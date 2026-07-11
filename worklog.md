@@ -495,3 +495,37 @@ Stage Summary:
 - Full keyboard navigation: ArrowUp/Down cycles selectedIndex across the 5 flat result items (with scrollIntoView), Enter activates the selected item (toast + navigate for items with a screen target), Escape closes the modal. ⌘K / Ctrl+K opens the modal globally.
 - All copy is verbatim from the universal_search_command_center_qbit_hub design HTML; all colors stay strictly within qbit-* Material-3 tokens (primary, primary-container, secondary, surface-variant, surface-container-lowest/low, surface-dim, outline, outline-variant, on-surface-variant, on-primary-container) — no indigo or random colors introduced.
 - Lint clean; dev server compiles successfully.
+
+---
+Task ID: auth-rbac-shell
+Agent: main
+Task: Implement Authentication, RBAC, Application Shell, Navigation, Theme Switching, Protected Routes, Error Pages
+
+Work Log:
+- Inspected existing architecture: 21 page components, AppShell/Sidebar/TopBar shells, Zustand navigation store, Prisma+SQLite, next-auth + next-themes installed but unconfigured.
+- Created RBAC module at src/lib/rbac/roles.ts with 7 roles (administrator, installation_engineer, support_engineer, sales_executive, dealer, viewer, public_customer), screen-level permission matrix, canAccessScreen helper, filterNavItemsByRole helper, homeScreenForRole helper.
+- Created NextAuth config at src/lib/auth/options.ts: JWT session strategy, Credentials provider backed by Prisma User table, bcrypt password hashing, role injection into JWT + session callbacks, TypeScript module augmentation for custom role field.
+- Mounted NextAuth at src/app/api/auth/[...nextauth]/route.ts.
+- Extended Prisma User model with role, passwordHash, image fields; ran db:push.
+- Created seed script at scripts/seed-users.ts with 6 demo accounts; seeded successfully.
+- Created Providers wrapper at src/components/providers/Providers.tsx bundling SessionProvider + ThemeProvider (next-themes, class attribute, system default, localStorage key "qbit-theme").
+- Created ThemeToggle at src/components/qbit/shells/ThemeToggle.tsx: cycles Light → Dark → System, Material Symbols icons, suppressHydrationWarning to avoid SSR mismatch.
+- Created ProfileMenu at src/components/qbit/shells/ProfileMenu.tsx: Radix dropdown with avatar + name + role badge header, Account Settings / Recent Activity / Help & Support items, Sign Out (calls signOut).
+- Created QbitBreadcrumb at src/components/qbit/shells/QbitBreadcrumb.tsx: Material Symbols chevron_right separators, clickable in-app navigation, current-page styling.
+- Created AuthGuard at src/components/qbit/auth/AuthGuard.tsx: loading skeleton, unauthenticated → login redirect, authenticated but unauthorized → 403 ForbiddenScreen, RBAC check via canAccessScreen.
+- Created useAuth hook at src/lib/auth/use-auth.ts: thin wrapper around useSession surfacing role, isAuthenticated, canAccess, homeScreen, filterNav helpers.
+- Created error pages: src/app/not-found.tsx (404), src/app/unauthorized/page.tsx (401), src/app/forbidden/page.tsx (403), src/app/error.tsx (global error boundary). All Stitch-styled with ScreenSwitcher.
+- Updated layout.tsx (minimal edit): wrapped children in <Providers>.
+- Updated TopBar.tsx (minimal edit): replaced static dark_mode button with <ThemeToggle/>, replaced static avatar block with <ProfileMenu/>.
+- Updated LoginPage.tsx (minimal edit): wired onSubmit to signIn() + getSession(), added loading/error states, added error banner; UI layout/spacing/typography unchanged.
+- Updated page.tsx (minimal edit): wrapped screen switch in <AuthGuard>.
+- Added NEXTAUTH_SECRET + NEXTAUTH_URL to .env.
+- Installed bcryptjs + @types/bcryptjs.
+- Verified: lint passes (0 errors, 1 pre-existing warning), TypeScript: 0 errors in new files, dev server HTTP 200, login flow works with admin@qbithub.com/admin123, theme toggle cycles Light/Dark/System and applies .dark class, profile menu opens with Sign Out working, /unauthorized /forbidden /not-found all render correctly.
+
+Stage Summary:
+- 13 new files created, 4 existing files minimally edited (layout.tsx, TopBar.tsx, LoginPage.tsx, page.tsx), 0 files overwritten, 0 UI redesign.
+- Demo credentials: admin@qbithub.com/admin123, engineer@qbithub.com/engineer123, support@qbithub.com/support123, sales@qbithub.com/sales123, dealer@qbithub.com/dealer123, viewer@qbithub.com/viewer123.
+- Full auth flow: login → role-based redirect → authenticated session → sign out → back to login.
+- RBAC enforced at AuthGuard level: unauthenticated users blocked from protected screens, authenticated users blocked from screens outside their role.
+- Theme persistence: localStorage key "qbit-theme", respects prefers-color-scheme when set to system.

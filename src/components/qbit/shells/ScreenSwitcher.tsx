@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Icon } from "../primitives/Icon";
 import { useNavigation, type ScreenId } from "@/lib/navigation/store";
+import { permittedRolesForScreen, type Role } from "@/lib/rbac/roles";
 
 interface ScreenEntry {
   id: ScreenId;

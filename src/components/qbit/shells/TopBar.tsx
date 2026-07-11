@@ -3,6 +3,8 @@
 import { cn } from "@/lib/utils";
 import { Icon } from "../primitives/Icon";
 import { ScreenSwitcher } from "./ScreenSwitcher";
+import { ThemeToggle } from "./ThemeToggle";
+import { ProfileMenu } from "./ProfileMenu";
 
 export interface TopBarProps {
   searchPlaceholder?: string;
@@ -121,23 +123,11 @@ export function TopBar({
         <button className="hidden md:flex h-9 w-9 items-center justify-center rounded-lg text-qbit-on-surface-variant hover:bg-qbit-surface-container transition-colors">
           <Icon name="help" className="text-[20px]" />
         </button>
-        <button className="hidden md:flex h-9 w-9 items-center justify-center rounded-lg text-qbit-on-surface-variant hover:bg-qbit-surface-container transition-colors">
-          <Icon name="dark_mode" className="text-[20px]" />
-        </button>
+        <ThemeToggle />
         <ScreenSwitcher />
         {user && (
-          <div className="flex items-center gap-2 pl-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-qbit-primary text-xs font-bold text-qbit-on-primary ring-2 ring-white">
-              {user.initials ?? user.name?.split(" ").map((p) => p[0]).slice(0, 2).join("")}
-            </div>
-            {user.name && (
-              <div className="hidden lg:block min-w-0">
-                <p className="truncate text-xs font-semibold text-qbit-on-surface">{user.name}</p>
-                {user.role && (
-                  <p className="truncate text-[10px] text-qbit-on-surface-variant">{user.role}</p>
-                )}
-              </div>
-            )}
+          <div className="pl-1">
+            <ProfileMenu />
           </div>
         )}
       </div>

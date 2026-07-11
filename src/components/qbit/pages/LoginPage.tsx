@@ -1,10 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { signIn, getSession } from "next-auth/react";
 import { Icon } from "../primitives/Icon";
 import { QbitButton } from "../primitives/QbitButton";
 import { ScreenSwitcher } from "../shells/ScreenSwitcher";
 import { useNavigation } from "@/lib/navigation/store";
+import { homeScreenForRole, type Role } from "@/lib/rbac/roles";
+
+type LoginState = "idle" | "loading" | "error";
 
 export function LoginPage() {
   const navigate = useNavigation((s) => s.navigate);
@@ -12,6 +16,8 @@ export function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(true);
+  const [loginState, setLoginState] = useState<LoginState>("idle");
+  const [errorMessage, setErrorMessage] = useState("");
 
   return (
     <div className="flex min-h-screen bg-qbit-surface-container-lowest">
@@ -94,11 +100,34 @@ export function LoginPage() {
           {/* Form */}
           <form
             className="mt-8 space-y-5"
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault();
-              navigate("home");
+              setLoginState("loading");
+              setErrorMessage("");
+              const result = await signIn("credentials", {
+                email,
+                password,
+                redirect: false,
+              });
+              if (result?.error) {
+                setLoginState("error");
+                setErrorMessage("Invalid email or password. Please try again.");
+                return;
+              }
+              // Refresh the session in the React context so AuthGuard sees
+              // the authenticated state immediately, then navigate.
+              const session = await getSession();
+              const role = session?.user?.role as Role | undefined;
+              navigate(role ? homeScreenForRole(role) : "home");
             }}
           >
+            {/* Error banner */}
+            {loginState === "error" && (
+              <div className="flex items-center gap-2 rounded-xl border border-qbit-error/30 bg-qbit-error-container/40 px-3 py-2.5 text-xs font-medium text-qbit-on-error-container">
+                <Icon name="error" className="text-[16px]" filled />
+                {errorMessage}
+              </div>
+            )}
             {/* Email */}
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-qbit-on-surface-variant mb-1.5">
@@ -162,8 +191,14 @@ export function LoginPage() {
               </a>
             </div>
             {/* Submit */}
-            <QbitButton type="submit" size="lg" fullWidth iconRight="arrow_forward">
-              Login to Dashboard
+            <QbitButton
+              type="submit"
+              size="lg"
+              fullWidth
+              iconRight={loginState === "loading" ? "progress_activity" : "arrow_forward"}
+              disabled={loginState === "loading"}
+            >
+              {loginState === "loading" ? "Signing in…" : "Login to Dashboard"}
             </QbitButton>
           </form>
 

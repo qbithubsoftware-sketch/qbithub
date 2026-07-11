@@ -1,6 +1,7 @@
 "use client";
 
 import { useNavigation } from "@/lib/navigation/store";
+import { AuthGuard } from "@/components/qbit/auth/AuthGuard";
 import { LoginPage } from "@/components/qbit/pages/LoginPage";
 import { HomePage } from "@/components/qbit/pages/HomePage";
 import { EngineerDashboardPage } from "@/components/qbit/pages/EngineerDashboardPage";
@@ -26,50 +27,54 @@ import { QbitT800ProductOverviewPage } from "@/components/qbit/pages/QbitT800Pro
 export default function Home() {
   const current = useNavigation((s) => s.current);
 
-  switch (current) {
-    case "login":
-      return <LoginPage />;
-    case "home":
-      return <HomePage />;
-    case "engineer-dashboard":
-      return <EngineerDashboardPage />;
-    case "product-library":
-      return <ProductLibraryPage />;
-    case "product-details-t800":
-      return <ProductDetailsT800Page />;
-    case "driver-download-center":
-      return <DriverDownloadCenterPage />;
-    case "installation-center":
-      return <InstallationCenterPage />;
-    case "customer-handover-report":
-      return <CustomerHandoverReportPage />;
-    case "video-training-center":
-      return <VideoTrainingCenterPage />;
-    case "t800-installation-guide":
-      return <T800InstallationGuidePage />;
-    case "ai-support-center":
-      return <AISupportCenterPage />;
-    case "job-details-inst-550-a":
-      return <JobDetailsInst550APage />;
-    case "field-engineer-workspace":
-      return <FieldEngineerWorkspacePage />;
-    case "job-completion-handover":
-      return <JobCompletionHandoverPage />;
-    case "admin-dashboard":
-      return <AdminDashboardPage />;
-    case "user-role-management":
-      return <UserRoleManagementPage />;
-    case "product-management":
-      return <ProductManagementPage />;
-    case "system-settings":
-      return <SystemSettingsPage />;
-    case "universal-search-command-center":
-      return <UniversalSearchCommandCenterPage />;
-    case "universal-search-mobile":
-      return <UniversalSearchMobilePage />;
-    case "product-overview":
-      return <QbitT800ProductOverviewPage />;
-    default:
-      return <LoginPage />;
-  }
+  const screen = (() => {
+    switch (current) {
+      case "login":
+        return <LoginPage />;
+      case "home":
+        return <HomePage />;
+      case "engineer-dashboard":
+        return <EngineerDashboardPage />;
+      case "product-library":
+        return <ProductLibraryPage />;
+      case "product-details-t800":
+        return <ProductDetailsT800Page />;
+      case "driver-download-center":
+        return <DriverDownloadCenterPage />;
+      case "installation-center":
+        return <InstallationCenterPage />;
+      case "customer-handover-report":
+        return <CustomerHandoverReportPage />;
+      case "video-training-center":
+        return <VideoTrainingCenterPage />;
+      case "t800-installation-guide":
+        return <T800InstallationGuidePage />;
+      case "ai-support-center":
+        return <AISupportCenterPage />;
+      case "job-details-inst-550-a":
+        return <JobDetailsInst550APage />;
+      case "field-engineer-workspace":
+        return <FieldEngineerWorkspacePage />;
+      case "job-completion-handover":
+        return <JobCompletionHandoverPage />;
+      case "admin-dashboard":
+        return <AdminDashboardPage />;
+      case "user-role-management":
+        return <UserRoleManagementPage />;
+      case "product-management":
+        return <ProductManagementPage />;
+      case "system-settings":
+        return <SystemSettingsPage />;
+      case "universal-search-command-center":
+        return <UniversalSearchCommandCenterPage />;
+      case "universal-search-mobile":
+        return <UniversalSearchMobilePage />;
+      case "product-overview":
+        return <QbitT800ProductOverviewPage />;
+      default:
+        return <LoginPage />;
+    }
+  })();
+
+  return <AuthGuard>{screen}</AuthGuard>;
 }
