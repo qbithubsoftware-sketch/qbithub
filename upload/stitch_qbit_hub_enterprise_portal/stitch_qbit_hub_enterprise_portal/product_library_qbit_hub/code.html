@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>QBIT Hub - Product Library</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-fixed-variant": "#444749",
+                        "on-secondary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "outline-variant": "#c3c5d9",
+                        "on-primary": "#ffffff",
+                        "tertiary": "#4e5153",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-container": "#e5e8ff",
+                        "on-primary-fixed": "#001550",
+                        "on-primary-fixed-variant": "#003ab2",
+                        "inverse-surface": "#293040",
+                        "on-secondary-fixed-variant": "#003ea8",
+                        "surface-tint": "#004ee7",
+                        "primary": "#0043c8",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-highest": "#dce2f7",
+                        "tertiary-fixed": "#e0e3e5",
+                        "outline": "#737688",
+                        "on-error": "#ffffff",
+                        "inverse-on-surface": "#edf0ff",
+                        "surface-dim": "#d3daef",
+                        "surface-bright": "#f9f9ff",
+                        "error": "#ba1a1a",
+                        "secondary-fixed": "#dbe1ff",
+                        "on-background": "#141b2b",
+                        "background": "#f9f9ff",
+                        "secondary-container": "#316bf3",
+                        "secondary": "#0051d5",
+                        "tertiary-container": "#66696b",
+                        "surface-variant": "#dce2f7",
+                        "surface-container-high": "#e1e8fd",
+                        "on-error-container": "#93000a",
+                        "surface-container": "#e9edff",
+                        "on-tertiary-container": "#e7e9eb",
+                        "tertiary-fixed-dim": "#c4c7c9",
+                        "on-surface": "#141b2b",
+                        "on-tertiary-fixed": "#191c1e",
+                        "primary-fixed": "#dce1ff",
+                        "secondary-fixed-dim": "#b4c5ff",
+                        "surface": "#f9f9ff",
+                        "primary-container": "#0057ff",
+                        "on-secondary-container": "#fefcff",
+                        "inverse-primary": "#b6c4ff",
+                        "on-secondary-fixed": "#00174b",
+                        "on-surface-variant": "#434656",
+                        "surface-container-low": "#f1f3ff",
+                        "primary-fixed-dim": "#b6c4ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "unit": "8px",
+                        "margin-mobile": "16px",
+                        "3xl": "64px",
+                        "xl": "32px",
+                        "md": "16px",
+                        "lg": "24px",
+                        "gutter": "24px",
+                        "2xl": "48px",
+                        "container-max": "1440px",
+                        "sm": "8px",
+                        "margin-desktop": "32px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display-sm": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "headline-lg": ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 4px;
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        .active-tab-indicator {
+            position: absolute;
+            left: 0;
+            width: 4px;
+            height: 100%;
+        }
+    </style>
+</head>
+<body class="bg-surface font-body-md text-on-surface selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-lowest border-r border-outline-variant flex flex-col py-md z-50">
+<div class="px-lg mb-xl">
+<h1 class="font-headline-sm text-headline-sm font-bold text-primary">QBIT Hub</h1>
+<p class="font-label-sm text-label-sm text-outline uppercase tracking-widest mt-1">Enterprise SaaS</p>
+</div>
+<nav class="flex-1 overflow-y-auto px-md space-y-1 custom-scrollbar">
+<!-- Products is active -->
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 cursor-pointer" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="relative flex items-center gap-md px-md py-sm rounded-lg text-primary font-semibold border-l-4 border-primary bg-surface-container transition-colors duration-200 cursor-pointer" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-label-md text-label-md">Products</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 cursor-pointer" href="#">
+<span class="material-symbols-outlined">settings_input_component</span>
+<span class="font-label-md text-label-md">Drivers</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 cursor-pointer" href="#">
+<span class="material-symbols-outlined">menu_book</span>
+<span class="font-label-md text-label-md">Installation Guides</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 cursor-pointer" href="#">
+<span class="material-symbols-outlined">play_circle</span>
+<span class="font-label-md text-label-md">Videos</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 cursor-pointer" href="#">
+<span class="material-symbols-outlined">download</span>
+<span class="font-label-md text-label-md">Downloads</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 cursor-pointer" href="#">
+<span class="material-symbols-outlined">library_books</span>
+<span class="font-label-md text-label-md">Knowledge Base</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 cursor-pointer" href="#">
+<span class="material-symbols-outlined">build</span>
+<span class="font-label-md text-label-md">Troubleshooting</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 cursor-pointer" href="#">
+<span class="material-symbols-outlined">bookmark</span>
+<span class="font-label-md text-label-md">Bookmarks</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 cursor-pointer" href="#">
+<span class="material-symbols-outlined">history</span>
+<span class="font-label-md text-label-md">Recent Files</span>
+</a>
+</nav>
+<div class="px-md mt-auto pt-md border-t border-outline-variant space-y-1">
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">contact_support</span>
+<span class="font-label-md text-label-md">Support</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">menu_open</span>
+<span class="font-label-md text-label-md">Collapse</span>
+</a>
+</div>
+</aside>
+<!-- TopNavBar -->
+<header class="fixed top-0 right-0 w-[calc(100%-256px)] h-16 bg-surface-container-lowest/80 backdrop-blur-md border-b border-outline-variant flex justify-between items-center px-lg z-40 shadow-sm">
+<div class="flex items-center gap-xl w-full max-w-2xl">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 text-body-sm focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all" placeholder="Search product technical library..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-lg">
+<div class="flex gap-md">
+<button class="p-2 rounded-full hover:bg-surface-container transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 rounded-full hover:bg-surface-container transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">dark_mode</span>
+</button>
+<button class="p-2 rounded-full hover:bg-surface-container transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">apps</span>
+</button>
+</div>
+<div class="h-8 w-[1px] bg-outline-variant mx-2"></div>
+<div class="flex items-center gap-md cursor-pointer hover:opacity-80 transition-opacity">
+<div class="w-8 h-8 rounded-full overflow-hidden bg-primary-container">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a software engineer in a modern office environment, wearing a minimalist neutral-toned sweater. The lighting is soft and natural, emphasizing a high-end enterprise aesthetic with a clean, light-mode color palette and subtle bokeh background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD39-2kwgCOdTxbosLclrwsUS25xPb3F_xuAsLgoUe755lQkyBnX1O0fm7hlSTQFOR8BC48X0WYTaIjMnXHR-mJ-ry_ur-PPibqx69WK98rD4evswB61mafPCHBMekTU_xJgM25xHdO9vcBBfOXesk_V6iqgGBuefAZWZfoQw4jT4ktbs6UQen_tmruy0_prUUsIe0PfEyxlXTWcGGc6trq__wEHUvjpxx56SBpLpgTdyZLQcYUJNwWXKMD2htlNIVts1_vF9b-Lpkn"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-64 pt-16 min-h-screen">
+<!-- Hero Section -->
+<section class="px-xl py-3xl text-center bg-gradient-to-b from-surface-container-low to-surface">
+<div class="max-w-4xl mx-auto space-y-md">
+<h2 class="font-display-sm text-display-sm text-on-surface tracking-tight">Product Library</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">
+                    Browse all QBIT hardware with specifications, images, videos, manuals and drivers. 
+                    The definitive technical repository for enterprise-grade hardware solutions.
+                </p>
+<div class="pt-xl max-w-xl mx-auto">
+<div class="relative group">
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-2xl py-4 px-12 text-body-md shadow-lg focus:ring-primary focus:border-primary transition-all group-hover:shadow-xl" placeholder="Enter model number (e.g. T-800)..." type="text"/>
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary font-bold">search</span>
+<div class="absolute right-3 top-1/2 -translate-y-1/2 px-3 py-1 bg-surface-container rounded-lg text-label-sm text-on-surface-variant border border-outline-variant">⌘ K</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Categories Section -->
+<section class="px-xl py-xl">
+<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-lg">
+<!-- Windows POS -->
+<div class="glass-card p-xl rounded-2xl flex flex-col items-center text-center hover:translate-y-[-4px] transition-transform cursor-pointer group border border-outline-variant/50">
+<div class="w-16 h-16 bg-primary-container/10 rounded-2xl flex items-center justify-center mb-md group-hover:bg-primary-container/20 transition-colors">
+<span class="material-symbols-outlined text-primary text-[32px]">desktop_windows</span>
+</div>
+<span class="font-headline-sm text-label-md font-semibold">Windows POS</span>
+<span class="text-label-sm text-outline mt-1">12 Products</span>
+</div>
+<!-- Android POS -->
+<div class="glass-card p-xl rounded-2xl flex flex-col items-center text-center hover:translate-y-[-4px] transition-transform cursor-pointer group border border-outline-variant/50">
+<div class="w-16 h-16 bg-secondary-container/10 rounded-2xl flex items-center justify-center mb-md group-hover:bg-secondary-container/20 transition-colors">
+<span class="material-symbols-outlined text-secondary text-[32px]">phone_android</span>
+</div>
+<span class="font-headline-sm text-label-md font-semibold">Android POS</span>
+<span class="text-label-sm text-outline mt-1">8 Products</span>
+</div>
+<!-- Printers -->
+<div class="glass-card p-xl rounded-2xl flex flex-col items-center text-center hover:translate-y-[-4px] transition-transform cursor-pointer group border border-outline-variant/50">
+<div class="w-16 h-16 bg-on-tertiary-fixed-variant/10 rounded-2xl flex items-center justify-center mb-md group-hover:bg-on-tertiary-fixed-variant/20 transition-colors">
+<span class="material-symbols-outlined text-tertiary text-[32px]">print</span>
+</div>
+<span class="font-headline-sm text-label-md font-semibold">Thermal Printers</span>
+<span class="text-label-sm text-outline mt-1">15 Products</span>
+</div>
+<!-- Scanners -->
+<div class="glass-card p-xl rounded-2xl flex flex-col items-center text-center hover:translate-y-[-4px] transition-transform cursor-pointer group border border-outline-variant/50">
+<div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-md group-hover:bg-primary/20 transition-colors">
+<span class="material-symbols-outlined text-primary text-[32px]">barcode_scanner</span>
+</div>
+<span class="font-headline-sm text-label-md font-semibold">Barcode Scanners</span>
+<span class="text-label-sm text-outline mt-1">6 Products</span>
+</div>
+<!-- Accessories -->
+<div class="glass-card p-xl rounded-2xl flex flex-col items-center text-center hover:translate-y-[-4px] transition-transform cursor-pointer group border border-outline-variant/50">
+<div class="w-16 h-16 bg-secondary/10 rounded-2xl flex items-center justify-center mb-md group-hover:bg-secondary/20 transition-colors">
+<span class="material-symbols-outlined text-secondary text-[32px]">cable</span>
+</div>
+<span class="font-headline-sm text-label-md font-semibold">Accessories</span>
+<span class="text-label-sm text-outline mt-1">24 Products</span>
+</div>
+</div>
+</section>
+<!-- Popular Products Section -->
+<section class="px-xl py-xl">
+<div class="flex justify-between items-end mb-xl">
+<div>
+<h3 class="font-headline-lg text-headline-lg tracking-tight">Trending Hardware</h3>
+<p class="text-on-surface-variant font-body-md mt-1">The most frequently accessed resources this week.</p>
+</div>
+<div class="flex gap-sm">
+<button class="p-2 rounded-full border border-outline-variant hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="p-2 rounded-full border border-outline-variant hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+<div class="flex gap-lg overflow-x-auto pb-md custom-scrollbar -mx-xl px-xl">
+<!-- Trending Card 1 -->
+<div class="min-w-[320px] bg-surface-container-lowest rounded-2xl border border-outline-variant p-md flex gap-md hover:shadow-md transition-shadow cursor-pointer">
+<div class="w-24 h-24 rounded-xl bg-surface overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Close up studio product photography of a sleek, white QBIT thermal printer on a pristine surface. The lighting is crisp and cool, featuring bright white reflections and blue accent lights on the device body, matching a high-end enterprise tech portal style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuALCh3mMbIykFVmGEGtneQr7KAg3dhLo_Q0HGYbZlQEUwABRogW4Zq-mvlEpd_BuaGEO2Y0x_nUI-Xk9qVyqSpNzbKRCksNc9-vZ8VPf9PPS07m-MHRFKmwE9DDRwchnKhDGg7sevq6w1v-EKGLAkfcu6saSffrdcCwtPYA3byW2GnUsh4CY32L3CS8nmqwCjj8-L2frCXVzsH4hIQJtNMVtGaheNcDgjGAQkM5a34qg0-03VCmIrRaWa6eWlfwtx5A8s48OOlsZjjn"/>
+</div>
+<div class="flex-1 flex flex-col justify-center">
+<span class="text-primary font-label-sm">Top Resource</span>
+<h4 class="font-headline-sm text-body-lg font-bold">HUB-X Pro</h4>
+<span class="text-on-surface-variant text-label-sm">Thermal Printer • v2.4 Driver</span>
+</div>
+</div>
+<!-- Trending Card 2 -->
+<div class="min-w-[320px] bg-surface-container-lowest rounded-2xl border border-outline-variant p-md flex gap-md hover:shadow-md transition-shadow cursor-pointer">
+<div class="w-24 h-24 rounded-xl bg-surface overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Highly detailed studio shot of a white enterprise barcode scanner with minimalist design and glowing blue LED accents. The product is shown from a 3/4 angle against a bright, airy background, maintaining the premium technology portal aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBeK0BcnBJWqdYDmGZWp7LN6IS2HwTvH8zsIEq4WMLhbj_Zzya1hpOmCKc6Z8sPOK_1MiA0oI5cPmjOoFCESr9UwTMdKfuOQIqKZxLz78YDrgmDRLDnlQEVyJQyukhvfFeBV0B4eFmu8OKkCVN3Jv2v1Q_WpipftZgDmM-DnDI-rh_vzZixhtTK1UnQD8J5KjAZhNumJKegjACKpI1DcketgB3y_5Jwew4wFLvM2Z4KcA_IOmimlare-hzrZ3BAxSScr2tD2kqOGqkb"/>
+</div>
+<div class="flex-1 flex flex-col justify-center">
+<span class="text-secondary font-label-sm">Newly Released</span>
+<h4 class="font-headline-sm text-body-lg font-bold">ScanMaster Elite</h4>
+<span class="text-on-surface-variant text-label-sm">Wireless Scanner • User Manual</span>
+</div>
+</div>
+<!-- Trending Card 3 -->
+<div class="min-w-[320px] bg-surface-container-lowest rounded-2xl border border-outline-variant p-md flex gap-md hover:shadow-md transition-shadow cursor-pointer">
+<div class="w-24 h-24 rounded-xl bg-surface overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A premium white Windows POS terminal with a large bright screen displaying a minimalist logo. The device is sleek and robust, featuring integrated components and soft blue light indicators, photographed in a professional studio setting with clean high-key lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAG7PYQIac9dQYt1V3Md22HlN8QUILm03YA0ooKi-biRqEOP-Tf5lKqKOs1iLgkYE5VKg9tTxrwu8XdO5_972hy156vZ3Hu95cC0pZyiWvuLlo-Lg4dGZXEQnFIlqzZlFbJu656hyESrgvnar-ZgYhYn4lcJeBZruY6w-rE9PY8O-btA-eU8N9EhHrexbzaO9fn3IXnMzc5ez8OLnbuBcCf5nKApLX5uU_4WCXRvRlmIib7po3ZOH-8Fu6o7k6f-qFHr-lP6zVGfyrx"/>
+</div>
+<div class="flex-1 flex flex-col justify-center">
+<span class="text-tertiary font-label-sm">Most Downloaded</span>
+<h4 class="font-headline-sm text-body-lg font-bold">QBIT T-800</h4>
+<span class="text-on-surface-variant text-label-sm">Windows POS • Setup Guide</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Product Grid -->
+<section class="px-xl py-xl">
+<div class="flex items-center justify-between mb-xl">
+<h3 class="font-headline-lg text-headline-lg tracking-tight">Full Hardware Inventory</h3>
+<div class="flex items-center gap-md">
+<button class="flex items-center gap-sm px-md py-2 border border-outline-variant rounded-lg font-label-md text-on-surface hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[20px]">filter_list</span>
+                        Filter
+                    </button>
+<button class="flex items-center gap-sm px-md py-2 border border-outline-variant rounded-lg font-label-md text-on-surface hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[20px]">sort</span>
+                        Sort: Newest
+                    </button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-xl">
+<!-- Product Card 1: T-800 -->
+<div class="group bg-surface-container-lowest rounded-2xl border border-outline-variant overflow-hidden hover:shadow-2xl transition-all duration-300">
+<div class="relative h-64 bg-surface-container-low p-xl flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" data-alt="An enterprise Windows POS terminal in pristine white, featuring a large high-resolution touchscreen and a sleek aluminum base. The photography uses high-key studio lighting with soft shadows, highlighting the premium build quality and integrated hardware components." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAyET5eetajHL6zCTnB7Gy_l5iiB20H7vDTPM9xiBQ25P5hpbGli9AkudzUnEOcS7fAsy_bSyZQQBAeGgaKN_QEHXRujSt80LcrIMaEBA-MU1-JFUVSCus2XdnelZYupiaYoeyaXV01X3tiwMkC-dJoK56ZTh2lMxnib_EbaXAetCakxxsuNFqkTlb2SUddLbjovMqzrZY8MwJuG0Rt5j0aKHc9AirhfpWlfSWG8CZfLAvhTFSGj_19v4nKBKmyzFDvVxd-0Nz5XOwG"/>
+<div class="absolute top-md left-md flex gap-sm">
+<span class="px-3 py-1 bg-primary text-on-primary rounded-full text-label-sm font-bold">WINDOWS POS</span>
+<span class="px-3 py-1 bg-surface-container-lowest/80 backdrop-blur text-on-surface-variant rounded-full text-label-sm border border-outline-variant/30">MODEL: T-800</span>
+</div>
+</div>
+<div class="p-xl space-y-lg">
+<div>
+<h4 class="font-headline-md text-headline-md font-bold mb-1">QBIT T-800</h4>
+<div class="flex gap-md items-center text-outline">
+<span class="material-symbols-outlined text-[18px]">desktop_windows</span>
+<span class="material-symbols-outlined text-[18px]">laptop_mac</span>
+<span class="material-symbols-outlined text-[18px]">terminal</span>
+<span class="text-label-sm font-medium ml-1">OS Supported</span>
+</div>
+</div>
+<div class="flex flex-wrap gap-sm">
+<span class="px-3 py-1 bg-surface-container-low text-on-surface-variant rounded-lg text-label-sm flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]">description</span> Manual
+                            </span>
+<span class="px-3 py-1 bg-surface-container-low text-on-surface-variant rounded-lg text-label-sm flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]">download</span> Driver
+                            </span>
+<span class="px-3 py-1 bg-surface-container-low text-on-surface-variant rounded-lg text-label-sm flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]">videocam</span> Video
+                            </span>
+</div>
+<div class="grid grid-cols-2 gap-md pt-md border-t border-outline-variant/50">
+<button class="w-full bg-primary text-on-primary py-3 rounded-xl font-label-md hover:bg-primary-container transition-colors shadow-md">View Details</button>
+<div class="flex gap-md">
+<button class="flex-1 border border-outline-variant rounded-xl flex items-center justify-center hover:bg-surface-container-low transition-colors text-on-surface-variant" onclick="toggleShareModal()" title="Share">
+<span class="material-symbols-outlined">share</span>
+</button>
+<button class="flex-1 border border-outline-variant rounded-xl flex items-center justify-center hover:bg-surface-container-low transition-colors text-on-surface-variant" title="Favorite">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Product Card 2: HUB-X -->
+<div class="group bg-surface-container-lowest rounded-2xl border border-outline-variant overflow-hidden hover:shadow-2xl transition-all duration-300">
+<div class="relative h-64 bg-surface-container-low p-xl flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" data-alt="A professional white thermal receipt printer with glowing cyan LED accents along its edges. The device has a minimalist, rounded cubic shape and is photographed on a reflective white surface with a clean, high-tech enterprise lighting style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCwhLUtLS1-591nlcVwUfCLRu0azsxtu8JXf3z9MMIygO2TCMheuA14vf5KmhbtoJFjoQE_C4SetIrlXe92B0l92tSYTxEMQgoOFs1tMzCqCy4dbCY2rNEReQatanLG_o75HCsUunrVGG6JTYBqKOPn1agX2nqLrsUeFPXA6GC351BYH-m1M_b9ajkQH89O1D28kEMC43VyMR1lEL1d1V6RO0BaAqDSfkX-ZGCafpwSX5gcwfKiphfaWz4r9rN6QAtWPDIhsnbysPB-"/>
+<div class="absolute top-md left-md flex gap-sm">
+<span class="px-3 py-1 bg-secondary text-on-secondary rounded-full text-label-sm font-bold">PRINTER</span>
+<span class="px-3 py-1 bg-surface-container-lowest/80 backdrop-blur text-on-surface-variant rounded-full text-label-sm border border-outline-variant/30">MODEL: HUB-X PRO</span>
+</div>
+</div>
+<div class="p-xl space-y-lg">
+<div>
+<h4 class="font-headline-md text-headline-md font-bold mb-1">HUB-X Pro</h4>
+<div class="flex gap-md items-center text-outline">
+<span class="material-symbols-outlined text-[18px]">desktop_windows</span>
+<span class="material-symbols-outlined text-[18px]">phone_android</span>
+<span class="material-symbols-outlined text-[18px]">terminal</span>
+<span class="text-label-sm font-medium ml-1">OS Supported</span>
+</div>
+</div>
+<div class="flex flex-wrap gap-sm">
+<span class="px-3 py-1 bg-surface-container-low text-on-surface-variant rounded-lg text-label-sm flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]">description</span> Manual
+                            </span>
+<span class="px-3 py-1 bg-surface-container-low text-on-surface-variant rounded-lg text-label-sm flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]">download</span> Driver
+                            </span>
+</div>
+<div class="grid grid-cols-2 gap-md pt-md border-t border-outline-variant/50">
+<button class="w-full bg-primary text-on-primary py-3 rounded-xl font-label-md hover:bg-primary-container transition-colors shadow-md">View Details</button>
+<div class="flex gap-md">
+<button class="flex-1 border border-outline-variant rounded-xl flex items-center justify-center hover:bg-surface-container-low transition-colors text-on-surface-variant" onclick="toggleShareModal()" title="Share">
+<span class="material-symbols-outlined">share</span>
+</button>
+<button class="flex-1 border border-outline-variant rounded-xl flex items-center justify-center hover:bg-surface-container-low transition-colors text-on-surface-variant" title="Favorite">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Product Card 3: ScanMaster -->
+<div class="group bg-surface-container-lowest rounded-2xl border border-outline-variant overflow-hidden hover:shadow-2xl transition-all duration-300">
+<div class="relative h-64 bg-surface-container-low p-xl flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" data-alt="A handheld wireless barcode scanner with a futuristic ergonomic white design and silver metallic highlights. The device is shown sitting on its charging cradle with a subtle blue power indicator light, captured with bright, even studio lighting that matches an enterprise tech aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDbLFgYmMrOPCssRcbXjiio_yszfDF-XwkM6UiFHJ7MFRWDCsoo4RsrEU3rJKPUu2OeR_TdLIdNnGWNEdOZGydb7HNAVseaq9wbOljKHCZMZzNSqj7pVD46apICnOK1BreUZdTSs92M8dnlfxSc7NqIJ4haLUYZseD0B2u1FApW9EzeMeYwCHj6dFhoqAa5lsiFEYFSvJNsVftbze6D4GNMmbA3zP2ftinCyvnJmYvwRLdyrGQ8UdwycO1s9OBc_9iJUt0uyPAGSu5g"/>
+<div class="absolute top-md left-md flex gap-sm">
+<span class="px-3 py-1 bg-tertiary-container text-on-tertiary-container rounded-full text-label-sm font-bold">SCANNER</span>
+<span class="px-3 py-1 bg-surface-container-lowest/80 backdrop-blur text-on-surface-variant rounded-full text-label-sm border border-outline-variant/30">MODEL: SM-E1</span>
+</div>
+</div>
+<div class="p-xl space-y-lg">
+<div>
+<h4 class="font-headline-md text-headline-md font-bold mb-1">ScanMaster Elite</h4>
+<div class="flex gap-md items-center text-outline">
+<span class="material-symbols-outlined text-[18px]">desktop_windows</span>
+<span class="material-symbols-outlined text-[18px]">phone_android</span>
+<span class="text-label-sm font-medium ml-1">OS Supported</span>
+</div>
+</div>
+<div class="flex flex-wrap gap-sm">
+<span class="px-3 py-1 bg-surface-container-low text-on-surface-variant rounded-lg text-label-sm flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]">description</span> Manual
+                            </span>
+<span class="px-3 py-1 bg-surface-container-low text-on-surface-variant rounded-lg text-label-sm flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]">videocam</span> Video
+                            </span>
+</div>
+<div class="grid grid-cols-2 gap-md pt-md border-t border-outline-variant/50">
+<button class="w-full bg-primary text-on-primary py-3 rounded-xl font-label-md hover:bg-primary-container transition-colors shadow-md">View Details</button>
+<div class="flex gap-md">
+<button class="flex-1 border border-outline-variant rounded-xl flex items-center justify-center hover:bg-surface-container-low transition-colors text-on-surface-variant" onclick="toggleShareModal()" title="Share">
+<span class="material-symbols-outlined">share</span>
+</button>
+<button class="flex-1 border border-outline-variant rounded-xl flex items-center justify-center hover:bg-surface-container-low transition-colors text-on-surface-variant" title="Favorite">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Share Modal Mockup -->
+<div class="fixed inset-0 z-[60] flex items-center justify-center pointer-events-none opacity-0 transition-all duration-300" id="shareModal">
+<div class="absolute inset-0 bg-on-background/40 backdrop-blur-sm" onclick="toggleShareModal()"></div>
+<div class="relative bg-surface-container-lowest w-full max-w-md p-xl rounded-2xl shadow-2xl scale-95 transition-transform duration-300 glass-card">
+<div class="flex justify-between items-center mb-xl">
+<h3 class="font-headline-sm text-headline-sm">Share Hardware Profile</h3>
+<button class="p-2 rounded-full hover:bg-surface-container text-on-surface-variant" onclick="toggleShareModal()">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="space-y-lg">
+<div class="p-md bg-surface-container rounded-xl border border-outline-variant">
+<div class="flex justify-between items-center mb-sm">
+<span class="text-label-sm text-on-surface-variant">Technical Asset Link</span>
+<span class="material-symbols-outlined text-[16px] text-primary">link</span>
+</div>
+<div class="flex gap-sm">
+<input class="flex-1 bg-surface border-outline-variant rounded-lg px-md py-2 text-body-sm text-outline" readonly="" type="text" value="https://hub.qbit.com/assets/T-800"/>
+<button class="bg-primary text-on-primary px-4 py-2 rounded-lg font-label-md hover:bg-primary-container transition-colors">Copy</button>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-md">
+<button class="flex items-center justify-center gap-md p-xl border border-outline-variant rounded-2xl hover:bg-surface-container-low transition-colors text-on-surface-variant group">
+<div class="w-10 h-10 bg-[#25D366]/10 rounded-full flex items-center justify-center text-[#25D366] group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined">chat</span>
+</div>
+<span class="font-label-md">WhatsApp</span>
+</button>
+<button class="flex items-center justify-center gap-md p-xl border border-outline-variant rounded-2xl hover:bg-surface-container-low transition-colors text-on-surface-variant group">
+<div class="w-10 h-10 bg-error/10 rounded-full flex items-center justify-center text-error group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined">picture_as_pdf</span>
+</div>
+<span class="font-label-md">Download PDF</span>
+</button>
+</div>
+<button class="w-full flex items-center justify-center gap-md py-4 border-2 border-dashed border-outline-variant rounded-2xl hover:border-primary hover:bg-primary-container/5 transition-all text-on-surface-variant">
+<span class="material-symbols-outlined">mail</span>
+<span class="font-label-md">Email Technical Specs</span>
+</button>
+</div>
+</div>
+</div>
+<script>
+        function toggleShareModal() {
+            const modal = document.getElementById('shareModal');
+            const inner = modal.querySelector('.relative');
+            
+            if (modal.classList.contains('opacity-0')) {
+                modal.classList.remove('opacity-0', 'pointer-events-none');
+                inner.classList.remove('scale-95');
+                inner.classList.add('scale-100');
+            } else {
+                modal.classList.add('opacity-0', 'pointer-events-none');
+                inner.classList.add('scale-95');
+                inner.classList.remove('scale-100');
+            }
+        }
+
+        // Add some atmospheric micro-interactions
+        document.querySelectorAll('.glass-card').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                card.style.setProperty('--mouse-x', `${x}px`);
+                card.style.setProperty('--mouse-y', `${y}px`);
+            });
+        });
+    </script>
+</body></html>

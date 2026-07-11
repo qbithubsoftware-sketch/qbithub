@@ -1,0 +1,429 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>QBIT Hub - Field Engineer Workspace</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Google Fonts: Inter -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        /* Custom scrollbar for clean UI */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-high": "#e1e8fd",
+                        "on-secondary-fixed-variant": "#003ea8",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed": "#191c1e",
+                        "primary-container": "#0057ff",
+                        "outline": "#737688",
+                        "surface-dim": "#d3daef",
+                        "surface-bright": "#f9f9ff",
+                        "secondary-fixed": "#dbe1ff",
+                        "tertiary-fixed": "#e0e3e5",
+                        "tertiary": "#4e5153",
+                        "secondary-container": "#316bf3",
+                        "outline-variant": "#c3c5d9",
+                        "on-surface-variant": "#434656",
+                        "error-container": "#ffdad6",
+                        "inverse-on-surface": "#edf0ff",
+                        "primary-fixed-dim": "#b6c4ff",
+                        "surface-container-low": "#f1f3ff",
+                        "on-primary-fixed": "#001550",
+                        "on-background": "#141b2b",
+                        "on-primary": "#ffffff",
+                        "surface": "#f9f9ff",
+                        "on-tertiary-container": "#e7e9eb",
+                        "on-surface": "#141b2b",
+                        "on-primary-fixed-variant": "#003ab2",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-container": "#e5e8ff",
+                        "on-tertiary-fixed-variant": "#444749",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-container": "#fefcff",
+                        "surface-container": "#e9edff",
+                        "on-error-container": "#93000a",
+                        "inverse-surface": "#293040",
+                        "tertiary-container": "#66696b",
+                        "primary": "#0043c8",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed": "#dce1ff",
+                        "secondary": "#0051d5",
+                        "on-secondary-fixed": "#00174b",
+                        "surface-variant": "#dce2f7",
+                        "inverse-primary": "#b6c4ff",
+                        "on-error": "#ffffff",
+                        "surface-tint": "#004ee7",
+                        "tertiary-fixed-dim": "#c4c7c9",
+                        "background": "#f9f9ff",
+                        "secondary-fixed-dim": "#b4c5ff",
+                        "surface-container-highest": "#dce2f7"
+                    },
+                    "spacing": {
+                        "sm": "8px",
+                        "gutter": "24px",
+                        "xl": "32px",
+                        "xs": "4px",
+                        "3xl": "64px",
+                        "margin-desktop": "32px",
+                        "md": "16px",
+                        "margin-mobile": "16px",
+                        "lg": "24px",
+                        "container-max": "1440px",
+                        "2xl": "48px",
+                        "unit": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "display-sm": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "headline-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "display-sm": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-hidden flex h-screen">
+<!-- SideNavBar (JSON Derived) -->
+<aside class="hidden md:flex flex-col h-full py-md w-64 bg-surface-container-low dark:bg-surface-dim border-r border-outline-variant dark:border-outline fixed left-0 top-0 z-50">
+<div class="px-gutter mb-xl">
+<h1 class="font-headline-md text-headline-md font-black text-primary">QBIT Hub</h1>
+<p class="text-label-sm text-on-surface-variant uppercase tracking-wider">Field Ops v2.4</p>
+</div>
+<nav class="flex-1 px-sm space-y-xs">
+<a class="flex items-center gap-md px-md py-sm text-primary font-bold bg-secondary-container/20 border-l-4 border-primary transition-all duration-200 cursor-pointer" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all duration-200 cursor-pointer" href="#">
+<span class="material-symbols-outlined">engineering</span>
+<span class="font-label-md text-label-md">My Jobs</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all duration-200 cursor-pointer" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-label-md text-label-md">Inventory</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all duration-200 cursor-pointer" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="font-label-md text-label-md">Documents</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all duration-200 cursor-pointer" href="#">
+<span class="material-symbols-outlined">support_agent</span>
+<span class="font-label-md text-label-md">Support</span>
+</a>
+</nav>
+<div class="px-sm mt-auto">
+<button class="w-full mb-md bg-primary-container text-on-primary py-sm rounded-lg font-label-md flex items-center justify-center gap-sm active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[20px]">sync</span>
+                Sync Offline Data
+            </button>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all duration-200 cursor-pointer" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label-md text-label-md">Logout</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col md:ml-64 h-full relative overflow-hidden">
+<!-- TopNavBar (JSON Derived) -->
+<header class="flex justify-between items-center w-full px-gutter h-16 bg-surface-container-lowest dark:bg-inverse-surface border-b border-outline-variant dark:border-outline shadow-sm z-40 sticky top-0">
+<div class="flex items-center gap-lg flex-1">
+<div class="md:hidden">
+<span class="material-symbols-outlined text-primary cursor-pointer">menu</span>
+</div>
+<div class="relative w-full max-w-md hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 text-body-sm focus:ring-2 focus:ring-primary/20 placeholder:text-outline transition-all" placeholder="Search jobs, customers, or serials..." type="text">
+</div>
+</div>
+<div class="flex items-center gap-md">
+<div class="flex items-center gap-sm px-md border-r border-outline-variant h-8 mr-sm">
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-high p-1.5 rounded-full transition-colors cursor-pointer active:scale-95">notifications</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-high p-1.5 rounded-full transition-colors cursor-pointer active:scale-95">help</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-high p-1.5 rounded-full transition-colors cursor-pointer active:scale-95">settings</button>
+</div>
+<div class="flex items-center gap-sm cursor-pointer group">
+<div class="text-right hidden lg:block">
+<p class="text-label-md font-bold text-on-surface leading-tight">Alex Rivera</p>
+<p class="text-[10px] uppercase text-on-surface-variant leading-tight">Senior Field Engineer</p>
+</div>
+<img class="w-10 h-10 rounded-full border-2 border-primary-container object-cover" data-alt="A professional headshot of a Hispanic male field engineer in his late 30s wearing a high-performance navy blue tech jacket. The lighting is soft and professional with a clean office background. The overall aesthetic is high-end enterprise with a focus on trust and competence, matching a premium modern UI." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBAx5FmsYm_yVjAwlKqJgRmAQP-bmzuKxj3crO0jRPMbU4DGIFtmLHR_hr7Wa-145pyOhQMNowzW3GwLmlktvh7AhBiLtMSBmE1ODubFV1sGq5dtQFtMFB_gwjIyW2ZgK-ybWTFvTo8UPMxa18HZaW7fQo12l9Ncnkp8u01aZY3WtRpHr7xmCm5Ysn9Xw2_Vey3EMWuRprprwI_-wAo_otaFgnPgWQ8Ub7R3HkqCE-KZnD8TbE_4ZY1BMTChOZ7FClILvq1YeQPD5-b">
+</div>
+</div>
+</header>
+<!-- Dashboard Canvas -->
+<div class="flex-1 overflow-y-auto bg-background p-gutter">
+<!-- Header Section -->
+<section class="mb-xl flex flex-col md:flex-row justify-between items-start md:items-end gap-md">
+<div>
+<h2 class="font-display-sm text-display-sm text-on-surface mb-xs">Field Workspace</h2>
+<p class="text-body-lg text-on-surface-variant">Welcome back, Alex. You have <span class="font-bold text-primary">4 jobs</span> scheduled for today.</p>
+</div>
+<div class="flex gap-sm">
+<button class="bg-surface-container-lowest border border-outline-variant px-md py-2 rounded-lg text-label-md flex items-center gap-sm hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-[18px]">calendar_today</span>
+                        View Schedule
+                    </button>
+<button class="bg-primary text-on-primary px-md py-2 rounded-lg text-label-md font-bold flex items-center gap-sm shadow-md hover:shadow-lg transition-all active:scale-95">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                        New Job Request
+                    </button>
+</div>
+</section>
+<!-- KPI Grid -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-lg mb-xl">
+<!-- KPI Card 1 -->
+<div class="glass-card p-lg rounded-2xl border border-outline-variant shadow-sm flex items-center justify-between group hover:border-primary transition-colors cursor-default h-full">
+<div>
+<p class="text-label-sm text-on-surface-variant uppercase tracking-widest mb-1">Today's Jobs</p>
+<h3 class="text-display-sm font-black text-on-surface">04</h3>
+<p class="text-body-sm text-on-primary-fixed-variant flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>
+                            +2 from yesterday
+                        </p>
+</div>
+<div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+<span class="material-symbols-outlined text-primary text-[32px]">task_alt</span>
+</div>
+</div>
+<!-- KPI Card 2 -->
+<div class="glass-card p-lg rounded-2xl border border-outline-variant shadow-sm flex items-center justify-between group hover:border-secondary transition-colors cursor-default h-full">
+<div>
+<p class="text-label-sm text-on-surface-variant uppercase tracking-widest mb-1">Pending Installs</p>
+<h3 class="text-display-sm font-black text-on-surface">12</h3>
+<p class="text-body-sm text-on-surface-variant flex items-center gap-1 mt-1">
+                            Current backlog
+                        </p>
+</div>
+<div class="w-14 h-14 rounded-2xl bg-secondary-fixed flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+<span class="material-symbols-outlined text-secondary text-[32px]">pending_actions</span>
+</div>
+</div>
+<!-- KPI Card 3 -->
+<div class="glass-card p-lg rounded-2xl border border-outline-variant shadow-sm flex items-center justify-between group hover:border-error transition-colors cursor-default h-full">
+<div>
+<p class="text-label-sm text-on-surface-variant uppercase tracking-widest mb-1">Open Issues</p>
+<h3 class="text-display-sm font-black text-on-surface">03</h3>
+<p class="text-body-sm text-error flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-[16px]">warning</span>
+                            Requires attention
+                        </p>
+</div>
+<div class="w-14 h-14 rounded-2xl bg-error-container flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+<span class="material-symbols-outlined text-error text-[32px]">emergency_home</span>
+</div>
+</div>
+</section>
+<!-- Main Body: Job List -->
+<section class="bg-surface-container-lowest rounded-2xl border border-outline-variant shadow-sm overflow-hidden">
+<div class="px-gutter py-md border-b border-outline-variant flex justify-between items-center">
+<div class="flex items-center gap-md">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">My Installation Jobs</h3>
+<span class="bg-surface-container-high text-on-surface px-2 py-0.5 rounded-full text-label-sm">4 Remaining</span>
+</div>
+<div class="flex items-center gap-sm">
+<button class="material-symbols-outlined p-2 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors">filter_list</button>
+<button class="material-symbols-outlined p-2 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors">sort</button>
+</div>
+</div>
+<div class="divide-y divide-outline-variant">
+<!-- Job Card 1 -->
+<div class="px-gutter py-lg hover:bg-surface-container-low/50 transition-colors group duration-200">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-md">
+<div class="flex items-start gap-lg flex-1">
+<div class="w-12 h-12 rounded-xl bg-primary-fixed flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary">router</span>
+</div>
+<div class="space-y-1">
+<div class="flex items-center gap-sm">
+<span class="font-bold text-primary font-label-md uppercase tracking-tight">INST-550-A</span>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-error-container text-error uppercase">High Priority</span>
+</div>
+<h4 class="font-headline-sm text-on-surface">The Daily Grind - Soho Branch</h4>
+<p class="text-body-sm text-on-surface-variant mt-0.5">Daily Grind Hospitality Co. • 42nd St, Manhattan</p>
+</div>
+</div>
+<div class="flex flex-wrap items-center gap-lg">
+<div class="flex items-center gap-sm">
+<div class="w-2 h-2 rounded-full bg-secondary animate-pulse"></div>
+<span class="text-label-md font-bold text-secondary uppercase">In Progress</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="px-md py-2 border border-outline-variant rounded-lg text-label-md font-bold text-on-surface-variant hover:bg-surface-container-highest transition-all flex items-center gap-xs active:scale-95">
+<span class="material-symbols-outlined text-[18px]">near_me</span>
+                                        Navigate
+                                    </button>
+<button class="px-md py-2 border border-outline-variant rounded-lg text-label-md font-bold text-on-surface-variant hover:bg-surface-container-highest transition-all flex items-center gap-xs active:scale-95">
+<span class="material-symbols-outlined text-[18px]">call</span>
+                                        Call
+                                    </button>
+<button class="px-md py-2 bg-primary text-on-primary rounded-lg text-label-md font-bold hover:shadow-md transition-all flex items-center gap-xs active:scale-95">
+                                        Open Job
+                                        <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Job Card 2 -->
+<div class="px-gutter py-lg hover:bg-surface-container-low/50 transition-colors group duration-200">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-md">
+<div class="flex items-start gap-lg flex-1">
+<div class="w-12 h-12 rounded-xl bg-surface-container-high flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-on-surface-variant">satellite_alt</span>
+</div>
+<div class="space-y-1">
+<div class="flex items-center gap-sm">
+<span class="font-bold text-on-surface-variant font-label-md uppercase tracking-tight">INST-552-C</span>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-surface-variant text-on-surface-variant uppercase">Normal</span>
+</div>
+<h4 class="font-headline-sm text-on-surface">Harbor Logistics Hub</h4>
+<p class="text-body-sm text-on-surface-variant mt-0.5">Global Freight Solutions • Pier 94, Industrial Zone</p>
+</div>
+</div>
+<div class="flex flex-wrap items-center gap-lg">
+<div class="flex items-center gap-sm">
+<div class="w-2 h-2 rounded-full bg-outline-variant"></div>
+<span class="text-label-md font-bold text-on-surface-variant uppercase">Scheduled</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="px-md py-2 border border-outline-variant rounded-lg text-label-md font-bold text-on-surface-variant hover:bg-surface-container-highest transition-all flex items-center gap-xs active:scale-95">
+<span class="material-symbols-outlined text-[18px]">near_me</span>
+                                        Navigate
+                                    </button>
+<button class="px-md py-2 border border-outline-variant rounded-lg text-label-md font-bold text-on-surface-variant hover:bg-surface-container-highest transition-all flex items-center gap-xs active:scale-95">
+<span class="material-symbols-outlined text-[18px]">call</span>
+                                        Call
+                                    </button>
+<button class="px-md py-2 bg-primary text-on-primary rounded-lg text-label-md font-bold hover:shadow-md transition-all flex items-center gap-xs active:scale-95">
+                                        Open Job
+                                        <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Job Card 3 -->
+<div class="px-gutter py-lg hover:bg-surface-container-low/50 transition-colors group duration-200">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-md">
+<div class="flex items-start gap-lg flex-1">
+<div class="w-12 h-12 rounded-xl bg-surface-container-high flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-on-surface-variant">sensors</span>
+</div>
+<div class="space-y-1">
+<div class="flex items-center gap-sm">
+<span class="font-bold text-on-surface-variant font-label-md uppercase tracking-tight">INST-601-B</span>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-surface-variant text-on-surface-variant uppercase">Normal</span>
+</div>
+<h4 class="font-headline-sm text-on-surface">Elevate Coworking Space</h4>
+<p class="text-body-sm text-on-surface-variant mt-0.5">Urban Workplaces LLC • Broadway, Floor 12</p>
+</div>
+</div>
+<div class="flex flex-wrap items-center gap-lg">
+<div class="flex items-center gap-sm">
+<div class="w-2 h-2 rounded-full bg-outline-variant"></div>
+<span class="text-label-md font-bold text-on-surface-variant uppercase">Scheduled</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="px-md py-2 border border-outline-variant rounded-lg text-label-md font-bold text-on-surface-variant hover:bg-surface-container-highest transition-all flex items-center gap-xs active:scale-95">
+<span class="material-symbols-outlined text-[18px]">near_me</span>
+                                        Navigate
+                                    </button>
+<button class="px-md py-2 border border-outline-variant rounded-lg text-label-md font-bold text-on-surface-variant hover:bg-surface-container-highest transition-all flex items-center gap-xs active:scale-95">
+<span class="material-symbols-outlined text-[18px]">call</span>
+                                        Call
+                                    </button>
+<button class="px-md py-2 bg-primary text-on-primary rounded-lg text-label-md font-bold hover:shadow-md transition-all flex items-center gap-xs active:scale-95">
+                                        Open Job
+                                        <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer action for list -->
+<div class="px-gutter py-md bg-surface-container-low text-center">
+<button class="text-label-md font-bold text-primary hover:underline transition-all">View All 12 Pending Installations</button>
+</div>
+</section>
+<!-- Bottom Spacer for better scroll padding -->
+<div class="h-12"></div>
+</div>
+</main>
+<!-- FAB (Suppressed based on contextual rules, but added here for the specific screen's primary purpose if needed - in this case, "Sync" is already in sidebar) -->
+<script>
+        // Simple micro-interactions
+        document.querySelectorAll('.active\\:scale-95').forEach(button => {
+            button.addEventListener('mousedown', () => {
+                button.classList.add('scale-95');
+            });
+            button.addEventListener('mouseup', () => {
+                button.classList.remove('scale-95');
+            });
+            button.addEventListener('mouseleave', () => {
+                button.classList.remove('scale-95');
+            });
+        });
+
+        // Search bar focus effect
+        const searchInput = document.querySelector('input[type="text"]');
+        if(searchInput) {
+            searchInput.addEventListener('focus', () => {
+                searchInput.parentElement.classList.add('ring-2', 'ring-primary/20');
+            });
+            searchInput.addEventListener('blur', () => {
+                searchInput.parentElement.classList.remove('ring-2', 'ring-primary/20');
+            });
+        }
+    </script>
+
+
+
+</body></html>

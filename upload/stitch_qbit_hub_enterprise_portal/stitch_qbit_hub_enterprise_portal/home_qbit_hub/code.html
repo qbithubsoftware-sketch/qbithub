@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>QBIT Hub - Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-low": "#f1f3ff",
+                    "secondary-fixed": "#dbe1ff",
+                    "primary-container": "#0057ff",
+                    "on-primary-container": "#e5e8ff",
+                    "on-error": "#ffffff",
+                    "primary-fixed": "#dce1ff",
+                    "surface-bright": "#f9f9ff",
+                    "on-tertiary-fixed-variant": "#444749",
+                    "on-background": "#141b2b",
+                    "on-tertiary-container": "#e7e9eb",
+                    "surface-container-lowest": "#ffffff",
+                    "on-secondary-fixed": "#00174b",
+                    "surface-tint": "#004ee7",
+                    "primary": "#0043c8",
+                    "outline-variant": "#c3c5d9",
+                    "outline": "#737688",
+                    "tertiary-fixed-dim": "#c4c7c9",
+                    "inverse-surface": "#293040",
+                    "inverse-on-surface": "#edf0ff",
+                    "on-secondary-fixed-variant": "#003ea8",
+                    "tertiary-container": "#66696b",
+                    "error-container": "#ffdad6",
+                    "on-surface-variant": "#434656",
+                    "on-error-container": "#93000a",
+                    "surface": "#f9f9ff",
+                    "error": "#ba1a1a",
+                    "on-tertiary": "#ffffff",
+                    "background": "#f9f9ff",
+                    "secondary-fixed-dim": "#b4c5ff",
+                    "surface-variant": "#dce2f7",
+                    "tertiary": "#4e5153",
+                    "surface-container-highest": "#dce2f7",
+                    "primary-fixed-dim": "#b6c4ff",
+                    "tertiary-fixed": "#e0e3e5",
+                    "on-tertiary-fixed": "#191c1e",
+                    "inverse-primary": "#b6c4ff",
+                    "secondary": "#0051d5",
+                    "surface-container-high": "#e1e8fd",
+                    "on-surface": "#141b2b",
+                    "on-primary-fixed": "#001550",
+                    "on-secondary": "#ffffff",
+                    "secondary-container": "#316bf3",
+                    "on-secondary-container": "#fefcff",
+                    "on-primary": "#ffffff",
+                    "surface-container": "#e9edff",
+                    "surface-dim": "#d3daef",
+                    "on-primary-fixed-variant": "#003ab2"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "unit": "8px",
+                    "lg": "24px",
+                    "margin-mobile": "16px",
+                    "xs": "4px",
+                    "margin-desktop": "32px",
+                    "3xl": "64px",
+                    "container-max": "1440px",
+                    "sm": "8px",
+                    "2xl": "48px",
+                    "md": "16px",
+                    "xl": "32px",
+                    "gutter": "24px"
+            },
+            "fontFamily": {
+                    "body-sm": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "label-md": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "body-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "display-sm": ["Inter"],
+                    "headline-sm": ["Inter"],
+                    "display-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "headline-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "display-sm": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #c3c5d9;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface antialiased overflow-hidden">
+<!-- SideNavBar Shell -->
+<aside class="w-64 h-screen fixed left-0 top-0 bg-surface-container-low dark:bg-inverse-surface border-r border-outline-variant dark:border-outline flex flex-col h-full py-md z-50">
+<div class="px-gutter mb-xl">
+<h1 class="font-headline-sm text-headline-sm font-bold text-primary dark:text-primary-fixed-dim">QBIT Hub</h1>
+<p class="text-on-surface-variant font-label-sm text-label-sm opacity-70">Control Center</p>
+</div>
+<nav class="flex-1 space-y-xs px-sm">
+<a class="flex items-center gap-md px-md py-sm rounded-lg transition-colors duration-200 ease-in-out text-primary dark:text-primary-fixed-dim border-l-4 border-primary dark:border-primary-fixed-dim bg-primary-container/10" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg transition-colors duration-200 ease-in-out text-on-surface-variant dark:text-surface-variant hover:text-on-surface dark:hover:text-surface-bright hover:bg-surface-container-high dark:hover:bg-surface-container-highest" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-body-md text-body-md">Products</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg transition-colors duration-200 ease-in-out text-on-surface-variant dark:text-surface-variant hover:text-on-surface dark:hover:text-surface-bright hover:bg-surface-container-high dark:hover:bg-surface-container-highest" href="#">
+<span class="material-symbols-outlined">local_shipping</span>
+<span class="font-body-md text-body-md">Drivers</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg transition-colors duration-200 ease-in-out text-on-surface-variant dark:text-surface-variant hover:text-on-surface dark:hover:text-surface-bright hover:bg-surface-container-high dark:hover:bg-surface-container-highest" href="#">
+<span class="material-symbols-outlined">menu_book</span>
+<span class="font-body-md text-body-md">Manuals</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg transition-colors duration-200 ease-in-out text-on-surface-variant dark:text-surface-variant hover:text-on-surface dark:hover:text-surface-bright hover:bg-surface-container-high dark:hover:bg-surface-container-highest" href="#">
+<span class="material-symbols-outlined">videocam</span>
+<span class="font-body-md text-body-md">Videos</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg transition-colors duration-200 ease-in-out text-on-surface-variant dark:text-surface-variant hover:text-on-surface dark:hover:text-surface-bright hover:bg-surface-container-high dark:hover:bg-surface-container-highest" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-body-md text-body-md">Users</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg transition-colors duration-200 ease-in-out text-on-surface-variant dark:text-surface-variant hover:text-on-surface dark:hover:text-surface-bright hover:bg-surface-container-high dark:hover:bg-surface-container-highest" href="#">
+<span class="material-symbols-outlined">monitoring</span>
+<span class="font-body-md text-body-md">Analytics</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg transition-colors duration-200 ease-in-out text-on-surface-variant dark:text-surface-variant hover:text-on-surface dark:hover:text-surface-bright hover:bg-surface-container-high dark:hover:bg-surface-container-highest" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+</nav>
+<div class="mt-auto px-gutter py-md border-t border-outline-variant/30 flex items-center gap-sm">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">account_circle</span>
+</div>
+<div class="flex-1 min-w-0">
+<p class="font-label-md text-label-md truncate text-on-surface">Alex Rivera</p>
+<p class="text-[10px] uppercase tracking-wider text-on-surface-variant">Admin Access</p>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 h-screen overflow-y-auto custom-scrollbar flex flex-col bg-surface">
+<!-- TopNavBar Shell -->
+<header class="fixed top-0 right-0 left-64 h-16 bg-surface dark:bg-surface-container-lowest border-b border-outline-variant dark:border-outline z-40 transition-all duration-200">
+<div class="flex justify-between items-center px-gutter w-full h-full">
+<div class="flex items-center gap-md flex-1">
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface dark:text-on-surface">QBIT Hub Admin</span>
+<div class="flex items-center bg-surface-container rounded-full px-md py-xs ml-xl w-full max-w-lg border border-transparent focus-within:border-primary focus-within:bg-white transition-all group">
+<span class="material-symbols-outlined text-outline text-md group-focus-within:text-primary">search</span>
+<input class="bg-transparent border-none focus:ring-0 w-full text-label-md font-label-md py-1" placeholder="Global search..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-sm">
+<button class="p-sm rounded-full text-on-surface-variant dark:text-surface-variant hover:bg-surface-container dark:hover:bg-inverse-surface transition-all">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-sm rounded-full text-on-surface-variant dark:text-surface-variant hover:bg-surface-container dark:hover:bg-inverse-surface transition-all">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+<div class="h-8 w-[1px] bg-outline-variant mx-xs"></div>
+<img class="w-8 h-8 rounded-full border border-outline-variant object-cover" data-alt="Close-up professional headshot of a diverse male administrator in a modern office environment, high resolution corporate photography with soft bokeh background and warm professional lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBfrP6Nz_WPvIlOYP7mDxwrNCxCsxulkisEN_gptZDV_vWj9v0wLhsuERU126hRfPkKuWJ9iZI_6JMq-Baqislb84ptz8pzqmrfSvaaOAto1QRRBHwMUzmQEZEm6yHPS3kZ_OCeLoIZbUsbfN3c0iugzMDp-StXCIqowszDJuS74VBFjkYmTYBDRFy0eyKpn0S9XE-DfhkNndpuihGjrjawdjmdizAe0_anlbmAoCe4SClrNnnMh_1s2ytUQp_jOYzERB-d3hN7mn7f"/>
+</div>
+</div>
+</header>
+<!-- Canvas Body -->
+<div class="pt-16 px-gutter pb-gutter flex flex-col gap-lg mt-md">
+<!-- Welcome Hero -->
+<section class="grid grid-cols-1 md:grid-cols-12 gap-lg items-center bg-gradient-to-br from-surface-container-low to-surface border border-outline-variant rounded-2xl overflow-hidden p-xl relative">
+<div class="md:col-span-7 z-10">
+<span class="inline-block px-sm py-1 bg-primary/10 text-primary rounded-full font-label-sm text-label-sm mb-md">System Online • 99.9% Uptime</span>
+<h2 class="font-display-sm text-display-sm text-on-surface mb-xs">Good Morning, Alex.</h2>
+<h3 class="font-headline-md text-headline-md text-on-surface-variant mb-xl opacity-80">Welcome back to QBIT Hub</h3>
+<div class="flex items-center gap-xl">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-widest">Current Session</span>
+<span class="font-body-lg text-body-lg text-on-surface font-semibold" id="current-time">Monday, Oct 23 • 09:41 AM</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-widest">Active Alerts</span>
+<span class="font-body-lg text-body-lg text-error font-semibold">2 Critical Updates</span>
+</div>
+</div>
+</div>
+<div class="md:col-span-5 relative h-64 md:h-full flex items-center justify-center">
+<img class="object-contain max-h-72 w-full drop-shadow-2xl transition-transform hover:scale-105 duration-700" src="https://lh3.googleusercontent.com/aida/AP1WRLsvZGeMvhkznZvRq6jRYsjv-iHQbpSWfnJcjzWR5ZXLcxJRkHkGtY5oz38nSopfA0SsmkPaeg3no0eilyKUQcvIi4N_2prp-l-4v5jsJv4Dt4-0epzauDfrtusZp7STosWItm8w_XTtO5pT93F74ERu2j-EJYLBXWZfdygxZTF08r3zyqXDc_xRBxh_OCrcioa3J8F9b0vxAwgivTkFKdQqhSoNRfHmLws_eH2_3ziVncGhQBFdmii0RXEL"/>
+</div>
+</section>
+<!-- Universal Search Center -->
+<section class="max-w-4xl mx-auto w-full -mt-12 z-20">
+<div class="glass-card shadow-xl border border-outline-variant rounded-2xl p-xs flex items-center">
+<div class="flex items-center gap-md flex-1 bg-surface-container-highest/30 px-xl py-lg rounded-xl focus-within:bg-white transition-all">
+<span class="material-symbols-outlined text-primary scale-125">search</span>
+<input class="bg-transparent border-none focus:ring-0 w-full text-body-lg font-body-lg placeholder:text-outline/60" placeholder="Search products, drivers, manuals, installation guides, videos or ask AI..." type="text"/>
+<kbd class="hidden md:flex items-center gap-1 bg-surface-variant/50 text-on-surface-variant px-sm py-xs rounded text-[10px] font-bold border border-outline-variant">
+<span class="material-symbols-outlined text-[12px]">keyboard_command_key</span>K
+                        </kbd>
+</div>
+</div>
+</section>
+<!-- System Status KPIs -->
+<section class="grid grid-cols-2 md:grid-cols-4 gap-md">
+<div class="bg-white border border-outline-variant p-md rounded-xl hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start mb-sm">
+<span class="material-symbols-outlined text-primary p-xs bg-primary/10 rounded-lg">inventory_2</span>
+<span class="text-green-600 font-label-sm text-label-sm flex items-center">+4%</span>
+</div>
+<p class="font-label-sm text-label-sm text-outline">Total Products</p>
+<p class="font-headline-sm text-headline-sm text-on-surface">1,284</p>
+</div>
+<div class="bg-white border border-outline-variant p-md rounded-xl hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start mb-sm">
+<span class="material-symbols-outlined text-secondary p-xs bg-secondary/10 rounded-lg">download_for_offline</span>
+<span class="text-green-600 font-label-sm text-label-sm flex items-center">+12%</span>
+</div>
+<p class="font-label-sm text-label-sm text-outline">Drivers Active</p>
+<p class="font-headline-sm text-headline-sm text-on-surface">342</p>
+</div>
+<div class="bg-white border border-outline-variant p-md rounded-xl hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start mb-sm">
+<span class="material-symbols-outlined text-tertiary p-xs bg-tertiary/10 rounded-lg">menu_book</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm flex items-center">Stable</span>
+</div>
+<p class="font-label-sm text-label-sm text-outline">Guides &amp; Manuals</p>
+<p class="font-headline-sm text-headline-sm text-on-surface">891</p>
+</div>
+<div class="bg-white border border-outline-variant p-md rounded-xl hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start mb-sm">
+<span class="material-symbols-outlined text-error p-xs bg-error/10 rounded-lg">videocam</span>
+<span class="text-error font-label-sm text-label-sm flex items-center">-2%</span>
+</div>
+<p class="font-label-sm text-label-sm text-outline">Training Videos</p>
+<p class="font-headline-sm text-headline-sm text-on-surface">156</p>
+</div>
+</section>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
+<!-- Quick Access Grid & Continue Working -->
+<div class="lg:col-span-2 flex flex-col gap-lg">
+<!-- Quick Access Grid -->
+<section>
+<h3 class="font-headline-sm text-headline-sm mb-md flex items-center gap-sm">
+                            Quick Access <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+</h3>
+<div class="grid grid-cols-2 sm:grid-cols-3 gap-md">
+<button class="flex flex-col items-center text-center p-lg bg-white border border-outline-variant rounded-2xl hover:border-primary hover:bg-primary/5 transition-all group">
+<span class="material-symbols-outlined text-primary mb-sm scale-150 transition-transform group-hover:rotate-12">inventory_2</span>
+<span class="font-label-md text-label-md text-on-surface mb-xs">Products</span>
+<span class="text-[10px] text-outline">Browse Catalog</span>
+</button>
+<button class="flex flex-col items-center text-center p-lg bg-white border border-outline-variant rounded-2xl hover:border-primary hover:bg-primary/5 transition-all group">
+<span class="material-symbols-outlined text-primary mb-sm scale-150 transition-transform group-hover:rotate-12">local_shipping</span>
+<span class="font-label-md text-label-md text-on-surface mb-xs">Drivers</span>
+<span class="text-[10px] text-outline">Latest Firmware</span>
+</button>
+<button class="flex flex-col items-center text-center p-lg bg-white border border-outline-variant rounded-2xl hover:border-primary hover:bg-primary/5 transition-all group">
+<span class="material-symbols-outlined text-primary mb-sm scale-150 transition-transform group-hover:rotate-12">integration_instructions</span>
+<span class="font-label-md text-label-md text-on-surface mb-xs">Install Guides</span>
+<span class="text-[10px] text-outline">Setup Workflows</span>
+</button>
+<button class="flex flex-col items-center text-center p-lg bg-white border border-outline-variant rounded-2xl hover:border-primary hover:bg-primary/5 transition-all group">
+<span class="material-symbols-outlined text-primary mb-sm scale-150 transition-transform group-hover:rotate-12">menu_book</span>
+<span class="font-label-md text-label-md text-on-surface mb-xs">Manuals</span>
+<span class="text-[10px] text-outline">Documentation</span>
+</button>
+<button class="flex flex-col items-center text-center p-lg bg-white border border-outline-variant rounded-2xl hover:border-primary hover:bg-primary/5 transition-all group">
+<span class="material-symbols-outlined text-primary mb-sm scale-150 transition-transform group-hover:rotate-12">quiz</span>
+<span class="font-label-md text-label-md text-on-surface mb-xs">Troubleshooting</span>
+<span class="text-[10px] text-outline">Error Codes</span>
+</button>
+<button class="flex flex-col items-center text-center p-lg bg-white border border-outline-variant rounded-2xl hover:border-primary hover:bg-primary/5 transition-all group">
+<span class="material-symbols-outlined text-primary mb-sm scale-150 transition-transform group-hover:rotate-12">hub</span>
+<span class="font-label-md text-label-md text-on-surface mb-xs">Knowledge Base</span>
+<span class="text-[10px] text-outline">Article Wiki</span>
+</button>
+</div>
+</section>
+<!-- Featured Products Carousel -->
+<section>
+<div class="flex justify-between items-end mb-md">
+<h3 class="font-headline-sm text-headline-sm">New Releases</h3>
+<div class="flex gap-sm">
+<button class="p-xs bg-surface-container rounded-lg text-on-surface-variant hover:bg-primary hover:text-white transition-colors">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="p-xs bg-surface-container rounded-lg text-on-surface-variant hover:bg-primary hover:text-white transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+<div class="flex gap-md overflow-x-auto custom-scrollbar pb-md">
+<div class="min-w-[280px] bg-white border border-outline-variant rounded-2xl overflow-hidden group hover:shadow-lg transition-all">
+<div class="h-40 relative bg-surface-container overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="Close up of a premium industrial grade electronic component with sleek metallic blue accents and brushed aluminum casing, high-tech industrial design product photography, clean white background, soft studio lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC79p9dBjhtipNqAwd5kvHT6_38Nmy_uG-TnxOt5fJNSfU97yIyu5Ip9JKvFNcNLZ-OlmXFc5mU5vJhGUJqtjoYu-MQ0-kidIYT78dgMKvwWFKcSiZFAzOJG8FjqWKTkqlDr59rC6uwi3qxqCpQ-AWyo_e5U0FniSfHdfy74977a-3yrjXNPHTu6-0OYVXeQfvnySVAb2BD3DBOdW5ZM6sxhDInPtv9-_o2SO7TVxC1XboRNOHmdOrAOpaBhSPbPGgkGNgrxFfpquae"/>
+<span class="absolute top-sm right-sm bg-primary text-white text-[10px] px-sm py-0.5 rounded-full font-bold uppercase">New</span>
+</div>
+<div class="p-md">
+<h4 class="font-label-md text-label-md text-on-surface">QBIT Nexus X1</h4>
+<p class="text-body-sm text-on-surface-variant line-clamp-1 mb-md">Enterprise Hub Controller v2.0</p>
+<button class="w-full py-sm bg-surface-container hover:bg-primary hover:text-white text-primary text-label-sm font-bold rounded-lg transition-all">View Specs</button>
+</div>
+</div>
+<div class="min-w-[280px] bg-white border border-outline-variant rounded-2xl overflow-hidden group hover:shadow-lg transition-all">
+<div class="h-40 relative bg-surface-container overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="High-performance network server module with intricate wiring and status indicator lights glowing blue and white, professional enterprise hardware design photography, futuristic laboratory aesthetic, extremely detailed macro shot." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDNYevEGFO2Mzmfws1RGryGlCuhoQRbH78M_9eQxW9kF2MvXtiAvyUPDaAPUoEc1p8VVfIa6Qba1aYpd4uv4Bma1vuI0Q9cu48UCCDQ5FrdvonQ-YISl-mBt6U6omXv4meeEh6eVSm_5u6UbmEPe65UWuyutNejx9VZtvABh6u_-UGMIUINyxQBYbBLzXvRyRysLCviqM_u9g70iAk-GmZqe8J2qXfHFg8Mk1Sprlh6dSsowE2cdrMVOmgqPbi6Xtjn0EtHyPMwFGgX"/>
+</div>
+<div class="p-md">
+<h4 class="font-label-md text-label-md text-on-surface">Aura Terminal G3</h4>
+<p class="text-body-sm text-on-surface-variant line-clamp-1 mb-md">Advanced POS Interface System</p>
+<button class="w-full py-sm bg-surface-container hover:bg-primary hover:text-white text-primary text-label-sm font-bold rounded-lg transition-all">View Specs</button>
+</div>
+</div>
+<div class="min-w-[280px] bg-white border border-outline-variant rounded-2xl overflow-hidden group hover:shadow-lg transition-all">
+<div class="h-40 relative bg-surface-container overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="Handheld barcode scanner with ergonomic white and silver grip, glowing cyan LED sensors, industrial technology device product shot, minimalist white studio background with soft realistic shadows." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNsLd3q56zXUlRIJ8fmCyGiNA8rWB0NgAubuFXXQoR5SpT0EVwOxZPVKzcIk4EcFaUo6yZZfmmm_dLta8pHCNulAtJKB1zCXEWn0Qi3-WmSk_20vwCcnJDvYLcAxb-CBYu6MQg6Rc4XiweGdU86KSTl9Yo6FAJbx20aGIYggiHoubZV1GwzRx7b3TioFEBhvTqYVS5z4O1qIgZABgvJ1_y2Jz9G4IusRhYbisimsb6v6k0aHQvDSD18MwBs2DZ1Tqc4HcBBtYi6yF7"/>
+</div>
+<div class="p-md">
+<h4 class="font-label-md text-label-md text-on-surface">Optic Pro Scan</h4>
+<p class="text-body-sm text-on-surface-variant line-clamp-1 mb-md">Precision Inventory Scanner</p>
+<button class="w-full py-sm bg-surface-container hover:bg-primary hover:text-white text-primary text-label-sm font-bold rounded-lg transition-all">View Specs</button>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Sidebar Content: Continue Working & Updates -->
+<div class="flex flex-col gap-lg">
+<!-- Continue Working -->
+<section class="bg-white border border-outline-variant rounded-2xl p-md">
+<div class="flex items-center justify-between mb-md">
+<h3 class="font-label-md text-label-md text-on-surface">Continue Working</h3>
+<span class="material-symbols-outlined text-outline text-sm">history</span>
+</div>
+<div class="space-y-sm">
+<div class="flex items-center gap-sm p-sm rounded-lg hover:bg-surface-container cursor-pointer transition-colors group">
+<div class="w-10 h-10 rounded bg-secondary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary text-md">download</span>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-label-md font-label-md text-on-surface truncate">X1_Firmware_v4.2.bin</p>
+<p class="text-[10px] text-outline">Driver • 2 hours ago</p>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">play_circle</span>
+</div>
+<div class="flex items-center gap-sm p-sm rounded-lg hover:bg-surface-container cursor-pointer transition-colors group">
+<div class="w-10 h-10 rounded bg-tertiary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary text-md">menu_book</span>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-label-md font-label-md text-on-surface truncate">Setup_Manual_Terminal_G3</p>
+<p class="text-[10px] text-outline">Manual • 5 hours ago</p>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">play_circle</span>
+</div>
+<div class="flex items-center gap-sm p-sm rounded-lg hover:bg-surface-container cursor-pointer transition-colors group">
+<div class="w-10 h-10 rounded bg-primary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-md">videocam</span>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-label-md font-label-md text-on-surface truncate">Troubleshooting_Optic_Pro</p>
+<p class="text-[10px] text-outline">Video • Yesterday</p>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">play_circle</span>
+</div>
+</div>
+<button class="w-full mt-md py-sm text-primary text-label-sm font-bold border border-primary/20 rounded-lg hover:bg-primary/5">View Full History</button>
+</section>
+<!-- Latest Updates -->
+<section class="bg-surface-container-low border border-outline-variant rounded-2xl p-md">
+<h3 class="font-label-md text-label-md text-on-surface mb-md">System Updates</h3>
+<div class="relative space-y-md before:content-[''] before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-outline-variant">
+<div class="relative pl-xl">
+<div class="absolute left-0 top-1 w-[24px] h-[24px] rounded-full bg-primary border-4 border-surface-container-low flex items-center justify-center">
+<span class="w-1.5 h-1.5 rounded-full bg-white"></span>
+</div>
+<p class="text-label-sm font-bold text-on-surface">Critical Driver Update</p>
+<p class="text-body-sm text-on-surface-variant">Nexus X1 security patch released.</p>
+<p class="text-[10px] text-primary mt-1 font-bold">TODAY 08:30 AM</p>
+</div>
+<div class="relative pl-xl">
+<div class="absolute left-0 top-1 w-[24px] h-[24px] rounded-full bg-outline-variant border-4 border-surface-container-low flex items-center justify-center">
+<span class="w-1.5 h-1.5 rounded-full bg-surface-variant"></span>
+</div>
+<p class="text-label-sm font-bold text-on-surface">New Manual Added</p>
+<p class="text-body-sm text-on-surface-variant">Aura Terminal G3 troubleshooting guide.</p>
+<p class="text-[10px] text-outline mt-1 uppercase">Oct 21, 2023</p>
+</div>
+<div class="relative pl-xl">
+<div class="absolute left-0 top-1 w-[24px] h-[24px] rounded-full bg-outline-variant border-4 border-surface-container-low flex items-center justify-center">
+<span class="w-1.5 h-1.5 rounded-full bg-surface-variant"></span>
+</div>
+<p class="text-label-sm font-bold text-on-surface">Server Maintenance</p>
+<p class="text-body-sm text-on-surface-variant">Completed scheduled API optimization.</p>
+<p class="text-[10px] text-outline mt-1 uppercase">Oct 20, 2023</p>
+</div>
+</div>
+</section>
+</div>
+</div>
+</div>
+</main>
+<!-- AI Assistant Floating Widget -->
+<div class="fixed bottom-lg right-lg z-50 group">
+<div class="absolute bottom-full right-0 mb-md w-72 bg-white rounded-2xl shadow-2xl border border-outline-variant opacity-0 translate-y-4 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all duration-300">
+<div class="p-md border-b border-outline-variant flex items-center gap-sm bg-primary/5 rounded-t-2xl">
+<div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-md">smart_toy</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface">QBIT AI Assistant</p>
+<div class="flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+<span class="text-[10px] text-outline">Online</span>
+</div>
+</div>
+</div>
+<div class="p-md space-y-md h-48 overflow-y-auto custom-scrollbar bg-white">
+<div class="bg-surface-container p-sm rounded-lg rounded-tl-none">
+<p class="text-body-sm text-on-surface">Hello Alex! How can I help you with the QBIT Hub today?</p>
+</div>
+<div class="space-y-sm">
+<button class="w-full text-left text-[11px] font-bold text-primary hover:underline">How do I update the Nexus X1?</button>
+<button class="w-full text-left text-[11px] font-bold text-primary hover:underline">Find drivers for Terminal G3</button>
+<button class="w-full text-left text-[11px] font-bold text-primary hover:underline">Contact technical support</button>
+</div>
+</div>
+<div class="p-md border-t border-outline-variant">
+<div class="flex gap-sm items-center bg-surface-container rounded-lg px-sm py-xs">
+<input class="bg-transparent border-none focus:ring-0 text-body-sm w-full" placeholder="Ask AI anything..." type="text"/>
+<span class="material-symbols-outlined text-primary cursor-pointer">send</span>
+</div>
+</div>
+</div>
+<button class="w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center hover:scale-110 hover:bg-secondary transition-all">
+<span class="material-symbols-outlined text-[28px]">chat</span>
+</button>
+</div>
+<script>
+        // Real-time clock update
+        function updateTime() {
+            const now = new Date();
+            const options = { weekday: 'long', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            document.getElementById('current-time').textContent = now.toLocaleDateString('en-US', options).replace(/,/g, '');
+        }
+        setInterval(updateTime, 60000);
+        updateTime();
+
+        // Keyboard shortcut handling (UI visual only)
+        document.addEventListener('keydown', function(e) {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                document.querySelector('input[placeholder*="Search products"]').focus();
+            }
+        });
+    </script>
+</body></html>

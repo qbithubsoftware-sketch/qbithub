@@ -1,0 +1,42 @@
+---
+Task ID: 8-t800-installation-guide
+Agent: full-stack-developer
+Task: Build T800InstallationGuidePage from Stitch design
+
+Work Log:
+- Read /home/z/my-project/upload/stitch_qbit_hub_enterprise_portal/ANALYSIS.md (sections 1, 2.10, 3-7) to understand the shared Material-3 design system, color tokens, typography scale, and InstalCore sidebar variant conventions.
+- Read the original Stitch HTML at /home/z/my-project/upload/stitch_qbit_hub_enterprise_portal/stitch_qbit_hub_enterprise_portal/t_800_installation_guide_qbit_hub/code.html to capture exact copy text, icon names, badge variants, timeline structure, the 12-col 8/4 grid, and the interactive Mark-as-Complete micro-interaction (Processing... -> Step Completed with bg-green-600).
+- Read /home/z/my-project/worklog.md to confirm previous agent patterns (InstallationCenterPage uses variant="instalcore" + INSTALCORE_NAV + brand "InstalCore"/"Enterprise Portal"/"hub"; TopBar uses rightText + rightTextIcon; navigation via useNavigation).
+- Inspected primitive APIs: Icon (filled prop), GlassCard/SurfaceCard (className override works via tailwind-merge), TimelineStep (props: index/icon/title/description/status/meta/isLast/children — children wrapped in <div className="mt-3">, outer wrapper has `relative flex gap-4`), ProgressTracker (label/value/showPercentage/variant/pulse), QbitButton (variant/size/icon/iconRight/iconFilled/fullWidth + disabled:opacity-50 default), TagBadge (primary/secondary/neutral/error variants with text-[10px] uppercase tracking-wider), Checkbox (shadcn radix with data-[state=checked] selectors).
+- Inspected shells: AppShell (variant/brand/navItems/activeScreen/user/topBar/children), TopBar (searchPlaceholder/user/rightText/rightTextIcon).
+- Inspected navigation store (useNavigation + ScreenId) and INSTALCORE_NAV.
+- Confirmed `useToast` from /home/z/my-project/src/hooks/use-toast.ts returns { toast } and the Toaster is mounted globally in /home/z/my-project/src/app/layout.tsx, so toast() calls render immediately.
+- Confirmed the route is already wired in /home/z/my-project/src/app/page.tsx (`case "t800-installation-guide": return <T800InstallationGuidePage />;`).
+- Overwrote the stub at /home/z/my-project/src/components/qbit/pages/T800InstallationGuidePage.tsx with a full pixel-faithful implementation wrapped in AppShell (variant="instalcore", brand "InstalCore"/"Enterprise Portal"/"hub", activeScreen "t800-installation-guide", user "E. Richardson"/"Lead Field Engineer"/"ER", topBar search "Search documentation..." + rightText "QBIT T-800 Series" + rightTextIcon "verified").
+- Built the 4 required sections in order:
+  1. Header — Breadcrumb (Products › POS Systems › QBIT T-800 Installation with chevron_right separators, last item bold + primary); H2 "Step-by-Step Installation Guide" (text-2xl md:text-3xl); subtitle verbatim from design; right-aligned "Estimated total time" small label + "25 Minutes" bold primary value (text-xl font-bold text-qbit-primary). Layout uses flex-col on mobile, flex-row on md+.
+  2. Progress Bar Card — SurfaceCard p-6; header row with task_alt icon (primary/10 bg circle), "Overall Progress" bold label, "Step 2 of 5" subtitle, big "40%" primary text on right; below uses ProgressTracker primitive with value=40, variant="primary", pulse=true, showPercentage=false (since 40% already in header).
+  3. Main Content 12-col grid (lg:grid-cols-12, gap-8, stacks to 1-col on mobile):
+     - Left col-span-8: TimelineStep-driven timeline:
+       * Step 1 (status=completed, icon="check"): title "Step 1: Unbox & Inventory", description verbatim, children = absolutely-positioned (right-0 top-0) TagBadge "Completed" (neutral variant) + Required Tools box ("Required Tools: Box Cutter" with content_cut icon in a surface-container-low bordered panel).
+       * Step 2 (status=active, index="2"): title "Step 2: Power Connection", description verbatim, children = absolutely-positioned TagBadge "In Progress" (primary variant) + active-bordered card (border-2 border-qbit-primary shadow-md) containing "Estimated Time: 5 mins" (schedule icon, primary color) on left and Mark-as-Complete QbitButton on right. Button uses local step2State ("idle"/"processing"/"completed"): idle renders "Mark as Complete" (primary); processing renders animated progress_activity icon (animate-spin) + "Processing..." for 1.5s; completed renders filled check_circle icon + "Step Completed" with bg-green-600 override + disabled:opacity-100 override (so green stays vibrant). Toast fires on completion with title "Step Completed" + description "Power Connection verified and saved to cloud."
+       * Step 3 (status=pending, index="3"): title "Step 3: Peripheral Wiring", description verbatim, children = "View Wiring Diagram" link button (schema icon) navigating to installation-center via useNavigation.
+       * Step 4 (status=pending, index="4", isLast): title "Step 4: Driver Configuration", description verbatim, children = "Driver Download Center" link button (download_for_offline icon) navigating to driver-download-center.
+     - Right col-span-4 (space-y-6):
+       * Tools Required SurfaceCard — uppercase "TOOLS REQUIRED" header; 3 tool rows each with hover:scale-[1.02], white-bg icon tile (primary icon), and label ("Power Adapter (In Box)" power icon, "Cat6 LAN Cable" lan icon, "Philips #2 Screwdriver" build icon).
+       * Interactive Checklist SurfaceCard (bg-qbit-surface-container-low override) — header with assignment_turned_in icon + "INTERACTIVE CHECKLIST"; two groups (Safety Verification: "Surface is flat and stable", "Power outlet is grounded (surge protected)"; Hardware Checks: "Base plate screws tightened" (defaultChecked=true with line-through opacity-50), "Screen tilt mechanism verified", "I/O cover plate seated correctly") using shadcn Checkbox with qbit-primary checked state + group divider; bottom "Export Certification Log" outline QbitButton (file_download icon) firing a toast on click.
+       * Help Widget GlassCard — glass-panel effect with border-qbit-primary/10; "Need Technical Support?" header; verbatim "Our engineers are available 24/7 for QBIT installations." subtitle; full-width primary QbitButton "Live Support Chat" (support_agent icon) navigating to ai-support-center; decorative bottom-right support_agent watermark (text-[120px] text-qbit-primary/5, filled, pointer-events-none, absolute).
+  4. Auto-show toast — useEffect on mount schedules a 1500ms timer that fires toast({ title: "Progress Saved", description: "Installation state uploaded to cloud." }); cleanup clears the timer on unmount.
+- Used `<Icon name="..." />` for every icon, TagBadge for status pills, SurfaceCard/GlassCard for cards, ProgressTracker for the overall progress bar, TimelineStep for each timeline entry, QbitButton for primary/outline actions, shadcn Checkbox for checklist items. No emojis, no `any` — all state typed (Step2ButtonState union, Tool/ChecklistItem/ChecklistGroup interfaces, USER `as const`). All copy taken verbatim from design HTML.
+- Ran `bun run lint` — 0 errors, 0 warnings in the new file (only the pre-existing custom-font warning in layout.tsx remains). Dev server log shows clean recompiles (`✓ Compiled in 5.5s`).
+
+Stage Summary:
+- File delivered: /home/z/my-project/src/components/qbit/pages/T800InstallationGuidePage.tsx (~370 lines, strict TypeScript, no `any`, no emojis, named export `T800InstallationGuidePage`, `"use client"` directive).
+- All copy is taken verbatim from the t_800_installation_guide_qbit_hub design HTML.
+- All icons render through the `<Icon name="..." />` Material Symbols wrapper.
+- All in-app navigation goes through `useNavigation((s) => s.navigate)` with typed ScreenId targets (installation-center, driver-download-center, ai-support-center).
+- Layout uses lg:grid-cols-12 with col-span-8 (timeline) and col-span-4 (right widgets); stacks to single column on mobile.
+- Mark-as-Complete micro-interaction implements the full 3-state cycle (idle → processing with spinning progress_activity icon → completed with green check_circle, disabled) and fires a toast on completion.
+- Auto-show "Progress Saved" toast fires 1.5s after page mount via useEffect + setTimeout (cleanup on unmount).
+- Color usage stays strictly within qbit-* Material-3 tokens (primary, primary/10, surface-container-low/lowest, outline-variant, on-surface-variant) plus the design-specified bg-green-600 for the completed button state — no indigo or random colors.
+- Lint clean; dev server compiles successfully.

@@ -1,0 +1,519 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>QBIT Hub - AI Support Center</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#e0e3e5",
+                        "secondary-fixed": "#dbe1ff",
+                        "surface-dim": "#d3daef",
+                        "primary-fixed-dim": "#b6c4ff",
+                        "on-surface": "#141b2b",
+                        "inverse-surface": "#293040",
+                        "inverse-on-surface": "#edf0ff",
+                        "surface-variant": "#dce2f7",
+                        "background": "#f9f9ff",
+                        "secondary-container": "#316bf3",
+                        "on-tertiary-fixed-variant": "#444749",
+                        "on-secondary-fixed-variant": "#003ea8",
+                        "inverse-primary": "#b6c4ff",
+                        "surface-container-low": "#f1f3ff",
+                        "surface": "#f9f9ff",
+                        "secondary-fixed-dim": "#b4c5ff",
+                        "on-error-container": "#93000a",
+                        "outline-variant": "#c3c5d9",
+                        "primary": "#0043c8",
+                        "on-tertiary-container": "#e7e9eb",
+                        "outline": "#737688",
+                        "on-tertiary-fixed": "#191c1e",
+                        "surface-container-high": "#e1e8fd",
+                        "on-primary-container": "#e5e8ff",
+                        "surface-container-highest": "#dce2f7",
+                        "surface-tint": "#004ee7",
+                        "tertiary-container": "#66696b",
+                        "error": "#ba1a1a",
+                        "secondary": "#0051d5",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed": "#00174b",
+                        "on-background": "#141b2b",
+                        "surface-container": "#e9edff",
+                        "tertiary-fixed-dim": "#c4c7c9",
+                        "on-primary": "#ffffff",
+                        "primary-fixed": "#dce1ff",
+                        "on-primary-fixed-variant": "#003ab2",
+                        "on-error": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary": "#4e5153",
+                        "on-primary-fixed": "#001550",
+                        "surface-bright": "#f9f9ff",
+                        "on-surface-variant": "#434656",
+                        "primary-container": "#0057ff",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-container": "#fefcff",
+                        "error-container": "#ffdad6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "md": "16px",
+                        "2xl": "48px",
+                        "sm": "8px",
+                        "margin-mobile": "16px",
+                        "container-max": "1440px",
+                        "xl": "32px",
+                        "gutter": "24px",
+                        "3xl": "64px",
+                        "lg": "24px",
+                        "unit": "8px",
+                        "margin-desktop": "32px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "display-sm": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-md": ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- Sidebar Component (Fixed) -->
+<aside class="fixed left-0 top-0 h-full w-[256px] bg-surface shadow-sm flex flex-col justify-between py-lg px-md z-40 border-r border-outline-variant/30">
+<div class="space-y-xl">
+<div class="flex items-center gap-sm px-xs">
+<span class="material-symbols-outlined text-primary text-headline-md" data-icon="hub">hub</span>
+<div class="flex flex-col">
+<span class="text-headline-md font-headline-md font-bold text-on-surface">QBIT Hub</span>
+<span class="text-label-sm font-label-sm text-outline">InstalCore Enterprise</span>
+</div>
+</div>
+<nav class="space-y-xs">
+<a class="flex items-center gap-md p-sm rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="text-label-md font-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-md p-sm rounded-lg text-primary border-l-4 border-primary bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+<span class="text-label-md font-label-md">Knowledge Base</span>
+</a>
+<a class="flex items-center gap-md p-sm rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="build">build</span>
+<span class="text-label-md font-label-md">Troubleshooting</span>
+</a>
+<a class="flex items-center gap-md p-sm rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="confirmation_number">confirmation_number</span>
+<span class="text-label-md font-label-md">Support Tickets</span>
+</a>
+<a class="flex items-center gap-md p-sm rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="insights">insights</span>
+<span class="text-label-md font-label-md">Analytics</span>
+</a>
+</nav>
+<button class="w-full bg-primary-container text-on-primary py-sm rounded-xl font-label-md flex items-center justify-center gap-xs shadow-md active:scale-[0.98] transition-transform">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+                New Support Case
+            </button>
+</div>
+<div class="space-y-xs pt-xl border-t border-outline-variant/30">
+<a class="flex items-center gap-md p-sm rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="text-label-md font-label-md">Settings</span>
+</a>
+<a class="flex items-center gap-md p-sm rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span class="text-label-md font-label-md">Help Center</span>
+</a>
+<div class="flex items-center gap-md p-sm mt-md">
+<img class="w-10 h-10 rounded-full object-cover ring-2 ring-surface-container-high" data-alt="A professional headshot of a technical support engineer with a neutral, friendly expression. The lighting is crisp and studio-quality, emphasizing a modern tech-industry professional look. Soft blue background tones match the enterprise branding of QBIT Hub." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBxtCXIfQA5chCmMlVJyuEXi66pARlKMs-r4aacd-rjOtoIaBejwd6RRUsRZ5gw50MDEd3r21_Dnu6PQxrRLdNfaTKVSyu6mtQckgm7EsZ2WGmIpaxMal2TEHhYVpDI7UA8A_aZTAdOSmfdyYu92VhXVaKCd7eMH6vhSHG2WZTNRT3wAdjkjFeT-nnQsiDB6JeM9afv0N4mB_SRSk-J9etXL5lYC5N0wYDi0HU7KPrZqTHHX8z90zksXPiGDr855DMvHPGWombwHA3M">
+<div class="flex flex-col">
+<span class="text-label-md font-label-md font-bold text-on-surface">Alex Mercer</span>
+<span class="text-label-sm font-label-sm text-outline">Lead Engineer</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Header / Top Bar -->
+<header class="fixed top-0 right-0 w-[calc(100%-256px)] h-[64px] bg-surface flex justify-between items-center px-lg z-30 border-b border-outline-variant/30">
+<div class="flex items-center gap-lg flex-1">
+<span class="text-headline-sm font-headline-sm font-bold text-primary">Technical Installation Support</span>
+<nav class="hidden lg:flex items-center gap-lg ml-xl">
+<a class="text-label-md font-label-md text-on-surface-variant hover:text-primary transition-all" href="#">Status</a>
+<a class="text-label-md font-label-md text-primary border-b-2 border-primary font-bold pb-1" href="#">Documentation</a>
+<a class="text-label-md font-label-md text-on-surface-variant hover:text-primary transition-all" href="#">Remote Assistance</a>
+</nav>
+</div>
+<div class="flex items-center gap-md">
+<button class="p-sm text-on-surface-variant hover:text-primary rounded-full hover:bg-surface-container-low transition-all">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+</button>
+<button class="p-sm text-on-surface-variant hover:text-primary rounded-full hover:bg-surface-container-low transition-all">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<div class="h-8 w-[1px] bg-outline-variant/50 mx-xs"></div>
+<button class="bg-secondary-container text-on-secondary px-md py-sm rounded-full text-label-md font-label-md flex items-center gap-xs hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined" data-icon="smart_toy">smart_toy</span>
+                AI Assistant
+            </button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="ml-[256px] mt-[64px] p-xl space-y-2xl max-w-[1600px]">
+<!-- Page Hero / AI Search -->
+<section class="flex flex-col items-center text-center space-y-lg py-xl">
+<div class="space-y-xs">
+<h1 class="text-headline-lg font-headline-lg text-on-surface">AI Support Center</h1>
+<p class="text-body-lg font-body-lg text-on-surface-variant">Intelligent diagnostic and resolution tools for InstalCore hardware.</p>
+</div>
+<div class="relative w-full max-w-2xl group">
+<span class="absolute left-md top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-focus-within:text-primary transition-colors" data-icon="search">search</span>
+<input class="w-full pl-3xl pr-xl py-lg bg-surface-container-low border border-outline-variant rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-body-md shadow-sm outline-none focus:border-2" placeholder="Ask anything... e.g. 'Thermal printer not printing'" type="text">
+<button class="absolute right-sm top-1/2 -translate-y-1/2 bg-primary text-on-primary px-lg py-md rounded-xl text-label-md font-bold">Search</button>
+</div>
+</section>
+<div class="grid grid-cols-12 gap-xl">
+<!-- Left Column: AI Assistant & Quick Actions -->
+<div class="col-span-12 lg:col-span-8 space-y-xl">
+<!-- AI Assistant Chat Interface -->
+<div class="bg-surface-container-lowest rounded-2xl border border-outline-variant overflow-hidden shadow-sm">
+<div class="bg-surface-container-high px-lg py-md border-b border-outline-variant flex items-center justify-between">
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 bg-primary-container rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary" data-icon="smart_toy">smart_toy</span>
+</div>
+<div>
+<h3 class="text-headline-sm font-headline-sm">QBIT Technical Assistant</h3>
+<p class="text-label-sm font-label-sm text-outline flex items-center gap-xs">
+<span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span> Online • Powered by CoreAI
+                                </p>
+</div>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface p-xs">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+<div class="p-lg space-y-xl min-h-[400px]">
+<!-- Assistant Greeting -->
+<div class="flex gap-md max-w-3xl">
+<div class="w-8 h-8 rounded-full bg-primary-container flex-shrink-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary text-[18px]" data-icon="smart_toy">smart_toy</span>
+</div>
+<div class="space-y-md">
+<div class="bg-surface-container-low p-md rounded-2xl rounded-tl-none border border-outline-variant/30 text-body-md text-on-surface border-outline-variant">
+                                    Hi Alex! I'm your QBIT Technical Assistant. I have analyzed your previous support logs and current fleet status. How can I help you today?
+                                </div>
+<div class="flex flex-wrap gap-sm">
+<button class="px-md py-sm bg-surface-container-lowest border border-primary text-primary rounded-full text-label-md font-medium hover:bg-primary hover:text-on-primary transition-all">How do I install Windows POS?</button>
+<button class="px-md py-sm bg-surface-container-lowest border border-primary text-primary rounded-full text-label-md font-medium hover:bg-primary hover:text-on-primary transition-all">Printer not detected</button>
+<button class="px-md py-sm bg-surface-container-lowest border border-primary text-primary rounded-full text-label-md font-medium hover:bg-primary hover:text-on-primary transition-all">Barcode scanner setup</button>
+</div>
+</div>
+</div>
+<!-- Sample Detailed Response -->
+<div class="flex gap-md max-w-3xl">
+<div class="w-8 h-8 rounded-full bg-primary-container flex-shrink-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary text-[18px]" data-icon="smart_toy">smart_toy</span>
+</div>
+<div class="space-y-md">
+<div class="bg-surface-container-low p-md rounded-2xl rounded-tl-none border border-outline-variant/30 text-body-md text-on-surface space-y-md shadow-sm">
+<p class="">To resolve the **Thermal Printer (QBIT-P20) Connection Issue**, please follow these steps:</p>
+<ol class="list-decimal list-inside space-y-xs font-medium">
+<li class="">Ensure the USB-B cable is securely connected.</li>
+<li class="">Run the diagnostic configuration command via Terminal.</li>
+</ol>
+<div class="bg-inverse-surface text-inverse-on-surface p-md rounded-lg font-mono text-body-sm relative group">
+<code>qbit-cli device --reset-port /dev/usb/lp0 --verbose</code>
+<button class="absolute top-md right-md opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[18px]" data-icon="content_copy">content_copy</span>
+</button>
+</div>
+<p class="text-body-sm">If the port reset fails, you may need to update your kernel drivers.</p>
+<div class="flex items-center gap-md pt-sm">
+<a class="flex items-center gap-xs text-primary font-bold hover:underline" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="download">download</span>
+                                            V2.4 Driver
+                                        </a>
+<a class="flex items-center gap-xs text-primary font-bold hover:underline" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="description">description</span>
+                                            Service Manual
+                                        </a>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="p-lg bg-surface-container-lowest border-t border-outline-variant">
+<div class="relative flex items-center gap-md">
+<input class="flex-1 bg-surface-container-low border border-outline-variant rounded-xl px-lg py-md focus:ring-2 focus:ring-primary/20 outline-none" placeholder="Type your technical question..." type="text">
+<button class="p-md bg-primary text-on-primary rounded-xl hover:bg-primary-container transition-all">
+<span class="material-symbols-outlined" data-icon="send">send</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Troubleshooting Center (Issue Cards) -->
+<section class="space-y-lg">
+<div class="flex items-center justify-between">
+<h2 class="text-headline-md font-headline-md text-on-surface">Troubleshooting Center</h2>
+<a class="text-label-md font-bold text-primary hover:underline" href="#">View All Diagnostics</a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+<div class="bg-error-container/30 border border-error/20 p-lg rounded-2xl flex items-start gap-md group hover:shadow-md transition-all cursor-pointer">
+<div class="p-sm bg-error/10 text-error rounded-xl">
+<span class="material-symbols-outlined" data-icon="print_disabled">print_disabled</span>
+</div>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<h4 class="text-body-md font-bold text-on-error-container">Printer not printing</h4>
+<span class="text-label-sm font-bold text-error uppercase">Action Required</span>
+</div>
+<p class="text-body-sm text-on-error-container/80 mt-xs">3 identical issues reported in Sector 4. Likely firmware mismatch.</p>
+<button class="mt-md text-label-md font-bold text-error flex items-center gap-xs group-hover:gap-md transition-all">
+                                    Start Wizard <span class="material-symbols-outlined text-body-sm" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+<div class="bg-surface-container-low border border-outline-variant p-lg rounded-2xl flex items-start gap-md group hover:shadow-md transition-all cursor-pointer">
+<div class="p-sm bg-primary/10 text-primary rounded-xl">
+<span class="material-symbols-outlined" data-icon="barcode_scanner">barcode_scanner</span>
+</div>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<h4 class="text-body-md font-bold text-on-surface">Scanner not scanning</h4>
+<span class="text-label-sm font-bold text-outline uppercase">Common Issue</span>
+</div>
+<p class="text-body-sm text-on-surface-variant mt-xs">Occasional beam timeout during high-frequency operation.</p>
+<button class="mt-md text-label-md font-bold text-primary flex items-center gap-xs group-hover:gap-md transition-all">
+                                    Run Calibration <span class="material-symbols-outlined text-body-sm" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Column: Quick Support & Tickets -->
+<div class="col-span-12 lg:col-span-4 space-y-xl">
+<!-- Quick Support Cards Grid -->
+<section class="space-y-lg mt-lg">
+<h3 class="text-headline-sm font-headline-sm">Quick Resources</h3>
+<div class="grid grid-cols-2 gap-sm">
+<a class="bg-surface-container-lowest p-md rounded-xl border border-outline-variant flex flex-col items-center text-center gap-sm hover:border-primary hover:shadow-sm transition-all group active:scale-95" href="#">
+<span class="material-symbols-outlined text-primary" data-icon="download">download</span>
+<span class="text-label-md font-medium text-on-surface group-hover:text-primary">Driver Downloads</span>
+</a>
+<a class="bg-surface-container-lowest p-md rounded-xl border border-outline-variant flex flex-col items-center text-center gap-sm hover:border-primary hover:shadow-sm transition-all group active:scale-95" href="#">
+<span class="material-symbols-outlined text-primary" data-icon="menu_book">menu_book</span>
+<span class="text-label-md font-medium text-on-surface group-hover:text-primary">Installation Guides</span>
+</a>
+<a class="bg-surface-container-lowest p-md rounded-xl border border-outline-variant flex flex-col items-center text-center gap-sm hover:border-primary hover:shadow-sm transition-all group active:scale-95" href="#">
+<span class="material-symbols-outlined text-primary" data-icon="system_update">system_update</span>
+<span class="text-label-md font-medium text-on-surface group-hover:text-primary">Firmware Updates</span>
+</a>
+<a class="bg-surface-container-lowest p-md rounded-xl border border-outline-variant flex flex-col items-center text-center gap-sm hover:border-primary hover:shadow-sm transition-all group active:scale-95" href="#">
+<span class="material-symbols-outlined text-primary" data-icon="library_books">library_books</span>
+<span class="text-label-md font-medium text-on-surface group-hover:text-primary">Manual Library</span>
+</a>
+<a class="bg-surface-container-lowest p-md rounded-xl border border-outline-variant flex flex-col items-center text-center gap-sm hover:border-primary hover:shadow-sm transition-all group active:scale-95" href="#">
+<span class="material-symbols-outlined text-primary" data-icon="videocam">videocam</span>
+<span class="text-label-md font-medium text-on-surface group-hover:text-primary">Training Videos</span>
+</a>
+<a class="bg-surface-container-lowest p-md rounded-xl border border-outline-variant flex flex-col items-center text-center gap-sm hover:border-primary hover:shadow-sm transition-all group active:scale-95" href="#">
+<span class="material-symbols-outlined text-primary" data-icon="verified_user">verified_user</span>
+<span class="text-label-md font-medium text-on-surface group-hover:text-primary">Warranty</span>
+</a>
+<a class="bg-surface-container-lowest p-md rounded-xl border border-outline-variant flex flex-col items-center text-center gap-sm hover:border-primary hover:shadow-sm transition-all group active:scale-95" href="#">
+<span class="material-symbols-outlined text-primary" data-icon="confirmation_number">confirmation_number</span>
+<span class="text-label-md font-medium text-on-surface group-hover:text-primary">Support Tickets</span>
+</a>
+<a class="bg-surface-container-lowest p-md rounded-xl border border-outline-variant flex flex-col items-center text-center gap-sm hover:border-primary hover:shadow-sm transition-all group active:scale-95" href="#">
+<span class="material-symbols-outlined text-primary" data-icon="construction">construction</span>
+<span class="text-label-md font-medium text-on-surface group-hover:text-primary">Troubleshooting</span>
+</a>
+</div>
+</section>
+<!-- Support Tickets -->
+<section class="bg-surface-container-lowest rounded-2xl border border-outline-variant p-lg shadow-sm">
+<div class="flex items-center justify-between mb-lg">
+<h3 class="text-headline-sm font-headline-sm">Recent Tickets</h3>
+<span class="bg-primary/10 text-primary px-sm py-xs rounded-full text-label-sm font-bold">2 Open</span>
+</div>
+<div class="space-y-md">
+<div class="p-md rounded-xl hover:bg-surface-container-low transition-all border border-transparent hover:border-outline-variant cursor-pointer">
+<div class="flex justify-between items-start mb-xs">
+<span class="text-label-sm font-bold text-error flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]" data-icon="priority_high" data-weight="fill">priority_high</span> High Priority
+                                </span>
+<span class="text-label-sm text-outline">#TIC-9042</span>
+</div>
+<h4 class="text-body-md font-bold text-on-surface mb-xs">Kernel Error on POS-X10</h4>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-xs">
+<div class="w-6 h-6 rounded-full bg-surface-dim overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A portrait of a male engineer in his 30s with short hair and glasses, looking focused and professional. He is the assigned specialist for technical support cases, representing the expertise available at QBIT Hub." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnwz5WqdapyVCy1GR7Xtjw3NklAsjcuZkUSCAKjRHz99mI7J5YYT93elRgN3o_LBEOdWU4foq4IEpix8XVP5n13-V8MbpKFRFCmurtLYc3gnB9eQAiO_qAxr5QIGLDF1FGuI1htygaADJYLgLcxXWZxmdXUm07blsz_6GO0pBZdD_Z0R3tFtcdqB5g6trfkqB2FY9IUrq84CM8-wt-7Z4rSEFYpnFO31sc1ZOLDbQxO2IJe-AoUy8tsTPFBxlx0TpgQkwa44hi95-O">
+</div>
+<span class="text-label-sm text-on-surface-variant">Eng. Sarah J.</span>
+</div>
+<span class="text-label-sm px-sm py-xs bg-surface-container-highest rounded text-on-surface-variant">In Progress</span>
+</div>
+</div>
+<div class="p-md rounded-xl hover:bg-surface-container-low transition-all border border-transparent hover:border-outline-variant cursor-pointer">
+<div class="flex justify-between items-start mb-xs">
+<span class="text-label-sm font-bold text-primary flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]" data-icon="check_circle">check_circle</span> Normal
+                                </span>
+<span class="text-label-sm text-outline">#TIC-8812</span>
+</div>
+<h4 class="text-body-md font-bold text-on-surface mb-xs">Scanner Firmware Update</h4>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-xs">
+<div class="w-6 h-6 rounded-full bg-surface-dim overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A portrait of a technical specialist, mid-40s, with a warm and approachable expression. She is part of the QBIT Hub engineering team, shown in a clean, modern workspace background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAM2bj_iNqtnQoqyEX_I0h4uJDjUZ-9ENH1SIljpeSJLAPlNIJPLyDwEP_2phG08uO44398A7oMJb4XhiL3WqsPYP-un-sia1vhf1hioqVV7jzA0Iqxa0I2xLRD0as3uxF-BcGpttN0M0mh_dX5vCiSCDk4iuPYiX31UaLAY7HZPO-Q1js2TdADYeTAEyyQQftxVPsoBelCpEWH5JDK2daIFIlWCsr1a9f1Ftz7wNBO435pTA9HPv5mTwUA_r4XXhTnF5Vb-MgSRBNf">
+</div>
+<span class="text-label-sm text-on-surface-variant">Eng. David K.</span>
+</div>
+<span class="text-label-sm px-sm py-xs bg-emerald-100 text-emerald-700 rounded font-bold">Resolved</span>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+<!-- Knowledge Base Section -->
+<section class="space-y-xl">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-md">
+<div class="space-y-xs">
+<h2 class="text-headline-md font-headline-md text-on-surface">Knowledge Base</h2>
+<p class="text-body-md text-on-surface-variant">Explore thousands of verified technical articles and community guides.</p>
+</div>
+<div class="flex items-center gap-md">
+<div class="relative">
+<span class="absolute left-md top-1/2 -translate-y-1/2 material-symbols-outlined text-outline text-[20px]" data-icon="filter_list">filter_list</span>
+<select class="pl-3xl pr-lg py-sm bg-surface-container-lowest border border-outline-variant rounded-full text-label-md outline-none appearance-none cursor-pointer">
+<option>All Categories</option>
+<option>POS Machines</option>
+<option>Printers</option>
+<option>Scanners</option>
+</select>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg gap-gutter">
+<!-- Article 1 -->
+<div class="bg-surface-container-lowest p-lg rounded-2xl border border-outline-variant hover:shadow-lg transition-all group cursor-pointer flex flex-col justify-between h-full">
+<div>
+<div class="flex justify-between items-start mb-md">
+<span class="px-sm py-xs bg-surface-container-high text-on-surface-variant rounded font-label-sm font-bold">POS Machines</span>
+<button class="text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="bookmark">bookmark</span>
+</button>
+</div>
+<h4 class="text-headline-sm font-bold text-on-surface mb-sm group-hover:text-primary transition-colors">Optimizing Windows 11 for InstalCore POS-X10 Series</h4>
+<p class="text-body-sm text-on-surface-variant line-clamp-2">Complete guide on power settings, driver isolation, and peripheral mapping for the latest enterprise OS.</p>
+</div>
+<div class="flex items-center gap-md mt-lg pt-lg border-t border-outline-variant/30 text-label-sm text-outline font-medium">
+<span class="flex items-center gap-xs"><span class="material-symbols-outlined text-[16px]" data-icon="schedule">schedule</span> 8 min read</span>
+<span class="flex items-center gap-xs"><span class="material-symbols-outlined text-[16px]" data-icon="visibility">visibility</span> 2.4k views</span>
+</div>
+</div>
+<!-- Article 2 -->
+<div class="bg-surface-container-lowest p-lg rounded-2xl border border-outline-variant hover:shadow-lg transition-all group cursor-pointer flex flex-col justify-between h-full">
+<div>
+<div class="flex justify-between items-start mb-md">
+<span class="px-sm py-xs bg-surface-container-high text-on-surface-variant rounded font-label-sm font-bold">Printers</span>
+<button class="text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="bookmark">bookmark</span>
+</button>
+</div>
+<h4 class="text-headline-sm font-bold text-on-surface mb-sm group-hover:text-primary transition-colors">Troubleshooting Thermal Head Overheating Issues</h4>
+<p class="text-body-sm text-on-surface-variant line-clamp-2">Maintain print quality and hardware longevity by adjusting duty cycles and voltage inputs via the QBIT CLI.</p>
+</div>
+<div class="flex items-center gap-md mt-lg pt-lg border-t border-outline-variant/30 text-label-sm text-outline font-medium">
+<span class="flex items-center gap-xs"><span class="material-symbols-outlined text-[16px]" data-icon="schedule">schedule</span> 12 min read</span>
+<span class="flex items-center gap-xs"><span class="material-symbols-outlined text-[16px]" data-icon="visibility">visibility</span> 1.8k views</span>
+</div>
+</div>
+<!-- Article 3 -->
+<div class="bg-surface-container-lowest p-lg rounded-2xl border border-outline-variant hover:shadow-lg transition-all group cursor-pointer flex flex-col justify-between h-full">
+<div>
+<div class="flex justify-between items-start mb-md">
+<span class="px-sm py-xs bg-surface-container-high text-on-surface-variant rounded font-label-sm font-bold">Networking</span>
+<button class="text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="bookmark" data-weight="fill">bookmark</span>
+</button>
+</div>
+<h4 class="text-headline-sm font-bold text-on-surface mb-sm group-hover:text-primary transition-colors">Configuring Static IP on Mobile Wireless Hubs</h4>
+<p class="text-body-sm text-on-surface-variant line-clamp-2">Step-by-step instructions for manual network allocation on QBIT Hub 4G/5G deployment kits.</p>
+</div>
+<div class="flex items-center gap-md mt-lg pt-lg border-t border-outline-variant/30 text-label-sm text-outline font-medium">
+<span class="flex items-center gap-xs"><span class="material-symbols-outlined text-[16px]" data-icon="schedule">schedule</span> 5 min read</span>
+<span class="flex items-center gap-xs"><span class="material-symbols-outlined text-[16px]" data-icon="visibility">visibility</span> 3.1k views</span>
+</div>
+</div>
+</div>
+<div class="flex justify-center mt-xl">
+<button class="px-xl py-md bg-primary text-on-primary rounded-xl font-bold hover:bg-primary-container transition-all flex items-center gap-md shadow-md">
+                    Explore All Articles
+                    <span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</section>
+</main>
+<script>
+        // Micro-interactions and simple state handling
+        document.querySelectorAll('a, button').forEach(el => {
+            el.addEventListener('mousedown', () => {
+                el.classList.add('scale-[0.98]');
+            });
+            el.addEventListener('mouseup', () => {
+                el.classList.remove('scale-[0.98]');
+            });
+            el.addEventListener('mouseleave', () => {
+                el.classList.remove('scale-[0.98]');
+            });
+        });
+
+        // Search bar focus effect
+        const searchInput = document.querySelector('input[type="text"]');
+        if (searchInput) {
+            searchInput.addEventListener('focus', () => {
+                searchInput.parentElement.classList.add('scale-[1.01]');
+            });
+            searchInput.addEventListener('blur', () => {
+                searchInput.parentElement.classList.remove('scale-[1.01]');
+            });
+        }
+    </script>
+
+
+
+</body></html>

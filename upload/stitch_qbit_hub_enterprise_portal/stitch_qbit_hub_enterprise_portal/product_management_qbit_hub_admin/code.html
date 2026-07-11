@@ -1,0 +1,332 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>QBIT Hub Admin - Product Management</title>
+<!-- Fonts and Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#e0e3e5",
+                        "surface-variant": "#dce2f7",
+                        "primary": "#0043c8",
+                        "surface": "#f9f9ff",
+                        "on-tertiary-container": "#e7e9eb",
+                        "secondary-fixed": "#dbe1ff",
+                        "background": "#f9f9ff",
+                        "on-secondary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "surface-dim": "#d3daef",
+                        "on-primary-fixed-variant": "#003ab2",
+                        "tertiary-fixed-dim": "#c4c7c9",
+                        "on-tertiary-fixed-variant": "#444749",
+                        "surface-tint": "#004ee7",
+                        "on-tertiary-fixed": "#191c1e",
+                        "on-secondary-fixed-variant": "#003ea8",
+                        "inverse-on-surface": "#edf0ff",
+                        "surface-container-high": "#e1e8fd",
+                        "primary-container": "#0057ff",
+                        "primary-fixed": "#dce1ff",
+                        "error": "#ba1a1a",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-container": "#66696b",
+                        "on-secondary-fixed": "#00174b",
+                        "on-primary-fixed": "#001550",
+                        "primary-fixed-dim": "#b6c4ff",
+                        "surface-container-highest": "#dce2f7",
+                        "on-error": "#ffffff",
+                        "tertiary": "#4e5153",
+                        "on-surface-variant": "#434656",
+                        "on-background": "#141b2b",
+                        "on-tertiary": "#ffffff",
+                        "outline-variant": "#c3c5d9",
+                        "error-container": "#ffdad6",
+                        "outline": "#737688",
+                        "on-primary": "#ffffff",
+                        "surface-container-low": "#f1f3ff",
+                        "surface-bright": "#f9f9ff",
+                        "secondary-container": "#316bf3",
+                        "secondary": "#0051d5",
+                        "on-primary-container": "#e5e8ff",
+                        "inverse-primary": "#b6c4ff",
+                        "surface-container": "#e9edff",
+                        "inverse-surface": "#293040",
+                        "secondary-fixed-dim": "#b4c5ff",
+                        "on-secondary-container": "#fefcff",
+                        "on-surface": "#141b2b"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "8px",
+                        "xs": "4px",
+                        "md": "16px",
+                        "gutter": "24px",
+                        "margin-desktop": "32px",
+                        "2xl": "48px",
+                        "xl": "32px",
+                        "unit": "8px",
+                        "lg": "24px",
+                        "3xl": "64px",
+                        "container-max": "1440px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "display-sm": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "display-lg": ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #dce2f7;
+            border-radius: 10px;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md overflow-hidden">
+<!-- Shell Container -->
+<div class="flex h-screen w-full">
+<!-- SideNavBar (from Shared Components) -->
+<aside class="w-64 h-screen fixed left-0 top-0 bg-surface-container-low dark:bg-inverse-surface border-r border-outline-variant dark:border-outline flex flex-col py-md z-50">
+<div class="px-gutter mb-3xl">
+<h1 class="font-headline-sm text-headline-sm font-bold text-primary dark:text-primary-fixed-dim">QBIT Hub</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Control Center</p>
+</div>
+<nav class="flex-1 space-y-xs px-sm">
+<!-- Dashboard -->
+<a class="flex items-center px-md py-sm rounded-lg transition-colors duration-200 ease-in-out text-on-surface-variant hover:bg-surface-container-high group" href="#">
+<span class="material-symbols-outlined mr-md text-inherit">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<!-- Products (ACTIVE) -->
+<a class="flex items-center px-md py-sm rounded-lg transition-colors duration-200 ease-in-out text-primary dark:text-primary-fixed-dim border-l-4 border-primary dark:border-primary-fixed-dim bg-primary-container/10 group" href="#">
+<span class="material-symbols-outlined mr-md text-inherit">inventory_2</span>
+<span class="font-label-md text-label-md">Products</span>
+</a>
+<!-- Drivers -->
+<a class="flex items-center px-md py-sm rounded-lg transition-colors duration-200 ease-in-out text-on-surface-variant hover:bg-surface-container-high group" href="#">
+<span class="material-symbols-outlined mr-md text-inherit">local_shipping</span>
+<span class="font-label-md text-label-md">Drivers</span>
+</a>
+<!-- Manuals -->
+<a class="flex items-center px-md py-sm rounded-lg transition-colors duration-200 ease-in-out text-on-surface-variant hover:bg-surface-container-high group" href="#">
+<span class="material-symbols-outlined mr-md text-inherit">menu_book</span>
+<span class="font-label-md text-label-md">Manuals</span>
+</a>
+<!-- Videos -->
+<a class="flex items-center px-md py-sm rounded-lg transition-colors duration-200 ease-in-out text-on-surface-variant hover:bg-surface-container-high group" href="#">
+<span class="material-symbols-outlined mr-md text-inherit">videocam</span>
+<span class="font-label-md text-label-md">Videos</span>
+</a>
+<!-- Users -->
+<a class="flex items-center px-md py-sm rounded-lg transition-colors duration-200 ease-in-out text-on-surface-variant hover:bg-surface-container-high group" href="#">
+<span class="material-symbols-outlined mr-md text-inherit">group</span>
+<span class="font-label-md text-label-md">Users</span>
+</a>
+<!-- Analytics -->
+<a class="flex items-center px-md py-sm rounded-lg transition-colors duration-200 ease-in-out text-on-surface-variant hover:bg-surface-container-high group" href="#">
+<span class="material-symbols-outlined mr-md text-inherit">monitoring</span>
+<span class="font-label-md text-label-md">Analytics</span>
+</a>
+<!-- Settings -->
+<a class="flex items-center px-md py-sm rounded-lg transition-colors duration-200 ease-in-out text-on-surface-variant hover:bg-surface-container-high group" href="#">
+<span class="material-symbols-outlined mr-md text-inherit">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</nav>
+<div class="px-gutter pt-md">
+<div class="flex items-center space-x-sm p-sm rounded-xl bg-surface-container-high/50">
+<div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-bold text-[10px]">AD</div>
+<div class="flex-1 overflow-hidden">
+<p class="text-xs font-bold truncate">Admin User</p>
+<p class="text-[10px] text-on-surface-variant truncate">admin@qbit.io</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 flex-1 flex flex-col min-w-0">
+<!-- TopNavBar (from Shared Components) -->
+<header class="h-16 bg-surface border-b border-outline-variant flex items-center justify-between px-gutter sticky top-0 z-40">
+<div class="flex items-center flex-1 max-w-2xl">
+<div class="relative w-full group">
+<span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-full pl-3xl pr-md py-xs text-label-md focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all outline-none" placeholder="Search catalog, serials, or models..." type="text">
+</div>
+</div>
+<div class="flex items-center space-x-md ml-lg">
+<button class="p-xs text-on-surface-variant hover:bg-surface-container-high rounded-full transition-all">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-xs text-on-surface-variant hover:bg-surface-container-high rounded-full transition-all">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+<div class="h-8 w-px bg-outline-variant mx-xs"></div>
+<img class="w-8 h-8 rounded-full object-cover ring-2 ring-surface-container-high" data-alt="High-resolution professional headshot of a corporate IT administrator, minimalist background with soft focus on a modern office environment, warm professional lighting, and neutral color palette." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDVPPKqBvQAL02SIELPyYwihWxFk1mJMtVJYCKw2RL5AeieBm2jtH9EhbPAgl3xMIIwP8px32ZY8JihW5jZysPuWJncOJ17GneTLCgqgk4-Zx3iezkpzJCcJYM6G2cwr83zU_PyA75h0Spw9a1homaQlXxzWh6RPpYxvZc9u4UL7POcqZqaPoYgkjeVVHNpiNn0TPNzW4VyAnCCXjITKARbAcjxPjCXAyIx_Ik1n8i8sLpg4KOZJNJiCzsTGsOmLvd2uzfGMCxEusU1">
+</div>
+</header>
+<!-- Page Canvas -->
+<section class="p-gutter flex-1 overflow-y-auto custom-scrollbar">
+<!-- Page Header with Primary Action -->
+<div class="flex justify-between items-center mb-xl">
+<div>
+<nav class="flex items-center text-label-sm text-on-surface-variant mb-xs">
+<span class="">Inventory</span>
+<span class="material-symbols-outlined text-[14px] mx-xs">chevron_right</span>
+<span class="text-primary font-bold">Products</span>
+</nav>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Product Management</h2>
+</div>
+<button class="bg-primary text-white px-xl py-sm rounded-lg font-label-md text-label-md flex items-center hover:bg-primary-container transition-all shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined mr-sm">add</span>
+                        Add Product
+                    </button>
+</div>
+<!-- Stats Overview (Bento Style) -->
+<div class="grid grid-cols-4 gap-md mb-xl">
+<div class="glass-card p-md rounded-xl">
+<p class="text-label-sm text-on-surface-variant uppercase tracking-tighter">Total SKU</p>
+<h3 class="text-headline-md font-headline-md mt-xs">1,284</h3>
+<div class="mt-xs text-xs text-green-600 flex items-center">
+<span class="material-symbols-outlined text-[14px] mr-xs">trending_up</span> +12% vs last month
+                        </div>
+</div>
+<div class="glass-card p-md rounded-xl">
+<p class="text-label-sm text-on-surface-variant uppercase tracking-tighter">Active Items</p>
+<h3 class="text-headline-md font-headline-md mt-xs">1,042</h3>
+<div class="mt-xs text-xs text-on-surface-variant">81% operation rate</div>
+</div>
+<div class="glass-card p-md rounded-xl">
+<p class="text-label-sm text-on-surface-variant uppercase tracking-tighter">Archived</p>
+<h3 class="text-headline-md font-headline-md mt-xs">242</h3>
+<div class="mt-xs text-xs text-on-surface-variant flex items-center">
+<span class="material-symbols-outlined text-[14px] mr-xs">archive</span> 14 new this week
+                        </div>
+</div>
+<div class="glass-card p-md rounded-xl">
+<p class="text-label-sm text-on-surface-variant uppercase tracking-tighter">System Health</p>
+<h3 class="text-headline-md font-headline-md mt-xs text-primary">99.9%</h3>
+<div class="mt-xs text-xs text-on-surface-variant">Synchronized</div>
+</div>
+</div>
+<!-- Bulk Actions Bar (Sticky logic handled by container) -->
+<div class="hidden glass-card mb-md p-sm px-md rounded-lg flex items-center justify-between animate-in slide-in-from-top duration-300" id="bulk-bar">
+<div class="flex items-center text-label-md text-primary font-bold">
+<span class="bg-primary text-white px-xs rounded mr-sm" id="selected-count">0</span>
+                        items selected
+                    </div>
+<div class="flex items-center space-x-sm">
+<button class="px-md py-xs border border-error text-error font-label-md rounded-lg hover:bg-error-container/20 transition-all flex items-center">
+<span class="material-symbols-outlined mr-sm text-[18px]">delete</span>
+                            Bulk Delete
+                        </button>
+<button class="px-md py-xs bg-surface-container-high text-on-surface font-label-md rounded-lg hover:bg-surface-variant transition-all flex items-center">
+<span class="material-symbols-outlined mr-sm text-[18px]">file_download</span>
+                            Export CSV
+                        </button>
+<button class="p-xs text-on-surface-variant hover:bg-surface-container-high rounded-full" onclick="clearSelection()">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+</div>
+<!-- Data Table Container -->
+<div class="bg-white rounded-xl border border-outline-variant overflow-hidden shadow-sm">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-variant"><th class="py-md px-md w-12"><input class="rounded-md border-outline-variant text-primary focus:ring-primary h-4 w-4" id="select-all" type="checkbox"></th><th class="py-md px-sm font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider" style="width: 64px;">Image</th><th class="py-md px-sm font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider" style="width: 20%;">Product Name</th><th class="py-md px-sm font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider" style="width: 15%;">Model Number</th><th class="py-md px-sm font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider" style="width: 15%;">Category</th><th class="py-md px-sm font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider" style="width: 15%;">Status</th><th class="py-md px-sm font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider" style="width: 15%;">Last Updated</th><th class="py-md px-md font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider text-right">Actions</th></tr>
+</thead>
+<tbody class="divide-y divide-surface-container-low"><tr class="hover:bg-surface-container-lowest transition-colors group h-[72px]"><td class="py-md px-md"><input class="row-checkbox rounded-md border-outline-variant text-primary focus:ring-primary h-4 w-4" type="checkbox"></td><td class="py-md px-sm"><div class="w-12 h-12 bg-surface-container-high rounded-lg overflow-hidden border border-outline-variant"><img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAuifOAeQSz_Fo7aoK0vqGiPdgpac6phKjIaVjo9Rw2in9t_1RZa0KHcvHaC3XA92DpLuL8jW2n7wYRJxGaL-22j3pTPzsJYebVHB2qoOvIRbpsfox3lNlS8qvVN47_W5TVtHa2S3aUNBLyPZMKxhmCwAC9hBUvP_7ESHgkrXTZGElbpz-YZUEqW6P9u74Wm9SXd4c2HpXD4JHNSDebCMJPEENrXy39fROFG26tWpgRhlJazomDE7u-k2LcPy2Ghrds9BJJI05J40Ex"></div></td><td class="py-md px-sm"><span class="font-bold text-on-surface">QBIT T-800</span><p class="text-xs text-on-surface-variant">Flagship Enterprise POS</p></td><td class="py-md px-sm text-body-sm font-mono text-on-surface-variant">T800-ENT-2024</td><td class="py-md px-sm"><span class="bg-secondary-fixed text-on-secondary-fixed-variant px-sm py-xs rounded-full text-[11px] font-bold">Windows POS</span></td><td class="py-md px-sm"><div class="flex items-center text-green-600 font-bold text-xs uppercase tracking-widest px-sm py-xs rounded-full bg-green-600/10"><span class="w-2 h-2 rounded-full bg-green-600 mr-sm"></span>Active</div></td><td class="py-md px-sm text-body-sm text-on-surface-variant">Oct 24, 2023</td><td class="py-md px-md text-right"><div class="flex justify-end space-x-xs opacity-0 group-hover:opacity-100 transition-opacity"><button class="p-xs text-primary hover:bg-primary-container/10 rounded-lg"><span class="material-symbols-outlined text-[20px]">visibility</span></button><button class="p-xs text-on-surface-variant hover:bg-surface-container-high rounded-lg"><span class="material-symbols-outlined text-[20px]">edit</span></button><button class="p-xs text-error hover:bg-error-container/20 rounded-lg"><span class="material-symbols-outlined text-[20px]">delete</span></button></div></td></tr><tr class="hover:bg-surface-container-lowest transition-colors group h-[72px]"><td class="py-md px-md"><input class="row-checkbox rounded-md border-outline-variant text-primary focus:ring-primary h-4 w-4" type="checkbox"></td><td class="py-md px-sm"><div class="w-12 h-12 bg-surface-container-high rounded-lg overflow-hidden border border-outline-variant"><img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD7aLuvM_yoyO1ff_NCauuQfYwRXo4c8gWJqTIfKDeHGa3vEhFS17lPVxrXXQmsGRkt073BTJHy98Gxfdzs4BlQ1n291cZhgkjcvVgiM6eg1YJUJTlvUOqKAa1uuCRYkgy5toqN4-ra2fTpbKMtpfVJOOGGSEkfqiGX3dVV_F9N356TG9AfjT0RfA8wO7CXxWBfoJf21QD7YC5UzrpI0cM9XtrCzvvQhWHicmuuon1jo2ELLe0p4fRNcgKkkSxhjzTR5rNQYIkmgao-"></div></td><td class="py-md px-sm"><span class="font-bold text-on-surface">ScanPro M-10</span><p class="text-xs text-on-surface-variant">Industrial Handheld</p></td><td class="py-md px-sm text-body-sm font-mono text-on-surface-variant">SPM-10-MOB</td><td class="py-md px-sm"><span class="bg-tertiary-fixed text-on-tertiary-fixed-variant px-sm py-xs rounded-full text-[11px] font-bold">Android Device</span></td><td class="py-md px-sm"><div class="flex items-center text-green-600 font-bold text-xs uppercase tracking-widest px-sm py-xs rounded-full bg-green-600/10"><span class="w-2 h-2 rounded-full bg-green-600 mr-sm"></span>Active</div></td><td class="py-md px-sm text-body-sm text-on-surface-variant">Nov 02, 2023</td><td class="py-md px-md text-right"><div class="flex justify-end space-x-xs opacity-0 group-hover:opacity-100 transition-opacity"><button class="p-xs text-primary hover:bg-primary-container/10 rounded-lg"><span class="material-symbols-outlined text-[20px]">visibility</span></button><button class="p-xs text-on-surface-variant hover:bg-surface-container-high rounded-lg"><span class="material-symbols-outlined text-[20px]">edit</span></button><button class="p-xs text-error hover:bg-error-container/20 rounded-lg"><span class="material-symbols-outlined text-[20px]">delete</span></button></div></td></tr><tr class="hover:bg-surface-container-lowest transition-colors group h-[72px]"><td class="py-md px-md"><input class="row-checkbox rounded-md border-outline-variant text-primary focus:ring-primary h-4 w-4" type="checkbox"></td><td class="py-md px-sm"><div class="w-12 h-12 bg-surface-container-high rounded-lg overflow-hidden border border-outline-variant"><img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAV1YWCpVnzqlZCpV2c0uMH2UlslF7conzVrv-986nOjOLpX04KzJ7Go_neImcfg8NCE3sWtAGIzwB2rJBIeDM0fY_P04coibnq-KsLwCqcGB9Yz9dxqRs80DyQ9EPGKp2iV7A5NwT0hZzwyN36BRngNC92Wi7mNtKjWN4UQzlPP0fujo4lKGwsEct3x3PsJQGfcsOa72rUc9R1pavU7qrMrtzigwOCUsy5dQc07eqFhBmpzrSj54kCycRdzzZ1z4r1ZJdVt2hCD1Gt"></div></td><td class="py-md px-sm"><span class="font-bold text-on-surface">PrintX G-5</span><p class="text-xs text-on-surface-variant">Legacy Thermal Printer</p></td><td class="py-md px-sm text-body-sm font-mono text-on-surface-variant">PXG5-LEGACY</td><td class="py-md px-sm"><span class="bg-surface-container-highest text-outline px-sm py-xs rounded-full text-[11px] font-bold">Accessories</span></td><td class="py-md px-sm"><div class="flex items-center text-outline font-bold text-xs uppercase tracking-widest px-sm py-xs rounded-full bg-outline/10"><span class="w-2 h-2 rounded-full bg-outline mr-sm"></span>Archived</div></td><td class="py-md px-sm text-body-sm text-on-surface-variant">Aug 12, 2023</td><td class="py-md px-md text-right"><div class="flex justify-end space-x-xs opacity-0 group-hover:opacity-100 transition-opacity"><button class="p-xs text-primary hover:bg-primary-container/10 rounded-lg"><span class="material-symbols-outlined text-[20px]">visibility</span></button><button class="p-xs text-on-surface-variant hover:bg-surface-container-high rounded-lg"><span class="material-symbols-outlined text-[20px]">edit</span></button><button class="p-xs text-error hover:bg-error-container/20 rounded-lg"><span class="material-symbols-outlined text-[20px]">delete</span></button></div></td></tr></tbody>
+</table>
+<!-- Pagination -->
+<div class="px-md py-sm bg-surface-container-low flex justify-between items-center border-t border-outline-variant"><p class="text-label-md text-on-surface-variant">Showing <span class="font-bold text-on-surface">1 - 25</span> of <span class="font-bold text-on-surface">1,284</span></p><div class="flex items-center space-x-sm"><button class="p-xs hover:bg-surface-container-high rounded-lg transition-all disabled:opacity-30" disabled=""><span class="material-symbols-outlined">first_page</span></button><button class="p-xs hover:bg-surface-container-high rounded-lg transition-all disabled:opacity-30" disabled=""><span class="material-symbols-outlined">chevron_left</span></button><div class="flex space-x-xs"><button class="w-8 h-8 rounded-lg bg-primary text-white text-label-sm font-bold shadow-sm">1</button><button class="w-8 h-8 rounded-lg hover:bg-surface-container-high text-label-sm">2</button><button class="w-8 h-8 rounded-lg hover:bg-surface-container-high text-label-sm">3</button><span class="px-xs flex items-end">...</span><button class="w-8 h-8 rounded-lg hover:bg-surface-container-high text-label-sm">52</button></div><button class="p-xs hover:bg-surface-container-high rounded-lg transition-all"><span class="material-symbols-outlined">chevron_right</span></button><button class="p-xs hover:bg-surface-container-high rounded-lg transition-all"><span class="material-symbols-outlined">last_page</span></button></div></div>
+</div>
+</section>
+</main>
+</div>
+<!-- Micro-interactions Script -->
+<script>
+        const selectAll = document.getElementById('select-all');
+        const checkboxes = document.querySelectorAll('.row-checkbox');
+        const bulkBar = document.getElementById('bulk-bar');
+        const selectedCountLabel = document.getElementById('selected-count');
+
+        function updateBulkBar() {
+            const checkedCount = document.querySelectorAll('.row-checkbox:checked').length;
+            if (checkedCount > 0) {
+                bulkBar.classList.remove('hidden');
+                bulkBar.classList.add('flex');
+                selectedCountLabel.textContent = checkedCount;
+            } else {
+                bulkBar.classList.add('hidden');
+                bulkBar.classList.remove('flex');
+            }
+        }
+
+        selectAll.addEventListener('change', (e) => {
+            checkboxes.forEach(cb => cb.checked = e.target.checked);
+            updateBulkBar();
+        });
+
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', () => {
+                const allChecked = Array.from(checkboxes).every(c => c.checked);
+                selectAll.checked = allChecked;
+                updateBulkBar();
+            });
+        });
+
+        function clearSelection() {
+            selectAll.checked = false;
+            checkboxes.forEach(cb => cb.checked = false);
+            updateBulkBar();
+        }
+
+        // Search Bar Focus Effect (Micro-interaction)
+        const searchInput = document.querySelector('input[type="text"]');
+        searchInput.addEventListener('focus', () => {
+            searchInput.parentElement.classList.add('scale-[1.01]');
+        });
+        searchInput.addEventListener('blur', () => {
+            searchInput.parentElement.classList.remove('scale-[1.01]');
+        });
+    </script>
+
+
+
+</body></html>

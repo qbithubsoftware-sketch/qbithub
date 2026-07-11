@@ -1,0 +1,499 @@
+     1→<!DOCTYPE html>
+     2→
+     3→<html class="light" lang="en"><head>
+     4→<meta charset="utf-8"/>
+     5→<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+     6→<title>QBIT Hub - Dashboard</title>
+     7→<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+     8→<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+     9→<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    10→<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    11→<script id="tailwind-config">
+    12→      tailwind.config = {
+    13→        darkMode: "class",
+    14→        theme: {
+    15→          extend: {
+    16→            "colors": {
+    17→                    "surface-container-low": "#f1f3ff",
+    18→                    "secondary-fixed": "#dbe1ff",
+    19→                    "primary-container": "#0057ff",
+    20→                    "on-primary-container": "#e5e8ff",
+    21→                    "on-error": "#ffffff",
+    22→                    "primary-fixed": "#dce1ff",
+    23→                    "surface-bright": "#f9f9ff",
+    24→                    "on-tertiary-fixed-variant": "#444749",
+    25→                    "on-background": "#141b2b",
+    26→                    "on-tertiary-container": "#e7e9eb",
+    27→                    "surface-container-lowest": "#ffffff",
+    28→                    "on-secondary-fixed": "#00174b",
+    29→                    "surface-tint": "#004ee7",
+    30→                    "primary": "#0043c8",
+    31→                    "outline-variant": "#c3c5d9",
+    32→                    "outline": "#737688",
+    33→                    "tertiary-fixed-dim": "#c4c7c9",
+    34→                    "inverse-surface": "#293040",
+    35→                    "inverse-on-surface": "#edf0ff",
+    36→                    "on-secondary-fixed-variant": "#003ea8",
+    37→                    "tertiary-container": "#66696b",
+    38→                    "error-container": "#ffdad6",
+    39→                    "on-surface-variant": "#434656",
+    40→                    "on-error-container": "#93000a",
+    41→                    "surface": "#f9f9ff",
+    42→                    "error": "#ba1a1a",
+    43→                    "on-tertiary": "#ffffff",
+    44→                    "background": "#f9f9ff",
+    45→                    "secondary-fixed-dim": "#b4c5ff",
+    46→                    "surface-variant": "#dce2f7",
+    47→                    "tertiary": "#4e5153",
+    48→                    "surface-container-highest": "#dce2f7",
+    49→                    "primary-fixed-dim": "#b6c4ff",
+    50→                    "tertiary-fixed": "#e0e3e5",
+    51→                    "on-tertiary-fixed": "#191c1e",
+    52→                    "inverse-primary": "#b6c4ff",
+    53→                    "secondary": "#0051d5",
+    54→                    "surface-container-high": "#e1e8fd",
+    55→                    "on-surface": "#141b2b",
+    56→                    "on-primary-fixed": "#001550",
+    57→                    "on-secondary": "#ffffff",
+    58→                    "secondary-container": "#316bf3",
+    59→                    "on-secondary-container": "#fefcff",
+    60→                    "on-primary": "#ffffff",
+    61→                    "surface-container": "#e9edff",
+    62→                    "surface-dim": "#d3daef",
+    63→                    "on-primary-fixed-variant": "#003ab2"
+    64→            },
+    65→            "borderRadius": {
+    66→                    "DEFAULT": "0.25rem",
+    67→                    "lg": "0.5rem",
+    68→                    "xl": "0.75rem",
+    69→                    "full": "9999px"
+    70→            },
+    71→            "spacing": {
+    72→                    "unit": "8px",
+    73→                    "lg": "24px",
+    74→                    "margin-mobile": "16px",
+    75→                    "xs": "4px",
+    76→                    "margin-desktop": "32px",
+    77→                    "3xl": "64px",
+    78→                    "container-max": "1440px",
+    79→                    "sm": "8px",
+    80→                    "2xl": "48px",
+    81→                    "md": "16px",
+    82→                    "xl": "32px",
+    83→                    "gutter": "24px"
+    84→            },
+    85→            "fontFamily": {
+    86→                    "body-sm": ["Inter"],
+    87→                    "headline-md": ["Inter"],
+    88→                    "headline-lg": ["Inter"],
+    89→                    "label-md": ["Inter"],
+    90→                    "headline-lg-mobile": ["Inter"],
+    91→                    "body-md": ["Inter"],
+    92→                    "body-lg": ["Inter"],
+    93→                    "label-sm": ["Inter"],
+    94→                    "display-sm": ["Inter"],
+    95→                    "headline-sm": ["Inter"],
+    96→                    "display-lg": ["Inter"]
+    97→            },
+    98→            "fontSize": {
+    99→                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+   100→                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+   101→                    "headline-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+   102→                    "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+   103→                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+   104→                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+   105→                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+   106→                    "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+   107→                    "display-sm": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+   108→                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+   109→                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+   110→            }
+   111→          },
+   112→        },
+   113→      }
+   114→    </script>
+   115→<style>
+   116→        body { font-family: 'Inter', sans-serif; }
+   117→        .material-symbols-outlined {
+   118→            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+   119→        }
+   120→        .glass-card {
+   121→            background: rgba(255, 255, 255, 0.8);
+   122→            backdrop-filter: blur(12px);
+   123→            -webkit-backdrop-filter: blur(12px);
+   124→        }
+   125→        .custom-scrollbar::-webkit-scrollbar {
+   126→            width: 4px;
+   127→            height: 4px;
+   128→        }
+   129→        .custom-scrollbar::-webkit-scrollbar-thumb {
+   130→            background: #c3c5d9;
+   131→            border-radius: 10px;
+   132→        }
+   133→    </style>
+   134→</head>
+   135→<body class="bg-background text-on-surface antialiased overflow-hidden">
+   136→<!-- SideNavBar Shell -->
+   137→<aside class="w-64 h-screen fixed left-0 top-0 bg-surface-container-low dark:bg-inverse-surface border-r border-outline-variant dark:border-outline flex flex-col h-full py-md z-50">
+   138→<div class="px-gutter mb-xl">
+   139→<h1 class="font-headline-sm text-headline-sm font-bold text-primary dark:text-primary-fixed-dim">QBIT Hub</h1>
+   140→<p class="text-on-surface-variant font-label-sm text-label-sm opacity-70">Control Center</p>
+   141→</div>
+   142→<nav class="flex-1 space-y-xs px-sm">
+   143→<a class="flex items-center gap-md px-md py-sm rounded-lg transition-colors duration-200 ease-in-out text-primary dark:text-primary-fixed-dim border-l-4 border-primary dark:border-primary-fixed-dim bg-primary-container/10" href="#">
+   144→<span class="material-symbols-outlined">dashboard</span>
+   145→<span class="font-body-md text-body-md">Dashboard</span>
+   146→</a>
+   147→<a class="flex items-center gap-md px-md py-sm rounded-lg transition-colors duration-200 ease-in-out text-on-surface-variant dark:text-surface-variant hover:text-on-surface dark:hover:text-surface-bright hover:bg-surface-container-high dark:hover:bg-surface-container-highest" href="#">
+   148→<span class="material-symbols-outlined">inventory_2</span>
+   149→<span class="font-body-md text-body-md">Products</span>
+   150→</a>
+   151→<a class="flex items-center gap-md px-md py-sm rounded-lg transition-colors duration-200 ease-in-out text-on-surface-variant dark:text-surface-variant hover:text-on-surface dark:hover:text-surface-bright hover:bg-surface-container-high dark:hover:bg-surface-container-highest" href="#">
+   152→<span class="material-symbols-outlined">local_shipping</span>
+   153→<span class="font-body-md text-body-md">Drivers</span>
+   154→</a>
+   155→<a class="flex items-center gap-md px-md py-sm rounded-lg transition-colors duration-200 ease-in-out text-on-surface-variant dark:text-surface-variant hover:text-on-surface dark:hover:text-surface-bright hover:bg-surface-container-high dark:hover:bg-surface-container-highest" href="#">
+   156→<span class="material-symbols-outlined">menu_book</span>
+   157→<span class="font-body-md text-body-md">Manuals</span>
+   158→</a>
+   159→<a class="flex items-center gap-md px-md py-sm rounded-lg transition-colors duration-200 ease-in-out text-on-surface-variant dark:text-surface-variant hover:text-on-surface dark:hover:text-surface-bright hover:bg-surface-container-high dark:hover:bg-surface-container-highest" href="#">
+   160→<span class="material-symbols-outlined">videocam</span>
+   161→<span class="font-body-md text-body-md">Videos</span>
+   162→</a>
+   163→<a class="flex items-center gap-md px-md py-sm rounded-lg transition-colors duration-200 ease-in-out text-on-surface-variant dark:text-surface-variant hover:text-on-surface dark:hover:text-surface-bright hover:bg-surface-container-high dark:hover:bg-surface-container-highest" href="#">
+   164→<span class="material-symbols-outlined">group</span>
+   165→<span class="font-body-md text-body-md">Users</span>
+   166→</a>
+   167→<a class="flex items-center gap-md px-md py-sm rounded-lg transition-colors duration-200 ease-in-out text-on-surface-variant dark:text-surface-variant hover:text-on-surface dark:hover:text-surface-bright hover:bg-surface-container-high dark:hover:bg-surface-container-highest" href="#">
+   168→<span class="material-symbols-outlined">monitoring</span>
+   169→<span class="font-body-md text-body-md">Analytics</span>
+   170→</a>
+   171→<a class="flex items-center gap-md px-md py-sm rounded-lg transition-colors duration-200 ease-in-out text-on-surface-variant dark:text-surface-variant hover:text-on-surface dark:hover:text-surface-bright hover:bg-surface-container-high dark:hover:bg-surface-container-highest" href="#">
+   172→<span class="material-symbols-outlined">settings</span>
+   173→<span class="font-body-md text-body-md">Settings</span>
+   174→</a>
+   175→</nav>
+   176→<div class="mt-auto px-gutter py-md border-t border-outline-variant/30 flex items-center gap-sm">
+   177→<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center">
+   178→<span class="material-symbols-outlined text-primary">account_circle</span>
+   179→</div>
+   180→<div class="flex-1 min-w-0">
+   181→<p class="font-label-md text-label-md truncate text-on-surface">Alex Rivera</p>
+   182→<p class="text-[10px] uppercase tracking-wider text-on-surface-variant">Admin Access</p>
+   183→</div>
+   184→</div>
+   185→</aside>
+   186→<!-- Main Content Area -->
+   187→<main class="ml-64 h-screen overflow-y-auto custom-scrollbar flex flex-col bg-surface">
+   188→<!-- TopNavBar Shell -->
+   189→<header class="fixed top-0 right-0 left-64 h-16 bg-surface dark:bg-surface-container-lowest border-b border-outline-variant dark:border-outline z-40 transition-all duration-200">
+   190→<div class="flex justify-between items-center px-gutter w-full h-full">
+   191→<div class="flex items-center gap-md flex-1">
+   192→<span class="font-headline-sm text-headline-sm font-bold text-on-surface dark:text-on-surface">QBIT Hub Admin</span>
+   193→<div class="flex items-center bg-surface-container rounded-full px-md py-xs ml-xl w-full max-w-lg border border-transparent focus-within:border-primary focus-within:bg-white transition-all group">
+   194→<span class="material-symbols-outlined text-outline text-md group-focus-within:text-primary">search</span>
+   195→<input class="bg-transparent border-none focus:ring-0 w-full text-label-md font-label-md py-1" placeholder="Global search..." type="text"/>
+   196→</div>
+   197→</div>
+   198→<div class="flex items-center gap-sm">
+   199→<button class="p-sm rounded-full text-on-surface-variant dark:text-surface-variant hover:bg-surface-container dark:hover:bg-inverse-surface transition-all">
+   200→<span class="material-symbols-outlined">notifications</span>
+   201→</button>
+   202→<button class="p-sm rounded-full text-on-surface-variant dark:text-surface-variant hover:bg-surface-container dark:hover:bg-inverse-surface transition-all">
+   203→<span class="material-symbols-outlined">help_outline</span>
+   204→</button>
+   205→<div class="h-8 w-[1px] bg-outline-variant mx-xs"></div>
+   206→<img class="w-8 h-8 rounded-full border border-outline-variant object-cover" data-alt="Close-up professional headshot of a diverse male administrator in a modern office environment, high resolution corporate photography with soft bokeh background and warm professional lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBfrP6Nz_WPvIlOYP7mDxwrNCxCsxulkisEN_gptZDV_vWj9v0wLhsuERU126hRfPkKuWJ9iZI_6JMq-Baqislb84ptz8pzqmrfSvaaOAto1QRRBHwMUzmQEZEm6yHPS3kZ_OCeLoIZbUsbfN3c0iugzMDp-StXCIqowszDJuS74VBFjkYmTYBDRFy0eyKpn0S9XE-DfhkNndpuihGjrjawdjmdizAe0_anlbmAoCe4SClrNnnMh_1s2ytUQp_jOYzERB-d3hN7mn7f"/>
+   207→</div>
+   208→</div>
+   209→</header>
+   210→<!-- Canvas Body -->
+   211→<div class="pt-16 px-gutter pb-gutter flex flex-col gap-lg mt-md">
+   212→<!-- Welcome Hero -->
+   213→<section class="grid grid-cols-1 md:grid-cols-12 gap-lg items-center bg-gradient-to-br from-surface-container-low to-surface border border-outline-variant rounded-2xl overflow-hidden p-xl relative">
+   214→<div class="md:col-span-7 z-10">
+   215→<span class="inline-block px-sm py-1 bg-primary/10 text-primary rounded-full font-label-sm text-label-sm mb-md">System Online • 99.9% Uptime</span>
+   216→<h2 class="font-display-sm text-display-sm text-on-surface mb-xs">Good Morning, Alex.</h2>
+   217→<h3 class="font-headline-md text-headline-md text-on-surface-variant mb-xl opacity-80">Welcome back to QBIT Hub</h3>
+   218→<div class="flex items-center gap-xl">
+   219→<div class="flex flex-col">
+   220→<span class="font-label-sm text-label-sm text-outline uppercase tracking-widest">Current Session</span>
+   221→<span class="font-body-lg text-body-lg text-on-surface font-semibold" id="current-time">Monday, Oct 23 • 09:41 AM</span>
+   222→</div>
+   223→<div class="flex flex-col">
+   224→<span class="font-label-sm text-label-sm text-outline uppercase tracking-widest">Active Alerts</span>
+   225→<span class="font-body-lg text-body-lg text-error font-semibold">2 Critical Updates</span>
+   226→</div>
+   227→</div>
+   228→</div>
+   229→<div class="md:col-span-5 relative h-64 md:h-full flex items-center justify-center">
+   230→<img class="object-contain max-h-72 w-full drop-shadow-2xl transition-transform hover:scale-105 duration-700" src="https://lh3.googleusercontent.com/aida/AP1WRLsvZGeMvhkznZvRq6jRYsjv-iHQbpSWfnJcjzWR5ZXLcxJRkHkGtY5oz38nSopfA0SsmkPaeg3no0eilyKUQcvIi4N_2prp-l-4v5jsJv4Dt4-0epzauDfrtusZp7STosWItm8w_XTtO5pT93F74ERu2j-EJYLBXWZfdygxZTF08r3zyqXDc_xRBxh_OCrcioa3J8F9b0vxAwgivTkFKdQqhSoNRfHmLws_eH2_3ziVncGhQBFdmii0RXEL"/>
+   231→</div>
+   232→</section>
+   233→<!-- Universal Search Center -->
+   234→<section class="max-w-4xl mx-auto w-full -mt-12 z-20">
+   235→<div class="glass-card shadow-xl border border-outline-variant rounded-2xl p-xs flex items-center">
+   236→<div class="flex items-center gap-md flex-1 bg-surface-container-highest/30 px-xl py-lg rounded-xl focus-within:bg-white transition-all">
+   237→<span class="material-symbols-outlined text-primary scale-125">search</span>
+   238→<input class="bg-transparent border-none focus:ring-0 w-full text-body-lg font-body-lg placeholder:text-outline/60" placeholder="Search products, drivers, manuals, installation guides, videos or ask AI..." type="text"/>
+   239→<kbd class="hidden md:flex items-center gap-1 bg-surface-variant/50 text-on-surface-variant px-sm py-xs rounded text-[10px] font-bold border border-outline-variant">
+   240→<span class="material-symbols-outlined text-[12px]">keyboard_command_key</span>K
+   241→                        </kbd>
+   242→</div>
+   243→</div>
+   244→</section>
+   245→<!-- System Status KPIs -->
+   246→<section class="grid grid-cols-2 md:grid-cols-4 gap-md">
+   247→<div class="bg-white border border-outline-variant p-md rounded-xl hover:shadow-md transition-shadow">
+   248→<div class="flex justify-between items-start mb-sm">
+   249→<span class="material-symbols-outlined text-primary p-xs bg-primary/10 rounded-lg">inventory_2</span>
+   250→<span class="text-green-600 font-label-sm text-label-sm flex items-center">+4%</span>
+   251→</div>
+   252→<p class="font-label-sm text-label-sm text-outline">Total Products</p>
+   253→<p class="font-headline-sm text-headline-sm text-on-surface">1,284</p>
+   254→</div>
+   255→<div class="bg-white border border-outline-variant p-md rounded-xl hover:shadow-md transition-shadow">
+   256→<div class="flex justify-between items-start mb-sm">
+   257→<span class="material-symbols-outlined text-secondary p-xs bg-secondary/10 rounded-lg">download_for_offline</span>
+   258→<span class="text-green-600 font-label-sm text-label-sm flex items-center">+12%</span>
+   259→</div>
+   260→<p class="font-label-sm text-label-sm text-outline">Drivers Active</p>
+   261→<p class="font-headline-sm text-headline-sm text-on-surface">342</p>
+   262→</div>
+   263→<div class="bg-white border border-outline-variant p-md rounded-xl hover:shadow-md transition-shadow">
+   264→<div class="flex justify-between items-start mb-sm">
+   265→<span class="material-symbols-outlined text-tertiary p-xs bg-tertiary/10 rounded-lg">menu_book</span>
+   266→<span class="text-on-surface-variant font-label-sm text-label-sm flex items-center">Stable</span>
+   267→</div>
+   268→<p class="font-label-sm text-label-sm text-outline">Guides &amp; Manuals</p>
+   269→<p class="font-headline-sm text-headline-sm text-on-surface">891</p>
+   270→</div>
+   271→<div class="bg-white border border-outline-variant p-md rounded-xl hover:shadow-md transition-shadow">
+   272→<div class="flex justify-between items-start mb-sm">
+   273→<span class="material-symbols-outlined text-error p-xs bg-error/10 rounded-lg">videocam</span>
+   274→<span class="text-error font-label-sm text-label-sm flex items-center">-2%</span>
+   275→</div>
+   276→<p class="font-label-sm text-label-sm text-outline">Training Videos</p>
+   277→<p class="font-headline-sm text-headline-sm text-on-surface">156</p>
+   278→</div>
+   279→</section>
+   280→<div class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
+   281→<!-- Quick Access Grid & Continue Working -->
+   282→<div class="lg:col-span-2 flex flex-col gap-lg">
+   283→<!-- Quick Access Grid -->
+   284→<section>
+   285→<h3 class="font-headline-sm text-headline-sm mb-md flex items-center gap-sm">
+   286→                            Quick Access <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+   287→</h3>
+   288→<div class="grid grid-cols-2 sm:grid-cols-3 gap-md">
+   289→<button class="flex flex-col items-center text-center p-lg bg-white border border-outline-variant rounded-2xl hover:border-primary hover:bg-primary/5 transition-all group">
+   290→<span class="material-symbols-outlined text-primary mb-sm scale-150 transition-transform group-hover:rotate-12">inventory_2</span>
+   291→<span class="font-label-md text-label-md text-on-surface mb-xs">Products</span>
+   292→<span class="text-[10px] text-outline">Browse Catalog</span>
+   293→</button>
+   294→<button class="flex flex-col items-center text-center p-lg bg-white border border-outline-variant rounded-2xl hover:border-primary hover:bg-primary/5 transition-all group">
+   295→<span class="material-symbols-outlined text-primary mb-sm scale-150 transition-transform group-hover:rotate-12">local_shipping</span>
+   296→<span class="font-label-md text-label-md text-on-surface mb-xs">Drivers</span>
+   297→<span class="text-[10px] text-outline">Latest Firmware</span>
+   298→</button>
+   299→<button class="flex flex-col items-center text-center p-lg bg-white border border-outline-variant rounded-2xl hover:border-primary hover:bg-primary/5 transition-all group">
+   300→<span class="material-symbols-outlined text-primary mb-sm scale-150 transition-transform group-hover:rotate-12">integration_instructions</span>
+   301→<span class="font-label-md text-label-md text-on-surface mb-xs">Install Guides</span>
+   302→<span class="text-[10px] text-outline">Setup Workflows</span>
+   303→</button>
+   304→<button class="flex flex-col items-center text-center p-lg bg-white border border-outline-variant rounded-2xl hover:border-primary hover:bg-primary/5 transition-all group">
+   305→<span class="material-symbols-outlined text-primary mb-sm scale-150 transition-transform group-hover:rotate-12">menu_book</span>
+   306→<span class="font-label-md text-label-md text-on-surface mb-xs">Manuals</span>
+   307→<span class="text-[10px] text-outline">Documentation</span>
+   308→</button>
+   309→<button class="flex flex-col items-center text-center p-lg bg-white border border-outline-variant rounded-2xl hover:border-primary hover:bg-primary/5 transition-all group">
+   310→<span class="material-symbols-outlined text-primary mb-sm scale-150 transition-transform group-hover:rotate-12">quiz</span>
+   311→<span class="font-label-md text-label-md text-on-surface mb-xs">Troubleshooting</span>
+   312→<span class="text-[10px] text-outline">Error Codes</span>
+   313→</button>
+   314→<button class="flex flex-col items-center text-center p-lg bg-white border border-outline-variant rounded-2xl hover:border-primary hover:bg-primary/5 transition-all group">
+   315→<span class="material-symbols-outlined text-primary mb-sm scale-150 transition-transform group-hover:rotate-12">hub</span>
+   316→<span class="font-label-md text-label-md text-on-surface mb-xs">Knowledge Base</span>
+   317→<span class="text-[10px] text-outline">Article Wiki</span>
+   318→</button>
+   319→</div>
+   320→</section>
+   321→<!-- Featured Products Carousel -->
+   322→<section>
+   323→<div class="flex justify-between items-end mb-md">
+   324→<h3 class="font-headline-sm text-headline-sm">New Releases</h3>
+   325→<div class="flex gap-sm">
+   326→<button class="p-xs bg-surface-container rounded-lg text-on-surface-variant hover:bg-primary hover:text-white transition-colors">
+   327→<span class="material-symbols-outlined">chevron_left</span>
+   328→</button>
+   329→<button class="p-xs bg-surface-container rounded-lg text-on-surface-variant hover:bg-primary hover:text-white transition-colors">
+   330→<span class="material-symbols-outlined">chevron_right</span>
+   331→</button>
+   332→</div>
+   333→</div>
+   334→<div class="flex gap-md overflow-x-auto custom-scrollbar pb-md">
+   335→<div class="min-w-[280px] bg-white border border-outline-variant rounded-2xl overflow-hidden group hover:shadow-lg transition-all">
+   336→<div class="h-40 relative bg-surface-container overflow-hidden">
+   337→<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="Close up of a premium industrial grade electronic component with sleek metallic blue accents and brushed aluminum casing, high-tech industrial design product photography, clean white background, soft studio lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC79p9dBjhtipNqAwd5kvHT6_38Nmy_uG-TnxOt5fJNSfU97yIyu5Ip9JKvFNcNLZ-OlmXFc5mU5vJhGUJqtjoYu-MQ0-kidIYT78dgMKvwWFKcSiZFAzOJG8FjqWKTkqlDr59rC6uwi3qxqCpQ-AWyo_e5U0FniSfHdfy74977a-3yrjXNPHTu6-0OYVXeQfvnySVAb2BD3DBOdW5ZM6sxhDInPtv9-_o2SO7TVxC1XboRNOHmdOrAOpaBhSPbPGgkGNgrxFfpquae"/>
+   338→<span class="absolute top-sm right-sm bg-primary text-white text-[10px] px-sm py-0.5 rounded-full font-bold uppercase">New</span>
+   339→</div>
+   340→<div class="p-md">
+   341→<h4 class="font-label-md text-label-md text-on-surface">QBIT Nexus X1</h4>
+   342→<p class="text-body-sm text-on-surface-variant line-clamp-1 mb-md">Enterprise Hub Controller v2.0</p>
+   343→<button class="w-full py-sm bg-surface-container hover:bg-primary hover:text-white text-primary text-label-sm font-bold rounded-lg transition-all">View Specs</button>
+   344→</div>
+   345→</div>
+   346→<div class="min-w-[280px] bg-white border border-outline-variant rounded-2xl overflow-hidden group hover:shadow-lg transition-all">
+   347→<div class="h-40 relative bg-surface-container overflow-hidden">
+   348→<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="High-performance network server module with intricate wiring and status indicator lights glowing blue and white, professional enterprise hardware design photography, futuristic laboratory aesthetic, extremely detailed macro shot." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDNYevEGFO2Mzmfws1RGryGlCuhoQRbH78M_9eQxW9kF2MvXtiAvyUPDaAPUoEc1p8VVfIa6Qba1aYpd4uv4Bma1vuI0Q9cu48UCCDQ5FrdvonQ-YISl-mBt6U6omXv4meeEh6eVSm_5u6UbmEPe65UWuyutNejx9VZtvABh6u_-UGMIUINyxQBYbBLzXvRyRysLCviqM_u9g70iAk-GmZqe8J2qXfHFg8Mk1Sprlh6dSsowE2cdrMVOmgqPbi6Xtjn0EtHyPMwFGgX"/>
+   349→</div>
+   350→<div class="p-md">
+   351→<h4 class="font-label-md text-label-md text-on-surface">Aura Terminal G3</h4>
+   352→<p class="text-body-sm text-on-surface-variant line-clamp-1 mb-md">Advanced POS Interface System</p>
+   353→<button class="w-full py-sm bg-surface-container hover:bg-primary hover:text-white text-primary text-label-sm font-bold rounded-lg transition-all">View Specs</button>
+   354→</div>
+   355→</div>
+   356→<div class="min-w-[280px] bg-white border border-outline-variant rounded-2xl overflow-hidden group hover:shadow-lg transition-all">
+   357→<div class="h-40 relative bg-surface-container overflow-hidden">
+   358→<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="Handheld barcode scanner with ergonomic white and silver grip, glowing cyan LED sensors, industrial technology device product shot, minimalist white studio background with soft realistic shadows." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNsLd3q56zXUlRIJ8fmCyGiNA8rWB0NgAubuFXXQoR5SpT0EVwOxZPVKzcIk4EcFaUo6yZZfmmm_dLta8pHCNulAtJKB1zCXEWn0Qi3-WmSk_20vwCcnJDvYLcAxb-CBYu6MQg6Rc4XiweGdU86KSTl9Yo6FAJbx20aGIYggiHoubZV1GwzRx7b3TioFEBhvTqYVS5z4O1qIgZABgvJ1_y2Jz9G4IusRhYbisimsb6v6k0aHQvDSD18MwBs2DZ1Tqc4HcBBtYi6yF7"/>
+   359→</div>
+   360→<div class="p-md">
+   361→<h4 class="font-label-md text-label-md text-on-surface">Optic Pro Scan</h4>
+   362→<p class="text-body-sm text-on-surface-variant line-clamp-1 mb-md">Precision Inventory Scanner</p>
+   363→<button class="w-full py-sm bg-surface-container hover:bg-primary hover:text-white text-primary text-label-sm font-bold rounded-lg transition-all">View Specs</button>
+   364→</div>
+   365→</div>
+   366→</div>
+   367→</section>
+   368→</div>
+   369→<!-- Sidebar Content: Continue Working & Updates -->
+   370→<div class="flex flex-col gap-lg">
+   371→<!-- Continue Working -->
+   372→<section class="bg-white border border-outline-variant rounded-2xl p-md">
+   373→<div class="flex items-center justify-between mb-md">
+   374→<h3 class="font-label-md text-label-md text-on-surface">Continue Working</h3>
+   375→<span class="material-symbols-outlined text-outline text-sm">history</span>
+   376→</div>
+   377→<div class="space-y-sm">
+   378→<div class="flex items-center gap-sm p-sm rounded-lg hover:bg-surface-container cursor-pointer transition-colors group">
+   379→<div class="w-10 h-10 rounded bg-secondary/10 flex items-center justify-center">
+   380→<span class="material-symbols-outlined text-secondary text-md">download</span>
+   381→</div>
+   382→<div class="flex-1 min-w-0">
+   383→<p class="text-label-md font-label-md text-on-surface truncate">X1_Firmware_v4.2.bin</p>
+   384→<p class="text-[10px] text-outline">Driver • 2 hours ago</p>
+   385→</div>
+   386→<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">play_circle</span>
+   387→</div>
+   388→<div class="flex items-center gap-sm p-sm rounded-lg hover:bg-surface-container cursor-pointer transition-colors group">
+   389→<div class="w-10 h-10 rounded bg-tertiary/10 flex items-center justify-center">
+   390→<span class="material-symbols-outlined text-tertiary text-md">menu_book</span>
+   391→</div>
+   392→<div class="flex-1 min-w-0">
+   393→<p class="text-label-md font-label-md text-on-surface truncate">Setup_Manual_Terminal_G3</p>
+   394→<p class="text-[10px] text-outline">Manual • 5 hours ago</p>
+   395→</div>
+   396→<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">play_circle</span>
+   397→</div>
+   398→<div class="flex items-center gap-sm p-sm rounded-lg hover:bg-surface-container cursor-pointer transition-colors group">
+   399→<div class="w-10 h-10 rounded bg-primary/10 flex items-center justify-center">
+   400→<span class="material-symbols-outlined text-primary text-md">videocam</span>
+   401→</div>
+   402→<div class="flex-1 min-w-0">
+   403→<p class="text-label-md font-label-md text-on-surface truncate">Troubleshooting_Optic_Pro</p>
+   404→<p class="text-[10px] text-outline">Video • Yesterday</p>
+   405→</div>
+   406→<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">play_circle</span>
+   407→</div>
+   408→</div>
+   409→<button class="w-full mt-md py-sm text-primary text-label-sm font-bold border border-primary/20 rounded-lg hover:bg-primary/5">View Full History</button>
+   410→</section>
+   411→<!-- Latest Updates -->
+   412→<section class="bg-surface-container-low border border-outline-variant rounded-2xl p-md">
+   413→<h3 class="font-label-md text-label-md text-on-surface mb-md">System Updates</h3>
+   414→<div class="relative space-y-md before:content-[''] before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-outline-variant">
+   415→<div class="relative pl-xl">
+   416→<div class="absolute left-0 top-1 w-[24px] h-[24px] rounded-full bg-primary border-4 border-surface-container-low flex items-center justify-center">
+   417→<span class="w-1.5 h-1.5 rounded-full bg-white"></span>
+   418→</div>
+   419→<p class="text-label-sm font-bold text-on-surface">Critical Driver Update</p>
+   420→<p class="text-body-sm text-on-surface-variant">Nexus X1 security patch released.</p>
+   421→<p class="text-[10px] text-primary mt-1 font-bold">TODAY 08:30 AM</p>
+   422→</div>
+   423→<div class="relative pl-xl">
+   424→<div class="absolute left-0 top-1 w-[24px] h-[24px] rounded-full bg-outline-variant border-4 border-surface-container-low flex items-center justify-center">
+   425→<span class="w-1.5 h-1.5 rounded-full bg-surface-variant"></span>
+   426→</div>
+   427→<p class="text-label-sm font-bold text-on-surface">New Manual Added</p>
+   428→<p class="text-body-sm text-on-surface-variant">Aura Terminal G3 troubleshooting guide.</p>
+   429→<p class="text-[10px] text-outline mt-1 uppercase">Oct 21, 2023</p>
+   430→</div>
+   431→<div class="relative pl-xl">
+   432→<div class="absolute left-0 top-1 w-[24px] h-[24px] rounded-full bg-outline-variant border-4 border-surface-container-low flex items-center justify-center">
+   433→<span class="w-1.5 h-1.5 rounded-full bg-surface-variant"></span>
+   434→</div>
+   435→<p class="text-label-sm font-bold text-on-surface">Server Maintenance</p>
+   436→<p class="text-body-sm text-on-surface-variant">Completed scheduled API optimization.</p>
+   437→<p class="text-[10px] text-outline mt-1 uppercase">Oct 20, 2023</p>
+   438→</div>
+   439→</div>
+   440→</section>
+   441→</div>
+   442→</div>
+   443→</div>
+   444→</main>
+   445→<!-- AI Assistant Floating Widget -->
+   446→<div class="fixed bottom-lg right-lg z-50 group">
+   447→<div class="absolute bottom-full right-0 mb-md w-72 bg-white rounded-2xl shadow-2xl border border-outline-variant opacity-0 translate-y-4 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all duration-300">
+   448→<div class="p-md border-b border-outline-variant flex items-center gap-sm bg-primary/5 rounded-t-2xl">
+   449→<div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+   450→<span class="material-symbols-outlined text-white text-md">smart_toy</span>
+   451→</div>
+   452→<div>
+   453→<p class="font-label-md text-label-md text-on-surface">QBIT AI Assistant</p>
+   454→<div class="flex items-center gap-1">
+   455→<span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+   456→<span class="text-[10px] text-outline">Online</span>
+   457→</div>
+   458→</div>
+   459→</div>
+   460→<div class="p-md space-y-md h-48 overflow-y-auto custom-scrollbar bg-white">
+   461→<div class="bg-surface-container p-sm rounded-lg rounded-tl-none">
+   462→<p class="text-body-sm text-on-surface">Hello Alex! How can I help you with the QBIT Hub today?</p>
+   463→</div>
+   464→<div class="space-y-sm">
+   465→<button class="w-full text-left text-[11px] font-bold text-primary hover:underline">How do I update the Nexus X1?</button>
+   466→<button class="w-full text-left text-[11px] font-bold text-primary hover:underline">Find drivers for Terminal G3</button>
+   467→<button class="w-full text-left text-[11px] font-bold text-primary hover:underline">Contact technical support</button>
+   468→</div>
+   469→</div>
+   470→<div class="p-md border-t border-outline-variant">
+   471→<div class="flex gap-sm items-center bg-surface-container rounded-lg px-sm py-xs">
+   472→<input class="bg-transparent border-none focus:ring-0 text-body-sm w-full" placeholder="Ask AI anything..." type="text"/>
+   473→<span class="material-symbols-outlined text-primary cursor-pointer">send</span>
+   474→</div>
+   475→</div>
+   476→</div>
+   477→<button class="w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center hover:scale-110 hover:bg-secondary transition-all">
+   478→<span class="material-symbols-outlined text-[28px]">chat</span>
+   479→</button>
+   480→</div>
+   481→<script>
+   482→        // Real-time clock update
+   483→        function updateTime() {
+   484→            const now = new Date();
+   485→            const options = { weekday: 'long', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+   486→            document.getElementById('current-time').textContent = now.toLocaleDateString('en-US', options).replace(/,/g, '');
+   487→        }
+   488→        setInterval(updateTime, 60000);
+   489→        updateTime();
+   490→
+   491→        // Keyboard shortcut handling (UI visual only)
+   492→        document.addEventListener('keydown', function(e) {
+   493→            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+   494→                e.preventDefault();
+   495→                document.querySelector('input[placeholder*="Search products"]').focus();
+   496→            }
+   497→        });
+   498→    </script>
+   499→</body></html>

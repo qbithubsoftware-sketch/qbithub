@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Customer Handover &amp; Completion Report - InstalCore</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-fixed-dim": "#b4c5ff",
+                    "outline": "#737688",
+                    "background": "#f9f9ff",
+                    "on-secondary-container": "#fefcff",
+                    "inverse-surface": "#293040",
+                    "surface-container": "#e9edff",
+                    "on-tertiary-container": "#e7e9eb",
+                    "on-secondary-fixed-variant": "#003ea8",
+                    "tertiary": "#4e5153",
+                    "on-surface-variant": "#434656",
+                    "on-secondary-fixed": "#00174b",
+                    "secondary-container": "#316bf3",
+                    "inverse-primary": "#b6c4ff",
+                    "inverse-on-surface": "#edf0ff",
+                    "error-container": "#ffdad6",
+                    "on-surface": "#141b2b",
+                    "surface-container-high": "#e1e8fd",
+                    "surface-container-low": "#f1f3ff",
+                    "primary": "#0043c8",
+                    "surface-container-lowest": "#ffffff",
+                    "surface": "#f9f9ff",
+                    "secondary-fixed": "#dbe1ff",
+                    "on-tertiary": "#ffffff",
+                    "surface-bright": "#f9f9ff",
+                    "tertiary-container": "#66696b",
+                    "secondary": "#0051d5",
+                    "primary-fixed-dim": "#b6c4ff",
+                    "on-error": "#ffffff",
+                    "tertiary-fixed-dim": "#c4c7c9",
+                    "on-primary-fixed-variant": "#003ab2",
+                    "on-error-container": "#93000a",
+                    "surface-tint": "#004ee7",
+                    "on-tertiary-fixed": "#191c1e",
+                    "error": "#ba1a1a",
+                    "on-background": "#141b2b",
+                    "surface-dim": "#d3daef",
+                    "surface-container-highest": "#dce2f7",
+                    "on-tertiary-fixed-variant": "#444749",
+                    "tertiary-fixed": "#e0e3e5",
+                    "primary-container": "#0057ff",
+                    "on-primary-container": "#e5e8ff",
+                    "outline-variant": "#c3c5d9",
+                    "on-primary-fixed": "#001550",
+                    "on-primary": "#ffffff",
+                    "surface-variant": "#dce2f7",
+                    "on-secondary": "#ffffff",
+                    "primary-fixed": "#dce1ff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "lg": "24px",
+                    "container-max": "1440px",
+                    "xs": "4px",
+                    "unit": "8px",
+                    "md": "16px",
+                    "margin-mobile": "16px",
+                    "gutter": "24px",
+                    "2xl": "48px",
+                    "sm": "8px",
+                    "margin-desktop": "32px",
+                    "xl": "32px",
+                    "3xl": "64px"
+            },
+            "fontFamily": {
+                    "headline-sm": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "body-md": ["Inter"],
+                    "label-md": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "display-sm": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-lg-mobile": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "headline-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "display-sm": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #f9f9ff; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border: 1px solid #e2e8f0; }
+        .signature-pad { background: #ffffff; border: 1px dashed #c3c5d9; cursor: crosshair; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #c3c5d9; border-radius: 10px; }
+    </style>
+</head>
+<body class="text-on-background">
+<!-- Side Navigation Bar -->
+<aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-low border-r border-outline-variant flex flex-col h-screen overflow-y-auto z-50">
+<div class="px-6 py-8">
+<h1 class="font-headline-md text-headline-md font-bold text-primary">InstalCore</h1>
+<p class="text-label-sm text-outline uppercase tracking-wider mt-1">Enterprise Portal</p>
+</div>
+<nav class="flex-1 px-2 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 border-l-4 border-primary text-primary font-bold bg-surface-container-high" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-label-md text-label-md">Products</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">settings_input_component</span>
+<span class="font-label-md text-label-md">Drivers</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">menu_book</span>
+<span class="font-label-md text-label-md">Installation Guides</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">video_library</span>
+<span class="font-label-md text-label-md">Videos</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">download</span>
+<span class="font-label-md text-label-md">Downloads</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</nav>
+<div class="p-6 border-t border-outline-variant flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined">person</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface">Alex Rivera</p>
+<p class="text-xs text-outline">Lead Engineer</p>
+</div>
+</div>
+</aside>
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 right-0 w-[calc(100%-256px)] h-16 bg-white/80 backdrop-blur-md flex justify-between items-center px-8 z-40">
+<div class="flex items-center gap-4 w-1/3">
+<div class="relative w-full max-w-sm">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-full pl-10 pr-4 py-2 text-body-sm focus:ring-2 focus:ring-primary transition-all" placeholder="Search installation reports..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<button class="relative text-on-surface-variant hover:text-primary transition-colors duration-200">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute -top-1 -right-1 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors duration-200">
+<span class="material-symbols-outlined">help</span>
+</button>
+<div class="h-8 w-px bg-outline-variant"></div>
+<div class="flex items-center gap-2">
+<span class="font-label-md text-label-md text-on-surface">Project: IC-9842</span>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-64 pt-16 min-h-screen">
+<div class="p-8 max-w-[1200px] mx-auto">
+<!-- Page Header -->
+<div class="flex justify-between items-end mb-8">
+<div>
+<nav class="flex items-center gap-2 text-outline mb-2">
+<span class="text-xs font-label-md">Reports</span>
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+<span class="text-xs font-label-md text-primary">Handover</span>
+</nav>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Customer Handover &amp; Completion Report</h2>
+<p class="text-body-md text-on-surface-variant mt-1">Final validation and sign-off for Installation ID: <span class="font-bold text-on-surface">INST-442-B</span></p>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 px-4 py-2 border border-outline-variant text-on-surface font-label-md rounded-lg hover:bg-surface-container transition-all">
+<span class="material-symbols-outlined text-[20px]">print</span>
+                        Print Installation Report
+                    </button>
+<button class="flex items-center gap-2 px-6 py-2 bg-primary text-on-primary font-label-md rounded-lg shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[20px]">download</span>
+                        Download Handover PDF
+                    </button>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-12 gap-6">
+<!-- Left Column: Completion Checklist & Testing -->
+<div class="col-span-12 lg:col-span-7 space-y-6">
+<!-- Completion Checklist -->
+<section class="glass-card rounded-xl p-6 shadow-sm">
+<div class="flex items-center gap-3 mb-6">
+<div class="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+<span class="material-symbols-outlined">checklist</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm">Completion Checklist</h3>
+</div>
+<div class="space-y-4">
+<label class="flex items-center justify-between p-4 rounded-lg border border-outline-variant hover:bg-surface-container-lowest transition-colors cursor-pointer">
+<div class="flex items-center gap-4">
+<input checked="" class="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary" type="checkbox"/>
+<span class="font-body-md text-body-md text-on-surface">Installation Done</span>
+</div>
+<span class="text-xs font-label-sm px-2 py-1 bg-green-100 text-green-700 rounded-full">COMPLETED</span>
+</label>
+<label class="flex items-center justify-between p-4 rounded-lg border border-outline-variant hover:bg-surface-container-lowest transition-colors cursor-pointer">
+<div class="flex items-center gap-4">
+<input checked="" class="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary" type="checkbox"/>
+<span class="font-body-md text-body-md text-on-surface">System Tests Passed</span>
+</div>
+<span class="text-xs font-label-sm px-2 py-1 bg-green-100 text-green-700 rounded-full">VERIFIED</span>
+</label>
+<label class="flex items-center justify-between p-4 rounded-lg border border-outline-variant hover:bg-surface-container-lowest transition-colors cursor-pointer">
+<div class="flex items-center gap-4">
+<input class="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary" type="checkbox"/>
+<span class="font-body-md text-body-md text-on-surface">Customer Trained &amp; Onboarded</span>
+</div>
+<span class="text-xs font-label-sm px-2 py-1 bg-amber-100 text-amber-700 rounded-full">IN PROGRESS</span>
+</label>
+</div>
+</section>
+<!-- Testing Procedure Section -->
+<section class="glass-card rounded-xl p-6 shadow-sm">
+<div class="flex items-center gap-3 mb-6">
+<div class="w-10 h-10 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center">
+<span class="material-symbols-outlined">biotech</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm">Testing Procedure</h3>
+</div>
+<div class="overflow-hidden border border-outline-variant rounded-lg">
+<table class="w-full text-left">
+<thead class="bg-surface-container-low border-b border-outline-variant">
+<tr>
+<th class="px-6 py-4 font-label-sm text-label-sm text-outline">HARDWARE COMPONENT</th>
+<th class="px-6 py-4 font-label-sm text-label-sm text-outline">DIAGNOSTIC STATUS</th>
+<th class="px-6 py-4 font-label-sm text-label-sm text-outline">ACTION</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-outline">print</span>
+<span class="font-body-md text-body-md">Thermal Printer</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2 text-green-600 font-label-md">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                                                PASS
+                                            </div>
+</td>
+<td class="px-6 py-4">
+<button class="text-primary font-label-sm hover:underline">Retest</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-outline">qr_code_scanner</span>
+<span class="font-body-md text-body-md">High-Speed Scanner</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2 text-green-600 font-label-md">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                                                PASS
+                                            </div>
+</td>
+<td class="px-6 py-4">
+<button class="text-primary font-label-sm hover:underline">Retest</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-outline">touch_app</span>
+<span class="font-body-md text-body-md">Capacitive Touch Screen</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2 text-error font-label-md">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">cancel</span>
+                                                FAIL (Recalibration Req.)
+                                            </div>
+</td>
+<td class="px-6 py-4">
+<button class="text-primary font-label-sm hover:underline">Troubleshoot</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</div>
+<!-- Right Column: Signatures & Summary -->
+<div class="col-span-12 lg:col-span-5 space-y-6">
+<!-- Summary Card -->
+<div class="bg-primary p-6 rounded-xl text-on-primary shadow-xl relative overflow-hidden">
+<div class="relative z-10">
+<h4 class="font-label-sm text-label-sm opacity-80 uppercase tracking-widest mb-1">Handover Status</h4>
+<p class="font-headline-md text-headline-md font-bold">Awaiting Signatures</p>
+<div class="mt-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">schedule</span>
+<span class="text-body-sm">Today, Oct 24 • 14:32 PM</span>
+</div>
+</div>
+<div class="absolute -right-8 -bottom-8 w-32 h-32 bg-white/10 rounded-full blur-3xl"></div>
+<div class="absolute -left-8 -top-8 w-24 h-24 bg-primary-container/20 rounded-full blur-2xl"></div>
+</div>
+<!-- Digital Signatures Section -->
+<section class="glass-card rounded-xl p-6 shadow-sm">
+<div class="flex items-center gap-3 mb-6">
+<div class="w-10 h-10 rounded-lg bg-tertiary/10 text-tertiary flex items-center justify-center">
+<span class="material-symbols-outlined">draw</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm">Digital Signatures</h3>
+</div>
+<div class="space-y-8">
+<!-- Field Engineer Signature -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-2">Field Engineer: Alex Rivera</label>
+<div class="signature-pad h-32 rounded-lg flex items-center justify-center relative group">
+<img class="max-h-24 opacity-60" data-alt="A clean digital handwritten signature in blue ink on a crisp white background with a subtle paper texture. The signature is professional and flowing. Minimalist and corporate styling." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBw-gvuRaRYQx_YSx7624C8vrK0nDodU-ILhhGCAvHkrAxQJIzjyqZalM0NQnyKRd1MPXPVwibnmaV24WIk_1FeRznicNAJJWln5WegEnYoZh__J0oGDYaNw7Ld8DpzHD0uzXB3pvqJ6pgQWv8-1BuAKf_INwh2Xdh_8oO5LWTG03oY-dI3ixESZmDIOsrpoiYLLginWshFrmJQbhax1TNdBDyO2Nd623vVouvV5fO2nG2O2sGEv-WvSX_1o3vL2JuxrykpdaoTOxxG"/>
+<button class="absolute top-2 right-2 p-1 bg-surface-container rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-sm">edit</span>
+</button>
+</div>
+<div class="mt-2 flex justify-between text-xs text-outline">
+<span>E-Signed: 2023-10-24 14:15 UTC</span>
+<span>ID: FR-9921-X</span>
+</div>
+</div>
+<!-- Customer Signature -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-2">Customer: James Wilson (Operations Dir.)</label>
+<div class="signature-pad h-40 rounded-lg flex flex-col items-center justify-center bg-surface-container-lowest">
+<span class="material-symbols-outlined text-outline text-3xl mb-2">gesture</span>
+<p class="text-body-sm text-outline">Click here to sign on screen</p>
+</div>
+<div class="mt-4">
+<button class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-secondary text-on-secondary font-label-md rounded-lg hover:bg-secondary/90 transition-all">
+<span class="material-symbols-outlined text-[20px]">send</span>
+                                        Email Report to Customer
+                                    </button>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+<!-- Troubleshooting Quick Links -->
+<section class="mt-12">
+<div class="flex items-center gap-3 mb-6">
+<h3 class="font-headline-sm text-headline-sm">Troubleshooting Quick Links</h3>
+<div class="flex-1 h-px bg-outline-variant"></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+<a class="flex items-start gap-4 p-4 glass-card rounded-xl hover:border-primary hover:shadow-md transition-all group" href="#">
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined">wifi_off</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface">Network Connectivity</p>
+<p class="text-xs text-outline mt-1">Issues with local DNS or IP lease.</p>
+</div>
+</a>
+<a class="flex items-start gap-4 p-4 glass-card rounded-xl hover:border-primary hover:shadow-md transition-all group" href="#">
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined">key</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface">Admin Credentials</p>
+<p class="text-xs text-outline mt-1">Resetting the local terminal master key.</p>
+</div>
+</a>
+<a class="flex items-start gap-4 p-4 glass-card rounded-xl hover:border-primary hover:shadow-md transition-all group" href="#">
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined">sync</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface">Data Sync Delay</p>
+<p class="text-xs text-outline mt-1">Forcing a manual cloud handshake.</p>
+</div>
+</a>
+<a class="flex items-start gap-4 p-4 glass-card rounded-xl hover:border-primary hover:shadow-md transition-all group" href="#">
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined">support_agent</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface">Level 2 Support</p>
+<p class="text-xs text-outline mt-1">Direct escalation for hardware failure.</p>
+</div>
+</a>
+</div>
+</section>
+</div>
+</main>
+<!-- Floating Toast Notification (Micro-interaction) -->
+<div class="fixed bottom-8 right-8 bg-on-surface text-surface px-6 py-4 rounded-xl shadow-2xl flex items-center gap-4 translate-y-24 opacity-0 transition-all duration-500 ease-out z-[100]" id="toast">
+<span class="material-symbols-outlined text-green-400">check_circle</span>
+<div>
+<p class="font-label-md text-label-md">Report saved successfully</p>
+<p class="text-xs opacity-70">A draft has been synced to the enterprise portal.</p>
+</div>
+<button class="ml-4 opacity-50 hover:opacity-100" onclick="hideToast()">
+<span class="material-symbols-outlined text-sm">close</span>
+</button>
+</div>
+<script>
+        // Micro-interaction for the toast
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const toast = document.getElementById('toast');
+                toast.classList.remove('translate-y-24', 'opacity-0');
+            }, 2000);
+        });
+
+        function hideToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.add('translate-y-24', 'opacity-0');
+        }
+
+        // Mock interaction for retest buttons
+        const retestBtns = document.querySelectorAll('button:contains("Retest")');
+        retestBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const row = e.target.closest('tr');
+                const status = row.querySelector('.text-green-600, .text-error');
+                status.innerHTML = `<span class="material-symbols-outlined animate-spin text-sm">sync</span> TESTING...`;
+                setTimeout(() => {
+                    status.innerHTML = `<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span> PASS`;
+                    status.className = 'flex items-center gap-2 text-green-600 font-label-md';
+                }, 1500);
+            });
+        });
+
+        // Add custom contains selector for retest buttons since it's not native
+        document.querySelectorAll('button').forEach(btn => {
+            if(btn.innerText === 'Retest') {
+                btn.addEventListener('click', (e) => {
+                    const status = e.target.closest('tr').querySelector('.text-green-600, .text-error');
+                    status.innerHTML = `<span class="material-symbols-outlined animate-spin text-sm">sync</span> TESTING...`;
+                    setTimeout(() => {
+                        status.innerHTML = `<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span> PASS`;
+                        status.className = 'flex items-center gap-2 text-green-600 font-label-md';
+                    }, 1200);
+                });
+            }
+        });
+    </script>
+</body></html>

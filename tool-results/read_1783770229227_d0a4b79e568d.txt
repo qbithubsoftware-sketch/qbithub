@@ -1,0 +1,531 @@
+     1→     1→<!DOCTYPE html>
+     2→     2→
+     3→     3→<html class="light" lang="en"><head>
+     4→     4→<meta charset="utf-8"/>
+     5→     5→<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+     6→     6→<title>QBIT Hub - Installation Engineer Dashboard</title>
+     7→     7→<!-- Google Fonts: Inter -->
+     8→     8→<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+     9→     9→<!-- Material Symbols Outlined -->
+    10→    10→<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    11→    11→<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    12→    12→<!-- Tailwind CSS -->
+    13→    13→<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    14→    14→<script id="tailwind-config">
+    15→    15→      tailwind.config = {
+    16→    16→        darkMode: "class",
+    17→    17→        theme: {
+    18→    18→          extend: {
+    19→    19→            "colors": {
+    20→    20→                    "surface-bright": "#f9f9ff",
+    21→    21→                    "on-secondary": "#ffffff",
+    22→    22→                    "secondary-fixed-dim": "#b4c5ff",
+    23→    23→                    "surface-container-highest": "#dce2f7",
+    24→    24→                    "on-primary": "#ffffff",
+    25→    25→                    "primary-fixed": "#dce1ff",
+    26→    26→                    "outline-variant": "#c3c5d9",
+    27→    27→                    "inverse-primary": "#b6c4ff",
+    28→    28→                    "on-primary-container": "#e5e8ff",
+    29→    29→                    "on-error-container": "#93000a",
+    30→    30→                    "on-secondary-container": "#fefcff",
+    31→    31→                    "on-tertiary": "#ffffff",
+    32→    32→                    "on-background": "#141b2b",
+    33→    33→                    "on-secondary-fixed-variant": "#003ea8",
+    34→    34→                    "on-surface-variant": "#434656",
+    35→    35→                    "surface-dim": "#d3daef",
+    36→    36→                    "surface-container-low": "#f1f3ff",
+    37→    37→                    "tertiary-fixed-dim": "#c4c7c9",
+    38→    38→                    "secondary-container": "#316bf3",
+    39→    39→                    "on-surface": "#141b2b",
+    40→    40→                    "surface-container": "#e9edff",
+    41→    41→                    "surface-variant": "#dce2f7",
+    42→    42→                    "on-tertiary-container": "#e7e9eb",
+    43→    43→                    "inverse-on-surface": "#edf0ff",
+    44→    44→                    "primary-container": "#0057ff",
+    45→    45→                    "background": "#f9f9ff",
+    46→    46→                    "error": "#ba1a1a",
+    47→    47→                    "on-primary-fixed-variant": "#003ab2",
+    48→    48→                    "on-tertiary-fixed-variant": "#444749",
+    49→    49→                    "primary": "#0043c8",
+    50→    50→                    "tertiary": "#4e5153",
+    51→    51→                    "on-tertiary-fixed": "#191c1e",
+    52→    52→                    "inverse-surface": "#293040",
+    53→    53→                    "secondary-fixed": "#dbe1ff",
+    54→    54→                    "tertiary-container": "#66696b",
+    55→    55→                    "tertiary-fixed": "#e0e3e5",
+    56→    56→                    "secondary": "#0051d5",
+    57→    57→                    "surface-tint": "#004ee7",
+    58→    58→                    "surface-container-high": "#e1e8fd",
+    59→    59→                    "surface-container-lowest": "#ffffff",
+    60→    60→                    "on-error": "#ffffff",
+    61→    61→                    "primary-fixed-dim": "#b6c4ff",
+    62→    62→                    "outline": "#737688",
+    63→    63→                    "error-container": "#ffdad6",
+    64→    64→                    "on-secondary-fixed": "#00174b",
+    65→    65→                    "on-primary-fixed": "#001550",
+    66→    66→                    "surface": "#f9f9ff"
+    67→    67→            },
+    68→    68→            "borderRadius": {
+    69→    69→                    "DEFAULT": "0.25rem",
+    70→    70→                    "lg": "0.5rem",
+    71→    71→                    "xl": "0.75rem",
+    72→    72→                    "full": "9999px"
+    73→    73→            },
+    74→    74→            "spacing": {
+    75→    75→                    "sm": "8px",
+    76→    76→                    "xs": "4px",
+    77→    77→                    "unit": "8px",
+    78→    78→                    "margin-desktop": "32px",
+    79→    79→                    "md": "16px",
+    80→    80→                    "container-max": "1440px",
+    81→    81→                    "2xl": "48px",
+    82→    82→                    "3xl": "64px",
+    83→    83→                    "gutter": "24px",
+    84→    84→                    "xl": "32px",
+    85→    85→                    "margin-mobile": "16px",
+    86→    86→                    "lg": "24px"
+    87→    87→            },
+    88→    88→            "fontFamily": {
+    89→    89→                    "body-lg": ["Inter"],
+    90→    90→                    "label-sm": ["Inter"],
+    91→    91→                    "body-sm": ["Inter"],
+    92→    92→                    "label-md": ["Inter"],
+    93→    93→                    "headline-lg": ["Inter"],
+    94→    94→                    "display-sm": ["Inter"],
+    95→    95→                    "body-md": ["Inter"],
+    96→    96→                    "headline-md": ["Inter"],
+    97→    97→                    "display-lg": ["Inter"],
+    98→    98→                    "headline-lg-mobile": ["Inter"],
+    99→    99→                    "headline-sm": ["Inter"]
+   100→   100→            },
+   101→   101→            "fontSize": {
+   102→   102→                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+   103→   103→                    "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+   104→   104→                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+   105→   105→                    "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+   106→   106→                    "headline-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+   107→   107→                    "display-sm": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+   108→   108→                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+   109→   109→                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+   110→   110→                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+   111→   111→                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+   112→   112→                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}]
+   113→   113→            }
+   114→   114→          },
+   115→   115→        },
+   116→   116→      }
+   117→   117→    </script>
+   118→   118→<style>
+   119→   119→        body {
+   120→   120→            font-family: 'Inter', sans-serif;
+   121→   121→            background-color: #f9f9ff;
+   122→   122→            color: #141b2b;
+   123→   123→        }
+   124→   124→        .material-symbols-outlined {
+   125→   125→            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+   126→   126→        }
+   127→   127→        .glass-card {
+   128→   128→            background: rgba(255, 255, 255, 0.8);
+   129→   129→            backdrop-filter: blur(12px);
+   130→   130→            border: 1px solid rgba(226, 232, 240, 0.8);
+   131→   131→        }
+   132→   132→        .bento-grid {
+   133→   133→            display: grid;
+   134→   134→            grid-template-columns: repeat(12, 1fr);
+   135→   135→            gap: 24px;
+   136→   136→        }
+   137→   137→        .hide-scrollbar::-webkit-scrollbar {
+   138→   138→            display: none;
+   139→   139→        }
+   140→   140→        .hide-scrollbar {
+   141→   141→            -ms-overflow-style: none;
+   142→   142→            scrollbar-width: none;
+   143→   143→        }
+   144→   144→    </style>
+   145→   145→</head>
+   146→   146→<body class="overflow-x-hidden">
+   147→   147→<!-- SIDE NAVIGATION BAR (Anchor) -->
+   148→   148→<aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-lowest flex flex-col py-md border-r border-outline-variant shadow-sm z-50">
+   149→   149→<div class="px-lg mb-xl">
+   150→   150→<h1 class="font-headline-sm text-headline-sm font-bold text-primary">QBIT Hub</h1>
+   151→   151→<p class="text-label-sm text-on-surface-variant">Enterprise SaaS</p>
+   152→   152→</div>
+   153→   153→<nav class="flex-1 px-sm space-y-xs overflow-y-auto hide-scrollbar">
+   154→   154→<!-- Active Tab: Dashboard -->
+   155→   155→<a class="flex items-center gap-md px-md py-sm rounded-lg text-primary font-semibold border-l-4 border-primary bg-surface-container cursor-pointer active:scale-95 transition-all" href="#">
+   156→   156→<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+   157→   157→<span class="font-body-sm">Dashboard</span>
+   158→   158→</a>
+   159→   159→<!-- Inactive Tabs -->
+   160→   160→<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low cursor-pointer active:scale-95 transition-all" href="#">
+   161→   161→<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+   162→   162→<span class="font-body-sm">Products</span>
+   163→   163→</a>
+   164→   164→<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low cursor-pointer active:scale-95 transition-all" href="#">
+   165→   165→<span class="material-symbols-outlined" data-icon="settings_input_component">settings_input_component</span>
+   166→   166→<span class="font-body-sm">Drivers</span>
+   167→   167→</a>
+   168→   168→<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low cursor-pointer active:scale-95 transition-all" href="#">
+   169→   169→<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+   170→   170→<span class="font-body-sm">Installation Guides</span>
+   171→   171→</a>
+   172→   172→<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low cursor-pointer active:scale-95 transition-all" href="#">
+   173→   173→<span class="material-symbols-outlined" data-icon="play_circle">play_circle</span>
+   174→   174→<span class="font-body-sm">Videos</span>
+   175→   175→</a>
+   176→   176→<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low cursor-pointer active:scale-95 transition-all" href="#">
+   177→   177→<span class="material-symbols-outlined" data-icon="download">download</span>
+   178→   178→<span class="font-body-sm">Downloads</span>
+   179→   179→</a>
+   180→   180→<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low cursor-pointer active:scale-95 transition-all" href="#">
+   181→   181→<span class="material-symbols-outlined" data-icon="library_books">library_books</span>
+   182→   182→<span class="font-body-sm">Knowledge Base</span>
+   183→   183→</a>
+   184→   184→<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low cursor-pointer active:scale-95 transition-all" href="#">
+   185→   185→<span class="material-symbols-outlined" data-icon="build">build</span>
+   186→   186→<span class="font-body-sm">Troubleshooting</span>
+   187→   187→</a>
+   188→   188→<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low cursor-pointer active:scale-95 transition-all" href="#">
+   189→   189→<span class="material-symbols-outlined" data-icon="bookmark">bookmark</span>
+   190→   190→<span class="font-body-sm">Bookmarks</span>
+   191→   191→</a>
+   192→   192→<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low cursor-pointer active:scale-95 transition-all" href="#">
+   193→   193→<span class="material-symbols-outlined" data-icon="history">history</span>
+   194→   194→<span class="font-body-sm">Recent Files</span>
+   195→   195→</a>
+   196→   196→<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low cursor-pointer active:scale-95 transition-all" href="#">
+   197→   197→<span class="material-symbols-outlined" data-icon="contact_support">contact_support</span>
+   198→   198→<span class="font-body-sm">Support</span>
+   199→   199→</a>
+   200→   200→</nav>
+   201→   201→<div class="px-sm pt-md border-t border-outline-variant">
+   202→   202→<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low cursor-pointer active:scale-95 transition-all" href="#">
+   203→   203→<span class="material-symbols-outlined" data-icon="settings">settings</span>
+   204→   204→<span class="font-body-sm">Settings</span>
+   205→   205→</a>
+   206→   206→<button class="w-full flex items-center gap-md px-md py-sm mt-xs rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-all">
+   207→   207→<span class="material-symbols-outlined" data-icon="menu_open">menu_open</span>
+   208→   208→<span class="font-body-sm">Collapse</span>
+   209→   209→</button>
+   210→   210→</div>
+   211→   211→</aside>
+   212→   212→<!-- TOP NAVIGATION BAR (Anchor) -->
+   213→   213→<header class="fixed top-0 right-0 w-[calc(100%-256px)] h-16 bg-surface-container-lowest/80 backdrop-blur-md flex justify-between items-center px-lg z-40 border-b border-outline-variant shadow-sm">
+   214→   214→<div class="flex items-center gap-lg flex-1">
+   215→   215→<div class="relative w-full max-w-md">
+   216→   216→<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]" data-icon="search">search</span>
+   217→   217→<input class="w-full pl-10 pr-4 py-2 bg-surface-container-low border-none rounded-full font-label-md text-on-surface-variant focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Search resources..." type="text"/>
+   218→   218→</div>
+   219→   219→</div>
+   220→   220→<div class="flex items-center gap-md">
+   221→   221→<button class="p-sm text-on-surface-variant hover:text-primary transition-colors active:opacity-80">
+   222→   222→<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+   223→   223→</button>
+   224→   224→<button class="p-sm text-on-surface-variant hover:text-primary transition-colors active:opacity-80">
+   225→   225→<span class="material-symbols-outlined" data-icon="dark_mode">dark_mode</span>
+   226→   226→</button>
+   227→   227→<button class="p-sm text-on-surface-variant hover:text-primary transition-colors active:opacity-80">
+   228→   228→<span class="material-symbols-outlined" data-icon="apps">apps</span>
+   229→   229→</button>
+   230→   230→<div class="h-8 w-px bg-outline-variant mx-xs"></div>
+   231→   231→<div class="flex items-center gap-sm cursor-pointer group">
+   232→   232→<div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center overflow-hidden border border-outline-variant">
+   233→   233→<img class="w-full h-full object-cover" data-alt="A professional studio headshot of a senior installation engineer in a clean tech environment, soft blue lighting, enterprise dashboard aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmCNTwcx6rPdkKs5uh6SX6K_JpdIsNFEdH0i1K5fI_uIut3pXg76NnugNaSVPyB0CFL2qzXgkN0ufmARexkd8NxB3bYGoUSkQ4wIohBxLYYeWoEO5qGDhxWeFoDs0_DWTUeJDKQESV1V6EyjNDdtpWMPzkvFT6qwjCjeaNtgI8mSgE2LCd_j-5AcV0feTenDydclGE8q_fYg1l8GCrsD0tX3cvxLltTY-kUAGz2ETzjF-MfkvYg_Z1R5mlQ9iIyXaHdklJBpqvV2z1"/>
+   234→   234→</div>
+   235→   235→<span class="font-label-md text-on-surface group-hover:text-primary transition-colors">Alex Chen</span>
+   236→   236→</div>
+   237→   237→</div>
+   238→   238→</header>
+   239→   239→<!-- MAIN CONTENT CANVAS -->
+   240→   240→<main class="ml-64 pt-16 min-h-screen">
+   241→   241→<div class="max-w-container-max mx-auto p-lg space-y-xl">
+   242→   242→<!-- Welcome Banner & Quick Search Section -->
+   243→   243→<section class="relative rounded-xl overflow-hidden min-h-[300px] flex flex-col items-center justify-center text-center p-xl">
+   244→   244→
+   245→   245→<div class="absolute inset-0 bg-gradient-to-b from-transparent to-surface-bright/90 -z-10"></div>
+   246→   246→<h2 class="font-display-sm text-display-sm text-primary mb-xs">Welcome back, Installation Engineer</h2>
+   247→   247→<p class="font-body-lg text-body-lg text-on-surface-variant mb-xl max-w-2xl">Access all enterprise deployment tools, drivers, and technical manuals from your central command center.</p>
+   248→   248→<div class="w-full max-w-3xl relative">
+   249→   249→<div class="absolute inset-0 bg-primary/10 blur-2xl rounded-full"></div>
+   250→   250→<div class="relative bg-white shadow-xl rounded-2xl flex items-center p-xs border border-outline-variant">
+   251→   251→<span class="material-symbols-outlined text-primary mx-md" data-icon="search">search</span>
+   252→   252→<input class="flex-1 border-none focus:ring-0 py-4 font-body-md text-on-surface" placeholder="Search products, drivers, videos, manuals..." type="text"/>
+   253→   253→<button class="bg-primary text-on-primary px-lg py-3 rounded-xl font-label-md hover:bg-secondary transition-all active:scale-95 mr-xs">Search Hub</button>
+   254→   254→</div>
+   255→   255→<div class="mt-md flex justify-center gap-sm">
+   256→   256→<span class="text-label-sm text-on-surface-variant">Trending:</span>
+   257→   257→<a class="text-label-sm text-primary hover:underline" href="#">V3 POS Firmware</a>
+   258→   258→<span class="text-outline-variant">•</span>
+   259→   259→<a class="text-label-sm text-primary hover:underline" href="#">Printer SDK 2.4</a>
+   260→   260→<span class="text-outline-variant">•</span>
+   261→   261→<a class="text-label-sm text-primary hover:underline" href="#">Android Integration</a>
+   262→   262→</div>
+   263→   263→</div>
+   264→   264→</section>
+   265→   265→<!-- Modern Summary Cards (Bento-style layout) -->
+   266→   266→<section class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-lg">
+   267→   267→<div class="glass-card p-lg rounded-xl flex flex-col gap-sm hover:shadow-md transition-all group">
+   268→   268→<div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors">
+   269→   269→<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+   270→   270→</div>
+   271→   271→<div>
+   272→   272→<p class="text-label-sm text-on-surface-variant">Total Products</p>
+   273→   273→<h3 class="font-headline-md text-headline-md text-on-surface">1,248</h3>
+   274→   274→</div>
+   275→   275→</div>
+   276→   276→<div class="glass-card p-lg rounded-xl flex flex-col gap-sm hover:shadow-md transition-all group">
+   277→   277→<div class="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary group-hover:bg-secondary group-hover:text-on-primary transition-colors">
+   278→   278→<span class="material-symbols-outlined" data-icon="settings_input_component">settings_input_component</span>
+   279→   279→</div>
+   280→   280→<div>
+   281→   281→<p class="text-label-sm text-on-surface-variant">Drivers</p>
+   282→   282→<h3 class="font-headline-md text-headline-md text-on-surface">432</h3>
+   283→   283→</div>
+   284→   284→</div>
+   285→   285→<div class="glass-card p-lg rounded-xl flex flex-col gap-sm hover:shadow-md transition-all group">
+   286→   286→<div class="w-10 h-10 rounded-lg bg-tertiary/10 flex items-center justify-center text-tertiary group-hover:bg-tertiary group-hover:text-on-primary transition-colors">
+   287→   287→<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+   288→   288→</div>
+   289→   289→<div>
+   290→   290→<p class="text-label-sm text-on-surface-variant">Guides</p>
+   291→   291→<h3 class="font-headline-md text-headline-md text-on-surface">156</h3>
+   292→   292→</div>
+   293→   293→</div>
+   294→   294→<div class="glass-card p-lg rounded-xl flex flex-col gap-sm hover:shadow-md transition-all group">
+   295→   295→<div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors">
+   296→   296→<span class="material-symbols-outlined" data-icon="play_circle">play_circle</span>
+   297→   297→</div>
+   298→   298→<div>
+   299→   299→<p class="text-label-sm text-on-surface-variant">Videos</p>
+   300→   300→<h3 class="font-headline-md text-headline-md text-on-surface">84</h3>
+   301→   301→</div>
+   302→   302→</div>
+   303→   303→<div class="glass-card p-lg rounded-xl flex flex-col gap-sm hover:shadow-md transition-all group">
+   304→   304→<div class="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary group-hover:bg-secondary group-hover:text-on-primary transition-colors">
+   305→   305→<span class="material-symbols-outlined" data-icon="library_books">library_books</span>
+   306→   306→</div>
+   307→   307→<div>
+   308→   308→<p class="text-label-sm text-on-surface-variant">Articles</p>
+   309→   309→<h3 class="font-headline-md text-headline-md text-on-surface">3.2k</h3>
+   310→   310→</div>
+   311→   311→</div>
+   312→   312→<div class="glass-card p-lg rounded-xl flex flex-col gap-sm hover:shadow-md transition-all group">
+   313→   313→<div class="w-10 h-10 rounded-lg bg-tertiary/10 flex items-center justify-center text-tertiary group-hover:bg-tertiary group-hover:text-on-primary transition-colors">
+   314→   314→<span class="material-symbols-outlined" data-icon="update">update</span>
+   315→   315→</div>
+   316→   316→<div>
+   317→   317→<p class="text-label-sm text-on-surface-variant">Latest Updates</p>
+   318→   318→<h3 class="font-headline-md text-headline-md text-on-surface">12</h3>
+   319→   319→</div>
+   320→   320→</div>
+   321→   321→</section>
+   322→   322→<div class="bento-grid">
+   323→   323→<!-- Quick Actions Section -->
+   324→   324→<div class="col-span-12 lg:col-span-8 space-y-xl">
+   325→   325→<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg shadow-sm">
+   326→   326→<div class="flex items-center justify-between mb-lg">
+   327→   327→<h3 class="font-headline-sm text-headline-sm">Quick Actions</h3>
+   328→   328→<button class="text-primary font-label-md hover:underline">Manage All</button>
+   329→   329→</div>
+   330→   330→<div class="grid grid-cols-2 md:grid-cols-4 gap-md">
+   331→   331→<button class="flex flex-col items-center justify-center p-lg rounded-xl bg-surface-container-low hover:bg-primary-container hover:text-on-primary-container transition-all group">
+   332→   332→<span class="material-symbols-outlined text-[32px] mb-sm group-hover:scale-110 transition-transform" data-icon="grid_view">grid_view</span>
+   333→   333→<span class="font-label-md text-center">Browse Products</span>
+   334→   334→</button>
+   335→   335→<button class="flex flex-col items-center justify-center p-lg rounded-xl bg-surface-container-low hover:bg-primary-container hover:text-on-primary-container transition-all group">
+   336→   336→<span class="material-symbols-outlined text-[32px] mb-sm group-hover:scale-110 transition-transform" data-icon="cloud_download">cloud_download</span>
+   337→   337→<span class="font-label-md text-center">Download Drivers</span>
+   338→   338→</button>
+   339→   339→<button class="flex flex-col items-center justify-center p-lg rounded-xl bg-surface-container-low hover:bg-primary-container hover:text-on-primary-container transition-all group">
+   340→   340→<span class="material-symbols-outlined text-[32px] mb-sm group-hover:scale-110 transition-transform" data-icon="fact_check">fact_check</span>
+   341→   341→<span class="font-label-md text-center">Installation Guides</span>
+   342→   342→</button>
+   343→   343→<button class="flex flex-col items-center justify-center p-lg rounded-xl bg-surface-container-low hover:bg-primary-container hover:text-on-primary-container transition-all group">
+   344→   344→<span class="material-symbols-outlined text-[32px] mb-sm group-hover:scale-110 transition-transform" data-icon="video_library">video_library</span>
+   345→   345→<span class="font-label-md text-center">Watch Videos</span>
+   346→   346→</button>
+   347→   347→</div>
+   348→   348→</div>
+   349→   349→<!-- Pinned Resources (Premium Cards) -->
+   350→   350→<div class="space-y-md">
+   351→   351→<h3 class="font-headline-sm text-headline-sm">Pinned Resources</h3>
+   352→   352→<div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
+   353→   353→<div class="relative h-48 rounded-xl overflow-hidden group cursor-pointer border border-outline-variant">
+   354→   354→<div class="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-500" data-alt="A clean, minimalist high-tech POS system on a white table with soft morning light, Windows interface visible, enterprise environment." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDyD1UwlsVwDRey9OgAwLFQFPRc4dcdq0SfB4-Y5JDUgM4dN1n8ivDZaahGf2ghiDqgD5crBxtHmDTvLvmfR7KplUf1t7gAi81cgGDcAwHzIFvumc7eZawrqFke9YeiJZ8gDdtKceU9T-gJIjUtQP2YU4T3W5pP7AY-ZtPPsMuLKYZTf_LwubYn0si5mZZA4QdYV_ScWJLk8tjWuYq7xTqfNBKg2Rw6J9G-qE2uyBSEferTvV4Ugek5F0chrFysmg77jJMwLOBQp9tu')"></div>
+   355→   355→<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+   356→   356→<div class="absolute bottom-0 left-0 p-lg w-full">
+   357→   357→<span class="bg-primary text-on-primary px-sm py-1 rounded text-[10px] font-bold uppercase tracking-wider mb-sm inline-block">Popular</span>
+   358→   358→<h4 class="text-white font-headline-sm">Windows POS Setup Guide</h4>
+   359→   359→<p class="text-white/70 font-label-md">Complete deployment workflow v4.2</p>
+   360→   360→</div>
+   361→   361→</div>
+   362→   362→<div class="relative h-48 rounded-xl overflow-hidden group cursor-pointer border border-outline-variant">
+   363→   363→<div class="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-500" data-alt="Macro photography of a sleek thermal receipt printer mechanism, metallic parts, futuristic office lighting, high contrast blue and white." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDW_yA2LkUAY_1Emkpr4vlMbaswHbc7sL4VxyIUdf2cZ5Wo1q6H6L2AwSAwtY42tJY8QtPxxwCZ7G08_e3Sc6WF3qBRJNLmZWQ0G07zqiRGn1CvDMeGSkav-QcgBEd1cVAOwiNmggPdzZf96FoIOIGQP7_UsPkKf_jbDNgyDzSSq7j7DKSIY1EYoFMF_k3pV3A-T5N93yZobuSiiEktop75EXJkB5Wc4sRllkKyTbb9Na5ruVvmYo3jiSJAuozhDaj0jIFCL8FjOl1K')"></div>
+   364→   364→<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+   365→   365→<div class="absolute bottom-0 left-0 p-lg w-full">
+   366→   366→<span class="bg-secondary text-on-secondary px-sm py-1 rounded text-[10px] font-bold uppercase tracking-wider mb-sm inline-block">Driver</span>
+   367→   367→<h4 class="text-white font-headline-sm">Thermal Printer Driver</h4>
+   368→   368→<h4 class="text-white/70 font-label-md">Unified Windows/Linux Package</h4>
+   369→   369→</div>
+   370→   370→</div>
+   371→   371→<div class="relative h-48 rounded-xl overflow-hidden group cursor-pointer border border-outline-variant">
+   372→   372→<div class="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-500" data-alt="Close up of a laser barcode scanner reflecting neon light in a dark warehouse, tech-focused professional photography." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBOWMHTUWnYeQ9_u55cvcX-E9WMl3qoEZ7AOURIzLailAzu6xqdk-f--E_ZpFwDVRAYXrzhVpi2092vcD99L6L7UZ1m21f5SBm-ia_CYyvLHevVvfZN_o7oZTBG0mfg7mPIdFcnW4mFz91ocJ6mccCh0TS6p2lR00lcM6AweGKAH27O7didqqqUO-kaN-osQFcLHA-eEoZ0VX7FcxxBK4JYSvJNoT3f37bQeLgWUhazzS_pUFi9kbjp6DETokA17BDmK8F5g1cXC1Rl')"></div>
+   373→   373→<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+   374→   374→<div class="absolute bottom-0 left-0 p-lg w-full">
+   375→   375→<span class="bg-tertiary text-on-tertiary px-sm py-1 rounded text-[10px] font-bold uppercase tracking-wider mb-sm inline-block">Manual</span>
+   376→   376→<h4 class="text-white font-headline-sm">Barcode Scanner Manual</h4>
+   377→   377→<p class="text-white/70 font-label-md">Configuration &amp; Troubleshooting</p>
+   378→   378→</div>
+   379→   379→</div>
+   380→   380→<div class="relative h-48 rounded-xl overflow-hidden group cursor-pointer border border-outline-variant">
+   381→   381→<div class="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-500" data-alt="A handheld Android POS device being used in a modern retail store, shallow depth of field, focus on the screen UI, premium feel." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCZRVr--nGewxaj5YD2gf5QuXnelXNZZTsQ3tLZy1_FDNxB57LCcEchXnoNOe2pvSOQuSMPltB-8l9g91RkOUlLmaAkcOWhSkUnU9fQhqd4kt3eeDG5MaK2OcGZyWAq42hFo90otZ0BbsHGLElzyxSdIG9u6UuP_mCiAcEJ7quSdQN89UZ7wtdccbrjM8dMhus2dAK6nEraYEBcRCvX0d8R-laC6MkoMivK-04eX7_5L9F-8zOLeSpWVhiE2zh99Kf-PA0LZw-K2Di1')"></div>
+   382→   382→<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+   383→   383→<div class="absolute bottom-0 left-0 p-lg w-full">
+   384→   384→<span class="bg-primary text-on-primary px-sm py-1 rounded text-[10px] font-bold uppercase tracking-wider mb-sm inline-block">Android</span>
+   385→   385→<h4 class="text-white font-headline-sm">Android POS Installation</h4>
+   386→   386→<p class="text-white/70 font-label-md">GMS &amp; App Store Configuration</p>
+   387→   387→</div>
+   388→   388→</div>
+   389→   389→</div>
+   390→   390→</div>
+   391→   391→</div>
+   392→   392→<!-- Right Sidebar: Recent Activity & Latest Updates -->
+   393→   393→<div class="col-span-12 lg:col-span-4 space-y-xl">
+   394→   394→<!-- Recent Activity Section -->
+   395→   395→<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg shadow-sm">
+   396→   396→<div class="flex items-center justify-between mb-lg">
+   397→   397→<h3 class="font-headline-sm text-headline-sm">Recent Activity</h3>
+   398→   398→<button class="text-primary font-label-md hover:underline">View History</button>
+   399→   399→</div>
+   400→   400→<div class="space-y-lg">
+   401→   401→<div class="flex gap-md">
+   402→   402→<div class="relative flex flex-col items-center">
+   403→   403→<div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary z-10">
+   404→   404→<span class="material-symbols-outlined text-[18px]" data-icon="download">download</span>
+   405→   405→</div>
+   406→   406→<div class="w-px h-full bg-outline-variant absolute top-8"></div>
+   407→   407→</div>
+   408→   408→<div class="pb-md">
+   409→   409→<p class="text-body-sm font-semibold">Driver Updated: QBIT T-800</p>
+   410→   410→<p class="text-label-sm text-on-surface-variant">Version 2.4.1 stable released for Win11.</p>
+   411→   411→<span class="text-[11px] text-outline mt-xs block">2 hours ago</span>
+   412→   412→</div>
+   413→   413→</div>
+   414→   414→<div class="flex gap-md">
+   415→   415→<div class="relative flex flex-col items-center">
+   416→   416→<div class="w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center text-secondary z-10">
+   417→   417→<span class="material-symbols-outlined text-[18px]" data-icon="description">description</span>
+   418→   418→</div>
+   419→   419→<div class="w-px h-full bg-outline-variant absolute top-8"></div>
+   420→   420→</div>
+   421→   421→<div class="pb-md">
+   422→   422→<p class="text-body-sm font-semibold">Manual Revised: Android Kiosk</p>
+   423→   423→<p class="text-label-sm text-on-surface-variant">Updated security section for API Level 34.</p>
+   424→   424→<span class="text-[11px] text-outline mt-xs block">5 hours ago</span>
+   425→   425→</div>
+   426→   426→</div>
+   427→   427→<div class="flex gap-md">
+   428→   428→<div class="relative flex flex-col items-center">
+   429→   429→<div class="w-8 h-8 rounded-full bg-tertiary/10 flex items-center justify-center text-tertiary z-10">
+   430→   430→<span class="material-symbols-outlined text-[18px]" data-icon="inventory">inventory</span>
+   431→   431→</div>
+   432→   432→<div class="w-px h-full bg-outline-variant absolute top-8"></div>
+   433→   433→</div>
+   434→   434→<div class="pb-md">
+   435→   435→<p class="text-body-sm font-semibold">Product Added: HUB-X Pro</p>
+   436→   436→<p class="text-label-sm text-on-surface-variant">New enterprise hub series now in catalog.</p>
+   437→   437→<span class="text-[11px] text-outline mt-xs block">Yesterday</span>
+   438→   438→</div>
+   439→   439→</div>
+   440→   440→<div class="flex gap-md">
+   441→   441→<div class="relative flex flex-col items-center">
+   442→   442→<div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary z-10">
+   443→   443→<span class="material-symbols-outlined text-[18px]" data-icon="play_circle">play_circle</span>
+   444→   444→</div>
+   445→   445→</div>
+   446→   446→<div>
+   447→   447→<p class="text-body-sm font-semibold">Video Uploaded: Fiber Cabling</p>
+   448→   448→<p class="text-label-sm text-on-surface-variant">Advanced installation tutorial for sites.</p>
+   449→   449→<span class="text-[11px] text-outline mt-xs block">2 days ago</span>
+   450→   450→</div>
+   451→   451→</div>
+   452→   452→</div>
+   453→   453→</div>
+   454→   454→<!-- Latest Updates (Timeline Layout) -->
+   455→   455→<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg shadow-sm">
+   456→   456→<h3 class="font-headline-sm text-headline-sm mb-lg">Announcements</h3>
+   457→   457→<div class="space-y-md">
+   458→   458→<div class="p-md bg-primary-fixed/30 rounded-xl border border-primary/10">
+   459→   459→<div class="flex items-center gap-sm mb-xs">
+   460→   460→<span class="material-symbols-outlined text-primary text-[18px]" data-icon="campaign">campaign</span>
+   461→   461→<span class="font-label-md text-primary uppercase tracking-tight">System Notice</span>
+   462→   462→</div>
+   463→   463→<p class="text-body-sm font-medium">Scheduled maintenance on Nov 24, 02:00 GMT.</p>
+   464→   464→</div>
+   465→   465→<div class="p-md bg-surface-container-low rounded-xl border border-outline-variant">
+   466→   466→<div class="flex items-center gap-sm mb-xs">
+   467→   467→<span class="material-symbols-outlined text-on-surface-variant text-[18px]" data-icon="new_releases">new_releases</span>
+   468→   468→<span class="font-label-md text-on-surface-variant uppercase tracking-tight">Firmware</span>
+   469→   469→</div>
+   470→   470→<p class="text-body-sm">Global rollout of Firmware 4.0 for all Retail Units.</p>
+   471→   471→</div>
+   472→   472→<div class="p-md bg-surface-container-low rounded-xl border border-outline-variant">
+   473→   473→<div class="flex items-center gap-sm mb-xs">
+   474→   474→<span class="material-symbols-outlined text-on-surface-variant text-[18px]" data-icon="info">info</span>
+   475→   475→<span class="font-label-md text-on-surface-variant uppercase tracking-tight">Knowledge Base</span>
+   476→   476→</div>
+   477→   477→<p class="text-body-sm">New security protocols for data encryption added.</p>
+   478→   478→</div>
+   479→   479→</div>
+   480→   480→<button class="w-full mt-lg py-sm rounded-lg border border-outline-variant font-label-md hover:bg-surface-container transition-all">Check All Updates</button>
+   481→   481→</div>
+   482→   482→</div>
+   483→   483→</div>
+   484→   484→</div>
+   485→   485→</main>
+   486→   486→<!-- Contextual FAB (Suppressed on dashboard as per instructions, but adding for logic reference if needed elsewhere) -->
+   487→   487→<!-- <button class="fixed bottom-lg right-lg w-14 h-14 bg-primary text-on-primary rounded-full shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50">
+   488→   488→        <span class="material-symbols-outlined" data-icon="add">add</span>
+   489→   489→    </button> -->
+   490→   490→<script>
+   491→   491→        // Micro-interaction for hover states on summary cards
+   492→   492→        document.querySelectorAll('.glass-card').forEach(card => {
+   493→   493→            card.addEventListener('mouseenter', () => {
+   494→   494→                card.style.transform = 'translateY(-4px)';
+   495→   495→            });
+   496→   496→            card.addEventListener('mouseleave', () => {
+   497→   497→                card.style.transform = 'translateY(0)';
+   498→   498→            });
+   499→   499→        });
+   500→   500→
+   501→   501→        // Basic toggle for mobile navigation (mock logic)
+   502→   502→        const collapseBtn = document.querySelector('[data-icon="menu_open"]');
+   503→   503→        let collapsed = false;
+   504→   504→        collapseBtn?.parentElement.addEventListener('click', () => {
+   505→   505→            collapsed = !collapsed;
+   506→   506→            const sidebar = document.querySelector('aside');
+   507→   507→            const main = document.querySelector('main');
+   508→   508→            const header = document.querySelector('header');
+   509→   509→            
+   510→   510→            if(collapsed) {
+   511→   511→                sidebar.classList.add('w-20');
+   512→   512→                sidebar.classList.remove('w-64');
+   513→   513→                main.classList.remove('ml-64');
+   514→   514→                main.classList.add('ml-20');
+   515→   515→                header.classList.remove('w-[calc(100%-256px)]');
+   516→   516→                header.classList.add('w-[calc(100%-80px)]');
+   517→   517→                document.querySelectorAll('aside span:not(.material-symbols-outlined)').forEach(s => s.classList.add('hidden'));
+   518→   518→                collapseBtn.textContent = 'menu';
+   519→   519→            } else {
+   520→   520→                sidebar.classList.remove('w-20');
+   521→   521→                sidebar.classList.add('w-64');
+   522→   522→                main.classList.add('ml-64');
+   523→   523→                main.classList.remove('ml-20');
+   524→   524→                header.classList.add('w-[calc(100%-256px)]');
+   525→   525→                header.classList.remove('w-[calc(100%-80px)]');
+   526→   526→                document.querySelectorAll('aside span:not(.material-symbols-outlined)').forEach(s => s.classList.remove('hidden'));
+   527→   527→                collapseBtn.textContent = 'menu_open';
+   528→   528→            }
+   529→   529→        });
+   530→   530→    </script>
+   531→   531→</body></html>

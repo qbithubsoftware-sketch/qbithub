@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>QBIT Hub - QBIT T-800 Product Details</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-high": "#e1e8fd",
+                        "on-surface": "#141b2b",
+                        "surface-dim": "#d3daef",
+                        "secondary": "#0051d5",
+                        "error-container": "#ffdad6",
+                        "background": "#f9f9ff",
+                        "on-primary": "#ffffff",
+                        "primary": "#0043c8",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#444749",
+                        "inverse-surface": "#293040",
+                        "surface": "#f9f9ff",
+                        "surface-bright": "#f9f9ff",
+                        "inverse-primary": "#b6c4ff",
+                        "surface-tint": "#004ee7",
+                        "on-error": "#ffffff",
+                        "tertiary-container": "#66696b",
+                        "on-surface-variant": "#434656",
+                        "secondary-fixed-dim": "#b4c5ff",
+                        "tertiary-fixed": "#e0e3e5",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed": "#191c1e",
+                        "on-primary-fixed-variant": "#003ab2",
+                        "surface-container-low": "#f1f3ff",
+                        "inverse-on-surface": "#edf0ff",
+                        "secondary-fixed": "#dbe1ff",
+                        "on-primary-fixed": "#001550",
+                        "secondary-container": "#316bf3",
+                        "on-secondary-fixed-variant": "#003ea8",
+                        "surface-variant": "#dce2f7",
+                        "outline": "#737688",
+                        "error": "#ba1a1a",
+                        "primary-fixed": "#dce1ff",
+                        "primary-container": "#0057ff",
+                        "on-secondary-container": "#fefcff",
+                        "surface-container-highest": "#dce2f7",
+                        "primary-fixed-dim": "#b6c4ff",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-container": "#e7e9eb",
+                        "on-primary-container": "#e5e8ff",
+                        "on-background": "#141b2b",
+                        "tertiary-fixed-dim": "#c4c7c9",
+                        "outline-variant": "#c3c5d9",
+                        "tertiary": "#4e5153",
+                        "on-secondary-fixed": "#00174b",
+                        "surface-container": "#e9edff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "md": "16px",
+                        "margin-desktop": "32px",
+                        "xs": "4px",
+                        "sm": "8px",
+                        "lg": "24px",
+                        "xl": "32px",
+                        "gutter": "24px",
+                        "container-max": "1440px",
+                        "3xl": "64px",
+                        "margin-mobile": "16px",
+                        "2xl": "48px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Inter"],
+                        "display-sm": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "display-sm": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #f9f9ff; }
+        .glass-effect { backdrop-filter: blur(12px); border: 1px solid rgba(226, 232, 240, 0.5); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    </style>
+</head>
+<body class="text-on-background">
+<!-- SideNavBar (JSON Derived) -->
+<aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-lowest border-r border-outline-variant shadow-sm flex flex-col py-md z-50">
+<div class="px-lg mb-xl">
+<h1 class="font-headline-sm text-headline-sm font-bold text-primary">QBIT Hub</h1>
+<p class="font-body-sm text-body-sm text-outline">Enterprise SaaS</p>
+</div>
+<nav class="flex-grow space-y-1 px-sm">
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-sm text-body-sm">Dashboard</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-primary font-semibold border-l-4 border-primary bg-surface-container cursor-pointer" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-body-sm text-body-sm">Products</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">settings_input_component</span>
+<span class="font-body-sm text-body-sm">Drivers</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">menu_book</span>
+<span class="font-body-sm text-body-sm">Installation Guides</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">play_circle</span>
+<span class="font-body-sm text-body-sm">Videos</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">download</span>
+<span class="font-body-sm text-body-sm">Downloads</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">library_books</span>
+<span class="font-body-sm text-body-sm">Knowledge Base</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">build</span>
+<span class="font-body-sm text-body-sm">Troubleshooting</span>
+</a>
+<div class="pt-lg mt-lg border-t border-outline-variant/30">
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-sm text-body-sm">Settings</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">menu_open</span>
+<span class="font-body-sm text-body-sm">Collapse</span>
+</a>
+</div>
+</nav>
+</aside>
+<!-- TopNavBar (JSON Derived) -->
+<header class="fixed top-0 right-0 w-[calc(100%-256px)] h-16 bg-surface-container-lowest/80 backdrop-blur-md border-b border-outline-variant shadow-sm flex justify-between items-center px-lg z-40">
+<div class="flex items-center gap-lg flex-1">
+<div class="relative w-96">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-xl pl-10 py-2 focus:ring-2 focus:ring-primary/20 font-body-sm" placeholder="Search components, documentation, or drivers..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors duration-200">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors duration-200">
+<span class="material-symbols-outlined">dark_mode</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors duration-200">
+<span class="material-symbols-outlined">apps</span>
+</button>
+<div class="h-8 w-8 rounded-full bg-primary-container flex items-center justify-center text-white overflow-hidden ml-sm">
+<img class="object-cover h-full w-full" data-alt="Professional headshot of a senior IT systems administrator for a large tech enterprise, wearing a casual navy blazer against a minimalist gray office background. High resolution, professional lighting, corporate aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD2DA7OVW22UduKG3R3uoGvGWbZq-dfRjB0VM0IYrBdoFFtkgQKybno3Qd_TEtE4fILsZXSxojDiDBpKDLR-X280dlUqlwpsTh-bXvg4IdOW5c0T6EZmi8W45OrGdciPb-Eo9k4yXfZSX8Lnx_ne0rtIyLbQAoCl4WSUkTjgqlp21CX8ZMqg7Ny1gA175JPNUAnyC6AzV81qnYaf7I7cK8YYmhPB5qRuMxN3_oI_riI6HqX_9rGN_7PWZ8_Z6GgS9HIyAD9KoqFWZXX"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-64 mt-16 p-xl">
+<div class="max-w-[1440px] mx-auto space-y-xl">
+<!-- Hero Section: Gallery & Product Info -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-xl">
+<!-- Left: Product Gallery -->
+<div class="lg:col-span-7 space-y-md">
+<div class="bg-white rounded-xl overflow-hidden border border-outline-variant shadow-sm aspect-[4/3] group relative">
+<img alt="QBIT T-800 Main View" class="w-full h-full object-contain p-lg transition-transform duration-500 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida/AP1WRLsvZGeMvhkznZvRq6jRYsjv-iHQbpSWfnJcjzWR5ZXLcxJRkHkGtY5oz38nSopfA0SsmkPaeg3no0eilyKUQcvIi4N_2prp-l-4v5jsJv4Dt4-0epzauDfrtusZp7STosWItm8w_XTtO5pT93F74ERu2j-EJYLBXWZfdygxZTF08r3zyqXDc_xRBxh_OCrcioa3J8F9b0vxAwgivTkFKdQqhSoNRfHmLws_eH2_3ziVncGhQBFdmii0RXEL"/>
+<div class="absolute bottom-4 right-4 bg-white/80 backdrop-blur px-sm py-xs rounded-lg border border-outline-variant flex items-center gap-xs shadow-sm">
+<span class="material-symbols-outlined text-sm">zoom_in</span>
+<span class="font-label-sm text-label-sm">Hover to zoom</span>
+</div>
+</div>
+<!-- Thumbnail Strip -->
+<div class="flex gap-md overflow-x-auto no-scrollbar pb-sm">
+<div class="min-w-[80px] h-20 bg-white border-2 border-primary rounded-lg overflow-hidden cursor-pointer shadow-sm">
+<img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida/AP1WRLsvZGeMvhkznZvRq6jRYsjv-iHQbpSWfnJcjzWR5ZXLcxJRkHkGtY5oz38nSopfA0SsmkPaeg3no0eilyKUQcvIi4N_2prp-l-4v5jsJv4Dt4-0epzauDfrtusZp7STosWItm8w_XTtO5pT93F74ERu2j-EJYLBXWZfdygxZTF08r3zyqXDc_xRBxh_OCrcioa3J8F9b0vxAwgivTkFKdQqhSoNRfHmLws_eH2_3ziVncGhQBFdmii0RXEL"/>
+</div>
+<!-- Generating 7 more mock thumbnails for visual balance -->
+<div class="min-w-[80px] h-20 bg-white border border-outline-variant rounded-lg overflow-hidden cursor-pointer hover:border-primary/50 transition-colors">
+<img class="w-full h-full object-cover" data-alt="A clean, close-up shot of the rear IO panel of an enterprise Windows POS terminal, highlighting various ports like USB, LAN, and HDMI, set against a pristine white studio background. Minimalist industrial design, premium lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAa2XzZ9Z2HWSOOKf9DQBu9pLEtZXI3kSPuftEcz_3TxlPnLYHSU7hFiq1KWZMnzja4QmkCtSBH-8UfEOPOI8L2G9cOsoBYoIbxVCvbMW3QBSPK8RSkhiNjRA1ERK32eKOzugDqkm_fFKqzVVi0soMCS1dRyYCH83tIomTSfRtu8gz26D42u2TCbfrl9Shmy1ixlb4mVsfYxHRBqyXkXTt7N70QiAsuSUoOWSrl9ONLr5EduHiCx_H8qWaO69PWFyQGoZxcVOXP-PGK"/>
+</div>
+<div class="min-w-[80px] h-20 bg-white border border-outline-variant rounded-lg overflow-hidden cursor-pointer hover:border-primary/50 transition-colors">
+<img class="w-full h-full object-cover" data-alt="Side profile view of a high-end white point-of-sale terminal, showing its slim aerodynamic base and adjustable screen hinge. Studio product photography, sharp focus, clean enterprise aesthetics." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCsN7-Skm4G--OeYxGLmqZ8ARAxnwYeL6pfJdTx72bOW6pJCnAI0lgxiL3kKYM8wV8IEozxGAa1yhLjOXsf6MGJTmR3lfWEEG_SRz0SpAzy0DC6aC4g-Q_5xNEuBDBdPHfDpPdEwqk9w7coATJ7YU5EDS2xEnIyU5xpd8x5rV5ggQQ42UlyNM6BY9ZIcTFNIFhn8IzTWyjx3T4C_tI41Sk0fWSFWWoMfpMmq1LfySf2zSiKzoZozzS9IVJcGmlMNmrNZc0tns2E1cY2"/>
+</div>
+<div class="min-w-[80px] h-20 bg-white border border-outline-variant rounded-lg overflow-hidden cursor-pointer hover:border-primary/50 transition-colors">
+<img class="w-full h-full object-cover" data-alt="Packaging view of a premium tech product, showing a sleek white minimalist cardboard box with blue branding accents, isolated on a clean white surface. High-end retail experience, crisp lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCBEl6V4VZXLN2vIP--u1X2KSl_gFQLa_Q249ZrVEI3ENtF_rs2IH0sHlppCRd4X-rWt4Yp9plbmdpqg9AmfDJ2DuiCkN0bRUvKam7JnK6L_ugqHhr3ncyECaifP3ugkpRxkB6ABILFEytiAcUaQNlP30Usg8oOnEEL1YlHZcANaqZN1-jEH7mz3AYqtyDJVaexhuUOd73rUfxBGYe4HwE-lihfLVbOVwPvOdiDq8sIjp5iHvFL1YKffcibUkYkvoi8KxkAYgFzmxVQ"/>
+</div>
+<div class="min-w-[80px] h-20 bg-white border border-outline-variant rounded-lg overflow-hidden cursor-pointer hover:border-primary/50 transition-colors">
+<img class="w-full h-full object-cover" data-alt="Bottom view of an industrial POS terminal showing rubberized feet and heat dissipation vents, clean white plastic finish, high-quality manufacturing detail. Studio environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMtbG2ddv5kXJrvZv9MgD0gUe-orJXbdo8jHNgglSI3jVhLF492xYkYEJlCTZ9EuKViwa6dpQ02hJnQxfvCCHqUws4m5-bvDy94aFn_ORNm9qxSrq_ewvvZFIvUhJjrKKJybkLMfsQrCaZBPqC2VD7YSotxwmPTKP0vowdlE_zkW7VWJ8jCdAW0zm_7X9-W3BwJU6fi7MgmPqmtYAz5PXNN3YSkQ8JdRyPtEfwsoYtVkphdF1ZmJOV03kQIvnk273RINnE8kfSl-Gp"/>
+</div>
+<div class="min-w-[80px] h-20 bg-white border border-outline-variant rounded-lg overflow-hidden cursor-pointer hover:border-primary/50 transition-colors">
+<img class="w-full h-full object-cover" data-alt="A lifestyle shot of the POS terminal in a modern boutique hotel reception, showcasing its sleek design integrating with high-end decor. Soft natural lighting, premium hospitality setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCplnPqLUjT0gEc4ySsQNv4xT5CSls8HXkwA0QHNQwACKY4zbDkV3142GQ_ZVxqHbUANNbhK7LEQC8xt8rGj-IX0WavPY0YO0J_hm8jnKlmiROp9xRMtn8ITQ8meAQLjDuSLT3S2bs_l09y0wnpY3jGteD1KMPH3LIOyxLzCT0U75hVH4m81m2HSHC7m3DyZvXjJw0hr9TpQWyC0cmeBJ-0kF-2nB12BDtgZDyEm3YAO5Jg8C26k20pfunnbdaytTZvE5sKJfS4rSNS"/>
+</div>
+<div class="min-w-[80px] h-20 bg-white border border-outline-variant rounded-lg overflow-hidden cursor-pointer hover:border-primary/50 transition-colors">
+<img class="w-full h-full object-cover" data-alt="Portrait angle showing the capacitive touch display active with a minimalist software interface, highlighting the vibrant colors and sharp resolution of the screen." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBzkpJVxInUbtpv2KBmZdQl2Vzwbjk5ztklZKJpReiLA1MtDS0M0BzcerHZw_D9ES1fLPSeACobUhxoVakqg-GxMQ1Cle3y8UgwclATAWhjO66VBNg60PmPge8NP0hDHqsoOecB_99EAvTQ1o9-vtK98Cmu0im0XXSnxsgJvuGP3a6aACUHyvd_4jsOEbqot3Mq3MdSnb5k5eencGj4DR8grDHAXocFe55WecuR2166TiMBHPyJE_NMVyfzJ-aotnZRXz4Tn87Bso8W"/>
+</div>
+<div class="min-w-[80px] h-20 bg-white border border-outline-variant rounded-lg overflow-hidden cursor-pointer hover:border-primary/50 transition-colors">
+<img class="w-full h-full object-cover" data-alt="Extreme close-up of the power button and status LEDs on a modern white enterprise hardware device, glowing with a soft blue light. High-tech precision, soft depth of field." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwJvUeo73DUabgyc69GihYu23EXHVBIywhyHExdRiyTELaZoGQmyuzGD1axJ8WrIY6TjtoJKWY3f5meIFZ7QIj289ep9CdLYRXCwts_niBD0SIqDCJM6epEA-WXhZFtzndL3IulMXmIEjph2GESk_1pOoe7VZ9AszF02g4Zz5YE0_JWRy3JyUvn8iXbWLEiLO0h93b1cu0O6BQ89fWKW6NFYXFNSfJg-H3kzASBxDwZybEX-6PSfStij6xhAH_-Bgadk9hydzS0_Au"/>
+</div>
+</div>
+</div>
+<!-- Right: Product Information & Quick Actions -->
+<div class="lg:col-span-5 flex flex-col gap-xl">
+<div class="space-y-md">
+<div class="flex items-center gap-md">
+<span class="px-md py-1 bg-green-100 text-green-700 rounded-full font-label-sm text-label-sm flex items-center gap-xs">
+<span class="material-symbols-outlined text-sm">check_circle</span> In Stock
+                            </span>
+<span class="px-md py-1 bg-primary-container/10 text-primary rounded-full font-label-sm text-label-sm">
+                                Latest Firmware v4.2.1
+                            </span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-outline tracking-wider mb-xs uppercase">Windows POS</p>
+<h2 class="font-display-sm text-display-sm text-on-surface mb-xs">QBIT T-800</h2>
+<p class="font-body-md text-body-md text-on-surface-variant italic">Model: T800-ENT</p>
+</div>
+<div class="flex items-center gap-lg pt-sm">
+<div class="flex flex-col items-center gap-1">
+<img alt="Windows Logo" class="w-6 h-6 grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100" src="https://lh3.googleusercontent.com/aida-public/AB6AXuASQBDNpG3716yE1s7QCFwaM_cL-ON10sxL51OBCkBTR21HhRN_WzKVDbWk2yRMYgPJpzUL7qXDUU18ttLvp68_AmnG-zGFe-E0KfTh-7ejrrRNLJWRvd7POFu7efrNtqvyCOVbiQPnvzBwEVvFwhFLfasHiIisrKx4Ubb6uDBrXRIvGhG1cQrg-BJ06eIuSZ79BsoOCqFNX9SgrsMdZAsDygvuk1VMPwzWjgEzpe3TyjXr8vFxUqQJxgMF5jFGkcpTQ6MtK8XrzoCA"/>
+<span class="font-label-sm text-[10px] text-outline">Windows</span>
+</div>
+<div class="flex flex-col items-center gap-1">
+<img alt="Android Logo" class="w-6 h-6 grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCDMtIDYP72Ck0UkTu_GSQ9G9velxoG5cIqPRq33qzCLuGwiDrjBNjgNjoYvAby1pfOftOIIM2807WyvqNK4NLKigfFWX2r0WyQnX7T4_WLyOdTmhfvw5oWb2U5YyCR05Z8vCp-Q2Dcen2feYcQE-2SR1nfM7yjvICQuae2DHG07q25jK9ZXMUkAXFHEe8x1dz6ucsXn96aZvP7jV-V6pk7Kua81brIGMh4LRWNXZHsUUmSoeATUKIVhLDs9yYHIp3Pmla1H0WjMUsG"/>
+<span class="font-label-sm text-[10px] text-outline">Android</span>
+</div>
+<div class="flex flex-col items-center gap-1">
+<img alt="Linux Logo" class="w-6 h-6 grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVDQ64lgfDYQIZDr01gSOGkAqvdQtyiEu9i76hysBgn9ZPDmkIFeMHKog3PuasH4U1SyuN8BfXAcDdfrZAEd5mOj4N2HUI8v8ZfGzOWr6xcPwVu5lnivK2ri37KufkxBaDqK3A47SxWralxQWevfHGiFGgtvcPTLETqO_kTpDQB3VpfjBqW7C3gFNUphK3EJ2bMM0VfknftzPXedXMEMSVk5agioWslW317mM-wJST3_57xwNWw-KhnvpCF2Wi5bqZllwTV5Rfzjn-"/>
+<span class="font-label-sm text-[10px] text-outline">Linux</span>
+</div>
+</div>
+</div>
+<!-- Quick Actions -->
+<div class="space-y-md pt-lg border-t border-outline-variant/30">
+<h3 class="font-label-sm text-label-sm uppercase tracking-widest text-outline">Quick Support Actions</h3>
+<div class="grid grid-cols-1 gap-md">
+<button class="w-full bg-primary text-white py-lg rounded-xl font-headline-sm text-headline-sm flex items-center justify-center gap-md shadow-lg shadow-primary/20 hover:bg-secondary transition-all active:scale-[0.98]">
+<span class="material-symbols-outlined">download</span> Download Driver
+                            </button>
+<div class="grid grid-cols-2 gap-md">
+<button class="bg-surface-container-low text-on-surface py-md rounded-xl font-label-md text-label-md flex items-center justify-center gap-sm border border-outline-variant hover:bg-white transition-all">
+<span class="material-symbols-outlined">menu_book</span> User Manual
+                                </button>
+<button class="bg-surface-container-low text-on-surface py-md rounded-xl font-label-md text-label-md flex items-center justify-center gap-sm border border-outline-variant hover:bg-white transition-all">
+<span class="material-symbols-outlined">play_circle</span> Installation Video
+                                </button>
+</div>
+</div>
+<div class="flex items-center justify-between gap-sm pt-sm">
+<button class="flex-1 flex items-center justify-center gap-xs text-outline hover:text-primary transition-colors py-2"><span class="material-symbols-outlined text-lg">share</span> <span class="font-label-sm text-label-sm">Share</span></button>
+<button class="flex-1 flex items-center justify-center gap-xs text-outline hover:text-primary transition-colors py-2"><span class="material-symbols-outlined text-lg">mail</span> <span class="font-label-sm text-label-sm">Email</span></button>
+<button class="flex-1 flex items-center justify-center gap-xs text-outline hover:text-primary transition-colors py-2"><span class="material-symbols-outlined text-lg">chat</span> <span class="font-label-sm text-label-sm">WhatsApp</span></button>
+<button class="flex-1 flex items-center justify-center gap-xs text-outline hover:text-primary transition-colors py-2"><span class="material-symbols-outlined text-lg">picture_as_pdf</span> <span class="font-label-sm text-label-sm">PDF</span></button>
+</div>
+</div>
+<!-- Short Specs Teaser -->
+<div class="bg-surface-container-lowest p-md rounded-xl border border-outline-variant/50">
+<div class="flex justify-between items-center mb-md">
+<h4 class="font-label-md text-label-md font-semibold">Key Specifications</h4>
+<a class="text-primary font-label-sm text-label-sm hover:underline" href="#full-specs">See All</a>
+</div>
+<div class="grid grid-cols-2 gap-md">
+<div class="flex gap-sm">
+<span class="material-symbols-outlined text-primary/60">memory</span>
+<div><p class="font-label-sm text-[10px] text-outline">CPU</p><p class="font-body-sm text-body-sm">Intel i5-11th Gen</p></div>
+</div>
+<div class="flex gap-sm">
+<span class="material-symbols-outlined text-primary/60">tv</span>
+<div><p class="font-label-sm text-[10px] text-outline">Display</p><p class="font-body-sm text-body-sm">15.6" FHD Touch</p></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Detailed Specifications & Features -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-xl">
+<div class="lg:col-span-8 space-y-xl">
+<!-- Specifications Table -->
+<div class="bg-white rounded-2xl border border-outline-variant shadow-sm overflow-hidden" id="full-specs">
+<div class="px-xl py-lg border-b border-outline-variant/30 flex justify-between items-center">
+<h3 class="font-headline-sm text-headline-sm">Technical Specifications</h3>
+<button class="text-primary flex items-center gap-xs hover:bg-primary-container/5 px-sm py-xs rounded-lg transition-colors">
+<span class="material-symbols-outlined text-lg">print</span>
+<span class="font-label-sm text-label-sm">Print Spec Sheet</span>
+</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<tbody class="font-body-sm text-body-sm">
+<tr class="border-b border-surface-container-low hover:bg-surface-container-lowest transition-colors">
+<td class="px-xl py-md font-semibold text-on-surface-variant w-1/3">Processor (CPU)</td>
+<td class="px-xl py-md text-on-surface">Intel® Core™ i5-1135G7 (8M Cache, up to 4.20 GHz)</td>
+</tr>
+<tr class="border-b border-surface-container-low hover:bg-surface-container-lowest transition-colors">
+<td class="px-xl py-md font-semibold text-on-surface-variant">Memory (RAM)</td>
+<td class="px-xl py-md text-on-surface">16GB DDR4 3200MHz (Expandable to 32GB)</td>
+</tr>
+<tr class="border-b border-surface-container-low hover:bg-surface-container-lowest transition-colors">
+<td class="px-xl py-md font-semibold text-on-surface-variant">Storage</td>
+<td class="px-xl py-md text-on-surface">512GB NVMe M.2 SSD</td>
+</tr>
+<tr class="border-b border-surface-container-low hover:bg-surface-container-lowest transition-colors">
+<td class="px-xl py-md font-semibold text-on-surface-variant">Display</td>
+<td class="px-xl py-md text-on-surface">15.6" IPS Panel, Full HD (1920x1080), 10-point Multi-touch</td>
+</tr>
+<tr class="border-b border-surface-container-low hover:bg-surface-container-lowest transition-colors">
+<td class="px-xl py-md font-semibold text-on-surface-variant">Connectivity</td>
+<td class="px-xl py-md text-on-surface">Dual-band Wi-Fi 6, Bluetooth 5.1, 1Gbps Ethernet</td>
+</tr>
+<tr class="border-b border-surface-container-low hover:bg-surface-container-lowest transition-colors">
+<td class="px-xl py-md font-semibold text-on-surface-variant">Ports</td>
+<td class="px-xl py-md text-on-surface">6x USB 3.0, 2x COM (RS232), 1x HDMI, 1x Cash Drawer Port (RJ11)</td>
+</tr>
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="px-xl py-md font-semibold text-on-surface-variant">Power Supply</td>
+<td class="px-xl py-md text-on-surface">External 12V / 5A Adapter, Energy Star 8.0 Certified</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Driver Section -->
+<div class="bg-surface-container-lowest border border-primary/20 rounded-2xl p-xl shadow-lg shadow-primary/5 flex items-center gap-xl relative overflow-hidden">
+<div class="absolute -right-8 -top-8 w-32 h-32 bg-primary/5 rounded-full blur-3xl"></div>
+<div class="w-16 h-16 bg-primary-container/10 rounded-2xl flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">terminal</span>
+</div>
+<div class="flex-grow">
+<div class="flex items-center gap-md mb-xs">
+<h4 class="font-headline-sm text-headline-sm">Universal Driver Package</h4>
+<span class="bg-primary text-white text-[10px] px-2 py-0.5 rounded font-bold">STABLE</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-md">Version 2.4.1 Stable • Released: Oct 12, 2023 • 45.2 MB</p>
+<div class="flex gap-md">
+<button class="bg-primary text-white px-lg py-sm rounded-xl font-label-md text-label-md flex items-center gap-sm hover:bg-secondary transition-all">
+<span class="material-symbols-outlined text-lg">download</span> Download Now
+                                </button>
+<button class="text-primary px-lg py-sm font-label-md text-label-md flex items-center gap-sm hover:underline">
+                                    Release Notes
+                                </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Right: Features & Timeline -->
+<div class="lg:col-span-4 space-y-xl">
+<!-- Feature Cards -->
+<div class="space-y-md">
+<h3 class="font-label-sm text-label-sm uppercase tracking-widest text-outline">Key Advantages</h3>
+<div class="bg-white p-lg rounded-xl border border-outline-variant flex gap-md group hover:border-primary/40 transition-colors">
+<div class="w-10 h-10 bg-surface-container-low rounded-lg flex items-center justify-center text-primary shrink-0 transition-transform group-hover:scale-110">
+<span class="material-symbols-outlined">shield</span>
+</div>
+<div>
+<h5 class="font-label-md text-label-md font-semibold mb-xs">Industrial Build</h5>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Durable IP54-rated aluminum chassis for harsh retail environments.</p>
+</div>
+</div>
+<div class="bg-white p-lg rounded-xl border border-outline-variant flex gap-md group hover:border-primary/40 transition-colors">
+<div class="w-10 h-10 bg-surface-container-low rounded-lg flex items-center justify-center text-primary shrink-0 transition-transform group-hover:scale-110">
+<span class="material-symbols-outlined">hub</span>
+</div>
+<div>
+<h5 class="font-label-md text-label-md font-semibold mb-xs">Multi-Port Support</h5>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Extensive legacy and modern connectivity for peripherals.</p>
+</div>
+</div>
+<div class="bg-white p-lg rounded-xl border border-outline-variant flex gap-md group hover:border-primary/40 transition-colors">
+<div class="w-10 h-10 bg-surface-container-low rounded-lg flex items-center justify-center text-primary shrink-0 transition-transform group-hover:scale-110">
+<span class="material-symbols-outlined">eco</span>
+</div>
+<div>
+<h5 class="font-label-md text-label-md font-semibold mb-xs">Energy Efficient</h5>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Consumes 40% less power than standard desktop POS systems.</p>
+</div>
+</div>
+</div>
+<!-- Installation Timeline -->
+<div class="bg-white p-xl rounded-2xl border border-outline-variant shadow-sm">
+<h3 class="font-label-sm text-label-sm uppercase tracking-widest text-outline mb-lg">Deployment Guide</h3>
+<div class="space-y-xl relative">
+<div class="absolute left-4 top-2 bottom-2 w-px bg-outline-variant/30"></div>
+<div class="flex gap-lg relative">
+<div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center shrink-0 z-10 font-bold text-xs">1</div>
+<div class="flex-grow">
+<h6 class="font-label-md text-label-md font-bold mb-1">Unbox &amp; Inspect</h6>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Remove protective films and check contents. (5 min)</p>
+</div>
+</div>
+<div class="flex gap-lg relative">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest text-on-surface flex items-center justify-center shrink-0 z-10 font-bold text-xs border border-outline-variant">2</div>
+<div class="flex-grow">
+<h6 class="font-label-md text-label-md font-bold mb-1">Mount &amp; Cable</h6>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Secure to counter and connect peripherals. (15 min)</p>
+</div>
+</div>
+<div class="flex gap-lg relative">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest text-on-surface flex items-center justify-center shrink-0 z-10 font-bold text-xs border border-outline-variant">3</div>
+<div class="flex-grow">
+<h6 class="font-label-md text-label-md font-bold mb-1">OS Boot &amp; Setup</h6>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Initialize Windows and configure network. (10 min)</p>
+</div>
+</div>
+<div class="flex gap-lg relative">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest text-on-surface flex items-center justify-center shrink-0 z-10 font-bold text-xs border border-outline-variant">4</div>
+<div class="flex-grow">
+<h6 class="font-label-md text-label-md font-bold mb-1">Driver Sync</h6>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Install QBIT Universal Driver pack. (5 min)</p>
+</div>
+</div>
+<div class="flex gap-lg relative">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest text-on-surface flex items-center justify-center shrink-0 z-10 font-bold text-xs border border-outline-variant">5</div>
+<div class="flex-grow">
+<h6 class="font-label-md text-label-md font-bold mb-1">Test Print</h6>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Verify receipt and cash drawer function. (2 min)</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Document Library -->
+<section class="space-y-md">
+<h3 class="font-headline-sm text-headline-sm">Document Library</h3>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-lg">
+<div class="bg-white p-lg rounded-xl border border-outline-variant flex items-start gap-md hover:shadow-md transition-shadow group">
+<div class="p-3 bg-red-50 text-red-600 rounded-lg shrink-0">
+<span class="material-symbols-outlined text-2xl">picture_as_pdf</span>
+</div>
+<div>
+<h5 class="font-label-md text-label-md font-bold group-hover:text-primary">User Manual v4.0</h5>
+<p class="font-body-sm text-body-sm text-outline mb-md">Detailed setup and configuration guide.</p>
+<button class="font-label-sm text-label-sm text-primary flex items-center gap-xs">Download <span class="material-symbols-outlined text-sm">download</span></button>
+</div>
+</div>
+<div class="bg-white p-lg rounded-xl border border-outline-variant flex items-start gap-md hover:shadow-md transition-shadow group">
+<div class="p-3 bg-blue-50 text-blue-600 rounded-lg shrink-0">
+<span class="material-symbols-outlined text-2xl">description</span>
+</div>
+<div>
+<h5 class="font-label-md text-label-md font-bold group-hover:text-primary">Datasheet &amp; Specs</h5>
+<p class="font-body-sm text-body-sm text-outline mb-md">Official technical specification document.</p>
+<button class="font-label-sm text-label-sm text-primary flex items-center gap-xs">Download <span class="material-symbols-outlined text-sm">download</span></button>
+</div>
+</div>
+<div class="bg-white p-lg rounded-xl border border-outline-variant flex items-start gap-md hover:shadow-md transition-shadow group">
+<div class="p-3 bg-green-50 text-green-600 rounded-lg shrink-0">
+<span class="material-symbols-outlined text-2xl">verified_user</span>
+</div>
+<div>
+<h5 class="font-label-md text-label-md font-bold group-hover:text-primary">Warranty Terms</h5>
+<p class="font-body-sm text-body-sm text-outline mb-md">3-Year Standard Enterprise Warranty info.</p>
+<button class="font-label-sm text-label-sm text-primary flex items-center gap-xs">Download <span class="material-symbols-outlined text-sm">download</span></button>
+</div>
+</div>
+</div>
+</section>
+<!-- Related Products -->
+<section class="space-y-md">
+<div class="flex justify-between items-center">
+<h3 class="font-headline-sm text-headline-sm">Related POS Hardware</h3>
+<div class="flex gap-sm">
+<button class="w-10 h-10 rounded-full border border-outline-variant flex items-center justify-center hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="w-10 h-10 rounded-full border border-outline-variant flex items-center justify-center hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+<div class="flex gap-lg overflow-x-auto no-scrollbar pb-lg">
+<div class="min-w-[300px] bg-white border border-outline-variant rounded-2xl overflow-hidden hover:shadow-lg transition-all group">
+<div class="h-48 bg-surface-container-low flex items-center justify-center overflow-hidden">
+<img class="w-3/4 h-3/4 object-contain group-hover:scale-110 transition-transform" data-alt="A premium dual-screen POS system for enterprise restaurants, featuring a matte black finish and large vibrant touchscreens on both sides. High-end product photography, minimalist environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1HnDv635xNKeEL2eHW0cVU7kqzPHPuokQHfBl9c35jjRzTb7JWe0MT03QMfJkKhwQSNXFFoe56_X9T4yU3hVqXsJwKrAVRtt9ddXXQ_vmNx40R2WUTmsJv2r44C1J9S0E9aOArUDEj4Iz49QhPXNfx34tNw0NeZtOUOn8QN3DlIWPbW5mSjRHVPtGVQnVCXJAl2ms4ZVayGZjvdwtrHKH0B_czR8ZZYYqi2oCWaiAT23fVoacwgNoKQ6HKClh-dGam2DTUDXVL0Ss"/>
+</div>
+<div class="p-md">
+<p class="font-label-sm text-[10px] text-outline uppercase mb-1">Dual-Screen Terminal</p>
+<h5 class="font-label-md text-label-md font-bold mb-md">QBIT Duo X-200</h5>
+<button class="w-full py-2 border border-primary text-primary rounded-lg font-label-sm text-label-sm hover:bg-primary/5 transition-colors">View Details</button>
+</div>
+</div>
+<div class="min-w-[300px] bg-white border border-outline-variant rounded-2xl overflow-hidden hover:shadow-lg transition-all group">
+<div class="h-48 bg-surface-container-low flex items-center justify-center overflow-hidden">
+<img class="w-3/4 h-3/4 object-contain group-hover:scale-110 transition-transform" data-alt="A compact and sleek handheld enterprise mobile POS device with an integrated thermal printer and barcode scanner. Modern industrial design, white and silver finish." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRe4NUuT5vkb0xz99_P8dTBhRf9Wy1ZvPsCyiMySMCU3Lg_-v5D-p6pmSxfLZDvPWZ_GNZEaH9zsFLEOJd_RRX8ocjYZe2Fis1RmkjFB2pw_Kog1eO3Q6VJy6jAwk4jC6XKL62KRlFPUSZXSxGGFdIjJIvXq9UuMCTDvkTZ0eewhmYg84-mXf_OB2SzQpmBBgL3SzjG1zwJ7C6ObGjLa0fJcbQgScZYwj2h9oZDA0g7WhTkearcip0z3vYwcI68cIZLH6TwG5kpoHE"/>
+</div>
+<div class="p-md">
+<p class="font-label-sm text-[10px] text-outline uppercase mb-1">Mobile POS</p>
+<h5 class="font-label-md text-label-md font-bold mb-md">QBIT Go M-50</h5>
+<button class="w-full py-2 border border-primary text-primary rounded-lg font-label-sm text-label-sm hover:bg-primary/5 transition-colors">View Details</button>
+</div>
+</div>
+<div class="min-w-[300px] bg-white border border-outline-variant rounded-2xl overflow-hidden hover:shadow-lg transition-all group">
+<div class="h-48 bg-surface-container-low flex items-center justify-center overflow-hidden">
+<img class="w-3/4 h-3/4 object-contain group-hover:scale-110 transition-transform" data-alt="High-performance thermal receipt printer with high-speed printing capabilities and a sleek white minimalist chassis. Close-up product shot, enterprise tech aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFqxUHP3zY4D4ZiBSeiU1iOiQft3GRocYPuI7nDKwsWcH6rNMLk715bqpr2ir3w26wAIPtaX-5hOCJ50e12WeMlqqXNpmfkLriF741jAm6KQvfrOLKG8kYCDyUhSy-Z0gqqdnKkJBSyQI3cnpX6ry9cYLDGwuqiA55VwXbPAXSgApL5tutVFnj_eqQTz3Wa0Mqj1c9jFIsqNTwbv7Acz207hGmQ5zsLNanH_qoSD4-B62jZIZrx7usyvdeh1pvErmmLe4-g0E-El2i"/>
+</div>
+<div class="p-md">
+<p class="font-label-sm text-[10px] text-outline uppercase mb-1">Peripherals</p>
+<h5 class="font-label-md text-label-md font-bold mb-md">QBIT Print P-80</h5>
+<button class="w-full py-2 border border-primary text-primary rounded-lg font-label-sm text-label-sm hover:bg-primary/5 transition-colors">View Details</button>
+</div>
+</div>
+<div class="min-w-[300px] bg-white border border-outline-variant rounded-2xl overflow-hidden hover:shadow-lg transition-all group">
+<div class="h-48 bg-surface-container-low flex items-center justify-center overflow-hidden">
+<img class="w-3/4 h-3/4 object-contain group-hover:scale-110 transition-transform" data-alt="Rugged industrial tablet for inventory management and warehouse operations, featuring reinforced corners and a high-brightness display. Technical focus, professional lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAthh1BPbjVWqBFCE8ynVrXAr1fblCHtFtP3o2r49zqcIeCicbRvjSpzKsSUX8E6bzYb6Trimqff-SEK1Dkx-8NM7N7X31Dka4QM3dDsSuCUV5tIJryAHFcaBSmxPuppPiFXsf26YchuwMe64ZFEQr43UihyOoa8LeCpKHkPH5Ke8stiAubOR4p-SoHyjEU7hmwE1_2ffWtkeimjdK19LtcImI2x-f1Tg2oKcrTyTLeNod17OFQxIcOXDRjIsMlwICdZzi3HlcUQ4Gs"/>
+</div>
+<div class="p-md">
+<p class="font-label-sm text-[10px] text-outline uppercase mb-1">Industrial Tablet</p>
+<h5 class="font-label-md text-label-md font-bold mb-md">QBIT Tab Rugged 10</h5>
+<button class="w-full py-2 border border-primary text-primary rounded-lg font-label-sm text-label-sm hover:bg-primary/5 transition-colors">View Details</button>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Success Toast Mockup -->
+<div class="fixed bottom-lg right-lg bg-surface-container-highest p-md rounded-xl shadow-2xl border border-outline-variant flex items-center gap-md transform translate-y-32 transition-transform duration-300 z-[100] glass-effect" id="toast">
+<div class="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined">download_done</span>
+</div>
+<div>
+<p class="font-label-md text-label-md font-bold">Download Started</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Universal_Driver_v2.4.1.msi</p>
+</div>
+<button class="text-outline hover:text-on-surface ml-sm" onclick="hideToast()"><span class="material-symbols-outlined">close</span></button>
+</div>
+<script>
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.remove('translate-y-32');
+            setTimeout(hideToast, 5000);
+        }
+        function hideToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.add('translate-y-32');
+        }
+
+        // Attach toast to the primary download button
+        document.querySelector('button.bg-primary.text-white.py-lg').addEventListener('click', function(e) {
+            e.preventDefault();
+            showToast();
+        });
+
+        // Simple interactive micro-interaction for thumbnail switching
+        const thumbnails = document.querySelectorAll('.flex.gap-md.overflow-x-auto.no-scrollbar div');
+        thumbnails.forEach(thumb => {
+            thumb.addEventListener('click', () => {
+                thumbnails.forEach(t => t.classList.replace('border-primary', 'border-outline-variant'));
+                thumb.classList.replace('border-outline-variant', 'border-primary');
+            });
+        });
+    </script>
+</body></html>

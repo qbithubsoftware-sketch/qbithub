@@ -1,0 +1,484 @@
+     1→<!DOCTYPE html><html class="light" lang="en"><head>
+     2→<meta charset="utf-8">
+     3→<meta content="width=device-width, initial-scale=1.0" name="viewport">
+     4→<title>QBIT Hub - User Management</title>
+     5→<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+     6→<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+     7→<style>
+     8→        .material-symbols-outlined {
+     9→            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    10→            display: inline-block;
+    11→            line-height: 1;
+    12→            text-transform: none;
+    13→            letter-spacing: normal;
+    14→            word-wrap: normal;
+    15→            white-space: nowrap;
+    16→            direction: ltr;
+    17→        }
+    18→        [data-weight="fill"] {
+    19→            font-variation-settings: 'FILL' 1;
+    20→        }
+    21→        body {
+    22→            font-family: 'Inter', sans-serif;
+    23→        }
+    24→        .glass-panel {
+    25→            background: rgba(255, 255, 255, 0.7);
+    26→            backdrop-filter: blur(12px);
+    27→            -webkit-backdrop-filter: blur(12px);
+    28→            border: 1px solid rgba(226, 232, 240, 0.8);
+    29→        }
+    30→        .custom-scrollbar::-webkit-scrollbar {
+    31→            width: 4px;
+    32→        }
+    33→        .custom-scrollbar::-webkit-scrollbar-track {
+    34→            background: transparent;
+    35→        }
+    36→        .custom-scrollbar::-webkit-scrollbar-thumb {
+    37→            background: #e2e8f0;
+    38→            border-radius: 10px;
+    39→        }
+    40→    </style>
+    41→<script id="tailwind-config">
+    42→        tailwind.config = {
+    43→            darkMode: "class",
+    44→            theme: {
+    45→                extend: {
+    46→                    "colors": {
+    47→                        "tertiary-fixed": "#e0e3e5",
+    48→                        "surface-variant": "#dce2f7",
+    49→                        "primary": "#0043c8",
+    50→                        "surface": "#f9f9ff",
+    51→                        "on-tertiary-container": "#e7e9eb",
+    52→                        "secondary-fixed": "#dbe1ff",
+    53→                        "background": "#f9f9ff",
+    54→                        "on-secondary": "#ffffff",
+    55→                        "on-error-container": "#93000a",
+    56→                        "surface-dim": "#d3daef",
+    57→                        "on-primary-fixed-variant": "#003ab2",
+    58→                        "tertiary-fixed-dim": "#c4c7c9",
+    59→                        "on-tertiary-fixed-variant": "#444749",
+    60→                        "surface-tint": "#004ee7",
+    61→                        "on-tertiary-fixed": "#191c1e",
+    62→                        "on-secondary-fixed-variant": "#003ea8",
+    63→                        "inverse-on-surface": "#edf0ff",
+    64→                        "surface-container-high": "#e1e8fd",
+    65→                        "primary-container": "#0057ff",
+    66→                        "primary-fixed": "#dce1ff",
+    67→                        "error": "#ba1a1a",
+    68→                        "surface-container-lowest": "#ffffff",
+    69→                        "tertiary-container": "#66696b",
+    70→                        "on-secondary-fixed": "#00174b",
+    71→                        "on-primary-fixed": "#001550",
+    72→                        "primary-fixed-dim": "#b6c4ff",
+    73→                        "surface-container-highest": "#dce2f7",
+    74→                        "on-error": "#ffffff",
+    75→                        "tertiary": "#4e5153",
+    76→                        "on-surface-variant": "#434656",
+    77→                        "on-background": "#141b2b",
+    78→                        "on-tertiary": "#ffffff",
+    79→                        "outline-variant": "#c3c5d9",
+    80→                        "error-container": "#ffdad6",
+    81→                        "outline": "#737688",
+    82→                        "on-primary": "#ffffff",
+    83→                        "surface-container-low": "#f1f3ff",
+    84→                        "surface-bright": "#f9f9ff",
+    85→                        "secondary-container": "#316bf3",
+    86→                        "secondary": "#0051d5",
+    87→                        "on-primary-container": "#e5e8ff",
+    88→                        "inverse-primary": "#b6c4ff",
+    89→                        "surface-container": "#e9edff",
+    90→                        "inverse-surface": "#293040",
+    91→                        "secondary-fixed-dim": "#b4c5ff",
+    92→                        "on-secondary-container": "#fefcff",
+    93→                        "on-surface": "#141b2b"
+    94→                    },
+    95→                    "borderRadius": {
+    96→                        "DEFAULT": "0.25rem",
+    97→                        "lg": "0.5rem",
+    98→                        "xl": "0.75rem",
+    99→                        "full": "9999px"
+   100→                    },
+   101→                    "spacing": {
+   102→                        "sm": "8px",
+   103→                        "xs": "4px",
+   104→                        "md": "16px",
+   105→                        "gutter": "24px",
+   106→                        "margin-desktop": "32px",
+   107→                        "2xl": "48px",
+   108→                        "xl": "32px",
+   109→                        "unit": "8px",
+   110→                        "lg": "24px",
+   111→                        "3xl": "64px",
+   112→                        "container-max": "1440px",
+   113→                        "margin-mobile": "16px"
+   114→                    },
+   115→                    "fontFamily": {
+   116→                        "headline-lg": ["Inter"],
+   117→                        "headline-sm": ["Inter"],
+   118→                        "label-sm": ["Inter"],
+   119→                        "body-md": ["Inter"],
+   120→                        "headline-md": ["Inter"],
+   121→                        "display-sm": ["Inter"],
+   122→                        "headline-lg-mobile": ["Inter"],
+   123→                        "body-sm": ["Inter"],
+   124→                        "body-lg": ["Inter"],
+   125→                        "label-md": ["Inter"],
+   126→                        "display-lg": ["Inter"]
+   127→                    },
+   128→                    "fontSize": {
+   129→                        "headline-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+   130→                        "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+   131→                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+   132→                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+   133→                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+   134→                        "display-sm": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+   135→                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+   136→                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+   137→                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+   138→                        "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+   139→                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+   140→                    }
+   141→                },
+   142→            },
+   143→        }
+   144→    </script>
+   145→</head>
+   146→<body class="bg-surface text-on-surface custom-scrollbar overflow-x-hidden">
+   147→<!-- Sidebar (Shared Component) -->
+   148→<aside class="w-64 h-screen fixed left-0 top-0 bg-surface-container-low dark:bg-inverse-surface border-r border-outline-variant dark:border-outline flex flex-col py-md z-50">
+   149→<div class="px-gutter mb-3xl">
+   150→<h1 class="font-headline-sm text-headline-sm font-bold text-primary dark:text-primary-fixed-dim">QBIT Hub</h1>
+   151→<p class="font-body-md text-body-md text-on-surface-variant opacity-70">Control Center</p>
+   152→</div>
+   153→<nav class="flex-1 space-y-xs">
+   154→<a class="flex items-center px-gutter py-sm text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors duration-200" href="#">
+   155→<span class="material-symbols-outlined mr-md">dashboard</span>
+   156→<span class="font-body-md text-body-md">Dashboard</span>
+   157→</a>
+   158→<a class="flex items-center px-gutter py-sm text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors duration-200" href="#">
+   159→<span class="material-symbols-outlined mr-md">inventory_2</span>
+   160→<span class="font-body-md text-body-md">Products</span>
+   161→</a>
+   162→<a class="flex items-center px-gutter py-sm text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors duration-200" href="#">
+   163→<span class="material-symbols-outlined mr-md">local_shipping</span>
+   164→<span class="font-body-md text-body-md">Drivers</span>
+   165→</a>
+   166→<a class="flex items-center px-gutter py-sm text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors duration-200" href="#">
+   167→<span class="material-symbols-outlined mr-md">menu_book</span>
+   168→<span class="font-body-md text-body-md">Manuals</span>
+   169→</a>
+   170→<a class="flex items-center px-gutter py-sm text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors duration-200" href="#">
+   171→<span class="material-symbols-outlined mr-md">videocam</span>
+   172→<span class="font-body-md text-body-md">Videos</span>
+   173→</a>
+   174→<!-- Active State for Users -->
+   175→<a class="flex items-center px-gutter py-sm text-primary dark:text-primary-fixed-dim border-l-4 border-primary dark:border-primary-fixed-dim bg-primary-container/10 transition-colors duration-200" href="#">
+   176→<span class="material-symbols-outlined mr-md">group</span>
+   177→<span class="font-body-md text-body-md">Users</span>
+   178→</a>
+   179→<a class="flex items-center px-gutter py-sm text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors duration-200" href="#">
+   180→<span class="material-symbols-outlined mr-md">monitoring</span>
+   181→<span class="font-body-md text-body-md">Analytics</span>
+   182→</a>
+   183→<a class="flex items-center px-gutter py-sm text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors duration-200" href="#">
+   184→<span class="material-symbols-outlined mr-md">settings</span>
+   185→<span class="font-body-md text-body-md">Settings</span>
+   186→</a>
+   187→</nav>
+   188→<div class="px-gutter mt-auto">
+   189→<div class="flex items-center gap-sm pt-md border-t border-outline-variant">
+   190→<img class="w-10 h-10 rounded-full object-cover" data-alt="A professional headshot of a female administrator in a clean office setting, soft natural lighting, high-end photography style, representing the QBIT Hub Admin User." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBzVWEy7S9_RxYuviwJOjhx6fDRA-iSJryAx2e2KWbZsPxoooDwRZt5NciLRDMI3q_9_5-xxk5rpRA11nlNr2QeYLGt65k2-AlyiHbXQ8zD0RAuHJWLjKTp5m1liB1F-Mw5n_7LOL80TnOjnB6TknYGjihVuBg2xicRC035LCTWykV92RG-T99pA71DcUhM6AnQhOjCNMBSgh6TFlTFHZCirPLYG-gB5pH5bJi1evf5ExUC6rTlWsMNqT-8pDfEXyFeiDsCMt368uK6">
+   191→<div class="flex flex-col">
+   192→<span class="font-label-md text-label-md">Admin User</span>
+   193→<span class="text-xs text-on-surface-variant">Super Admin</span>
+   194→</div>
+   195→</div>
+   196→</div>
+   197→</aside>
+   198→<!-- Main Content Area -->
+   199→<main class="ml-64 min-h-screen relative">
+   200→<!-- Top Nav (Shared Component) -->
+   201→<header class="fixed top-0 right-0 left-64 h-16 bg-surface dark:bg-surface-container-lowest border-b border-outline-variant dark:border-outline flex justify-between items-center px-gutter z-40">
+   202→<div class="flex items-center gap-md w-1/3">
+   203→<div class="relative w-full max-w-sm">
+   204→<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+   205→<input class="w-full pl-10 pr-4 py-2 bg-surface-container-low border-none rounded-lg focus:ring-2 focus:ring-primary text-sm" placeholder="Search resources..." type="text">
+   206→</div>
+   207→</div>
+   208→<div class="flex items-center gap-gutter">
+   209→<div class="flex items-center gap-md">
+   210→<button class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container dark:hover:bg-inverse-surface rounded-full p-2 transition-all duration-200">notifications</button>
+   211→<button class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container dark:hover:bg-inverse-surface rounded-full p-2 transition-all duration-200">help_outline</button>
+   212→</div>
+   213→<span class="font-headline-sm text-headline-sm font-bold text-on-surface dark:text-on-surface">QBIT Hub Admin</span>
+   214→</div>
+   215→</header>
+   216→<!-- Page Content -->
+   217→<div class="pt-24 pb-12 px-gutter space-y-xl p-lg">
+   218→<!-- Page Header Section -->
+   219→<section class="flex justify-between items-end items-center">
+   220→<div class="space-y-xs">
+   221→<h2 class="font-headline-lg text-headline-lg text-on-surface">User Management</h2>
+   222→<p class="font-body-md text-body-md text-on-surface-variant">Manage organization members and their access levels.</p>
+   223→</div>
+   224→<button class="flex items-center gap-sm bg-primary text-on-primary px-lg py-sm rounded-xl font-label-md text-label-md hover:shadow-lg transition-all active:scale-95">
+   225→<span class="material-symbols-outlined" data-weight="fill">person_add</span>
+   226→                    Invite User
+   227→                </button>
+   228→</section>
+   229→<!-- Tabs Section -->
+   230→<section class="flex border-b border-outline-variant">
+   231→<button class="px-xl py-md font-label-md text-label-md text-primary font-bold border-b-2 border-primary transition-all duration-200 text-primary-container" id="tab-users" onclick="toggleTab('users')">
+   232→                    Users
+   233→                </button>
+   234→<button class="px-xl py-md font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-all duration-200" id="tab-roles" onclick="toggleTab('roles')">
+   235→                    Roles &amp; Permissions
+   236→                </button>
+   237→</section>
+   238→<!-- Users Content -->
+   239→<div class="space-y-xl" id="content-users">
+   240→<!-- Data Table Container -->
+   241→<div class="glass-panel rounded-2xl overflow-hidden rounded-xl shadow-sm">
+   242→<table class="w-full text-left border-collapse">
+   243→<thead>
+   244→<tr class="bg-surface-container-low border-b border-outline-variant">
+   245→<th class="px-gutter py-md font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-label-md font-bold">Name</th>
+   246→<th class="px-gutter py-md font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-label-md font-bold">Role</th>
+   247→<th class="px-gutter py-md font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-label-md font-bold">Email</th>
+   248→<th class="px-gutter py-md font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-label-md font-bold">Status</th>
+   249→<th class="px-gutter py-md font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-label-md font-bold">Last Login</th>
+   250→<th class="px-gutter py-md text-right font-label-md font-bold"></th>
+   251→</tr>
+   252→</thead>
+   253→<tbody class="divide-y divide-surface-container">
+   254→<!-- Row 1 -->
+   255→<tr class="hover:bg-surface-bright transition-colors hover:bg-surface-container-low" style="height: 72px;">
+   256→<td class="px-gutter py-md">
+   257→<div class="flex items-center gap-md">
+   258→<img class="w-10 h-10 rounded-full border border-outline-variant" data-alt="A professional avatar of a man with a friendly smile, neutral background, studio lighting, corporate portrait style for an administrator." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDXJhp5eFIEz6SrGPTAqUmbaapTSOJbZfaE7BeXTxZ-JWZpjT0SFhl1BhewzZUGGf_M1ROHu9iA7GVo1q6SL4KgWDbwRb-wsjfNUCPf5lX0l-wWOaERIcYLGvwEuxCknTSAU2SntlbUsAS6eFR7fQfBSNWBIqHIEqxZPW-pbyAgjWY4Yqh2EzRWQocXqaN6XszH35xZmZxY-Ebq0JdEx3UrBjaWzWygrgZbahn7qXavzfNhTvFOeWz1j-eddUYt35dT_vTqWnRYp-cM">
+   259→<div>
+   260→<p class="font-label-md text-label-md text-on-surface font-headline-sm">Alex Rivera</p>
+   261→<p class="text-xs text-on-surface-variant">Team Lead</p>
+   262→</div>
+   263→</div>
+   264→</td>
+   265→<td class="px-gutter py-md">
+   266→<span class="inline-flex items-center px-sm py-xs rounded-full bg-primary-container/10 text-primary font-label-sm text-label-sm">Administrator</span>
+   267→</td>
+   268→<td class="px-gutter py-md font-body-sm text-body-sm text-on-surface-variant">alex.rivera@qbithub.com</td>
+   269→<td class="px-gutter py-md">
+   270→<span class="flex items-center gap-xs text-xs font-medium text-green-600">
+   271→<span class="w-2 h-2 rounded-full bg-green-500"></span>
+   272→                                        Active
+   273→                                    </span>
+   274→</td>
+   275→<td class="px-gutter py-md font-body-sm text-body-sm text-on-surface-variant">2 hours ago</td>
+   276→<td class="px-gutter py-md text-right">
+   277→<button class="material-symbols-outlined text-outline hover:text-on-surface transition-colors p-2">more_vert</button>
+   278→</td>
+   279→</tr>
+   280→<!-- Row 2 -->
+   281→<tr class="hover:bg-surface-bright transition-colors hover:bg-surface-container-low" style="height: 72px;">
+   282→<td class="px-gutter py-md">
+   283→<div class="flex items-center gap-md">
+   284→<img class="w-10 h-10 rounded-full border border-outline-variant" data-alt="A professional avatar of a woman wearing glasses, high-quality corporate headshot, bright lighting, representing a service engineer at QBIT Hub." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDInw3muzjCKwxsZDvwKg_Ao9LsdIOE7PCqSq1ej0EzOnMtVVC2zI_PhGN-gN1Uqhifrrl5fOXZUcmRC5LnvXlJLPsWWmv9yAtu0UKjHawFpm0wcRs89h6EAou-YtVz8sFqon4x5cxCUDaXT4C2ibVIxJQQxLMi35-SPs2qCFEi70KbVn7F4EzxMrWNMDnnfsuXuCcXw65z4Nv9YAUeOQZ9sFn__Q3pqxGEgHBiOY3eChB00GlC__xeQjGEEjBpUE2u6_Bu0vdlLUDo">
+   285→<div>
+   286→<p class="font-label-md text-label-md text-on-surface font-headline-sm">Sarah Chen</p>
+   287→<p class="text-xs text-on-surface-variant">Field Operations</p>
+   288→</div>
+   289→</div>
+   290→</td>
+   291→<td class="px-gutter py-md">
+   292→<span class="inline-flex items-center px-sm py-xs rounded-full bg-secondary-container/10 text-secondary font-label-sm text-label-sm">Service Engineer</span>
+   293→</td>
+   294→<td class="px-gutter py-md font-body-sm text-body-sm text-on-surface-variant">s.chen@qbithub.com</td>
+   295→<td class="px-gutter py-md">
+   296→<span class="flex items-center gap-xs text-xs font-medium text-green-600">
+   297→<span class="w-2 h-2 rounded-full bg-green-500"></span>
+   298→                                        Active
+   299→                                    </span>
+   300→</td>
+   301→<td class="px-gutter py-md font-body-sm text-body-sm text-on-surface-variant">Yesterday</td>
+   302→<td class="px-gutter py-md text-right">
+   303→<button class="material-symbols-outlined text-outline hover:text-on-surface transition-colors p-2">more_vert</button>
+   304→</td>
+   305→</tr>
+   306→<!-- Row 3 -->
+   307→<tr class="hover:bg-surface-bright transition-colors hover:bg-surface-container-low" style="height: 72px;">
+   308→<td class="px-gutter py-md">
+   309→<div class="flex items-center gap-md">
+   310→<img class="w-10 h-10 rounded-full border border-outline-variant" data-alt="An avatar of a young professional man, soft blue background, clear lighting, modern corporate style for a hub user." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDpBeiONQ3qPBStt4xfa4A-xpE-YxVWYbOsEAUcGQ6c4AnlBWXvawccd5HWkv2RTvDJuJOo3zVBuokWmFPw1WSZKZTk-ZJQmVy3txF98XXCTN_fjPQgvdIWxR6JImBydiXvjfOhvwdfzwqG4MjZAGs7HyXltn2A6Mww-7-VMs2whYM3KPTz3YtV2-kM7tDH4BAbbnc6sRNQlk3U3zu-HXWKJSmQR2bsA_ljpsv7MuSMR81AVBAYMl5tvFuL3B72UevdBGzO1MZdqfPk">
+   311→<div>
+   312→<p class="font-label-md text-label-md text-on-surface font-headline-sm">Jordan Smythe</p>
+   313→<p class="text-xs text-on-surface-variant">Logistics</p>
+   314→</div>
+   315→</div>
+   316→</td>
+   317→<td class="px-gutter py-md">
+   318→<span class="inline-flex items-center px-sm py-xs rounded-full bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm">Hub User</span>
+   319→</td>
+   320→<td class="px-gutter py-md font-body-sm text-body-sm text-on-surface-variant">jsmythe@qbithub.com</td>
+   321→<td class="px-gutter py-md">
+   322→<span class="flex items-center gap-xs text-xs font-medium text-outline">
+   323→<span class="w-2 h-2 rounded-full bg-outline"></span>
+   324→                                        Inactive
+   325→                                    </span>
+   326→</td>
+   327→<td class="px-gutter py-md font-body-sm text-body-sm text-on-surface-variant">3 days ago</td>
+   328→<td class="px-gutter py-md text-right">
+   329→<button class="material-symbols-outlined text-outline hover:text-on-surface transition-colors p-2">more_vert</button>
+   330→</td>
+   331→</tr>
+   332→</tbody>
+   333→</table>
+   334→</div>
+   335→<!-- Bento Style Insights -->
+   336→<div class="grid grid-cols-1 md:grid-cols-3 gap-lg">
+   337→<div class="md:col-span-2 glass-panel p-lg rounded-2xl flex flex-col justify-between rounded-xl shadow-sm">
+   338→<div>
+   339→<h3 class="font-headline-sm text-headline-sm text-on-surface mb-sm">Active Sessions</h3>
+   340→<p class="text-on-surface-variant text-body-sm mb-lg">Real-time overview of current platform usage across your organization.</p>
+   341→</div>
+   342→<div class="h-32 flex items-end gap-2 px-2">
+   343→<div class="flex-1 bg-primary/20 rounded-t-lg transition-all hover:bg-primary" style="height: 60%"></div>
+   344→<div class="flex-1 bg-primary/20 rounded-t-lg transition-all hover:bg-primary" style="height: 45%"></div>
+   345→<div class="flex-1 bg-primary/20 rounded-t-lg transition-all hover:bg-primary" style="height: 80%"></div>
+   346→<div class="flex-1 bg-primary/20 rounded-t-lg transition-all hover:bg-primary" style="height: 55%"></div>
+   347→<div class="flex-1 bg-primary/20 rounded-t-lg transition-all hover:bg-primary" style="height: 95%"></div>
+   348→<div class="flex-1 bg-primary/20 rounded-t-lg transition-all hover:bg-primary" style="height: 70%"></div>
+   349→<div class="flex-1 bg-primary/20 rounded-t-lg transition-all hover:bg-primary" style="height: 40%"></div>
+   350→<div class="flex-1 bg-primary/20 rounded-t-lg transition-all hover:bg-primary" style="height: 85%"></div>
+   351→</div>
+   352→</div>
+   353→<div class="glass-panel p-lg rounded-2xl flex flex-col justify-center items-center text-center space-y-md rounded-xl shadow-sm">
+   354→<div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+   355→<span class="material-symbols-outlined text-4xl" data-weight="fill">verified_user</span>
+   356→</div>
+   357→<div>
+   358→<h3 class="font-headline-sm text-headline-sm text-on-surface font-headline-md">Security Audit</h3>
+   359→<p class="text-on-surface-variant text-body-sm">All users have 2FA enabled. Last audit was 48 hours ago.</p>
+   360→</div>
+   361→<button class="w-full py-sm border border-outline-variant rounded-xl font-label-md text-label-md hover:bg-surface-container transition-colors">Run Audit</button>
+   362→</div>
+   363→</div>
+   364→</div>
+   365→<!-- Roles Content (Initially Hidden) -->
+   366→<div class="hidden space-y-xl" id="content-roles">
+   367→<section class="glass-panel p-xl rounded-2xl rounded-xl shadow-sm">
+   368→<div class="flex justify-between items-center mb-xl">
+   369→<div>
+   370→<h3 class="font-headline-sm text-headline-sm text-on-surface">Permission Matrix</h3>
+   371→<p class="text-on-surface-variant text-body-sm">Granular access control for system roles.</p>
+   372→</div>
+   373→<button class="text-primary font-label-md text-label-md hover:underline">Edit All Roles</button>
+   374→</div>
+   375→<div class="overflow-x-auto">
+   376→<table class="w-full text-left border-collapse">
+   377→<thead>
+   378→<tr class="border-b border-outline-variant">
+   379→<th class="py-md pr-gutter font-label-sm text-label-sm text-on-surface-variant uppercase">Role</th>
+   380→<th class="py-md px-md text-center font-label-sm text-label-sm text-on-surface-variant uppercase">View</th>
+   381→<th class="py-md px-md text-center font-label-sm text-label-sm text-on-surface-variant uppercase">Create</th>
+   382→<th class="py-md px-md text-center font-label-sm text-label-sm text-on-surface-variant uppercase">Edit</th>
+   383→<th class="py-md px-md text-center font-label-sm text-label-sm text-on-surface-variant uppercase">Delete</th>
+   384→<th class="py-md px-md text-center font-label-sm text-label-sm text-on-surface-variant uppercase">Upload</th>
+   385→</tr>
+   386→</thead>
+   387→<tbody class="divide-y divide-surface-container">
+   388→<!-- Admin -->
+   389→<tr>
+   390→<td class="py-lg pr-gutter">
+   391→<p class="font-label-md text-label-md text-on-surface">Administrator</p>
+   392→<p class="text-xs text-on-surface-variant">Full system access</p>
+   393→</td>
+   394→<td class="text-center py-lg"><input checked="" class="rounded border-outline-variant text-primary focus:ring-primary h-5 w-5" disabled="" type="checkbox"></td>
+   395→<td class="text-center py-lg"><input checked="" class="rounded border-outline-variant text-primary focus:ring-primary h-5 w-5" disabled="" type="checkbox"></td>
+   396→<td class="text-center py-lg"><input checked="" class="rounded border-outline-variant text-primary focus:ring-primary h-5 w-5" disabled="" type="checkbox"></td>
+   397→<td class="text-center py-lg"><input checked="" class="rounded border-outline-variant text-primary focus:ring-primary h-5 w-5" disabled="" type="checkbox"></td>
+   398→<td class="text-center py-lg"><input checked="" class="rounded border-outline-variant text-primary focus:ring-primary h-5 w-5" disabled="" type="checkbox"></td>
+   399→</tr>
+   400→<!-- Engineer -->
+   401→<tr>
+   402→<td class="py-lg pr-gutter">
+   403→<p class="font-label-md text-label-md text-on-surface">Service Engineer</p>
+   404→<p class="text-xs text-on-surface-variant">Maintenance &amp; Diagnostics</p>
+   405→</td>
+   406→<td class="text-center py-lg"><input checked="" class="rounded border-outline-variant text-primary focus:ring-primary h-5 w-5" type="checkbox"></td>
+   407→<td class="text-center py-lg"><input checked="" class="rounded border-outline-variant text-primary focus:ring-primary h-5 w-5" type="checkbox"></td>
+   408→<td class="text-center py-lg"><input checked="" class="rounded border-outline-variant text-primary focus:ring-primary h-5 w-5" type="checkbox"></td>
+   409→<td class="text-center py-lg"><input class="rounded border-outline-variant text-primary focus:ring-primary h-5 w-5" type="checkbox"></td>
+   410→<td class="text-center py-lg"><input checked="" class="rounded border-outline-variant text-primary focus:ring-primary h-5 w-5" type="checkbox"></td>
+   411→</tr>
+   412→<!-- Logistics -->
+   413→<tr>
+   414→<td class="py-lg pr-gutter">
+   415→<p class="font-label-md text-label-md text-on-surface">Logistics Hub</p>
+   416→<p class="text-xs text-on-surface-variant">Fleet &amp; Routing only</p>
+   417→</td>
+   418→<td class="text-center py-lg"><input checked="" class="rounded border-outline-variant text-primary focus:ring-primary h-5 w-5" type="checkbox"></td>
+   419→<td class="text-center py-lg"><input class="rounded border-outline-variant text-primary focus:ring-primary h-5 w-5" type="checkbox"></td>
+   420→<td class="text-center py-lg"><input class="rounded border-outline-variant text-primary focus:ring-primary h-5 w-5" type="checkbox"></td>
+   421→<td class="text-center py-lg"><input class="rounded border-outline-variant text-primary focus:ring-primary h-5 w-5" type="checkbox"></td>
+   422→<td class="text-center py-lg"><input class="rounded border-outline-variant text-primary focus:ring-primary h-5 w-5" type="checkbox"></td>
+   423→</tr>
+   424→<!-- Viewer -->
+   425→<tr>
+   426→<td class="py-lg pr-gutter">
+   427→<p class="font-label-md text-label-md text-on-surface">Guest Observer</p>
+   428→<p class="text-xs text-on-surface-variant">Read-only analytics</p>
+   429→</td>
+   430→<td class="text-center py-lg"><input checked="" class="rounded border-outline-variant text-primary focus:ring-primary h-5 w-5" type="checkbox"></td>
+   431→<td class="text-center py-lg"><input class="rounded border-outline-variant text-primary focus:ring-primary h-5 w-5 bg-surface-container-low" disabled="" type="checkbox"></td>
+   432→<td class="text-center py-lg"><input class="rounded border-outline-variant text-primary focus:ring-primary h-5 w-5 bg-surface-container-low" disabled="" type="checkbox"></td>
+   433→<td class="text-center py-lg"><input class="rounded border-outline-variant text-primary focus:ring-primary h-5 w-5 bg-surface-container-low" disabled="" type="checkbox"></td>
+   434→<td class="text-center py-lg"><input class="rounded border-outline-variant text-primary focus:ring-primary h-5 w-5 bg-surface-container-low" disabled="" type="checkbox"></td>
+   435→</tr>
+   436→</tbody>
+   437→</table>
+   438→</div>
+   439→</section>
+   440→</div>
+   441→</div>
+   442→</main>
+   443→<!-- Micro-interaction Scripts -->
+   444→<script>
+   445→        function toggleTab(tab) {
+   446→            const usersBtn = document.getElementById('tab-users');
+   447→            const rolesBtn = document.getElementById('tab-roles');
+   448→            const usersContent = document.getElementById('content-users');
+   449→            const rolesContent = document.getElementById('content-roles');
+   450→
+   451→            if (tab === 'users') {
+   452→                usersBtn.classList.add('text-primary', 'font-bold', 'border-b-2', 'border-primary');
+   453→                usersBtn.classList.remove('text-on-surface-variant');
+   454→                rolesBtn.classList.remove('text-primary', 'font-bold', 'border-b-2', 'border-primary');
+   455→                rolesBtn.classList.add('text-on-surface-variant');
+   456→                
+   457→                usersContent.classList.remove('hidden');
+   458→                rolesContent.classList.add('hidden');
+   459→            } else {
+   460→                rolesBtn.classList.add('text-primary', 'font-bold', 'border-b-2', 'border-primary');
+   461→                rolesBtn.classList.remove('text-on-surface-variant');
+   462→                usersBtn.classList.remove('text-primary', 'font-bold', 'border-b-2', 'border-primary');
+   463→                usersBtn.classList.add('text-on-surface-variant');
+   464→
+   465→                rolesContent.classList.remove('hidden');
+   466→                usersContent.classList.add('hidden');
+   467→            }
+   468→        }
+   469→
+   470→        // Add subtle hover animations to rows
+   471→        document.querySelectorAll('tr').forEach(row => {
+   472→            row.addEventListener('mouseenter', () => {
+   473→                row.style.transform = 'translateX(4px)';
+   474→                row.style.transition = 'transform 0.2s ease-out';
+   475→            });
+   476→            row.addEventListener('mouseleave', () => {
+   477→                row.style.transform = 'translateX(0)';
+   478→            });
+   479→        });
+   480→    </script>
+   481→
+   482→
+   483→
+   484→</body></html>

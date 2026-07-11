@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>QBIT Hub Admin - System Settings</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#e0e3e5",
+                        "surface-variant": "#dce2f7",
+                        "primary": "#0043c8",
+                        "surface": "#f9f9ff",
+                        "on-tertiary-container": "#e7e9eb",
+                        "secondary-fixed": "#dbe1ff",
+                        "background": "#f9f9ff",
+                        "on-secondary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "surface-dim": "#d3daef",
+                        "on-primary-fixed-variant": "#003ab2",
+                        "tertiary-fixed-dim": "#c4c7c9",
+                        "on-tertiary-fixed-variant": "#444749",
+                        "surface-tint": "#004ee7",
+                        "on-tertiary-fixed": "#191c1e",
+                        "on-secondary-fixed-variant": "#003ea8",
+                        "inverse-on-surface": "#edf0ff",
+                        "surface-container-high": "#e1e8fd",
+                        "primary-container": "#0057ff",
+                        "primary-fixed": "#dce1ff",
+                        "error": "#ba1a1a",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-container": "#66696b",
+                        "on-secondary-fixed": "#00174b",
+                        "on-primary-fixed": "#001550",
+                        "primary-fixed-dim": "#b6c4ff",
+                        "surface-container-highest": "#dce2f7",
+                        "on-error": "#ffffff",
+                        "tertiary": "#4e5153",
+                        "on-surface-variant": "#434656",
+                        "on-background": "#141b2b",
+                        "on-tertiary": "#ffffff",
+                        "outline-variant": "#c3c5d9",
+                        "error-container": "#ffdad6",
+                        "outline": "#737688",
+                        "on-primary": "#ffffff",
+                        "surface-container-low": "#f1f3ff",
+                        "surface-bright": "#f9f9ff",
+                        "secondary-container": "#316bf3",
+                        "secondary": "#0051d5",
+                        "on-primary-container": "#e5e8ff",
+                        "inverse-primary": "#b6c4ff",
+                        "surface-container": "#e9edff",
+                        "inverse-surface": "#293040",
+                        "secondary-fixed-dim": "#b4c5ff",
+                        "on-secondary-container": "#fefcff",
+                        "on-surface": "#141b2b"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "8px",
+                        "xs": "4px",
+                        "md": "16px",
+                        "gutter": "24px",
+                        "margin-desktop": "32px",
+                        "2xl": "48px",
+                        "xl": "32px",
+                        "unit": "8px",
+                        "lg": "24px",
+                        "3xl": "64px",
+                        "container-max": "1440px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "display-sm": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "display-lg": ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #737688;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px; width: 18px;
+            left: 3px; bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #0043c8; }
+        input:checked + .slider:before { transform: translateX(20px); }
+    </style>
+</head>
+<body class="bg-surface text-on-surface">
+<!-- Sidebar Navigation Shell -->
+<aside class="w-64 h-screen fixed left-0 top-0 bg-surface-container-low border-r border-outline-variant flex flex-col py-md z-50">
+<div class="px-gutter mb-3xl">
+<h1 class="font-headline-sm text-headline-sm font-bold text-primary">QBIT Hub</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Control Center</p>
+</div>
+<nav class="flex-1 space-y-1">
+<!-- Navigation Items Mapping from JSON -->
+<a class="flex items-center px-gutter py-sm text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-md">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<a class="flex items-center px-gutter py-sm text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-md">inventory_2</span>
+<span class="font-body-md text-body-md">Products</span>
+</a>
+<a class="flex items-center px-gutter py-sm text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-md">local_shipping</span>
+<span class="font-body-md text-body-md">Drivers</span>
+</a>
+<a class="flex items-center px-gutter py-sm text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-md">menu_book</span>
+<span class="font-body-md text-body-md">Manuals</span>
+</a>
+<a class="flex items-center px-gutter py-sm text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-md">videocam</span>
+<span class="font-body-md text-body-md">Videos</span>
+</a>
+<a class="flex items-center px-gutter py-sm text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-md">group</span>
+<span class="font-body-md text-body-md">Users</span>
+</a>
+<a class="flex items-center px-gutter py-sm text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-md">monitoring</span>
+<span class="font-body-md text-body-md">Analytics</span>
+</a>
+<!-- Active State: Settings -->
+<a class="flex items-center px-gutter py-sm text-primary border-l-4 border-primary bg-primary-container/10 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-md">settings</span>
+<span class="font-body-md text-body-md font-semibold">Settings</span>
+</a>
+</nav>
+<div class="px-gutter pt-md border-t border-outline-variant">
+<div class="flex items-center gap-sm p-sm rounded-lg hover:bg-surface-container">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined">person</span>
+</div>
+<div class="overflow-hidden">
+<p class="font-label-md text-label-md truncate">Admin User</p>
+<p class="text-xs text-on-surface-variant">System Administrator</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Top Bar -->
+<header class="fixed top-0 right-0 left-64 h-16 bg-surface border-b border-outline-variant flex justify-between items-center px-gutter z-40">
+<div class="flex items-center bg-surface-container-low px-md py-xs rounded-full w-96 border border-outline-variant">
+<span class="material-symbols-outlined text-outline text-lg">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm w-full ml-xs" placeholder="Search settings..." type="text"/>
+</div>
+<div class="flex items-center gap-md">
+<button class="p-xs rounded-full hover:bg-surface-container transition-all">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+</button>
+<button class="p-xs rounded-full hover:bg-surface-container transition-all">
+<span class="material-symbols-outlined text-on-surface-variant">help_outline</span>
+</button>
+</div>
+</header>
+<!-- Main Content -->
+<main class="ml-64 mt-16 p-margin-desktop max-w-container-max mx-auto">
+<div class="mb-xl">
+<h2 class="font-headline-lg text-headline-lg text-on-surface">System Settings</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Configure your enterprise hub branding and global application parameters.</p>
+</div>
+<div class="grid grid-cols-12 gap-xl">
+<!-- Branding Section (Bento Card Large) -->
+<section class="col-span-12 lg:col-span-8 bg-surface-container-lowest border border-outline-variant rounded-xl p-xl shadow-sm">
+<div class="flex items-center gap-sm mb-lg">
+<span class="material-symbols-outlined text-primary">palette</span>
+<h3 class="font-headline-sm text-headline-sm">Branding</h3>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-xl">
+<!-- Logo Upload -->
+<div class="space-y-md">
+<label class="font-label-md text-label-md block">Company Logo</label>
+<div class="group relative w-full h-40 rounded-lg border-2 border-dashed border-outline-variant hover:border-primary bg-surface-container-low flex flex-col items-center justify-center transition-all cursor-pointer">
+<span class="material-symbols-outlined text-3xl text-outline group-hover:text-primary mb-sm">cloud_upload</span>
+<p class="text-sm text-on-surface-variant">Drag and drop or click to upload</p>
+<p class="text-xs text-outline">PNG, SVG up to 2MB</p>
+</div>
+</div>
+<!-- Visual Presets -->
+<div class="space-y-xl">
+<div class="space-y-sm">
+<label class="font-label-md text-label-md block flex items-center gap-xs">
+                                Primary Color
+                                <span class="material-symbols-outlined text-xs text-outline cursor-help" title="Affects buttons, active states, and focus borders">info</span>
+</label>
+<div class="flex items-center gap-md p-md bg-surface border border-outline-variant rounded-lg">
+<div class="w-12 h-12 rounded bg-primary-container border border-white shadow-sm shrink-0"></div>
+<div class="flex-1">
+<p class="font-body-sm text-body-sm font-semibold">#0057ff</p>
+<p class="text-xs text-outline">Active Corporate Blue</p>
+</div>
+<button class="px-md py-sm bg-surface-container-high rounded-full font-label-sm text-label-sm hover:bg-surface-container-highest transition-colors">Change</button>
+</div>
+</div>
+<div class="space-y-sm">
+<label class="font-label-md text-label-md block">Primary Font</label>
+<select class="w-full bg-surface border-outline-variant rounded-lg font-body-md text-body-md py-sm px-md focus:ring-primary focus:border-primary">
+<option selected="">Inter (Default)</option>
+<option>Roboto</option>
+<option>Open Sans</option>
+<option>IBM Plex Sans</option>
+</select>
+</div>
+</div>
+</div>
+</section>
+<!-- Application Settings (Bento Card Small) -->
+<section class="col-span-12 lg:col-span-4 bg-surface-container-lowest border border-outline-variant rounded-xl p-xl shadow-sm">
+<div class="flex items-center gap-sm mb-lg">
+<span class="material-symbols-outlined text-primary">language</span>
+<h3 class="font-headline-sm text-headline-sm">App Settings</h3>
+</div>
+<div class="space-y-lg">
+<div class="space-y-xs">
+<label class="font-label-md text-label-md block">Default Language</label>
+<select class="w-full bg-surface border-outline-variant rounded-lg font-body-md text-body-md">
+<option selected="">English (US)</option>
+<option>Spanish (ES)</option>
+<option>French (FR)</option>
+<option>German (DE)</option>
+</select>
+</div>
+<div class="space-y-xs">
+<label class="font-label-md text-label-md block">Appearance Theme</label>
+<div class="grid grid-cols-3 gap-sm">
+<button class="flex flex-col items-center gap-xs p-sm bg-primary-container/10 border border-primary rounded-lg">
+<span class="material-symbols-outlined text-primary">light_mode</span>
+<span class="text-xs font-semibold">Light</span>
+</button>
+<button class="flex flex-col items-center gap-xs p-sm bg-surface hover:bg-surface-container rounded-lg border border-outline-variant">
+<span class="material-symbols-outlined text-outline">dark_mode</span>
+<span class="text-xs">Dark</span>
+</button>
+<button class="flex flex-col items-center gap-xs p-sm bg-surface hover:bg-surface-container rounded-lg border border-outline-variant">
+<span class="material-symbols-outlined text-outline">desktop_windows</span>
+<span class="text-xs">System</span>
+</button>
+</div>
+</div>
+<div class="space-y-xs">
+<label class="font-label-md text-label-md block">Timezone</label>
+<select class="w-full bg-surface border-outline-variant rounded-lg font-body-md text-body-md">
+<option>(GMT-08:00) Pacific Time (US &amp; Canada)</option>
+<option>(GMT+00:00) UTC</option>
+<option>(GMT+01:00) Central European Time</option>
+</select>
+</div>
+</div>
+</section>
+<!-- Security (Asymmetric Layout Card) -->
+<section class="col-span-12 lg:col-span-5 bg-surface-container-lowest border border-outline-variant rounded-xl p-xl shadow-sm">
+<div class="flex items-center gap-sm mb-lg">
+<span class="material-symbols-outlined text-primary">security</span>
+<h3 class="font-headline-sm text-headline-sm">Security &amp; Privacy</h3>
+</div>
+<div class="space-y-xl">
+<div class="flex items-center justify-between p-md bg-surface rounded-lg border border-outline-variant">
+<div class="pr-md">
+<p class="font-label-md text-label-md">Multi-factor Authentication (MFA)</p>
+<p class="text-xs text-on-surface-variant">Require additional verification via email or authenticator app.</p>
+</div>
+<label class="switch shrink-0">
+<input checked="" type="checkbox"/>
+<span class="slider"></span>
+</label>
+</div>
+<div class="space-y-sm">
+<div class="flex items-center justify-between">
+<label class="font-label-md text-label-md">Session Timeout</label>
+<span class="text-xs font-semibold text-primary">30 Minutes</span>
+</div>
+<input class="w-full h-2 bg-surface-container-high rounded-lg appearance-none cursor-pointer accent-primary" max="120" min="5" step="5" type="range" value="30"/>
+<div class="flex justify-between text-[10px] text-outline uppercase font-bold tracking-widest">
+<span>5m</span>
+<span>60m</span>
+<span>120m</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Backup & Restore (Full Width Table Layout) -->
+<section class="col-span-12 lg:col-span-7 bg-surface-container-lowest border border-outline-variant rounded-xl p-xl shadow-sm">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-md mb-lg">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary">backup</span>
+<h3 class="font-headline-sm text-headline-sm">Backup &amp; Restore</h3>
+</div>
+<button class="bg-primary text-on-primary px-lg py-sm rounded-lg font-label-md flex items-center gap-sm hover:bg-primary/90 transition-all shadow-md">
+<span class="material-symbols-outlined text-[18px]">cloud_sync</span>
+                        Create Manual Backup
+                    </button>
+</div>
+<div class="overflow-hidden border border-outline-variant rounded-lg">
+<table class="w-full text-left font-body-sm text-body-sm">
+<thead class="bg-surface-container-low border-b border-outline-variant">
+<tr>
+<th class="px-md py-sm font-label-sm text-label-sm uppercase text-outline">Date &amp; Time</th>
+<th class="px-md py-sm font-label-sm text-label-sm uppercase text-outline">Size</th>
+<th class="px-md py-sm font-label-sm text-label-sm uppercase text-outline">Status</th>
+<th class="px-md py-sm font-label-sm text-label-sm uppercase text-outline text-right">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<tr class="hover:bg-surface-container transition-colors">
+<td class="px-md py-md">
+<div class="flex flex-col">
+<span class="font-semibold">Oct 24, 2023 - 14:00</span>
+<span class="text-xs text-on-surface-variant">Manual backup initiated by Admin</span>
+</div>
+</td>
+<td class="px-md py-md text-on-surface-variant">124.5 MB</td>
+<td class="px-md py-md">
+<span class="bg-green-100 text-green-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-green-200">SUCCESS</span>
+</td>
+<td class="px-md py-md text-right">
+<button class="text-primary hover:underline font-semibold">Restore</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container transition-colors">
+<td class="px-md py-md">
+<div class="flex flex-col">
+<span class="font-semibold">Oct 23, 2023 - 03:00</span>
+<span class="text-xs text-on-surface-variant">Scheduled system backup</span>
+</div>
+</td>
+<td class="px-md py-md text-on-surface-variant">123.8 MB</td>
+<td class="px-md py-md">
+<span class="bg-green-100 text-green-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-green-200">SUCCESS</span>
+</td>
+<td class="px-md py-md text-right">
+<button class="text-primary hover:underline font-semibold">Restore</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container transition-colors">
+<td class="px-md py-md">
+<div class="flex flex-col">
+<span class="font-semibold">Oct 22, 2023 - 03:00</span>
+<span class="text-xs text-on-surface-variant">Scheduled system backup</span>
+</div>
+</td>
+<td class="px-md py-md text-on-surface-variant">123.2 MB</td>
+<td class="px-md py-md">
+<span class="bg-red-100 text-red-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-red-200">FAILED</span>
+</td>
+<td class="px-md py-md text-right">
+<button class="text-primary hover:underline font-semibold">Retry</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</div>
+<!-- Sticky Footer Action Bar -->
+<div class="fixed bottom-margin-desktop right-margin-desktop left-[calc(256px+32px)] glass-panel border border-outline-variant rounded-xl p-md flex justify-between items-center z-40 shadow-xl">
+<div class="flex items-center gap-md">
+<div class="flex h-2 w-2 rounded-full bg-primary animate-pulse"></div>
+<span class="text-sm font-label-md text-on-surface-variant">Changes detected but not saved.</span>
+</div>
+<div class="flex gap-md">
+<button class="px-xl py-sm rounded-lg border border-outline-variant font-label-md hover:bg-surface-container transition-colors">Discard</button>
+<button class="px-xl py-sm rounded-lg bg-primary text-on-primary font-label-md hover:shadow-lg hover:shadow-primary/20 transition-all">Save All Changes</button>
+</div>
+</div>
+</main>
+<script>
+        // Simple micro-interaction for theme switching visualization
+        const themeButtons = document.querySelectorAll('section:nth-of-type(2) .grid button');
+        themeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                themeButtons.forEach(b => {
+                    b.classList.remove('bg-primary-container/10', 'border-primary');
+                    b.classList.add('bg-surface', 'border-outline-variant');
+                    b.querySelector('span:first-child').classList.remove('text-primary');
+                    b.querySelector('span:first-child').classList.add('text-outline');
+                    b.querySelector('span:last-child').classList.remove('font-semibold');
+                });
+                btn.classList.add('bg-primary-container/10', 'border-primary');
+                btn.classList.remove('bg-surface', 'border-outline-variant');
+                btn.querySelector('span:first-child').classList.add('text-primary');
+                btn.querySelector('span:first-child').classList.remove('text-outline');
+                btn.querySelector('span:last-child').classList.add('font-semibold');
+            });
+        });
+
+        // Range slider value display
+        const timeoutSlider = document.querySelector('input[type="range"]');
+        const timeoutLabel = timeoutSlider.previousElementSibling.querySelector('span');
+        timeoutSlider.addEventListener('input', (e) => {
+            timeoutLabel.textContent = `${e.target.value} Minutes`;
+        });
+    </script>
+</body></html>

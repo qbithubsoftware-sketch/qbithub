@@ -1,0 +1,446 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>QBIT T-800 Installation Guide | InstalCore</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed-dim": "#b4c5ff",
+                        "outline": "#737688",
+                        "background": "#f9f9ff",
+                        "on-secondary-container": "#fefcff",
+                        "inverse-surface": "#293040",
+                        "surface-container": "#e9edff",
+                        "on-tertiary-container": "#e7e9eb",
+                        "on-secondary-fixed-variant": "#003ea8",
+                        "tertiary": "#4e5153",
+                        "on-surface-variant": "#434656",
+                        "on-secondary-fixed": "#00174b",
+                        "secondary-container": "#316bf3",
+                        "inverse-primary": "#b6c4ff",
+                        "inverse-on-surface": "#edf0ff",
+                        "error-container": "#ffdad6",
+                        "on-surface": "#141b2b",
+                        "surface-container-high": "#e1e8fd",
+                        "surface-container-low": "#f1f3ff",
+                        "primary": "#0043c8",
+                        "surface-container-lowest": "#ffffff",
+                        "surface": "#f9f9ff",
+                        "secondary-fixed": "#dbe1ff",
+                        "on-tertiary": "#ffffff",
+                        "surface-bright": "#f9f9ff",
+                        "tertiary-container": "#66696b",
+                        "secondary": "#0051d5",
+                        "primary-fixed-dim": "#b6c4ff",
+                        "on-error": "#ffffff",
+                        "tertiary-fixed-dim": "#c4c7c9",
+                        "on-primary-fixed-variant": "#003ab2",
+                        "on-error-container": "#93000a",
+                        "surface-tint": "#004ee7",
+                        "on-tertiary-fixed": "#191c1e",
+                        "error": "#ba1a1a",
+                        "on-background": "#141b2b",
+                        "surface-dim": "#d3daef",
+                        "surface-container-highest": "#dce2f7",
+                        "on-tertiary-fixed-variant": "#444749",
+                        "tertiary-fixed": "#e0e3e5",
+                        "primary-container": "#0057ff",
+                        "on-primary-container": "#e5e8ff",
+                        "outline-variant": "#c3c5d9",
+                        "on-primary-fixed": "#001550",
+                        "on-primary": "#ffffff",
+                        "surface-variant": "#dce2f7",
+                        "on-secondary": "#ffffff",
+                        "primary-fixed": "#dce1ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "lg": "24px",
+                        "container-max": "1440px",
+                        "xs": "4px",
+                        "unit": "8px",
+                        "md": "16px",
+                        "margin-mobile": "16px",
+                        "gutter": "24px",
+                        "2xl": "48px",
+                        "sm": "8px",
+                        "margin-desktop": "32px",
+                        "xl": "32px",
+                        "3xl": "64px"
+                    },
+                    "fontFamily": {
+                        "headline-sm": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "display-sm": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "headline-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "display-sm": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .timeline-line::before {
+            content: '';
+            position: absolute;
+            left: 19px;
+            top: 40px;
+            bottom: 0;
+            width: 2px;
+            background: #E2E8F0;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface">
+<!-- Sidebar Navigation Shell -->
+<aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-low dark:bg-inverse-surface border-r border-outline-variant dark:border-outline flex flex-col h-screen overflow-y-auto z-50">
+<div class="px-6 py-8">
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-inverse-primary">InstalCore</h1>
+<p class="font-label-md text-label-md text-outline opacity-70">Enterprise Portal</p>
+</div>
+<nav class="flex-1 px-2 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-surface-container dark:hover:bg-tertiary-container hover:text-primary transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-surface-container dark:hover:bg-tertiary-container hover:text-primary transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span class="font-label-md text-label-md">Products</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-surface-container dark:hover:bg-tertiary-container hover:text-primary transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="settings_input_component">settings_input_component</span>
+<span class="font-label-md text-label-md">Drivers</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 border-l-4 border-primary text-primary font-bold bg-surface-container-high dark:bg-surface-variant transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+<span class="font-label-md text-label-md">Installation Guides</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-surface-container dark:hover:bg-tertiary-container hover:text-primary transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="video_library">video_library</span>
+<span class="font-label-md text-label-md">Videos</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-surface-container dark:hover:bg-tertiary-container hover:text-primary transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="download">download</span>
+<span class="font-label-md text-label-md">Downloads</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-surface-container dark:hover:bg-tertiary-container hover:text-primary transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</nav>
+<div class="p-4 mt-auto">
+<div class="flex items-center gap-3 p-3 rounded-lg bg-surface-container-highest">
+<img class="w-10 h-10 rounded-full border-2 border-primary/20" data-alt="A professional enterprise engineer profile avatar, looking directly at camera, neutral background, sharp focus, wearing corporate work attire, high-quality professional photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAiAaBCLkNxXtCgUoexRe5fL2M_nT_Sxf1GOcbauqeibmW4JzudreCoIYbBrFUv7QVKkxrR_2Zj2fXe1KPgWoixZSQ2xRlYoC7UD6WYZKwiOa4luGYJNVrcDm99dPpV8yB7YMsXW16MJfFqCt1rBZOyyqcx89sW6KnmHpeB3P68bj2IMm2ZAL7KyBuWKm2JyMI5j2USw4PlhGx2lTjxKuYvzl2LGX-wEkev1f3DTKD77eRfcqbFShNz15TEJVLGD3ju3f3lVu-B3qWZ">
+<div class="overflow-hidden">
+<p class="font-label-md text-label-md font-bold truncate">E. Richardson</p>
+<p class="text-[10px] text-outline uppercase tracking-wider">Lead Field Engineer</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 right-0 w-[calc(100%-256px)] h-16 flex justify-between items-center px-8 z-40 bg-white/80 backdrop-blur-md border-b border-outline-variant">
+<div class="flex items-center gap-4 flex-1">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline" data-icon="search">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-full pl-10 pr-4 py-2 text-body-sm focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Search documentation..." type="text">
+</div>
+</div>
+<div class="flex items-center gap-6">
+<button class="text-on-surface-variant hover:text-primary transition-colors duration-200 flex items-center">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors duration-200 flex items-center">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+</button>
+<div class="h-8 w-[1px] bg-outline-variant"></div>
+<div class="flex items-center gap-2">
+<span class="font-label-md text-label-md text-on-surface-variant">QBIT T-800 Series</span>
+<span class="material-symbols-outlined text-primary text-[18px]" data-icon="verified">verified</span>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="ml-64 pt-24 pb-12 px-8 min-h-screen">
+<div class="max-w-6xl mx-auto">
+<!-- Header Section -->
+<div class="mb-12">
+<nav class="flex items-center gap-2 text-label-sm text-outline mb-4">
+<span class="">Products</span>
+<span class="material-symbols-outlined text-[14px]" data-icon="chevron_right">chevron_right</span>
+<span class="">POS Systems</span>
+<span class="material-symbols-outlined text-[14px]" data-icon="chevron_right">chevron_right</span>
+<span class="text-primary font-bold">QBIT T-800 Installation</span>
+</nav>
+<div class="flex items-end justify-between gap-8">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-2">Step-by-Step Installation Guide</h2>
+<p class="text-body-md text-on-surface-variant max-w-2xl">Complete hardware setup and software provisioning for the QBIT T-800 Windows Point of Sale workstation.</p>
+</div>
+<div class="text-right">
+<span class="text-label-sm text-outline block mb-1">Estimated total time</span>
+<span class="font-headline-sm text-headline-sm text-primary">25 Minutes</span>
+</div>
+</div>
+</div>
+<!-- Installation Progress Bar -->
+<div class="bg-white border border-outline-variant rounded-xl p-6 mb-8 shadow-sm mb-12">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="task_alt">task_alt</span>
+</div>
+<div>
+<p class="font-label-md text-label-md font-bold">Overall Progress</p>
+<p class="text-body-sm text-on-surface-variant">Step 2 of 5</p>
+</div>
+</div>
+<span class="font-headline-sm text-headline-sm text-primary">40%</span>
+</div>
+<div class="w-full h-3 bg-surface-container-low rounded-full overflow-hidden relative">
+<div class="h-full bg-primary-container rounded-full w-[40%] transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(0,87,255,0.4)] relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-12 gap-8">
+<!-- Timeline & Steps -->
+<div class="col-span-12 lg:col-span-8 space-y-6">
+<div class="relative timeline-line">
+<!-- Step 1 -->
+<div class="relative flex gap-6 mb-12 opacity-80 group">
+<div class="z-10 w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shadow-lg text-label-md">
+<span class="material-symbols-outlined" data-icon="check" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<div class="flex-1 bg-white border border-outline-variant rounded-xl p-6 shadow-sm group-hover:border-primary/50 transition-colors">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-headline-sm text-headline-sm">Step 1: Unbox &amp; Inventory</h3>
+<span class="px-3 py-1 bg-surface-container-highest text-outline text-[10px] font-bold uppercase rounded-full">Completed</span>
+</div>
+<p class="text-body-md text-on-surface-variant mb-4">Ensure all components are present including the terminal, stand, power brick, and accessory box.</p>
+<div class="flex items-center gap-4 p-3 bg-surface-container-low rounded-lg border border-outline-variant/30">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="content_cut">content_cut</span>
+<span class="text-body-sm font-medium">Required Tools: Box Cutter</span>
+</div>
+</div>
+</div>
+<!-- Step 2 -->
+<div class="relative flex gap-6 mb-12">
+<div class="z-10 w-10 h-10 rounded-full bg-primary ring-4 ring-primary/20 text-white flex items-center justify-center shadow-lg animate-pulse text-label-md">
+<span class="font-label-md font-bold">2</span>
+</div>
+<div class="flex-1 bg-white border-2 border-primary rounded-xl p-6 shadow-md">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-headline-md text-headline-md text-primary">Step 2: Power Connection</h3>
+<span class="px-3 py-1 bg-primary text-white text-[10px] font-bold uppercase rounded-full text-label-sm">In Progress</span>
+</div>
+<p class="text-body-md text-on-surface-variant mb-4">Route the DC power cable through the stand neck and connect to the underside of the QBIT head unit.</p>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2 text-primary font-medium">
+<span class="material-symbols-outlined text-[20px]" data-icon="schedule">schedule</span>
+<span class="text-label-sm">Estimated Time: 5 mins</span>
+</div>
+<button class="bg-primary text-white px-4 py-2 rounded-lg font-label-md hover:bg-primary-container transition-colors">Mark as Complete</button>
+</div>
+<div class="mt-4 overflow-hidden rounded-lg border border-outline-variant shadow-inner">
+<img class="w-full h-48 object-cover" data-alt="A high-quality technical illustration of a POS terminal stand showing the cable management routing. The style is clean, enterprise-focused, using technical blue lines and semi-transparent gray components to show internal structure. Soft studio lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD2vota7_wMniuELXGF_wkYzsGNECB8gVP5V6sGYnjYXiRF8Yul9XcC2HGTq_zt00eRcLZYDf7xHawnIUBL41QVpTvhgE0W7cDLUSJ8nt2IUYzWESrdXTwvsdKiuma8I-5shBCnklOsqCNmtGJMA0q-NPUzDDl2g-8ekyknOMNUoGnoqTd7J4ZELVSBDRGTYpZeA8jDO7154GSkxft8fLGl-8y_N4J2mpkv8jFFLIrXlGLO8TqmXBOs2rv9DpyPd_oyc_wbGBbmwcYh">
+</div>
+</div>
+</div>
+<!-- Step 3 -->
+<div class="relative flex gap-6 mb-12 opacity-60 grayscale-[0.5]">
+<div class="z-10 w-10 h-10 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center border-2 border-outline-variant">
+<span class="font-label-md font-bold">3</span>
+</div>
+<div class="flex-1 bg-white border border-outline-variant rounded-xl p-6">
+<h3 class="font-headline-sm text-headline-sm mb-2">Step 3: Peripheral Wiring</h3>
+<p class="text-body-md text-on-surface-variant mb-4">Connect Printer, Cash Drawer, and MSR/Scanner to designated ports.</p>
+<a class="inline-flex items-center gap-2 text-primary hover:underline font-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="schema">schema</span>
+                                    View Wiring Diagram
+                                </a>
+</div>
+</div>
+<!-- Step 4 -->
+<div class="relative flex gap-6 opacity-60 grayscale-[0.5]">
+<div class="z-10 w-10 h-10 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center border-2 border-outline-variant">
+<span class="font-label-md font-bold">4</span>
+</div>
+<div class="flex-1 bg-white border border-outline-variant rounded-xl p-6">
+<h3 class="font-headline-sm text-headline-sm mb-2">Step 4: Driver Configuration</h3>
+<p class="text-body-md text-on-surface-variant mb-4">Install specific Windows POS drivers for the touchscreen and thermal printer.</p>
+<a class="inline-flex items-center gap-2 text-primary hover:underline font-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="download_for_offline">download_for_offline</span>
+                                    Driver Download Center
+                                </a>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column Widgets -->
+<div class="col-span-12 lg:col-span-4 space-y-8">
+<!-- Tools Required Card -->
+<section class="bg-white border border-outline-variant rounded-xl p-6 shadow-sm">
+<h4 class="font-label-md text-label-md font-bold text-on-surface mb-4 uppercase tracking-widest">Tools Required</h4>
+<div class="grid grid-cols-1 gap-4">
+<div class="flex items-center gap-4 p-3 bg-surface-container-low rounded-lg transition-transform hover:scale-[1.02]">
+<div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center shadow-sm text-primary">
+<span class="material-symbols-outlined" data-icon="power">power</span>
+</div>
+<span class="font-label-md text-label-md">Power Adapter (In Box)</span>
+</div>
+<div class="flex items-center gap-4 p-3 bg-surface-container-low rounded-lg transition-transform hover:scale-[1.02]">
+<div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center shadow-sm text-primary">
+<span class="material-symbols-outlined" data-icon="lan">lan</span>
+</div>
+<span class="font-label-md text-label-md">Cat6 LAN Cable</span>
+</div>
+<div class="flex items-center gap-4 p-3 bg-surface-container-low rounded-lg transition-transform hover:scale-[1.02]">
+<div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center shadow-sm text-primary">
+<span class="material-symbols-outlined" data-icon="build">build</span>
+</div>
+<span class="font-label-md text-label-md">Philips #2 Screwdriver</span>
+</div>
+</div>
+</section>
+<!-- Interactive Checklist -->
+<section class="bg-surface-container-low border border-outline-variant rounded-xl p-6 shadow-sm">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-primary" data-icon="assignment_turned_in">assignment_turned_in</span>
+<h4 class="font-label-md text-label-md font-bold text-on-surface uppercase tracking-widest">Interactive Checklist</h4>
+</div>
+<div class="space-y-6">
+<div>
+<h5 class="text-[10px] font-black text-outline uppercase mb-3">Safety Verification</h5>
+<div class="space-y-3">
+<label class="flex items-start gap-3 cursor-pointer group">
+<input class="mt-1 rounded text-primary focus:ring-primary h-4 w-4 transition-all rounded-md" type="checkbox">
+<span class="text-body-sm group-hover:text-primary transition-colors">Surface is flat and stable</span>
+</label>
+<label class="flex items-start gap-3 cursor-pointer group">
+<input class="mt-1 rounded text-primary focus:ring-primary h-4 w-4 transition-all rounded-md" type="checkbox">
+<span class="text-body-sm group-hover:text-primary transition-colors">Power outlet is grounded (surge protected)</span>
+</label>
+</div>
+</div>
+<div class="h-[1px] bg-outline-variant/30"></div>
+<div>
+<h5 class="text-[10px] font-black text-outline uppercase mb-3">Hardware Checks</h5>
+<div class="space-y-3">
+<label class="flex items-start gap-3 cursor-pointer group">
+<input checked="" class="mt-1 rounded text-primary focus:ring-primary h-4 w-4 transition-all rounded-md" type="checkbox">
+<span class="text-body-sm group-hover:text-primary transition-colors line-through opacity-50">Base plate screws tightened</span>
+</label>
+<label class="flex items-start gap-3 cursor-pointer group">
+<input class="mt-1 rounded text-primary focus:ring-primary h-4 w-4 transition-all rounded-md" type="checkbox">
+<span class="text-body-sm group-hover:text-primary transition-colors">Screen tilt mechanism verified</span>
+</label>
+<label class="flex items-start gap-3 cursor-pointer group">
+<input class="mt-1 rounded text-primary focus:ring-primary h-4 w-4 transition-all rounded-md" type="checkbox">
+<span class="text-body-sm group-hover:text-primary transition-colors">I/O cover plate seated correctly</span>
+</label>
+</div>
+</div>
+</div>
+<button class="w-full mt-8 py-3 bg-white border border-outline text-on-surface-variant font-label-md rounded-lg hover:bg-surface-container-high hover:border-primary hover:text-primary transition-all">
+                            Export Certification Log
+                        </button>
+</section>
+<!-- Help Widget -->
+<div class="glass-panel p-6 rounded-xl border border-primary/10 relative overflow-hidden">
+<div class="relative z-10">
+<h4 class="font-label-md text-label-md font-bold mb-2">Need Technical Support?</h4>
+<p class="text-body-sm text-on-surface-variant mb-4">Our engineers are available 24/7 for QBIT installations.</p>
+<button class="bg-primary text-white w-full py-2 rounded-lg text-label-md font-bold shadow-md hover:shadow-lg transition-all border border-outline-variant">
+                                Live Support Chat
+                            </button>
+</div>
+<span class="material-symbols-outlined absolute -bottom-4 -right-4 text-primary/5 text-[120px]" data-icon="support_agent">support_agent</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Success Toast - Micro interaction simulation -->
+<div class="fixed bottom-8 right-8 bg-on-surface text-surface py-4 px-6 rounded-xl shadow-2xl flex items-center gap-4 transition-transform duration-300 z-[100] translate-y-24" id="toast">
+<span class="material-symbols-outlined text-green-400" data-icon="check_circle">check_circle</span>
+<div class="pr-8">
+<p class="font-label-md font-bold">Progress Saved</p>
+<p class="text-body-sm opacity-80">Installation state uploaded to cloud.</p>
+</div>
+<button class="text-white/50 hover:text-white" onclick="document.getElementById('toast').classList.add('translate-y-24')">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+</div>
+<script>
+        // Simple interaction to show toast after a "save" simulation
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const toast = document.getElementById('toast');
+                toast.classList.remove('translate-y-24');
+                setTimeout(() => {
+                    toast.classList.add('translate-y-24');
+                }, 5000);
+            }, 1500);
+        });
+
+        // Add ripple-like effect on progress marking (visual only)
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                if (this.innerText === "Mark as Complete") {
+                    this.classList.add('opacity-50', 'pointer-events-none');
+                    this.innerText = "Processing...";
+                    setTimeout(() => {
+                        this.innerText = "Step Completed";
+                        this.classList.remove('bg-primary');
+                        this.classList.add('bg-green-600');
+                    }, 800);
+                }
+            });
+        });
+    </script>
+
+
+
+</body></html>

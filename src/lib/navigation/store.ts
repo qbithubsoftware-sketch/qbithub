@@ -1,0 +1,60 @@
+/**
+ * In-app navigation store for QBIT Hub.
+ *
+ * The environment only exposes the `/` route, so we use a Zustand store
+ * to switch between the 21 design screens client-side.  Every screen has
+ * a stable string id so deep-linking / state restoration is trivial.
+ */
+
+import { create } from "zustand";
+
+export type ScreenId =
+  // Auth & marketing
+  | "login"
+  | "home"
+  | "product-overview"
+  // Engineer portal
+  | "engineer-dashboard"
+  | "product-library"
+  | "product-details-t800"
+  | "driver-download-center"
+  | "installation-center"
+  | "customer-handover-report"
+  | "video-training-center"
+  | "t800-installation-guide"
+  | "ai-support-center"
+  // Field engineer
+  | "field-engineer-workspace"
+  | "job-details-inst-550-a"
+  | "job-completion-handover"
+  // Admin
+  | "admin-dashboard"
+  | "user-role-management"
+  | "product-management"
+  | "system-settings"
+  // Search
+  | "universal-search-command-center"
+  | "universal-search-mobile";
+
+interface NavigationState {
+  current: ScreenId;
+  /** Optional context payload (e.g. job id) for screens that need an argument. */
+  params: Record<string, string>;
+  navigate: (screen: ScreenId, params?: Record<string, string>) => void;
+  /** Convenience helper that updates a single param without changing screen. */
+  setParam: (key: string, value: string) => void;
+}
+
+export const useNavigation = create<NavigationState>((set) => ({
+  current: "login",
+  params: {},
+  navigate: (screen, params = {}) =>
+    set({ current: screen, params }),
+  setParam: (key, value) =>
+    set((state) => ({ params: { ...state.params, [key]: value } })),
+}));
+
+/** Helper for non-React modules. */
+export function navigateTo(screen: ScreenId, params?: Record<string, string>) {
+  useNavigation.getState().navigate(screen, params);
+}

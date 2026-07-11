@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>QBIT Hub | Installation Completion &amp; Handover</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 1);
+        }
+        .signature-pad {
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f3ff;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c3c5d9;
+            border-radius: 4px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-high": "#e1e8fd",
+                        "on-secondary-fixed-variant": "#003ea8",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed": "#191c1e",
+                        "primary-container": "#0057ff",
+                        "outline": "#737688",
+                        "surface-dim": "#d3daef",
+                        "surface-bright": "#f9f9ff",
+                        "secondary-fixed": "#dbe1ff",
+                        "tertiary-fixed": "#e0e3e5",
+                        "tertiary": "#4e5153",
+                        "secondary-container": "#316bf3",
+                        "outline-variant": "#c3c5d9",
+                        "on-surface-variant": "#434656",
+                        "error-container": "#ffdad6",
+                        "inverse-on-surface": "#edf0ff",
+                        "primary-fixed-dim": "#b6c4ff",
+                        "surface-container-low": "#f1f3ff",
+                        "on-primary-fixed": "#001550",
+                        "on-background": "#141b2b",
+                        "on-primary": "#ffffff",
+                        "surface": "#f9f9ff",
+                        "on-tertiary-container": "#e7e9eb",
+                        "on-surface": "#141b2b",
+                        "on-primary-fixed-variant": "#003ab2",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-container": "#e5e8ff",
+                        "on-tertiary-fixed-variant": "#444749",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-container": "#fefcff",
+                        "surface-container": "#e9edff",
+                        "on-error-container": "#93000a",
+                        "inverse-surface": "#293040",
+                        "tertiary-container": "#66696b",
+                        "primary": "#0043c8",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed": "#dce1ff",
+                        "secondary": "#0051d5",
+                        "on-secondary-fixed": "#00174b",
+                        "surface-variant": "#dce2f7",
+                        "inverse-primary": "#b6c4ff",
+                        "on-error": "#ffffff",
+                        "surface-tint": "#004ee7",
+                        "tertiary-fixed-dim": "#c4c7c9",
+                        "background": "#f9f9ff",
+                        "secondary-fixed-dim": "#b4c5ff",
+                        "surface-container-highest": "#dce2f7"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "8px",
+                        "gutter": "24px",
+                        "xl": "32px",
+                        "xs": "4px",
+                        "3xl": "64px",
+                        "margin-desktop": "32px",
+                        "md": "16px",
+                        "margin-mobile": "16px",
+                        "lg": "24px",
+                        "container-max": "1440px",
+                        "2xl": "48px",
+                        "unit": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "display-sm": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "body-lg": ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md min-h-screen flex overflow-hidden">
+<!-- Sidebar Navigation (Mandatory Shared Component) -->
+<aside class="hidden md:flex flex-col h-full py-md w-64 bg-surface-container-low border-r border-outline-variant fixed left-0 top-0 z-50">
+<div class="px-gutter mb-3xl">
+<h1 class="font-headline-md text-headline-md font-black text-primary">QBIT Hub</h1>
+<p class="font-label-md text-label-md text-on-surface-variant">Field Ops v2.4</p>
+</div>
+<nav class="flex-1 px-sm space-y-xs">
+<!-- Active Tab: My Jobs (Since this is a job completion screen) -->
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-primary font-bold bg-secondary-container/20 border-l-4 border-primary transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined">engineering</span>
+<span class="font-label-md text-label-md">My Jobs</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-label-md text-label-md">Inventory</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="font-label-md text-label-md">Documents</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined">support_agent</span>
+<span class="font-label-md text-label-md">Support</span>
+</a>
+</nav>
+<div class="mt-auto px-sm">
+<button class="w-full bg-primary text-on-primary py-sm rounded-lg font-label-md text-label-md flex items-center justify-center gap-sm shadow-sm hover:opacity-90 active:scale-95 transition-all">
+<span class="material-symbols-outlined">sync</span>
+                Sync Offline Data
+            </button>
+<div class="mt-md border-t border-outline-variant pt-sm">
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label-md text-label-md">Logout</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 ml-0 md:ml-64 h-screen overflow-y-auto bg-surface-container-lowest">
+<!-- Top Navigation Bar -->
+<header class="sticky top-0 z-40 bg-surface-container-lowest/80 backdrop-blur-md flex justify-between items-center w-full px-gutter h-16 border-b border-outline-variant">
+<div class="flex items-center gap-lg">
+<button class="md:hidden p-sm text-on-surface-variant">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<div class="hidden md:flex items-center bg-surface-container-low px-md py-xs rounded-full w-96 border border-outline-variant">
+<span class="material-symbols-outlined text-outline">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-sm w-full ml-sm" placeholder="Search tasks, assets, or records..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-surface-container-high p-xs rounded-full transition-colors">notifications</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-surface-container-high p-xs rounded-full transition-colors">help</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-surface-container-high p-xs rounded-full transition-colors">settings</span>
+<div class="w-px h-8 bg-outline-variant mx-xs"></div>
+<div class="flex items-center gap-sm">
+<div class="text-right hidden sm:block">
+<p class="font-label-md text-label-md text-on-surface">Alex Rivera</p>
+<p class="text-[10px] uppercase tracking-wider text-outline">Senior Engineer</p>
+</div>
+<img class="w-10 h-10 rounded-full border-2 border-primary-container object-cover" data-alt="A professional headshot of a middle-aged male field engineer wearing a dark blue tactical polo with a small subtle company logo. He is smiling slightly against a clean, bright, out-of-focus technical environment with soft white and cool blue lighting. The image has a crisp, high-definition quality with a shallow depth of field, maintaining a premium enterprise aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBrkB0hyceA__hROxDUuBZxsosLKk-S0Q1uyjCHJs64BCtD1Nr-M2On_WVoo2tXWgnT2uV0CN_HukOGCvCFH4ljSV9zWfQnehoa-05KfJxGvf2TN2m6ebaX0epXtcUHyOiwnH2tHBSLnd3ZkC1C5et44XdJzOsuQTTkz7jLOu-cb-mwqCFRCHeZmC1QYkht1OVWb-NrrbjHjg2YAG0zaiZXvVC7ZTNOG2b2g8r5LuC3Hh3cFBQl4JUVEI9LDW-i2QoEt4_LNJPIpf9M"/>
+</div>
+</div>
+</header>
+<!-- Content Area -->
+<div class="max-w-container-max mx-auto p-gutter lg:p-2xl space-y-xl">
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-lg">
+<div>
+<nav class="flex items-center gap-xs text-outline font-label-md text-label-md mb-xs">
+<span>Work Orders</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span>WO-94281</span>
+</nav>
+<h2 class="font-display-sm text-display-sm text-on-surface tracking-tight">Installation Handover</h2>
+<p class="text-on-surface-variant font-body-md max-w-2xl">Finalize the installation by verifying test results, documenting notes, and collecting authorized signatures from both parties.</p>
+</div>
+<div class="flex items-center gap-sm">
+<span class="px-md py-xs bg-secondary-container/10 text-secondary font-label-md rounded-full border border-secondary-container/20 flex items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+                        Status: Quality Check
+                    </span>
+</div>
+</div>
+<!-- Bento Layout Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-lg">
+<!-- Left Column: Testing & Notes -->
+<div class="lg:col-span-7 space-y-lg">
+<!-- Testing Summary Card -->
+<div class="glass-card p-xl rounded-xl shadow-sm">
+<div class="flex items-center justify-between mb-lg">
+<h3 class="font-headline-sm text-headline-sm flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary">analytics</span>
+                                Test Results Verification
+                            </h3>
+<span class="text-label-sm font-label-sm text-outline">AUTO-VERIFIED</span>
+</div>
+<div class="space-y-md">
+<div class="flex items-center justify-between p-md bg-surface-container-low rounded-lg border border-outline-variant/30">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">signal_cellular_alt</span>
+</div>
+<div>
+<p class="font-label-md text-label-md">Signal Calibration</p>
+<p class="text-[12px] text-on-surface-variant">-14.2 dBm (Target: -15.0)</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="flex items-center justify-between p-md bg-surface-container-low rounded-lg border border-outline-variant/30">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">router</span>
+</div>
+<div>
+<p class="font-label-md text-label-md">Gateway Response</p>
+<p class="text-[12px] text-on-surface-variant">8ms Latency (Target: &lt;20ms)</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="flex items-center justify-between p-md bg-surface-container-low rounded-lg border border-outline-variant/30">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">bolt</span>
+</div>
+<div>
+<p class="font-label-md text-label-md">Power Consumption</p>
+<p class="text-[12px] text-on-surface-variant">Idle: 4.2W / Peak: 12.1W</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+</div>
+<!-- Rich Text Installation Notes -->
+<div class="glass-card p-xl rounded-xl shadow-sm">
+<div class="flex items-center justify-between mb-lg">
+<h3 class="font-headline-sm text-headline-sm flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary">edit_note</span>
+                                Installation Notes &amp; Recommendations
+                            </h3>
+</div>
+<div class="border border-outline-variant rounded-lg overflow-hidden">
+<div class="bg-surface-container-low p-sm flex gap-xs border-b border-outline-variant">
+<button class="p-xs hover:bg-surface-container-high rounded transition-colors"><span class="material-symbols-outlined text-[20px]">format_bold</span></button>
+<button class="p-xs hover:bg-surface-container-high rounded transition-colors"><span class="material-symbols-outlined text-[20px]">format_italic</span></button>
+<button class="p-xs hover:bg-surface-container-high rounded transition-colors"><span class="material-symbols-outlined text-[20px]">format_list_bulleted</span></button>
+<div class="w-px h-5 bg-outline-variant mx-xs"></div>
+<button class="p-xs hover:bg-surface-container-high rounded transition-colors"><span class="material-symbols-outlined text-[20px]">link</span></button>
+<button class="p-xs hover:bg-surface-container-high rounded transition-colors"><span class="material-symbols-outlined text-[20px]">image</span></button>
+</div>
+<textarea class="w-full p-md text-body-md border-none focus:ring-0 placeholder:text-outline/50 bg-transparent" placeholder="Describe the deployment environment, any specific challenges encountered, and maintenance recommendations for the client..." rows="6"></textarea>
+</div>
+</div>
+</div>
+<!-- Right Column: Feedback & Signatures -->
+<div class="lg:col-span-5 space-y-lg">
+<!-- Customer Feedback -->
+<div class="glass-card p-xl rounded-xl shadow-sm border-l-4 border-l-secondary">
+<h3 class="font-headline-sm text-headline-sm mb-md flex items-center gap-sm">
+<span class="material-symbols-outlined text-secondary">thumb_up</span>
+                            Customer Feedback
+                        </h3>
+<p class="text-on-surface-variant text-body-sm mb-lg">Ask the client to rate the installation experience and professionalism of the engineering team.</p>
+<div class="flex gap-sm mb-lg justify-center">
+<button class="material-symbols-outlined text-secondary text-[32px] hover:scale-110 transition-transform" style="font-variation-settings: 'FILL' 1;">star</button>
+<button class="material-symbols-outlined text-secondary text-[32px] hover:scale-110 transition-transform" style="font-variation-settings: 'FILL' 1;">star</button>
+<button class="material-symbols-outlined text-secondary text-[32px] hover:scale-110 transition-transform" style="font-variation-settings: 'FILL' 1;">star</button>
+<button class="material-symbols-outlined text-secondary text-[32px] hover:scale-110 transition-transform" style="font-variation-settings: 'FILL' 1;">star</button>
+<button class="material-symbols-outlined text-outline-variant text-[32px] hover:scale-110 transition-transform">star</button>
+</div>
+<textarea class="w-full p-md text-body-sm rounded-lg border border-outline-variant bg-surface-container-lowest focus:ring-1 focus:ring-primary h-24" placeholder="Client comments (Optional)..."></textarea>
+</div>
+<!-- Signatures Section -->
+<div class="glass-card p-xl rounded-xl shadow-sm">
+<h3 class="font-headline-sm text-headline-sm mb-lg flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary">draw</span>
+                            Digital Authorization
+                        </h3>
+<div class="grid grid-cols-1 gap-xl">
+<!-- Engineer Signature -->
+<div>
+<label class="font-label-md text-label-md text-on-surface-variant block mb-sm">Engineer Signature (Alex Rivera)</label>
+<div class="signature-pad h-32 rounded-lg border-2 border-dashed border-outline-variant relative flex items-center justify-center">
+<span class="material-symbols-outlined text-outline/30 text-[48px]">gesture</span>
+<canvas class="absolute inset-0 w-full h-full cursor-crosshair" id="engineerSig"></canvas>
+<button class="absolute bottom-xs right-xs p-xs text-outline hover:text-error transition-colors" title="Clear">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+</div>
+<!-- Customer Signature -->
+<div>
+<label class="font-label-md text-label-md text-on-surface-variant block mb-sm">Customer Signature (James P. Harrison)</label>
+<div class="signature-pad h-32 rounded-lg border-2 border-dashed border-outline-variant relative flex items-center justify-center">
+<span class="material-symbols-outlined text-outline/30 text-[48px]">signature</span>
+<canvas class="absolute inset-0 w-full h-full cursor-crosshair" id="customerSig"></canvas>
+<button class="absolute bottom-xs right-xs p-xs text-outline hover:text-error transition-colors" title="Clear">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Final Action -->
+<div class="pt-lg">
+<button class="w-full bg-primary-container text-on-primary py-lg rounded-xl font-headline-sm text-headline-sm flex items-center justify-center gap-md shadow-lg shadow-primary/20 hover:shadow-xl hover:translate-y-[-2px] transition-all active:scale-[0.98]">
+<span class="material-symbols-outlined">picture_as_pdf</span>
+                            Generate Installation Report
+                        </button>
+<p class="text-center text-outline text-[12px] mt-md">Final report will be emailed to all stakeholders immediately upon generation.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Spacer -->
+<div class="h-16"></div>
+</main>
+<!-- Success Modal (Hidden by default) -->
+<div class="hidden fixed inset-0 z-[60] flex items-center justify-center p-md" id="successModal">
+<div class="absolute inset-0 bg-on-background/40 backdrop-blur-sm"></div>
+<div class="glass-card relative w-full max-w-md p-xl rounded-2xl shadow-2xl animate-in zoom-in-95 duration-200">
+<div class="flex flex-col items-center text-center">
+<div class="w-20 h-20 rounded-full bg-secondary-container/20 text-secondary flex items-center justify-center mb-lg">
+<span class="material-symbols-outlined text-[48px]" style="font-variation-settings: 'FILL' 1;">task_alt</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-sm">Handover Complete</h3>
+<p class="text-on-surface-variant font-body-md mb-xl">The installation report for WO-94281 has been generated and successfully uploaded to the central vault.</p>
+<div class="flex w-full gap-md">
+<button class="flex-1 px-md py-sm rounded-lg border border-outline-variant font-label-md hover:bg-surface-container-high transition-colors">View Report</button>
+<button class="flex-1 bg-primary text-on-primary px-md py-sm rounded-lg font-label-md hover:opacity-90 transition-opacity" onclick="window.location.reload()">Done</button>
+</div>
+</div>
+</div>
+</div>
+<script>
+        // Micro-interaction for the "Generate Report" button
+        const reportBtn = document.querySelector('button.bg-primary-container');
+        const modal = document.getElementById('successModal');
+
+        reportBtn.addEventListener('click', () => {
+            reportBtn.innerHTML = '<span class="material-symbols-outlined animate-spin">progress_activity</span> Generating...';
+            reportBtn.disabled = true;
+            
+            setTimeout(() => {
+                modal.classList.remove('hidden');
+                reportBtn.innerHTML = '<span class="material-symbols-outlined">check_circle</span> Report Generated';
+            }, 1800);
+        });
+
+        // Simple drawing simulation on canvas (logic only, no visual actual draw for this UI demo)
+        const setupCanvas = (id) => {
+            const canvas = document.getElementById(id);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.parentElement.offsetWidth;
+            canvas.height = canvas.parentElement.offsetHeight;
+
+            let drawing = false;
+            canvas.addEventListener('mousedown', () => drawing = true);
+            canvas.addEventListener('mouseup', () => drawing = false);
+            canvas.addEventListener('mousemove', (e) => {
+                if (!drawing) return;
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                ctx.lineWidth = 2;
+                ctx.lineCap = 'round';
+                ctx.strokeStyle = '#141b2b';
+                
+                ctx.lineTo(x, y);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                
+                // Hide placeholder icon when drawing starts
+                canvas.previousElementSibling.style.opacity = '0.05';
+            });
+        };
+
+        window.onload = () => {
+            setupCanvas('engineerSig');
+            setupCanvas('customerSig');
+        };
+    </script>
+</body></html>

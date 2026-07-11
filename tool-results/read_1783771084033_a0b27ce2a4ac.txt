@@ -1,0 +1,1150 @@
+     1→     1→# QBIT Hub Enterprise Portal — Stitch Design Analysis
+     2→     2→
+     3→     3→Comprehensive structural analysis of all 21 Stitch design HTML pages. Use this document to recreate each page in Next.js + Tailwind + shadcn/ui.
+     4→     4→
+     5→     5→---
+     6→     6→
+     7→     7→## 1. Shared Design System
+     8→     8→
+     9→     9→### Tailwind Configuration (used in every page)
+    10→    10→
+    11→    11→All pages include the same Tailwind CDN config (`tailwind.config = {...}`) plus Inter + Material Symbols Outlined fonts:
+    12→    12→
+    13→    13→```html
+    14→    14→<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    15→    15→<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+    16→    16→<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    17→    17→```
+    18→    18→
+    19→    19→### Color Tokens (Material 3 inspired)
+    20→    20→
+    21→    21→| Token | Hex |
+    22→    22→|---|---|
+    23→    23→| `primary` | `#0043c8` |
+    24→    24→| `on-primary` | `#ffffff` |
+    25→    25→| `primary-container` | `#0057ff` |
+    26→    26→| `on-primary-container` | `#e5e8ff` |
+    27→    27→| `secondary` | `#0051d5` |
+    28→    28→| `on-secondary` | `#ffffff` |
+    29→    29→| `secondary-container` | `#316bf3` |
+    30→    30→| `on-secondary-container` | `#fefcff` |
+    31→    31→| `tertiary` | `#4e5153` |
+    32→    32→| `on-tertiary` | `#ffffff` |
+    33→    33→| `tertiary-container` | `#66696b` |
+    34→    34→| `on-tertiary-container` | `#e7e9eb` |
+    35→    35→| `error` | `#ba1a1a` |
+    36→    36→| `on-error` | `#ffffff` |
+    37→    37→| `error-container` | `#ffdad6` |
+    38→    38→| `on-error-container` | `#93000a` |
+    39→    39→| `background` | `#f9f9ff` |
+    40→    40→| `on-background` | `#141b2b` |
+    41→    41→| `surface` | `#f9f9ff` |
+    42→    42→| `surface-bright` | `#f9f9ff` |
+    43→    43→| `surface-dim` | `#d3daef` |
+    44→    44→| `surface-variant` | `#dce2f7` |
+    45→    45→| `surface-tint` | `#004ee7` |
+    46→    46→| `surface-container-lowest` | `#ffffff` |
+    47→    47→| `surface-container-low` | `#f1f3ff` |
+    48→    48→| `surface-container` | `#e9edff` |
+    49→    49→| `surface-container-high` | `#e1e8fd` |
+    50→    50→| `surface-container-highest` | `#dce2f7` |
+    51→    51→| `on-surface` | `#141b2b` |
+    52→    52→| `on-surface-variant` | `#434656` |
+    53→    53→| `outline` | `#737688` |
+    54→    54→| `outline-variant` | `#c3c5d9` |
+    55→    55→| `inverse-surface` | `#293040` |
+    56→    56→| `inverse-on-surface` | `#edf0ff` |
+    57→    57→| `inverse-primary` | `#b6c4ff` |
+    58→    58→| `primary-fixed` | `#dce1ff` |
+    59→    59→| `primary-fixed-dim` | `#b6c4ff` |
+    60→    60→| `secondary-fixed` | `#dbe1ff` |
+    61→    61→| `secondary-fixed-dim` | `#b4c5ff` |
+    62→    62→| `tertiary-fixed` | `#e0e3e5` |
+    63→    63→| `tertiary-fixed-dim` | `#c4c7c9` |
+    64→    64→
+    65→    65→Note: `darkMode: "class"` is enabled. Some pages include `dark:` variants for sidebar/top bar.
+    66→    66→
+    67→    67→### Typography Scale (Inter font everywhere)
+    68→    68→
+    69→    69→| Token | Size | Line | Weight | Tracking |
+    70→    70→|---|---|---|---|---|
+    71→    71→| `display-lg` | 48px | 56px | 700 | -0.02em |
+    72→    72→| `display-sm` | 36px | 44px | 700 | -0.02em |
+    73→    73→| `headline-lg` | 30px | 38px | 600 | -0.01em |
+    74→    74→| `headline-lg-mobile` | 24px | 32px | 600 | — |
+    75→    75→| `headline-md` | 24px | 32px | 600 | — |
+    76→    76→| `headline-sm` | 20px | 28px | 600 | — |
+    77→    77→| `body-lg` | 18px | 28px | 400 | — |
+    78→    78→| `body-md` | 16px | 24px | 400 | — |
+    79→    79→| `body-sm` | 14px | 20px | 400 | — |
+    80→    80→| `label-md` | 14px | 20px | 500 | — |
+    81→    81→| `label-sm` | 12px | 16px | 600 | 0.05em |
+    82→    82→
+    83→    83→Used via custom font family classes: `font-display-lg`, `font-headline-md`, `font-body-sm`, `font-label-md`, etc. Each has matching text-size helper `text-display-lg`, etc.
+    84→    84→
+    85→    85→### Spacing & Layout
+    86→    86→
+    87→    87→| Token | Value |
+    88→    88→|---|---|
+    89→    89→| `xs` | 4px |
+    90→    90→| `sm` | 8px |
+    91→    91→| `md` | 16px |
+    92→    92→| `lg` | 24px |
+    93→    93→| `xl` | 32px |
+    94→    94→| `2xl` | 48px |
+    95→    95→| `3xl` | 64px |
+    96→    96→| `unit` | 8px |
+    97→    97→| `gutter` | 24px |
+    98→    98→| `container-max` | 1440px |
+    99→    99→| `margin-mobile` | 16px |
+   100→   100→| `margin-desktop` | 32px |
+   101→   101→
+   102→   102→### Border Radius
+   103→   103→
+   104→   104→- `DEFAULT`: 0.25rem (4px)
+   105→   105→- `lg`: 0.5rem (8px)
+   106→   106→- `xl`: 0.75rem (12px)
+   107→   107→- `full`: 9999px
+   108→   108→
+   109→   109→Note: In practice, designs use Tailwind's `rounded-lg` (8px), `rounded-xl` (12px), `rounded-2xl` (16px), `rounded-3xl` (24px), and `rounded-full`.
+   110→   110→
+   111→   111→### Custom CSS Classes (define in globals.css)
+   112→   112→
+   113→   113→```css
+   114→   114→.glass-card {
+   115→   115→  background: rgba(255, 255, 255, 0.7);
+   116→   116→  backdrop-filter: blur(12px);
+   117→   117→  border: 1px solid rgba(226, 232, 240, 0.8);
+   118→   118→}
+   119→   119→.glass-panel {
+   120→   120→  background: rgba(255, 255, 255, 0.7);
+   121→   121→  backdrop-filter: blur(12px);
+   122→   122→  -webkit-backdrop-filter: blur(12px);
+   123→   123→}
+   124→   124→.glass-effect { backdrop-filter: blur(12px); }
+   125→   125→.bento-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px; }
+   126→   126→.hide-scrollbar::-webkit-scrollbar { display: none; }
+   127→   127→.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+   128→   128→.custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+   129→   129→.custom-scrollbar::-webkit-scrollbar-thumb { background: #c3c5d9; border-radius: 10px; }
+   130→   130→.material-symbols-outlined {
+   131→   131→  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+   132→   132→}
+   133→   133→.scroll-reveal { opacity: 0; transform: translateY(20px); transition: all 0.6s ease; }
+   134→   134→.scroll-reveal.active { opacity: 1; transform: translateY(0); }
+   135→   135→```
+   136→   136→
+   137→   137→### Icons (Material Symbols Outlined)
+   138→   138→
+   139→   139→Filled variants enabled via inline style: `style="font-variation-settings: 'FILL' 1;"`. Common sizes: `text-[12px]`, `text-[14px]`, `text-[18px]`, `text-[20px]`, `text-[24px]`, `text-[32px]`, `text-[48px]`, `text-3xl`, `text-4xl`.
+   140→   140→
+   141→   141→### Shared Layout Patterns
+   142→   142→
+   143→   143→**Standard Enterprise Layout** (used in ~12 pages):
+   144→   144→- Fixed left sidebar (`aside`) `w-64` (256px), `fixed left-0 top-0 h-full`, `bg-surface-container-lowest` or `bg-surface-container-low`, `border-r border-outline-variant`, `shadow-sm`, `z-50`.
+   145→   145→- Brand at top: `QBIT Hub` headline + tagline ("Enterprise SaaS", "Control Center", "Field Ops v2.4", "InstalCore Enterprise")
+   146→   146→- `<nav>` with `flex-1` and active item: `text-primary font-semibold border-l-4 border-primary bg-surface-container` (sometimes `bg-primary-container/10`).
+   147→   147→- Footer of sidebar: avatar (or initials), user name, role.
+   148→   148→- Top header `fixed top-0 right-0 w-[calc(100%-256px)] h-16` with `bg-surface-container-lowest/80 backdrop-blur-md`, `border-b border-outline-variant`, `shadow-sm`, `z-40`.
+   149→   149→- Main: `ml-64 pt-16 min-h-screen` with `max-w-container-max mx-auto p-lg` or `p-xl`.
+   150→   150→
+   151→   151→**Active Sidebar Item Pattern:**
+   152→   152→```
+   153→   153→class="flex items-center gap-md px-md py-sm rounded-lg text-primary font-semibold border-l-4 border-primary bg-surface-container"
+   154→   154→```
+   155→   155→
+   156→   156→**Inactive Sidebar Item Pattern:**
+   157→   157→```
+   158→   158→class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200"
+   159→   159→```
+   160→   160→
+   161→   161→### Recurring Sidebar Items (Engineer Portal pages)
+   162→   162→- Dashboard (`dashboard`)
+   163→   163→- Products (`inventory_2`)
+   164→   164→- Drivers (`settings_input_component` or `local_shipping`)
+   165→   165→- Installation Guides / Manuals (`menu_book`)
+   166→   166→- Videos (`play_circle` or `video_library` or `videocam`)
+   167→   167→- Downloads (`download`)
+   168→   168→- Knowledge Base (`library_books`)
+   169→   169→- Troubleshooting (`build`)
+   170→   170→- Bookmarks (`bookmark`)
+   171→   171→- Recent Files (`history`)
+   172→   172→- Support (`contact_support`)
+   173→   173→- Settings (`settings`)
+   174→   174→- Collapse (`menu_open`)
+   175→   175→
+   176→   176→### Recurring Sidebar Items (Admin pages)
+   177→   177→- Dashboard (`dashboard`)
+   178→   178→- Products (`inventory_2`)
+   179→   179→- Drivers (`local_shipping`)
+   180→   180→- Manuals (`menu_book`)
+   181→   181→- Videos (`videocam`)
+   182→   182→- Users (`group`)
+   183→   183→- Analytics (`monitoring`)
+   184→   184→- Settings (`settings`)
+   185→   185→
+   186→   186→### Recurring Sidebar Items (Field Engineer pages)
+   187→   187→- Dashboard (`dashboard`)
+   188→   188→- My Jobs (`engineering`)
+   189→   189→- Inventory (`inventory_2`)
+   190→   190→- Documents (`description`)
+   191→   191→- Support (`support_agent`)
+   192→   192→- (Plus "Sync Offline Data" CTA button at bottom)
+   193→   193→
+   194→   194→### Recurring Sidebar Items (AI Support pages)
+   195→   195→- Dashboard (`dashboard`)
+   196→   196→- Knowledge Base (`menu_book`)
+   197→   197→- Troubleshooting (`build`)
+   198→   198→- Support Tickets (`confirmation_number`)
+   199→   199→- Analytics (`insights`)
+   200→   200→- (Plus "New Support Case" CTA button)
+   201→   201→
+   202→   202→### Common Top Bar Elements
+   203→   203→- Search input with leading `search` icon, `bg-surface-container-low`, `rounded-full` (engineer portal) or `rounded-lg` (admin)
+   204→   204→- Notification bell (`notifications`) — sometimes with red `bg-error rounded-full w-2 h-2` dot
+   205→   205→- Help icon (`help` or `help_outline`)
+   206→   206→- Dark mode toggle (`dark_mode`)
+   207→   207→- Apps grid (`apps`)
+   208→   208→- Avatar (often `<img>` circle `w-8 h-8` or `w-10 h-10` rounded-full)
+   209→   209→- User name display
+   210→   210→
+   211→   211→---
+   212→   212→
+   213→   213→## 2. Page-by-Page Analysis
+   214→   214→
+   215→   215→### 2.1 `login_qbit_hub` — Login
+   216→   216→
+   217→   217→**Title:** `Login | QBIT Hub`
+   218→   218→
+   219→   219→**Layout:** Split-screen, full-height. Left 3/5 (lg) / 2/3 (xl) brand panel; right 2/5 (lg) / 1/3 (xl) form panel. No sidebar/topbar. Hidden on small mobile (left section).
+   220→   220→
+   221→   221→**Structure:**
+   222→   222→- **Left brand panel:** `bg-primary-container`, gradient overlay `from-primary/80 to-transparent`, image bg with `mix-blend-overlay`. Glass-panel content card.
+   223→   223→  - Pill badge: `Enterprise Installation Management` with `verified` icon
+   224→   224→  - H1: `Precision Engineering for Modern POS Systems.`
+   225→   225→  - Body: `Manage hardware lifecycles, installation workflows, and driver deployments across your global enterprise fleet with QBIT Hub.`
+   226→   226→  - Micro-stats grid (2 cols): `12,400+ Active Drivers` / `99.9% Uptime Reliability`
+   227→   227→- **Right form panel:** `bg-surface-container-lowest`, `p-xl md:p-3xl`
+   228→   228→  - Brand header: blue `dataset` icon in `w-10 h-10 bg-primary rounded-lg` + "QBIT Hub" text
+   229→   229→  - H2: `Welcome Back`
+   230→   230→  - Subtitle: `Sign in to manage your enterprise POS infrastructure.`
+   231→   231→  - **Form fields:**
+   232→   232→    - Corporate Email (icon `mail`, placeholder `name@company.com`)
+   233→   233→    - Password (icon `lock`, show/hide `visibility` button, placeholder `••••••••`)
+   234→   234→    - Remember Device checkbox + `Forgot Password?` link
+   235→   235→    - Primary button: `Login to Dashboard` with `arrow_forward` icon
+   236→   236→  - Divider: `or continue with`
+   237→   237→  - SSO button: `Single Sign-On (SSO)` with `security` icon
+   238→   238→  - Footer:
+   239→   239→    - `System Build` label + `v2.4.12-enterprise`
+   240→   240→    - Support Hub (`contact_support`) → `mailto:support@qbithub.io`
+   241→   241→    - API Docs (`terminal`)
+   242→   242→
+   243→   243→**Colors used:** primary, primary-container, on-primary, outline, outline-variant, surface-container-lowest, surface-container-low, background.
+   244→   244→
+   245→   245→**JS interactivity:** Focus scales input wrapper (`scale-[1.01]`). Button click adds ping ripple.
+   246→   246→
+   247→   247→---
+   248→   248→
+   249→   249→### 2.2 `dashboard_qbit_hub` — Installation Engineer Dashboard
+   250→   250→
+   251→   251→**Title:** `QBIT Hub - Installation Engineer Dashboard`
+   252→   252→
+   253→   253→**Layout:** Sidebar + topbar + main content. Full-width bento layout.
+   254→   254→
+   255→   255→**Sidebar items:** Dashboard (ACTIVE), Products, Drivers, Installation Guides, Videos, Downloads, Knowledge Base, Troubleshooting, Bookmarks, Recent Files, Support + (footer: Settings, Collapse).
+   256→   256→
+   257→   257→**Top bar:** Search "Search resources...", notifications, dark_mode, apps icon, divider, avatar + "Alex Chen" name.
+   258→   258→
+   259→   259→**Main sections:**
+   260→   260→1. **Welcome banner:** H2 `Welcome back, Installation Engineer`, subtitle `Access all enterprise deployment tools, drivers, and technical manuals from your central command center.`, large search bar with `Search Hub` button. Trending tags: `V3 POS Firmware`, `Printer SDK 2.4`, `Android Integration`.
+   261→   261→2. **Summary cards (6-col bento, glass-card):**
+   262→   262→   - Total Products: **1,248** (`inventory_2`)
+   263→   263→   - Drivers: **432** (`settings_input_component`)
+   264→   264→   - Guides: **156** (`menu_book`)
+   265→   265→   - Videos: **84** (`play_circle`)
+   266→   266→   - Articles: **3.2k** (`library_books`)
+   267→   267→   - Latest Updates: **12** (`update`)
+   268→   268→3. **Quick Actions (2x2 grid in main col):** Browse Products (`grid_view`), Download Drivers (`cloud_download`), Installation Guides (`fact_check`), Watch Videos (`video_library`)
+   269→   269→4. **Pinned Resources (2x2 image cards):**
+   270→   270→   - Windows POS Setup Guide (badge: `Popular`)
+   271→   271→   - Thermal Printer Driver (badge: `Driver`)
+   272→   272→   - Barcode Scanner Manual (badge: `Manual`)
+   273→   273→   - Android POS Installation (badge: `Android`)
+   274→   274→5. **Recent Activity timeline** (right col):
+   275→   275→   - Driver Updated: QBIT T-800, v2.4.1 (2h ago)
+   276→   276→   - Manual Revised: Android Kiosk (5h ago)
+   277→   277→   - Product Added: HUB-X Pro (Yesterday)
+   278→   278→   - Video Uploaded: Fiber Cabling (2 days ago)
+   279→   279→6. **Announcements:**
+   280→   280→   - System Notice: `Scheduled maintenance on Nov 24, 02:00 GMT.`
+   281→   281→   - Firmware: `Global rollout of Firmware 4.0 for all Retail Units.`
+   282→   282→   - Knowledge Base: `New security protocols for data encryption added.`
+   283→   283→   - Button: `Check All Updates`
+   284→   284→
+   285→   285→**Custom CSS:** `.glass-card`, `.bento-grid`, `.hide-scrollbar`
+   286→   286→
+   287→   287→**JS:** Glass-card hover lift (`translateY(-4px)`). Collapse button toggles sidebar between `w-64`/`w-20`.
+   288→   288→
+   289→   289→---
+   290→   290→
+   291→   291→### 2.3 `home_qbit_hub` — Admin Home
+   292→   292→
+   293→   293→**Title:** `QBIT Hub - Dashboard`
+   294→   294→
+   295→   295→**Layout:** Sidebar (with "QBIT Hub Admin" top bar) + topbar + main.
+   296→   296→
+   297→   297→**Sidebar items:** Dashboard (ACTIVE), Products, Drivers, Manuals, Videos, Users, Analytics, Settings. Footer user: `Alex Rivera`, `Admin Access`.
+   298→   298→
+   299→   299→**Top bar:** "QBIT Hub Admin" text + global search "Global search..." + notifications + help_outline + avatar.
+   300→   300→
+   301→   301→**Main sections:**
+   302→   302→1. **Welcome hero (gradient bg, 2-col):**
+   303→   303→   - Pill: `System Online • 99.9% Uptime`
+   304→   304→   - H2: `Good Morning, Alex.`
+   305→   305→   - H3: `Welcome back to QBIT Hub`
+   306→   306→   - Meta: `Current Session: Monday, Oct 23 • 09:41 AM` (live updating), `Active Alerts: 2 Critical Updates` (error color)
+   307→   307→   - Right: hero illustration image
+   308→   308→2. **Universal Search Center** (`max-w-4xl mx-auto`, glass-card): placeholder `Search products, drivers, manuals, installation guides, videos or ask AI...`, keyboard shortcut `⌘K` hint.
+   309→   309→3. **System Status KPIs (4-col grid):**
+   310→   310→   - Total Products: **1,284** (`inventory_2`) +4%
+   311→   311→   - Drivers Active: **342** (`download_for_offline`) +12%
+   312→   312→   - Guides & Manuals: **891** (`menu_book`) Stable
+   313→   313→   - Training Videos: **156** (`videocam`) -2% (error)
+   314→   314→4. **Quick Access (2x3 grid):** Products (Browse Catalog), Drivers (Latest Firmware), Install Guides (Setup Workflows), Manuals (Documentation), Troubleshooting (Error Codes), Knowledge Base (Article Wiki).
+   315→   315→5. **New Releases carousel (horizontal scroll):** QBIT Nexus X1 (Enterprise Hub Controller v2.0, "New" badge), Aura Terminal G3 (Advanced POS Interface System), Optic Pro Scan (Precision Inventory Scanner). Each card: View Specs button.
+   316→   316→6. **Continue Working sidebar:**
+   317→   317→   - X1_Firmware_v4.2.bin (Driver • 2 hours ago)
+   318→   318→   - Setup_Manual_Terminal_G3 (Manual • 5 hours ago)
+   319→   319→   - Troubleshooting_Optic_Pro (Video • Yesterday)
+   320→   320→   - View Full History button
+   321→   321→7. **System Updates timeline:**
+   322→   322→   - Critical Driver Update: Nexus X1 security patch (TODAY 08:30 AM)
+   323→   323→   - New Manual Added: Aura Terminal G3 (Oct 21)
+   324→   324→   - Server Maintenance: API optimization (Oct 20)
+   325→   325→8. **Floating AI Assistant widget** (bottom-right): toggle button with `chat` icon, expands to chat window with `smart_toy` avatar. Quick prompt suggestions.
+   326→   326→
+   327→   327→**JS:** Live clock update (60s). `⌘K` keyboard shortcut to focus search.
+   328→   328→
+   329→   329→---
+   330→   330→
+   331→   331→### 2.4 `product_library_qbit_hub` — Product Library
+   332→   332→
+   333→   333→**Title:** `QBIT Hub - Product Library`
+   334→   334→
+   335→   335→**Layout:** Sidebar + topbar + main.
+   336→   336→
+   337→   337→**Sidebar:** Same as dashboard (Products ACTIVE).
+   338→   338→
+   339→   339→**Top bar:** Search "Search product technical library...", notifications, dark_mode, apps, avatar (no name shown).
+   340→   340→
+   341→   341→**Main sections:**
+   342→   342→1. **Hero (centered):**
+   343→   343→   - H2: `Product Library`
+   344→   344→   - Body: `Browse all QBIT hardware with specifications, images, videos, manuals and drivers. The definitive technical repository for enterprise-grade hardware solutions.`
+   345→   345→   - Search: "Enter model number (e.g. T-800)..." with ⌘K hint
+   346→   346→2. **Categories (5-col grid):** Windows POS (12 Products, `desktop_windows`), Android POS (8 Products, `phone_android`), Thermal Printers (15 Products, `print`), Barcode Scanners (6 Products, `barcode_scanner`), Accessories (24 Products, `cable`).
+   347→   347→3. **Trending Hardware (horizontal scroll):**
+   348→   348→   - HUB-X Pro (Top Resource, Thermal Printer • v2.4 Driver)
+   349→   349→   - ScanMaster Elite (Newly Released, Wireless Scanner • User Manual)
+   350→   350→   - QBIT T-800 (Most Downloaded, Windows POS • Setup Guide)
+   351→   351→4. **Full Hardware Inventory (3-col grid):**
+   352→   352→   - Filter & Sort buttons
+   353→   353→   - **Card 1: QBIT T-800** — badge `WINDOWS POS`, `MODEL: T-800`, OS icons (Windows/Mac/Linux), chips: Manual/Driver/Video, buttons: View Details, Share (`share`), Favorite (`favorite`).
+   354→   354→   - **Card 2: HUB-X Pro** — badge `PRINTER`, `MODEL: HUB-X PRO`, chips: Manual/Driver.
+   355→   355→   - **Card 3: ScanMaster Elite** — badge `SCANNER`, `MODEL: SM-E1`, chips: Manual/Video.
+   356→   356→5. **Share Modal** (hidden by default, toggleShareModal): "Share Hardware Profile" — copyable URL `https://hub.qbit.com/assets/T-800`, WhatsApp button (`chat`), Download PDF button (`picture_as_pdf`), Email Technical Specs button (`mail`).
+   357→   357→
+   358→   358→**JS:** `toggleShareModal()`, mouse-tracking on glass-cards.
+   359→   359→
+   360→   360→---
+   361→   361→
+   362→   362→### 2.5 `product_details_qbit_t_800` — Product Details: QBIT T-800
+   363→   363→
+   364→   364→**Title:** `QBIT Hub - Product Details: QBIT T-800`
+   365→   365→
+   366→   366→**Layout:** Sidebar + topbar + main.
+   367→   367→
+   368→   368→**Sidebar:** Same as dashboard (Products ACTIVE).
+   369→   369→
+   370→   370→**Top bar:** Search "Search components, documentation, or drivers...", notifications, dark_mode, apps, avatar.
+   371→   371→
+   372→   372→**Main sections:**
+   373→   373→1. **Hero (2-col, 7/5 grid):**
+   374→   374→   - **Left gallery:** Large 4:3 image with "Hover to zoom" overlay; thumbnail strip (8 thumbnails, first one active with `border-2 border-primary`).
+   375→   375→   - **Right info:**
+   376→   376→     - Status chips: `In Stock` (green, `check_circle`), `Latest Firmware v4.2.1` (primary)
+   377→   377→     - Category label: `WINDOWS POS`
+   378→   378→     - H2: `QBIT T-800`
+   379→   379→     - Model: `T800-ENT` (italic)
+   380→   380→     - OS support icons (Windows, Android, Linux logos)
+   381→   381→     - Quick Actions: `Download Driver` (primary, `download`), `User Manual` (`menu_book`), `Installation Video` (`play_circle`), Share/Email/WhatsApp/PDF quick links
+   382→   382→     - Key Specs mini-card: CPU (Intel i5-11th Gen, `memory`), Display (15.6" FHD Touch, `tv`)
+   383→   383→2. **Detailed Specs section (8/4 grid):**
+   384→   384→   - **Left (col-span-8): Technical Specifications table** with header "Technical Specifications" + "Print Spec Sheet" button.
+   385→   385→     - Processor (CPU): Intel® Core™ i5-1135G7
+   386→   386→     - Memory (RAM): 16GB DDR4 3200MHz
+   387→   387→     - Storage: 512GB NVMe M.2 SSD
+   388→   388→     - Display: 15.6" IPS, FHD 1920x1080, 10-point Multi-touch
+   389→   389→     - Connectivity: Dual-band Wi-Fi 6, Bluetooth 5.1, 1Gbps Ethernet
+   390→   390→     - Ports: 6x USB 3.0, 2x COM, 1x HDMI, 1x Cash Drawer (RJ11)
+   391→   391→     - Power Supply: External 12V/5A, Energy Star 8.0
+   392→   392→   - **Driver section:** "Universal Driver Package" with `STABLE` badge, Version 2.4.1 Stable • Released Oct 12, 2023 • 45.2 MB, `Download Now` + `Release Notes` buttons.
+   393→   393→   - **Right (col-span-4): Feature cards** + **5-step Deployment Guide timeline**:
+   394→   394→     - Feature cards: Industrial Build (IP54 aluminum chassis, `shield`), Multi-Port Support (`hub`), Energy Efficient (40% less power, `eco`)
+   395→   395→     - Deployment Guide steps: 1. Unbox & Inspect (5 min), 2. Mount & Cable (15 min), 3. OS Boot & Setup (10 min), 4. Driver Sync (5 min), 5. Test Print (2 min)
+   396→   396→3. **Document Library (3-col):** User Manual v4.0 (PDF, `picture_as_pdf`), Datasheet & Specs (`description`), Warranty Terms (`verified_user`)
+   397→   397→4. **Related POS Hardware (horizontal carousel):** QBIT Duo X-200 (Dual-Screen Terminal), QBIT Go M-50 (Mobile POS), QBIT Print P-80 (Peripherals), QBIT Tab Rugged 10 (Industrial Tablet)
+   398→   398→
+   399→   399→**JS:** `showToast()` — Download Started toast notification for "Universal_Driver_v2.4.1.msi". Thumbnail switching with border class toggle.
+   400→   400→
+   401→   401→---
+   402→   402→
+   403→   403→### 2.6 `driver_download_center_qbit_hub` — Driver Download Center
+   404→   404→
+   405→   405→**Title:** `QBIT Hub - Driver Download Center`
+   406→   406→
+   407→   407→**Layout:** Sidebar (Installation Guides ACTIVE) + topbar + main with hero + featured bento + filter sidebar + driver list + recent activity sidebar.
+   408→   408→
+   409→   409→**Top bar:** Search "Search product, model...", notifications, dark_mode, apps, "Admin User" name + avatar.
+   410→   410→
+   411→   411→**Main sections:**
+   412→   412→1. **Hero (centered):** Pill `Resource Center`, H2 `Driver Download Center`, body subtitle. Large central search with `Search` button. Filter chips: All Products (active), Windows POS, Android POS, Thermal Printer, Barcode Scanner, Kiosks.
+   413→   413→2. **Featured Bento (3-col):**
+   414→   414→   - Latest Driver (`bolt` icon): `NEW RELEASE` label, "Universal Thermal Printer v2.4.1", Quick Download
+   415→   415→   - Recommended Firmware (`verified`): `STABLE BUILD`, "HUB-X Series Security Patch"
+   416→   416→   - Most Downloaded (`trending_up`): `POPULAR`, "Barcode Scanner SDK v1.9"
+   417→   417→3. **Filter sidebar (left, w-72):** Product Category checkboxes (POS Terminals, Thermal Printers (checked), Scanners), Operating System select (Windows 11/10, Ubuntu 22.04, Android 13.0), Type chips (Driver active, Firmware, SDK, Utility), Release Year range slider (2020-2024).
+   418→   418→4. **Driver list:** "Showing 24 drivers for Thermal Printer", Sort By dropdown. Driver cards (3 shown):
+   419→   419→   - **Card 1:** Universal Thermal Printer Driver v2.4.0 — `Verified Official` badge, HUB-X Pro Series, Oct 12 2023, 12.4 MB, OS tags Windows 11/10, release notes preview, Download + Release Notes buttons (`print` icon)
+   420→   420→   - **Card 2:** Advanced POS Terminal Firmware v4.1.2 — `Critical Update` (error), POS-2000 & 3000, Nov 05 2023, 45.8 MB, Embedded OS, CVE patch note
+   421→   421→   - **Card 3:** Barcode Scanner SDK for Android — `Developer Kit`, Scanner Q-Series, Dec 12 2023, 128 MB, Android 10+, full dev kit note
+   422→   422→5. **Pagination:** 1 (active) 2 3 ... 12
+   423→   423→6. **Right sidebar (w-80): Recent History timeline:**
+   424→   424→   - Thermal Driver v2.4.0 (2 hours ago, downloaded)
+   425→   425→   - Scanner SDK v1.9 (Yesterday, viewed)
+   426→   426→   - POS Security Patch (Oct 24 2023, downloaded)
+   427→   427→   - "View All Activity" button
+   428→   428→   - CTA card: "Need Hardware Support?" → Contact Support
+   429→   429→7. **Empty State (hidden):** `find_in_page` icon, "No drivers found", Reset All Filters button.
+   430→   430→
+   431→   431→**JS:** Search input focus scale, checkbox filter console logging.
+   432→   432→
+   433→   433→---
+   434→   434→
+   435→   435→### 2.7 `installation_center_qbit_hub` — Installation Center
+   436→   436→
+   437→   437→**Title:** `QBIT Hub - Installation Center`
+   438→   438→
+   439→   439→**Layout:** Sidebar ("InstalCore" brand, Installation Guides ACTIVE with `font-variation-settings: 'FILL' 1`) + topbar + main.
+   440→   440→
+   441→   441→**Sidebar:** Branded as "InstalCore" / "Enterprise Portal". Items: Dashboard, Products, Drivers, Installation Guides (ACTIVE), Videos, Downloads, Settings. Footer user: `Senior Engineer`, `Terminal ID: 4920`, "EP" initials avatar.
+   442→   442→
+   443→   443→**Top bar:** Search "Search across enterprise assets...", notifications (with red dot), help, avatar with `expand_more`.
+   444→   444→
+   445→   445→**Main sections:**
+   446→   446→1. **Hero (rounded-3xl, bg-primary-container):** H2 `Installation Center`, subtitle, search input + Filter button (`filter_list`).
+   447→   447→2. **Quick Access Bento (3-col, 6 cards):**
+   448→   448→   - Installation Guides (`menu_book`)
+   449→   449→   - Installation Videos (`video_library`)
+   450→   450→   - Quick Setup (`bolt`)
+   451→   451→   - Wiring Diagrams (`account_tree`)
+   452→   452→   - Configuration Guides (`settings_applications`)
+   453→   453→   - Troubleshooting (`error_outline`)
+   454→   454→   Each has hover lift + `arrow_forward` indicator.
+   455→   455→3. **Product Selection (5-col grid, image cards):** Windows POS (TERMINALS), Android POS (MOBILE), Thermal Printer (PERIPHERALS), Barcode Scanner (SCANNING), Kiosk (SELF-SERVICE). Header has "View All Products" link.
+   456→   456→4. **Recently Viewed Guides (list with progress bars):**
+   457→   457→   - Windows Terminal Elite X2 Configuration — Section 4: BIOS and Peripheral Sync, `Active` badge, 75% complete, Resume button (`desktop_windows`)
+   458→   458→   - TP-800 Thermal Printer Wiring Schematic — Section 2: Parallel Port Pinout, `In Review` badge, 30% complete, Resume button (`print`)
+   459→   459→   - Kiosk Core Server Connectivity Setup — Static IP Assignment, `Complete` badge (emerald), 100% complete, Review button (`dns`)
+   460→   460→5. **Footer:** InstalCore Hub branding, version "v4.2.1", links (Documentation Policy, Support Portal, Security Standards), share + print icon buttons.
+   461→   461→6. **FAB:** `add` icon, tooltip "New Installation Report".
+   462→   462→
+   463→   463→**JS:** Search input scale on focus.
+   464→   464→
+   465→   465→---
+   466→   466→
+   467→   467→### 2.8 `customer_handover_report_qbit_hub` — Customer Handover & Completion Report
+   468→   468→
+   469→   469→**Title:** `QBIT Hub - Customer Handover Report`
+   470→   470→
+   471→   471→**Layout:** Sidebar ("InstalCore" brand) + topbar + main 12-col bento.
+   472→   472→
+   473→   473→**Sidebar:** Dashboard, Products (ACTIVE), Drivers, Installation Guides, Videos, Downloads, Settings. Footer: `Alex Rivera`, `Lead Engineer`, `person` icon.
+   474→   474→
+   475→   475→**Top bar:** Search "Search installation reports...", notifications (red dot), help, divider, "Project: IC-9842" text.
+   476→   476→
+   477→   477→**Main sections:**
+   478→   478→1. **Page Header:** Breadcrumb `Reports › Handover`, H2 `Customer Handover & Completion Report`, subtitle "Final validation and sign-off for Installation ID: **INST-442-B**". Action buttons: `Print Installation Report` (`print`), `Download Handover PDF` (`download`, primary).
+   479→   479→2. **Bento Grid (12-col):**
+   480→   480→   - **Left (col-span-7):**
+   481→   481→     - **Completion Checklist:** Three items with status badges:
+   482→   482→       - Installation Done (COMPLETED, green) — checked
+   483→   483→       - System Tests Passed (VERIFIED, green) — checked
+   484→   484→       - Customer Trained & Onboarded (IN PROGRESS, amber) — unchecked
+   485→   485→     - **Testing Procedure table:** Columns HARDWARE COMPONENT | DIAGNOSTIC STATUS | ACTION. Rows:
+   486→   486→       - Thermal Printer (`print`) — PASS (green) — Retest
+   487→   487→       - High-Speed Scanner (`qr_code_scanner`) — PASS — Retest
+   488→   488→       - Capacitive Touch Screen (`touch_app`) — FAIL (Recalibration Req.) — Troubleshoot
+   489→   489→   - **Right (col-span-5):**
+   490→   490→     - **Summary card (bg-primary):** "Handover Status: Awaiting Signatures", `Today, Oct 24 • 14:32 PM`
+   491→   491→     - **Digital Signatures:** 
+   492→   492→       - Field Engineer: Alex Rivera — signed with image signature, "E-Signed: 2023-10-24 14:15 UTC", "ID: FR-9921-X"
+   493→   493→       - Customer: James Wilson (Operations Dir.) — unsigned, "Click here to sign on screen" with `gesture` icon
+   494→   494→       - Button: `Email Report to Customer` (`send`, secondary)
+   495→   495→3. **Troubleshooting Quick Links (4-col grid):**
+   496→   496→   - Network Connectivity (`wifi_off`)
+   497→   497→   - Admin Credentials (`key`)
+   498→   498→   - Data Sync Delay (`sync`)
+   499→   499→   - Level 2 Support (`support_agent`)
+   500→   500→
+   501→   501→**JS:** Toast auto-display after 2s, mock retest button that simulates testing state.
+   502→   502→
+   503→   503→---
+   504→   504→
+   505→   505→### 2.9 `video_training_center_qbit_hub` — Video Training Center
+   506→   506→
+   507→   507→**Title:** `QBIT Hub - Video Training Center`
+   508→   508→
+   509→   509→**Layout:** Sidebar ("InstalCore") + topbar + main.
+   510→   510→
+   511→   511→**Sidebar:** Same as installation center (Videos ACTIVE with FILL 1). Footer user: `Engineer Alpha`, `Tier 3 Certified`.
+   512→   512→
+   513→   513→**Top bar:** Search "Search training, products, or videos...", notifications, help, avatar.
+   514→   514→
+   515→   515→**Main sections:**
+   516→   516→1. **Featured Hero (rounded-3xl, bg-primary-container, 2-col):**
+   517→   517→   - Left: Pill `Featured Training` (`star`), H2 `Advanced Network Configuration 2.0`, body "Master complex VLAN tagging, priority queuing, and edge security protocols for the newest QBIT Hub enterprise firmware.", `Start Learning` button (white bg), `48m Duration` meta (`schedule`)
+   518→   518→   - Right: 16:9 video thumbnail with play button overlay (`play_arrow`)
+   519→   519→2. **Category Filter (horizontal scroll):** All Videos (active), Installation (`construction`), Setup (`settings_suggest`), Troubleshooting (`build`), Maintenance (`verified`)
+   520→   520→3. **Video Grid (4-col):** Each card has aspect-video thumbnail, duration badge (bottom-right), difficulty badge (top-left, green=Beginner / amber=Expert), category label, title, action buttons (Bookmark, Share, Download), `arrow_forward` indicator. Videos:
+   521→   521→   - **Card 1:** QBIT Hub Pro — "Physical Hardware Installation" (12:45, Beginner)
+   522→   522→   - **Card 2:** Core Gateway — "SSH Protocol Troubleshooting" (08:20, Expert)
+   523→   523→   - **Card 3:** QBIT Mini — "Initial Device Pairing" (05:15, Beginner)
+   524→   524→   - **Card 4:** Cooling Units — "Quarterly Filter Replacement" (15:50, Beginner)
+   525→   525→   - **Card 5:** Security Edge — "Firewall Rule Orchestration" (22:10, Expert)
+   526→   526→   - **Card 6:** Mobile App — "Field Technician App Setup" (06:30, Beginner)
+   527→   527→4. **FAB:** `add` icon
+   528→   528→
+   529→   529→**JS:** Filter chip toggling (active state).
+   530→   530→
+   531→   531→---
+   532→   532→
+   533→   533→### 2.10 `t_800_installation_guide_qbit_hub` — T-800 Installation Guide
+   534→   534→
+   535→   535→**Title:** `QBIT Hub - T-800 Installation Guide`
+   536→   536→
+   537→   537→**Layout:** Sidebar ("InstalCore") + topbar + main.
+   538→   538→
+   539→   539→**Sidebar:** Same as installation center (Installation Guides ACTIVE). Footer user: `E. Richardson`, `Lead Field Engineer`.
+   540→   540→
+   541→   541→**Top bar:** Search "Search documentation...", notifications, help, divider, "QBIT T-800 Series" text with `verified` icon.
+   542→   542→
+   543→   543→**Main sections:**
+   544→   544→1. **Header:** Breadcrumb `Products › POS Systems › QBIT T-800 Installation`, H2 `Step-by-Step Installation Guide`, subtitle "Complete hardware setup and software provisioning for the QBIT T-800 Windows Point of Sale workstation.", "Estimated total time: **25 Minutes**"
+   545→   545→2. **Progress Bar Card:** `Overall Progress` Step 2 of 5, `40%`, gradient progress bar with pulse animation
+   546→   546→3. **Main Content (12-col, 8/4 grid):**
+   547→   547→   - **Left (col-span-8) — Timeline of steps:**
+   548→   548→     - **Step 1: Unbox & Inventory** (completed, `check` icon): "Ensure all components are present including the terminal, stand, power brick, and accessory box." Required Tools: Box Cutter (`content_cut`)
+   549→   549→     - **Step 2: Power Connection** (active, pulsing, `2`): "Route the DC power cable through the stand neck and connect to the underside of the QBIT head unit." Estimated Time: 5 mins, `Mark as Complete` button, image
+   550→   550→     - **Step 3: Peripheral Wiring** (pending, `3`): "Connect Printer, Cash Drawer, and MSR/Scanner to designated ports." `View Wiring Diagram` link (`schema`)
+   551→   551→     - **Step 4: Driver Configuration** (pending, `4`): "Install specific Windows POS drivers for the touchscreen and thermal printer." `Driver Download Center` link (`download_for_offline`)
+   552→   552→   - **Right (col-span-4):**
+   553→   553→     - **Tools Required:** Power Adapter (In Box, `power`), Cat6 LAN Cable (`lan`), Philips #2 Screwdriver (`build`)
+   554→   554→     - **Interactive Checklist:** Safety Verification (Surface is flat and stable, Power outlet is grounded), Hardware Checks (Base plate screws tightened - checked/line-through, Screen tilt mechanism verified, I/O cover plate seated correctly). `Export Certification Log` button.
+   555→   555→     - **Help Widget (glass-panel):** "Need Technical Support?" `Live Support Chat` button (`support_agent` watermark in background)
+   556→   556→4. **Toast:** "Progress Saved" / "Installation state uploaded to cloud."
+   557→   557→
+   558→   558→**JS:** Auto-show toast on load (1.5s delay, hide after 5s). "Mark as Complete" button transitions to "Processing..." then "Step Completed" (green).
+   559→   559→
+   560→   560→---
+   561→   561→
+   562→   562→### 2.11 `ai_support_center_qbit_hub` — AI Support Center
+   563→   563→
+   564→   564→**Title:** `QBIT Hub - AI Support Center`
+   565→   565→
+   566→   566→**Layout:** Sidebar ("QBIT Hub" / "InstalCore Enterprise") + topbar + main.
+   567→   567→
+   568→   568→**Sidebar items:** Dashboard, Knowledge Base (ACTIVE, `menu_book`), Troubleshooting (`build`), Support Tickets (`confirmation_number`), Analytics (`insights`). CTA button: `New Support Case` (`add`). Footer: Settings, Help Center, user `Alex Mercer` / `Lead Engineer`.
+   569→   569→
+   570→   570→**Top bar:** Title `Technical Installation Support` + nav (Status, Documentation ACTIVE, Remote Assistance) + history, notifications, divider, `AI Assistant` button (`smart_toy`, secondary-container bg).
+   571→   571→
+   572→   572→**Main sections:**
+   573→   573→1. **Hero (centered):** H1 `AI Support Center`, subtitle "Intelligent diagnostic and resolution tools for InstalCore hardware." Search bar "Ask anything... e.g. 'Thermal printer not printing'" with `Search` button.
+   574→   574→2. **2-col grid (8/4):**
+   575→   575→   - **Left (col-span-8):**
+   576→   576→     - **AI Assistant Chat Interface:** Header "QBIT Technical Assistant" with `smart_toy` avatar, "Online • Powered by CoreAI" status (emerald pulse dot). Chat shows:
+   577→   577→       - Greeting: "Hi Alex! I'm your QBIT Technical Assistant. I have analyzed your previous support logs and current fleet status. How can I help you today?"
+   578→   578→       - Suggestion chips: "How do I install Windows POS?", "Printer not detected", "Barcode scanner setup"
+   579→   579→       - Detailed response about "Thermal Printer (QBIT-P20) Connection Issue" with numbered steps, code block (`qbit-cli device --reset-port /dev/usb/lp0 --verbose` with copy button), links to V2.4 Driver and Service Manual
+   580→   580→       - Input: "Type your technical question..." with send button (`send`)
+   581→   581→     - **Troubleshooting Center (2-col):**
+   582→   582→       - "Printer not printing" (`print_disabled`, error-container bg) — `Action Required` badge, "3 identical issues reported in Sector 4. Likely firmware mismatch.", `Start Wizard` button
+   583→   583→       - "Scanner not scanning" (`barcode_scanner`) — `Common Issue` badge, "Occasional beam timeout during high-frequency operation.", `Run Calibration` button
+   584→   584→   - **Right (col-span-4):**
+   585→   585→     - **Quick Resources (2x4 grid):** Driver Downloads (`download`), Installation Guides (`menu_book`), Firmware Updates (`system_update`), Manual Library (`library_books`), Training Videos (`videocam`), Warranty (`verified_user`), Support Tickets (`confirmation_number`), Troubleshooting (`construction`)
+   586→   586→     - **Recent Tickets:** "2 Open" badge
+   587→   587→       - #TIC-9042 — `High Priority` (error), "Kernel Error on POS-X10", Eng. Sarah J., `In Progress` status
+   588→   588→       - #TIC-8812 — `Normal` (primary), "Scanner Firmware Update", Eng. David K., `Resolved` status (emerald)
+   589→   589→3. **Knowledge Base section:**
+   590→   590→   - Filter dropdown: All Categories / POS Machines / Printers / Scanners
+   591→   591→   - Articles (3-col):
+   592→   592→     - "Optimizing Windows 11 for InstalCore POS-X10 Series" (POS Machines, 8 min read, 2.4k views)
+   593→   593→     - "Troubleshooting Thermal Head Overheating Issues" (Printers, 12 min read, 1.8k views)
+   594→   594→     - "Configuring Static IP on Mobile Wireless Hubs" (Networking, 5 min read, 3.1k views, bookmarked)
+   595→   595→   - Button: `Explore All Articles` (`arrow_forward`)
+   596→   596→
+   597→   597→**JS:** Mouse-down scale-[0.98] on all buttons/links. Search input focus scale.
+   598→   598→
+   599→   599→---
+   600→   600→
+   601→   601→### 2.12 `job_details_inst_550_a_qbit_hub` — Job Details: INST-550-A
+   602→   602→
+   603→   603→**Title:** `QBIT Hub - Job Details: INST-550-A`
+   604→   604→
+   605→   605→**Layout:** Topbar only (NO sidebar) + main 12-col bento + bottom action bar.
+   606→   606→
+   607→   607→**Top bar:** "QBIT Hub" + "Job ID: INST-550-A", nav (Dashboard, My Jobs ACTIVE, Inventory), notifications, settings, avatar.
+   608→   608→
+   609→   609→**Main sections (3-col 3/5/4 grid):**
+   610→   610→1. **Left (col-span-3):**
+   611→   611→   - **Customer Details:** CloudScale Systems, Acct: #CS-8820-XP, Contact: Sarah Jenkins, Site: "442 Industrial Way, Suite 300, San Francisco, CA 94103" (`business` icon)
+   612→   612→   - **Location:** Map preview (grayscale image), `Open in Maps` button (`open_in_new`, secondary-fixed bg)
+   613→   613→2. **Middle (col-span-5):**
+   614→   614→   - **Installation Progress** timeline (vertical):
+   615→   615→     - Step 1: Unboxing & Inspection — 08:45 AM, completed (green check)
+   616→   616→     - Step 2: Hardware Setup — `Live` (pulsing), active (primary)
+   617→   617→     - Step 3: Final Testing — Scheduled (pending, opacity-50)
+   618→   618→   - **Product Checklist:** 
+   619→   619→     - QBIT Core Hub V2 (SN: QB-9941-XJ-00, `inventory_2`) — checked (`check_circle`)
+   620→   620→     - Satellite Interface Pad (SN: SIP-3342-AA-91, `terminal`) — `Scan` button (primary)
+   621→   621→3. **Right (col-span-4):**
+   622→   622→   - **Documentation:** `Capture` button (`add_a_photo`), 2-col grid: BEFORE image (with view overlay), "Upload During" placeholder (`add_photo_alternate`, dashed border)
+   623→   623→   - **Testing Checklist:** Three test items with Pass/Fail/Retry segmented controls:
+   624→   624→     - Thermal Printer (`print`) — Pass selected
+   625→   625→     - Laser Scanner (`barcode_scanner`) — Fail selected (error)
+   626→   626→     - Local LAN Connect (`lan`) — Retrying (secondary, spinning refresh icon)
+   627→   627→4. **Bottom Action Bar (fixed):**
+   628→   628→   - Left: "Estimated End Time: 11:30 AM (2h 45m left)", `Report Issue` (`warning`), `View Manual` (`description`)
+   629→   629→   - Right: `Next Step: Connectivity` (`arrow_forward`, primary)
+   630→   630→
+   631→   631→**JS:** Glass-card hover lift. Pass/Fail/Retry segmented control toggle.
+   632→   632→
+   633→   633→---
+   634→   634→
+   635→   635→### 2.13 `field_engineer_workspace_qbit_hub` — Field Engineer Workspace
+   636→   636→
+   637→   637→**Title:** `QBIT Hub - Field Engineer Workspace`
+   638→   638→
+   639→   639→**Layout:** Sidebar (`hidden md:flex` mobile-aware) + topbar + main with KPIs + job list.
+   640→   640→
+   641→   641→**Sidebar:** Branded "QBIT Hub" / "Field Ops v2.4". Items: Dashboard (ACTIVE, `dashboard`), My Jobs (`engineering`), Inventory (`inventory_2`), Documents (`description`), Support (`support_agent`). CTA: `Sync Offline Data` (`sync`). Logout link.
+   642→   642→
+   643→   643→**Top bar:** Mobile menu icon (`menu`), search "Search jobs, customers, or serials...", notifications, help, settings, user "Alex Rivera" / "Senior Field Engineer" + avatar.
+   644→   644→
+   645→   645→**Main sections:**
+   646→   646→1. **Header:** H2 `Field Workspace`, subtitle "Welcome back, Alex. You have **4 jobs** scheduled for today." Buttons: `View Schedule` (`calendar_today`), `New Job Request` (`add`, primary)
+   647→   647→2. **KPI Grid (3-col):**
+   648→   648→   - Today's Jobs: **04** (`task_alt`) — +2 from yesterday
+   649→   649→   - Pending Installs: **12** (`pending_actions`) — Current backlog
+   650→   650→   - Open Issues: **03** (`emergency_home`) — Requires attention (error)
+   651→   651→3. **My Installation Jobs (list):** "4 Remaining" badge, filter/sort icons. Job cards:
+   652→   652→   - **Job 1:** INST-550-A, `High Priority` (error badge), "The Daily Grind - Soho Branch", "Daily Grind Hospitality Co. • 42nd St, Manhattan", `In Progress` (secondary pulse dot), buttons: Navigate (`near_me`), Call (`call`), Open Job (`arrow_forward`). Icon: `router`
+   653→   653→   - **Job 2:** INST-552-C, `Normal`, "Harbor Logistics Hub", "Global Freight Solutions • Pier 94, Industrial Zone", `Scheduled`, Navigate/Call/Open Job. Icon: `satellite_alt`
+   654→   654→   - **Job 3:** INST-601-B, `Normal`, "Elevate Coworking Space", "Urban Workplaces LLC • Broadway, Floor 12", `Scheduled`. Icon: `sensors`
+   655→   655→   - Footer: "View All 12 Pending Installations" link
+   656→   656→
+   657→   657→**JS:** Active scale-95 on buttons. Search ring on focus.
+   658→   658→
+   659→   659→---
+   660→   660→
+   661→   661→### 2.14 `job_completion_handover_qbit_hub` — Job Completion Handover
+   662→   662→
+   663→   663→**Title:** `QBIT Hub - Job Completion Handover`
+   664→   664→
+   665→   665→**Layout:** Sidebar ("QBIT Hub" / "Field Ops v2.4", My Jobs ACTIVE) + topbar + main.
+   666→   666→
+   667→   667→**Top bar:** Mobile menu, search "Search tasks, assets, or records...", notifications, help, settings, divider, "Alex Rivera" / "Senior Engineer" + avatar.
+   668→   668→
+   669→   669→**Main sections:**
+   670→   670→1. **Page Header:** Breadcrumb `Work Orders › WO-94281`, H2 `Installation Handover`, subtitle "Finalize the installation by verifying test results, documenting notes, and collecting authorized signatures from both parties.", Status pill `Status: Quality Check` (`verified`, secondary).
+   671→   671→2. **Bento Grid (12-col, 7/5):**
+   672→   672→   - **Left (col-span-7):**
+   673→   673→     - **Test Results Verification** (AUTO-VERIFIED): Three test rows:
+   674→   674→       - Signal Calibration (`signal_cellular_alt`) — -14.2 dBm (Target: -15.0), `check_circle` (secondary)
+   675→   675→       - Gateway Response (`router`) — 8ms Latency (Target: <20ms), `check_circle`
+   676→   676→       - Power Consumption (`bolt`) — Idle: 4.2W / Peak: 12.1W, `check_circle`
+   677→   677→     - **Installation Notes & Recommendations** (`edit_note`): Rich text editor with toolbar (Bold `format_bold`, Italic `format_italic`, Bullet `format_list_bulleted`, Link `link`, Image `image`) + textarea "Describe the deployment environment..."
+   678→   678→   - **Right (col-span-5):**
+   679→   679→     - **Customer Feedback** (left-bordered secondary): "Ask the client to rate the installation experience..." 5-star rating (4 filled, 1 outline), comments textarea
+   680→   680→     - **Digital Authorization** (`draw`): Two signature pads (canvas elements) with `gesture` and `signature` icons:
+   681→   681→       - Engineer Signature (Alex Rivera)
+   682→   682→       - Customer Signature (James P. Harrison)
+   683→   683→       - Clear buttons (`delete`)
+   684→   684→     - **Final Action:** `Generate Installation Report` button (`picture_as_pdf`, primary-container bg) + "Final report will be emailed to all stakeholders immediately upon generation."
+   685→   685→3. **Success Modal (hidden):** "Handover Complete" with `task_alt` icon, message "The installation report for WO-94281 has been generated and successfully uploaded to the central vault." Buttons: View Report, Done.
+   686→   686→
+   687→   687→**JS:** "Generate Report" button click → loading spinner (`progress_activity` icon) → modal shows. Canvas drawing simulation for signatures.
+   688→   688→
+   689→   689→---
+   690→   690→
+   691→   691→### 2.15 `admin_dashboard_qbit_hub` — Admin Dashboard
+   692→   692→
+   693→   693→**Title:** `QBIT Hub - Admin Dashboard`
+   694→   694→
+   695→   695→**Layout:** Sidebar ("QBIT Hub" / "Control Center", Dashboard ACTIVE) + topbar + main.
+   696→   696→
+   697→   697→**Top bar:** Search "Global search commands...", notifications (with red dot), help_outline, divider, avatar + `keyboard_arrow_down`.
+   698→   698→
+   699→   699→**Main sections:**
+   700→   700→1. **Header:** H2 `Admin Control Center`, subtitle "Manage products, drivers, manuals, videos, users and application settings." Action buttons: `Invite User` (`person_add`, surface bg), `Upload Driver` (`upload`, secondary-container bg), `Add Product` (`add`, primary).
+   701→   701→2. **KPI Grid (5-col):**
+   702→   702→   - Total Products: **124** +12% (`inventory_2`, primary)
+   703→   703→   - Active Users: **856** +8.4% (`group`, secondary)
+   704→   704→   - Drivers: **42** Stable (`local_shipping`, tertiary)
+   705→   705→   - Manuals: **18** +2 (`menu_book`)
+   706→   706→   - Storage Used: **65%** Critical (`storage`, error) — with progress bar (error color, pulse)
+   707→   707→3. **Main Grid (8/4):**
+   708→   708→   - **Left (col-span-8):**
+   709→   709→     - **Download Trends chart (simulated bar chart):** Legend "Drivers / Manuals", 7 vertical bars with primary/primary-container colors, floating tooltip "Aug 24 / Drivers: 2.4k"
+   710→   710→     - **Recent Uploads table:** Columns Image | Product Name | Category | Status | Last Updated. Rows:
+   711→   711→       - Q-Core Engine V2 (Hardware, `Published` primary badge, 2 mins ago)
+   712→   712→       - Network Map 2024 (Manual, `Draft` tertiary badge, 1 hour ago)
+   713→   713→       - PCIe Kernel Driver (Drivers, `Published`, Yesterday)
+   714→   714→   - **Right (col-span-4): Activity Logs timeline:**
+   715→   715→     - Alex Johnson uploaded a new product manual (Setup_Guide_V3.pdf, `picture_as_pdf`, 2 minutes ago)
+   716→   716→     - Sarah Chen updated Driver #42 (15 minutes ago)
+   717→   717→     - System: Security alert - Unrecognized login attempt from IP 192.168.1.45 (1 hour ago, error)
+   718→   718→     - Admin invited 3 new team members (3 initials: MK/PT/RL, 3 hours ago)
+   719→   719→     - Automator: Backups completed successfully (Yesterday 11:45 PM, opacity-60)
+   720→   720→     - "View All Activity" button
+   721→   721→
+   722→   722→**JS:** Table row click navigation log.
+   723→   723→
+   724→   724→---
+   725→   725→
+   726→   726→### 2.16 `user_role_management_qbit_hub_admin` — User & Role Management
+   727→   727→
+   728→   728→**Title:** `QBIT Hub - User Role Management`
+   729→   729→
+   730→   730→**Layout:** Sidebar (Users ACTIVE) + topbar + main.
+   731→   731→
+   732→   732→**Top bar:** Search "Search resources...", notifications, help_outline, "QBIT Hub Admin" title.
+   733→   733→
+   734→   734→**Main sections:**
+   735→   735→1. **Page Header:** H2 `User Management`, subtitle "Manage organization members and their access levels.", `Invite User` button (`person_add`, primary).
+   736→   736→2. **Tabs:** `Users` (active, primary, border-b-2), `Roles & Permissions`
+   737→   737→3. **Users Tab Content:**
+   738→   738→   - **Users Table:** Columns Name | Role | Email | Status | Last Login | (action). Rows:
+   739→   739→     - Alex Rivera (Team Lead, `Administrator` primary badge), alex.rivera@qbithub.com, `Active` (green dot), 2 hours ago, `more_vert` action
+   740→   740→     - Sarah Chen (Field Operations, `Service Engineer` secondary badge), s.chen@qbithub.com, `Active`, Yesterday
+   741→   741→     - Jordan Smythe (Logistics, `Hub User` neutral badge), jsmythe@qbithub.com, `Inactive` (outline dot), 3 days ago
+   742→   742→   - **Insights (2-col, 3-col-span-2):**
+   743→   743→     - Active Sessions bar chart (8 bars, primary/20 hover)
+   744→   744→     - Security Audit card: "All users have 2FA enabled. Last audit was 48 hours ago.", `Run Audit` button (`verified_user`)
+   745→   745→4. **Roles Tab Content (hidden initially):**
+   746→   746→   - **Permission Matrix:** Columns Role | View | Create | Edit | Delete | Upload. Rows:
+   747→   747→     - Administrator (Full system access) — all checked & disabled
+   748→   748→     - Service Engineer (Maintenance & Diagnostics) — View/Create/Edit/Upload checked
+   749→   749→     - Logistics Hub (Fleet & Routing only) — only View checked
+   750→   750→     - Guest Observer (Read-only analytics) — only View checked, rest disabled
+   751→   751→
+   752→   752→**JS:** `toggleTab('users' | 'roles')` switches tabs. Row hover translateX(4px).
+   753→   753→
+   754→   754→---
+   755→   755→
+   756→   756→### 2.17 `product_management_qbit_hub_admin` — Product Management
+   757→   757→
+   758→   758→**Title:** `QBIT Hub - Product Management`
+   759→   759→
+   760→   760→**Layout:** Sidebar (Products ACTIVE) + topbar + main.
+   761→   761→
+   762→   762→**Top bar:** Search "Search catalog, serials, or models...", notifications, help_outline, avatar with ring.
+   763→   763→
+   764→   764→**Main sections:**
+   765→   765→1. **Header:** Breadcrumb `Inventory › Products`, H2 `Product Management`, `Add Product` button (`add`, primary).
+   766→   766→2. **Stats (4-col):**
+   767→   767→   - Total SKU: **1,284** +12% vs last month (`trending_up`)
+   768→   768→   - Active Items: **1,042** 81% operation rate
+   769→   769→   - Archived: **242** 14 new this week (`archive`)
+   770→   770→   - System Health: **99.9%** Synchronized (primary color)
+   771→   771→3. **Bulk Actions Bar (hidden, slides in when items selected):** "X items selected", `Bulk Delete` (`delete`, error border), `Export CSV` (`file_download`), `close` button
+   772→   772→4. **Products Table:** Columns: checkbox | Image | Product Name | Model Number | Category | Status | Last Updated | Actions. Rows:
+   773→   773→   - QBIT T-800 (Flagship Enterprise POS), T800-ENT-2024, `Windows POS` (secondary-fixed badge), `Active` (green), Oct 24 2023. Actions on hover: visibility, edit, delete (error)
+   774→   774→   - ScanPro M-10 (Industrial Handheld), SPM-10-MOB, `Android Device` (tertiary-fixed badge), `Active`, Nov 02 2023
+   775→   775→   - PrintX G-5 (Legacy Thermal Printer), PXG5-LEGACY, `Accessories` (neutral badge), `Archived` (outline), Aug 12 2023
+   776→   776→5. **Pagination:** "Showing 1 - 25 of 1,284", first/prev page buttons (disabled), pages 1 (active) 2 3 ... 52, next/last buttons.
+   777→   777→
+   778→   778→**JS:** Select-all checkbox, individual row checkboxes, bulk bar visibility toggle. `clearSelection()` function. Search input focus scale.
+   779→   779→
+   780→   780→---
+   781→   781→
+   782→   782→### 2.18 `system_settings_qbit_hub_admin` — System Settings
+   783→   783→
+   784→   784→**Title:** `QBIT Hub - System Settings`
+   785→   785→
+   786→   786→**Layout:** Sidebar (Settings ACTIVE) + topbar + main.
+   787→   787→
+   788→   788→**Top bar:** Search "Search settings...", notifications, help_outline.
+   789→   789→
+   790→   790→**Main sections:**
+   791→   791→1. **Header:** H2 `System Settings`, subtitle "Configure your enterprise hub branding and global application parameters."
+   792→   792→2. **Grid (12-col):**
+   793→   793→   - **Branding (col-span-8):** `palette` icon
+   794→   794→     - Company Logo upload area (drag-drop, dashed border, `cloud_upload` icon, "PNG, SVG up to 2MB")
+   795→   795→     - Primary Color: #0057ff (Active Corporate Blue), `Change` button
+   796→   796→     - Primary Font: select (Inter default, Roboto, Open Sans, IBM Plex Sans)
+   797→   797→   - **App Settings (col-span-4):** `language` icon
+   798→   798→     - Default Language: select (English US, Spanish, French, German)
+   799→   799→     - Appearance Theme: 3-button grid (Light `light_mode` active, Dark `dark_mode`, System `desktop_windows`)
+   800→   800→     - Timezone: select (Pacific Time, UTC, Central European Time)
+   801→   801→   - **Security & Privacy (col-span-5):** `security` icon
+   802→   802→     - MFA toggle (checked) — "Require additional verification via email or authenticator app."
+   803→   803→     - Session Timeout: range slider 5-120 mins, current "30 Minutes"
+   804→   804→   - **Backup & Restore (col-span-7):** `backup` icon
+   805→   805→     - `Create Manual Backup` button (`cloud_sync`, primary)
+   806→   806→     - Backup history table (Date & Time | Size | Status | Action):
+   807→   807→       - Oct 24, 2023 - 14:00, Manual backup by Admin, 124.5 MB, `SUCCESS` (green), Restore button
+   808→   808→       - Oct 23, 2023 - 03:00, Scheduled system backup, 123.8 MB, `SUCCESS`, Restore
+   809→   809→       - Oct 22, 2023 - 03:00, Scheduled system backup, 123.2 MB, `FAILED` (red), Retry
+   810→   810→3. **Sticky Footer Action Bar:** "Changes detected but not saved." with `Discard` and `Save All Changes` buttons.
+   811→   811→
+   812→   812→**JS:** Theme button toggle. Range slider live update of "X Minutes" label.
+   813→   813→
+   814→   814→---
+   815→   815→
+   816→   816→### 2.19 `universal_search_command_center_qbit_hub` — Universal Search Command Center
+   817→   817→
+   818→   818→**Title:** `QBIT Hub - Universal Search`
+   819→   819→
+   820→   820→**Layout:** Sidebar (Dashboard ACTIVE, "QBIT Hub" / "InstalCore Enterprise") + topbar + main with command palette modal overlay.
+   821→   821→
+   822→   822→**Top bar:** Title `Technical Installation Support` + search trigger "Search or command..." with `⌘K` badge (clickable, opens modal). Nav: Status, Documentation, Remote Assistance. Notifications (red dot), history, `AI Assistant` button (`auto_awesome`, primary-container bg).
+   823→   823→
+   824→   824→**Main content (background):** Engineer Dashboard placeholder with H1 `Engineer Dashboard`, "Welcome back, Rivera. Here's your active workflow overview." Activity Stream placeholder image, System Health card (Cloud Sync `Optimal`, License Server `Active`).
+   825→   825→
+   826→   826→**Command Center Modal (the focus of the page):**
+   827→   827→- **Triggered by:** clicking search bar or pressing `⌘K` / `Ctrl+K`
+   828→   828→- **Backdrop:** `command-palette-backdrop backdrop-blur-md`
+   829→   829→- **Container:** max-w-2xl (720px max), `bg-surface-container-lowest`, `rounded-2xl`, `shadow-2xl`
+   830→   830→- **Search Header:** `search` icon (primary, 28px), input "Type a command or search..." (headline-sm font), `ESC` badge
+   831→   831→- **Filter Chips (horizontal scroll):** All (active, primary), Products, Drivers, Manuals, Videos
+   832→   832→- **Results (max-h-480px scroll):** Grouped sections:
+   833→   833→  - **Quick Actions:** "Create Ticket" (`confirmation_number`, primary bg, `Enter` badge), "Upload Driver" (`upload_file`, secondary bg) — this one is currently selected (border-l-4 primary)
+   834→   834→  - **Recent Items:** "T-800 Manual" (`menu_book`, "Manuals • Last opened 2h ago"), "Windows POS Driver" (`settings_input_component`, "Drivers • v2.4.1 Stable")
+   835→   835→  - **Products:** "QBIT T-800" (image thumb, "Industrial Processing Unit")
+   836→   836→- **Empty State (hidden, simulated):** `search_off` icon, "No results found for '...'", suggested actions (Contact Support, View FAQ)
+   837→   837→- **Footer Keyboard Hints:** `↑↓ to navigate`, `Enter to select`, `Esc to close`
+   838→   838→
+   839→   839→**JS:** `openCommandCenter()` / `closeCommandCenter()`. Global hotkey ⌘K / Ctrl+K. Escape to close. Input simulation for no-results (type "xyz" + >5 chars).
+   840→   840→
+   841→   841→---
+   842→   842→
+   843→   843→### 2.20 `universal_search_mobile_qbit_hub` — Universal Search Mobile
+   844→   844→
+   845→   845→**Title:** `QBIT Hub - Search (Mobile)`
+   846→   846→
+   847→   847→**Layout:** Mobile-first. NO sidebar. Top header + sticky search + results + bottom nav + FAB.
+   848→   848→
+   849→   849→**Header (fixed top, glass-header bg):** QBIT Hub logo (`bolt` icon in primary-container square), history button, avatar.
+   850→   850→
+   851→   851→**Sticky Search Section (top-[64px]):**
+   852→   852→- Search input "Search knowledge base, tickets..." with `search` icon (left) and `cancel` icon (right, error on hover)
+   853→   853→- Filter chips (horizontal scroll): All (active, primary), Documentation, Support Tickets, Drivers, Knowledge Base
+   854→   854→
+   855→   855→**Results (grouped sections):**
+   856→   856→1. **Documentation:** "View all" link. Result cards (rounded-2xl, with chevron_right indicator):
+   857→   857→   - V3 Core Installation Guide (`menu_book` icon, "Updated 2 days ago • v4.2.0 compatibility...")
+   858→   858→   - CLI Reference: Hub Utility (`terminal`, "Comprehensive command list for local dev...")
+   859→   859→2. **Recent Tickets:** "Open cases" link. Critical ticket card (`#INC-4921`, `Critical` red badge, "Kernel panic on v3-alpha build", assignee Alex Chen with avatar)
+   860→   860→3. **Quick Actions (2-col grid):** `New Case` (`add_circle`, secondary-container bg), `Latest SDK` (`download`, primary icon, surface-container-high bg)
+   861→   861→4. **Recent Searches:** List with history icon and `north_west` arrow:
+   862→   862→   - Database migration scripts
+   863→   863→   - API Authentication v2
+   864→   864→
+   865→   865→**FAB (bottom-24 right-md):** `qr_code_scanner` icon (filled), `w-14 h-14`, `rounded-2xl`, primary bg.
+   866→   866→
+   867→   867→**Bottom Navigation (fixed, h-72px):** Dashboard, Products, Search (ACTIVE with FILL 1, primary color, primary dot badge), Downloads, Profile.
+   868→   868→
+   869→   869→**JS:** Search icon scale animation on focus. Header shadow on scroll > 10px.
+   870→   870→
+   871→   871→---
+   872→   872→
+   873→   873→### 2.21 `qbit_t_800_product_overview` — QBIT T-800 Product Overview (Marketing)
+   874→   874→
+   875→   875→**Title:** `QBIT T-800 — Enterprise Terminal`
+   876→   876→
+   877→   877→**Layout:** Full-width marketing page. Top header (transparent w/ backdrop-blur) + main content + footer. NO sidebar.
+   878→   878→
+   879→   879→**Top Header (fixed top, h-72px, bg-white/80 backdrop-blur-md):**
+   880→   880→- Logo: `terminal` icon in `primary-container` square + "QBIT Hub" text
+   881→   881→- Search bar (hidden on mobile): "Search Products"
+   882→   882→- Nav (lg+): WhatsApp, Contact, English (`language` icon)
+   883→   883→- Dark mode toggle (`dark_mode`)
+   884→   884→
+   885→   885→**Main sections:**
+   886→   886→1. **Hero (min-h-921px, 2-col, hero-gradient bg):**
+   887→   887→   - Left: Pill `Enterprise Series • Model T8-X1`, H1 `QBIT T-800 Terminal` (with "Terminal" in primary color), body "Engineered for high-volume retail and logistics. The T-800 combines military-grade durability with seamless enterprise integration across all major platforms.", CTA buttons:
+   888→   888→     - `Download Driver` (primary, `download`)
+   889→   889→     - `User Manual` (white bg outline, `description`)
+   890→   890→     - `Watch Video` (text link, `play_circle`)
+   891→   891→   - Stats: OS Support (Windows/Android/Linux icons), Uptime 99.99%
+   892→   892→   - Right: product image with `drop-shadow-2xl`, blurred primary/5 background
+   893→   893→2. **Features Bento (3-col grid, bg-white):**
+   894→   894→   - H2: `Powering Enterprise Workflows`
+   895→   895→   - **Large feature (col-span-2):** `Nano-Performance Engine` (`bolt` icon, watermark `memory` icon), "Equipped with the latest octa-core processor architecture, the T-800 handles complex transactional data with sub-millisecond latency."
+   896→   896→   - **Security:** `Krypton Encryption` (`security`), "Hardware-level security modules ensure your enterprise data remains isolated and encrypted at rest."
+   897→   897→   - **Durability:** `IP65 Certified` (`shield`), "Dust-tight and protected against water jets, making it ideal for warehouse and outdoor terminal use."
+   898→   898→   - **Connectivity (col-span-2):** `Universal I/O Connectivity` (`hub` icon), "Features dual USB-C, Ethernet, and proprietary Q-Link ports..." Tag chips: USB 4.0, Wi-Fi 6E, Bluetooth 5.3
+   899→   899→3. **Technical Specifications (bg-surface-container-low):**
+   900→   900→   - H2: `Technical Specifications`, `Print Spec Sheet` button
+   901→   901→   - Table (rounded-3xl, bg-white):
+   902→   902→     - Processor: Octa-Core Q-Silicon X2 @ 3.4GHz
+   903→   903→     - Memory: 16GB LPDDR5x RAM
+   904→   904→     - Storage: 256GB / 512GB NVMe Gen4 SSD
+   905→   905→     - Display: 15.6" Ultra-Bright Retina (450 nits)
+   906→   906→     - Dimensions: 360mm x 240mm x 18mm
+   907→   907→     - I/O Ports: 2x USB-C 4.0, 1x RJ45, 1x HDMI 2.1, MicroSD
+   908→   908→4. **Installation & Training (2-col 8/4):**
+   909→   909→   - **Left (col-span-8):** H2 `Installation & Training`, main video player (aspect-video, `play_arrow` button), 3 thumbnail videos:
+   910→   910→     - Hardware Setup Guide (2:45)
+   911→   911→     - Software Configuration (5:12)
+   912→   912→     - Maintenance Basics (1:30)
+   913→   913→   - **Right (col-span-4, bg-surface-container-low):** "4-Step Quick Setup" timeline:
+   914→   914→     1. Unbox & Inspect
+   915→   915→     2. Connect Hardware
+   916→   916→     3. Configure OS
+   917→   917→     4. Diagnostics Test
+   918→   918→     `View Full Installation Guide` button
+   919→   919→5. **Download Center (4-col):**
+   920→   920→   - H2 `Download Center`, subtitle, `Stable v4.2.1` badge. Cards:
+   921→   921→     - Windows Driver (`terminal`, v4.2, Oct 24 2023, 42.5 MB, Download button)
+   922→   922→     - Linux SDK (`code`, v3.8, Nov 12 2023, 128.0 MB)
+   923→   923→     - BIOS Firmware (`memory`, v4.5, Jan 05 2024, 12.2 MB)
+   924→   924→     - User Manual (`auto_stories`, PDF, Latest, 5.8 MB, View Online button)
+   925→   925→6. **FAQ (centered, max-w-4xl):** H2 `Frequently Asked Questions`. 3 collapsible `<details>` items:
+   926→   926→   - "What is the expected lifespan of the T-800 touch screen?" (50 million touches per point)
+   927→   927→   - "Can I upgrade the memory or storage?" (Storage field-upgradeable, Memory soldered)
+   928→   928→   - "Is global on-site support available?" (Yes, Enterprise Care in 45+ countries)
+   929→   929→   - **Support Cards (3-col):** WhatsApp Support (`chat`, 24/7 Priority Chat), Call Technical Team (`call`, Mon-Fri 9am-6pm), Email Assistance (`mail`, 1-Hour Response Time)
+   930→   930→
+   931→   931→**Footer (bg-on-background, text-white):**
+   932→   932→- 6-col grid:
+   933→   933→  - Logo + tagline: "Empowering the world's leading enterprises with precision-engineered hardware solutions for over two decades."
+   934→   934→  - Products: T-Series Terminals, S-Series Scanners, P-Series Printers, Custom OEM
+   935→   935→  - Resources: Developer SDK, Case Studies, White Papers, Documentation
+   936→   936→  - Newsletter: email input + Join button
+   937→   937→- Copyright row: "© 2024 QBIT Hub Technology Group. All rights reserved." Links: Privacy Policy, Terms of Service, Cookie Settings
+   938→   938→
+   939→   939→**JS:** IntersectionObserver scroll-reveal animation. Sticky header scroll hide/show (translates up when scrolling down past 72px).
+   940→   940→
+   941→   941→---
+   942→   942→
+   943→   943→## 3. Cross-Page Component Patterns
+   944→   944→
+   945→   945→### Status Badges
+   946→   946→- **Success/Active:** `bg-green-100 text-green-700 rounded-full` or `bg-green-500/90 text-white` or `bg-emerald-100 text-emerald-700`
+   947→   947→- **Warning/In Progress:** `bg-amber-100 text-amber-700` or `bg-amber-500/90 text-white`
+   948→   948→- **Error/Critical:** `bg-red-100 text-red-800` or `bg-error-container text-on-error-container`
+   949→   949→- **Info/Primary:** `bg-primary/10 text-primary` or `bg-primary text-white`
+   950→   950→- **Neutral/Inactive:** `bg-surface-container-highest text-on-surface-variant` or `bg-outline/10 text-outline`
+   951→   951→
+   952→   952→### Tables
+   953→   953→- Header: `bg-surface-container-low border-b border-outline-variant`, `font-label-sm text-outline uppercase tracking-wider`
+   954→   954→- Body rows: `divide-y divide-outline-variant`, hover `hover:bg-surface-container-low`
+   955→   955→- Cells: `px-md py-md` or `px-gutter py-md`, `font-body-sm`
+   956→   956→
+   957→   957→### Cards
+   958→   958→- Standard: `bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm`
+   959→   959→- Glass: `glass-card rounded-xl p-lg shadow-sm`
+   960→   960→- Hover lift: `hover:shadow-md transition-all group` with `group-hover:scale-110` on inner icon
+   961→   961→
+   962→   962→### Buttons
+   963→   963→- **Primary:** `bg-primary text-on-primary rounded-xl px-md py-sm hover:bg-primary-container`
+   964→   964→- **Secondary:** `bg-surface-container-low text-on-surface border border-outline-variant rounded-xl`
+   965→   965→- **Outline:** `border border-outline-variant text-on-surface-variant rounded-lg hover:bg-surface-container`
+   966→   966→- **Danger:** `bg-error text-white` or `border border-error text-error`
+   967→   967→- **Pill/Chip:** `rounded-full px-md py-xs` or `px-md py-2`
+   968→   968→
+   969→   969→### Forms
+   970→   970→- Inputs: `bg-surface-container-low border border-outline-variant rounded-xl pl-10 pr-md py-md focus:ring-2 focus:ring-primary focus:border-primary focus:bg-white`
+   971→   971→- Search inputs typically have leading icon at `absolute left-3 top-1/2 -translate-y-1/2`
+   972→   972→- Labels: `font-label-md text-label-md text-on-surface-variant`
+   973→   973→
+   974→   974→### Timeline/Stepper
+   975→   975→- Vertical line: `absolute left-[X] top-2 bottom-2 w-[2px] bg-outline-variant/30`
+   976→   976→- Step circle: `w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center z-10`
+   977→   977→- Completed step: filled primary with `check` icon
+   978→   978→- Active step: `bg-primary ring-4 ring-primary/20 animate-pulse`
+   979→   979→- Pending step: `bg-surface-container border-2 border-outline-variant text-on-surface-variant`
+   980→   980→
+   981→   981→### Modals
+   982→   982→- Container: `fixed inset-0 z-[60] flex items-center justify-center`
+   983→   983→- Backdrop: `absolute inset-0 bg-on-background/40 backdrop-blur-sm`
+   984→   984→- Card: `relative bg-surface-container-lowest w-full max-w-md p-xl rounded-2xl shadow-2xl`
+   985→   985→
+   986→   986→### Toast Notifications
+   987→   987→- Container: `fixed bottom-lg right-lg bg-surface-container-highest p-md rounded-xl shadow-2xl border border-outline-variant flex items-center gap-md`
+   988→   988→- Hidden initially: `translate-y-32 opacity-0 transition-all duration-300`
+   989→   989→- Show: remove `translate-y-32 opacity-0`
+   990→   990→
+   991→   991→### Floating Action Button (FAB)
+   992→   992→- `fixed bottom-lg right-lg w-14 h-14 bg-primary text-on-primary rounded-full shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50`
+   993→   993→
+   994→   994→---
+   995→   995→
+   996→   996→## 4. Shared Component Checklist for Next.js + shadcn/ui Implementation
+   997→   997→
+   998→   998→### Layout Components Needed
+   999→   999→- `<AppShell>` — sidebar + topbar + main wrapper (variants: engineer, admin, field-engineer, ai-support, marketing)
+  1000→  1000→- `<Sidebar>` — with brand, nav items (active state), footer user card, optional CTA button
+  1001→  1001→- `<TopBar>` — with search, action icons, user
+  1002→  1002→- `<MobileBottomNav>` — for mobile pages
+  1003→  1003→
+  1004→  1004→### UI Components Needed
+  1005→  1005→- `<GlassCard>` — glass effect card
+  1006→  1006→- `<KpiCard>` — icon, label, value, delta badge
+  1007→  1007→- `<StatusBadge>` — variants: success, warning, error, info, neutral
+  1008→  1008→- `<TimelineStep>` — number/icon, title, status, content
+  1009→  1009→- `<ProgressTracker>` — percentage bar with label
+  1010→  1010→- `<DataTable>` — sortable, paginated, with bulk select bar
+  1011→  1011→- `<FilterSidebar>` — checkboxes, selects, range slider, chips
+  1012→  1012→- `<ChatInterface>` — message list, input, suggestion chips, code block
+  1013→  1013→- `<CommandPalette>` — modal with search, filter chips, grouped results, keyboard hints
+  1014→  1014→- `<SignaturePad>` — canvas-based signature input
+  1015→  1015→- `<RichTextEditor>` — textarea with toolbar
+  1016→  1016→- `<VideoCard>` — thumbnail, duration badge, difficulty badge, actions
+  1017→  1017→- `<ProductCard>` — image, badges, OS icons, action buttons
+  1018→  1018→- `<Toast>` — bottom-right notification with auto-dismiss
+  1019→  1019→- `<Modal>` — backdrop + content with close button
+  1020→  1020→
+  1021→  1021→### Page-Specific Notes
+  1022→  1022→- **Login:** 2-pane split (brand + form), no shell
+  1023→  1023→- **Marketing pages (qbit_t_800_product_overview):** No sidebar, full-width sections with footer
+  1024→  1024→- **Mobile pages (universal_search_mobile):** No sidebar, bottom nav, FAB
+  1025→  1025→- **Job details:** No sidebar (focused work), bottom action bar
+  1026→  1026→- **Command center:** Modal overlay on top of dashboard
+  1027→  1027→
+  1028→  1028→---
+  1029→  1029→
+  1030→  1030→## 5. Data Points to Seed
+  1031→  1031→
+  1032→  1032→### Products
+  1033→  1033→- QBIT T-800 (T800-ENT, Windows POS, v4.2.1 firmware, 16GB RAM, 512GB SSD, $1,248 active)
+  1034→  1034→- HUB-X Pro (HUB-X PRO, Printer, v2.4 driver)
+  1035→  1035→- ScanMaster Elite (SM-E1, Scanner, wireless)
+  1036→  1036→- QBIT Nexus X1 (Enterprise Hub Controller v2.0)
+  1037→  1037→- Aura Terminal G3 (Advanced POS Interface System)
+  1038→  1038→- Optic Pro Scan (Precision Inventory Scanner)
+  1039→  1039→- QBIT Duo X-200 (Dual-Screen Terminal)
+  1040→  1040→- QBIT Go M-50 (Mobile POS)
+  1041→  1041→- QBIT Print P-80 (Peripherals)
+  1042→  1042→- QBIT Tab Rugged 10 (Industrial Tablet)
+  1043→  1043→- ScanPro M-10 (SPM-10-MOB, Industrial Handheld, Android)
+  1044→  1044→- PrintX G-5 (PXG5-LEGACY, Legacy Thermal Printer, archived)
+  1045→  1045→
+  1046→  1046→### Job IDs / Installation IDs
+  1047→  1047→- INST-550-A (CloudScale Systems, The Daily Grind - Soho Branch)
+  1048→  1048→- INST-552-C (Harbor Logistics Hub)
+  1049→  1049→- INST-601-B (Elevate Coworking Space)
+  1050→  1050→- INST-442-B (Customer Handover - James Wilson)
+  1051→  1051→- WO-94281 (Job Completion Handover)
+  1052→  1052→- IC-9842 (Project)
+  1053→  1053→
+  1054→  1054→### Users
+  1055→  1055→- Alex Chen (Installation Engineer, dashboard)
+  1056→  1056→- Alex Rivera (Lead Engineer / Senior Field Engineer / Senior Engineer / Admin)
+  1057→  1057→- Alex Mercer (Lead Engineer, AI Support)
+  1058→  1058→- Sarah Chen (Field Operations, Service Engineer)
+  1059→  1059→- Sarah Jenkins (Customer Contact, CloudScale Systems)
+  1060→  1060→- Jordan Smythe (Logistics, Hub User, inactive)
+  1061→  1061→- James Wilson (Operations Dir., Customer)
+  1062→  1062→- James P. Harrison (Customer)
+  1063→  1063→- Alex Johnson (uploaded manual)
+  1064→  1064→- E. Richardson (Lead Field Engineer)
+  1065→  1065→- Engineer Alpha (Tier 3 Certified)
+  1066→  1066→- Admin User (Super Administrator)
+  1067→  1067→- Eng. Sarah J. (ticket assignee)
+  1068→  1068→- Eng. David K. (ticket assignee)
+  1069→  1069→
+  1070→  1070→### Tickets
+  1071→  1071→- #TIC-9042 — Kernel Error on POS-X10 (High Priority, In Progress)
+  1072→  1072→- #TIC-8812 — Scanner Firmware Update (Normal, Resolved)
+  1073→  1073→- #INC-4921 — Kernel panic on v3-alpha build (Critical)
+  1074→  1074→
+  1075→  1075→### Drivers/Firmware
+  1076→  1076→- Universal Thermal Printer Driver v2.4.0 / v2.4.1 (12.4 MB, HUB-X Pro)
+  1077→  1077→- Advanced POS Terminal Firmware v4.1.2 (45.8 MB, POS-2000/3000, CVE-2023-5421)
+  1078→  1078→- Barcode Scanner SDK v1.9 / Android (128 MB, Q-Series)
+  1079→  1079→- Windows Driver v4.2 (42.5 MB)
+  1080→  1080→- Linux SDK v3.8 (128 MB)
+  1081→  1081→- BIOS Firmware v4.5 (12.2 MB)
+  1082→  1082→- X1_Firmware_v4.2.bin
+  1083→  1083→
+  1084→  1084→### Statistics
+  1085→  1085→- Total Products: 124 / 1,248 / 1,284
+  1086→  1086→- Drivers: 42 / 432 / 342
+  1087→  1087→- Manuals/Guides: 18 / 156 / 891
+  1088→  1088→- Videos: 84 / 156
+  1089→  1089→- Articles: 3.2k
+  1090→  1090→- Active Users: 856
+  1091→  1091→- Storage Used: 65%
+  1092→  1092→- Uptime: 99.9% / 99.99%
+  1093→  1093→- Active Drivers: 12,400+
+  1094→  1094→
+  1095→  1095→---
+  1096→  1096→
+  1097→  1097→## 6. JavaScript Interactions Summary
+  1098→  1098→
+  1099→  1099→| Page | Interaction |
+  1100→  1100→|---|---|
+  1101→  1101→| Login | Input focus scale, button ripple |
+  1102→  1102→| Dashboard | Card hover lift, sidebar collapse toggle |
+  1103→  1103→| Home | Live clock (60s interval), ⌘K focus search, AI assistant hover expand |
+  1104→  1104→| Product Library | Share modal toggle, mouse-tracking on cards |
+  1105→  1105→| Product Details | Thumbnail switching, download toast, auto-show after click |
+  1106→  1106→| Driver Download Center | Search focus scale, checkbox logging |
+  1107→  1107→| Installation Center | Search focus scale |
+  1108→  1108→| Customer Handover | Auto-toast after 2s, retest button testing state |
+  1109→  1109→| Video Training | Filter chip toggle, search ring |
+  1110→  1110→| T-800 Installation Guide | Auto-toast on load, Mark as Complete button → Processing → Step Completed |
+  1111→  1111→| AI Support Center | Mouse-down scale, search focus scale |
+  1112→  1112→| Job Details | Card hover lift, segmented Pass/Fail/Retry toggle |
+  1113→  1113→| Field Engineer Workspace | Active scale-95 on buttons, search ring |
+  1114→  1114→| Job Completion Handover | Generate Report → spinner → success modal, canvas drawing |
+  1115→  1115→| Admin Dashboard | Row click navigation |
+  1116→  1116→| User Role Management | Tab switching, row hover translateX |
+  1117→  1117→| Product Management | Select-all/bulk bar toggle, search focus scale |
+  1118→  1118→| System Settings | Theme button toggle, range slider live update |
+  1119→  1119→| Universal Search Command Center | ⌘K / Ctrl+K hotkey, ESC close, search input no-results simulation |
+  1120→  1120→| Universal Search Mobile | Search icon scale animation, header shadow on scroll |
+  1121→  1121→| QBIT T-800 Overview | IntersectionObserver scroll-reveal, sticky header hide/show |
+  1122→  1122→
+  1123→  1123→---
+  1124→  1124→
+  1125→  1125→## 7. Next.js + Tailwind + shadcn/ui Implementation Notes
+  1126→  1126→
+  1127→  1127→1. **Tailwind config:** Add the same color tokens to `tailwind.config.ts`. Include custom font sizes via `fontSize` and font families via `fontFamily`.
+  1128→  1128→2. **Inter font:** Use `next/font/google` for Inter.
+  1129→  1129→3. **Material Symbols:** Either use `@fontsource/material-symbols-outlined` or load via `<link>` in root layout.
+  1130→  1130→4. **Custom CSS:** Define `.glass-card`, `.glass-panel`, `.bento-grid`, `.hide-scrollbar`, `.custom-scrollbar` in `globals.css`.
+  1131→  1131→5. **shadcn/ui mappings:**
+  1132→  1132→   - Buttons → custom variants (primary, secondary, outline, danger, ghost)
+  1133→  1133→   - Card → GlassCard with `glass-card` class
+  1134→  1134→   - Table → DataTable with custom styling
+  1135→  1135→   - Dialog → Modal with backdrop blur
+  1136→  1136→   - Tabs → custom implementation with `border-b-2 border-primary` for active
+  1137→  1137→   - Toast → shadcn Sonner with custom styling
+  1138→  1138→   - Badge → StatusBadge with semantic variants
+  1139→  1139→   - Checkbox → custom with primary color
+  1140→  1140→   - Select → shadcn Select
+  1141→  1141→6. **Layout:** Create per-role `<AppShell>` components (EngineerAppShell, AdminAppShell, FieldAppShell, AISupportAppShell).
+  1142→  1142→7. **Mobile:** Use responsive utilities (`hidden md:flex`, `md:hidden`). Build dedicated mobile pages for universal_search_mobile.
+  1143→  1143→8. **Dark mode:** All sidebar/topbar variants have `dark:` classes; ensure `next-themes` integration.
+  1144→  1144→9. **Charts:** Use Recharts or custom CSS bar charts (the dashboard uses simple div-based bars).
+  1145→  1145→10. **Signature pad:** Use `react-signature-canvas` for job_completion_handover.
+  1146→  1146→
+  1147→  1147→---
+  1148→  1148→
+  1149→  1149→End of analysis. Each page can now be recreated in Next.js using this document without re-reading the original HTML.
+  1150→  1150→

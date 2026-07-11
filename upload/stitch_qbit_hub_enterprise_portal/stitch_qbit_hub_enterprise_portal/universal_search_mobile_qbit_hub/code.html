@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>QBIT Hub - Universal Search</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-surface-variant": "#434656",
+                      "on-tertiary-fixed": "#191c1e",
+                      "on-error-container": "#93000a",
+                      "tertiary-fixed-dim": "#c4c7c9",
+                      "tertiary": "#4e5153",
+                      "secondary-fixed": "#dbe1ff",
+                      "inverse-surface": "#293040",
+                      "secondary-fixed-dim": "#b4c5ff",
+                      "on-tertiary-fixed-variant": "#444749",
+                      "on-tertiary-container": "#e7e9eb",
+                      "surface-dim": "#d3daef",
+                      "secondary": "#0051d5",
+                      "background": "#f9f9ff",
+                      "surface-container-low": "#f1f3ff",
+                      "on-primary-fixed": "#001550",
+                      "error": "#ba1a1a",
+                      "inverse-primary": "#b6c4ff",
+                      "primary-container": "#0057ff",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-variant": "#dce2f7",
+                      "primary-fixed-dim": "#b6c4ff",
+                      "on-secondary": "#ffffff",
+                      "on-error": "#ffffff",
+                      "surface-container-high": "#e1e8fd",
+                      "on-background": "#141b2b",
+                      "surface-container": "#e9edff",
+                      "on-tertiary": "#ffffff",
+                      "surface-container-highest": "#dce2f7",
+                      "primary": "#0043c8",
+                      "outline": "#737688",
+                      "surface-bright": "#f9f9ff",
+                      "on-secondary-fixed": "#00174b",
+                      "error-container": "#ffdad6",
+                      "primary-fixed": "#dce1ff",
+                      "surface": "#f9f9ff",
+                      "on-secondary-container": "#fefcff",
+                      "on-primary": "#ffffff",
+                      "secondary-container": "#316bf3",
+                      "outline-variant": "#c3c5d9",
+                      "tertiary-container": "#66696b",
+                      "on-secondary-fixed-variant": "#003ea8",
+                      "surface-tint": "#004ee7",
+                      "on-primary-container": "#e5e8ff",
+                      "on-surface": "#141b2b",
+                      "on-primary-fixed-variant": "#003ab2",
+                      "inverse-on-surface": "#edf0ff",
+                      "tertiary-fixed": "#e0e3e5"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "3xl": "64px",
+                      "margin-desktop": "32px",
+                      "lg": "24px",
+                      "sm": "8px",
+                      "container-max": "1440px",
+                      "unit": "8px",
+                      "margin-mobile": "16px",
+                      "gutter": "24px",
+                      "2xl": "48px",
+                      "md": "16px",
+                      "xs": "4px",
+                      "xl": "32px"
+              },
+              "fontFamily": {
+                      "label-sm": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "headline-sm": ["Inter"],
+                      "headline-lg-mobile": ["Inter"],
+                      "display-lg": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "display-sm": ["Inter"],
+                      "body-sm": ["Inter"],
+                      "body-md": ["Inter"],
+                      "label-md": ["Inter"]
+              },
+              "fontSize": {
+                      "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "headline-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "display-sm": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "500"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .glass-header {
+            background: rgba(249, 249, 255, 0.8);
+            backdrop-filter: blur(12px);
+        }
+        
+        .search-container-transition {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface antialiased min-h-screen flex flex-col">
+<!-- Top Navigation Bar (Mobile Implementation) -->
+<header class="fixed top-0 left-0 right-0 z-50 glass-header border-b border-outline-variant/30 px-md py-sm">
+<div class="flex items-center justify-between gap-md">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</div>
+<h1 class="font-headline-sm text-headline-sm tracking-tight text-primary">QBIT Hub</h1>
+</div>
+<div class="flex items-center gap-xs">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">history</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-container-high border border-outline-variant/50 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional studio portrait of a systems engineer with a neutral expression, wearing a sleek black minimalist shirt. The lighting is soft and directional against a clean, light-grey background. High-quality digital photography with a corporate, premium tech aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4jwWw86evHcSUg92rzAiGzN2cUZvPF-ERWpVYBZoJrgNFItiqbQsLxmRY357Fat-6SRLCCEoirxD5qwYEg_JV-syzN62bc4RxMJPnxZjmIDS8uW_NaHFtXNGZ8xlTQvagA4CvoCuJ0XBSIDF2mE9BeSNIceF3aiB0VRHPFP8XKTgvncP9IyqTDfnBSck2p8bgbu2eJ2iwSRNHL3qD5NxF0EfVvf8JaC5QowfPnevUkuRM5l787YtebgSsrosihuuzrbQN4MSVlPfe"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Area: Search Overlay -->
+<main class="flex-1 mt-[64px] pb-[80px] flex flex-col relative">
+<!-- Persistent Search Bar & Filters -->
+<section class="sticky top-[64px] z-40 bg-background/95 backdrop-blur-md pt-md pb-sm border-b border-outline-variant/20">
+<div class="px-md">
+<div class="relative flex items-center w-full group">
+<span class="material-symbols-outlined absolute left-4 text-on-surface-variant group-focus-within:text-primary transition-colors">search</span>
+<input autofocus="" class="w-full pl-12 pr-12 py-4 bg-surface-container-low border border-transparent focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-2xl font-body-md text-on-surface placeholder:text-on-surface-variant/60 transition-all outline-none" placeholder="Search knowledge base, tickets..." type="text"/>
+<button class="absolute right-4 text-on-surface-variant hover:text-error transition-colors">
+<span class="material-symbols-outlined">cancel</span>
+</button>
+</div>
+</div>
+<!-- Horizontal Filter Chips -->
+<div class="mt-md overflow-x-auto hide-scrollbar px-md">
+<div class="flex gap-sm pb-xs">
+<button class="px-md py-2 bg-primary text-on-primary rounded-full font-label-md whitespace-nowrap shadow-sm">All</button>
+<button class="px-md py-2 bg-surface-container-high text-on-surface-variant border border-outline-variant/30 rounded-full font-label-md whitespace-nowrap hover:bg-surface-container-highest transition-colors">Documentation</button>
+<button class="px-md py-2 bg-surface-container-high text-on-surface-variant border border-outline-variant/30 rounded-full font-label-md whitespace-nowrap hover:bg-surface-container-highest transition-colors">Support Tickets</button>
+<button class="px-md py-2 bg-surface-container-high text-on-surface-variant border border-outline-variant/30 rounded-full font-label-md whitespace-nowrap hover:bg-surface-container-highest transition-colors">Drivers</button>
+<button class="px-md py-2 bg-surface-container-high text-on-surface-variant border border-outline-variant/30 rounded-full font-label-md whitespace-nowrap hover:bg-surface-container-highest transition-colors">Knowledge Base</button>
+</div>
+</div>
+</section>
+<!-- Search Results -->
+<section class="px-md py-md space-y-xl">
+<!-- Group: Documentation -->
+<div class="space-y-md">
+<div class="flex items-center justify-between">
+<h2 class="font-label-sm text-label-sm uppercase tracking-widest text-on-surface-variant/60">Documentation</h2>
+<button class="text-primary font-label-md">View all</button>
+</div>
+<div class="space-y-sm">
+<!-- Result Card -->
+<div class="p-md bg-surface-container-lowest border border-outline-variant/30 rounded-2xl flex items-start gap-md active:scale-[0.98] transition-transform shadow-sm">
+<div class="w-12 h-12 rounded-xl bg-surface-container-high flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary">menu_book</span>
+</div>
+<div class="flex-1">
+<h3 class="font-headline-sm text-on-surface leading-tight">V3 Core Installation Guide</h3>
+<p class="font-body-sm text-on-surface-variant mt-xs line-clamp-1">Updated 2 days ago • v4.2.0 compatibility...</p>
+</div>
+<span class="material-symbols-outlined text-outline-variant">chevron_right</span>
+</div>
+<div class="p-md bg-surface-container-lowest border border-outline-variant/30 rounded-2xl flex items-start gap-md active:scale-[0.98] transition-transform shadow-sm">
+<div class="w-12 h-12 rounded-xl bg-surface-container-high flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary">terminal</span>
+</div>
+<div class="flex-1">
+<h3 class="font-headline-sm text-on-surface leading-tight">CLI Reference: Hub Utility</h3>
+<p class="font-body-sm text-on-surface-variant mt-xs line-clamp-1">Comprehensive command list for local dev...</p>
+</div>
+<span class="material-symbols-outlined text-outline-variant">chevron_right</span>
+</div>
+</div>
+</div>
+<!-- Group: Support Tickets -->
+<div class="space-y-md">
+<div class="flex items-center justify-between">
+<h2 class="font-label-sm text-label-sm uppercase tracking-widest text-on-surface-variant/60">Recent Tickets</h2>
+<button class="text-primary font-label-md">Open cases</button>
+</div>
+<div class="space-y-sm">
+<div class="p-md bg-surface-container-lowest border border-outline-variant/30 rounded-2xl flex flex-col gap-sm active:scale-[0.98] transition-transform shadow-sm">
+<div class="flex justify-between items-start">
+<div class="px-2 py-0.5 bg-error-container text-on-error-container rounded font-label-sm uppercase text-[10px]">Critical</div>
+<span class="text-on-surface-variant font-label-sm">#INC-4921</span>
+</div>
+<h3 class="font-headline-sm text-on-surface">Kernel panic on v3-alpha build</h3>
+<div class="flex items-center gap-xs mt-xs">
+<div class="w-5 h-5 rounded-full bg-surface-container-highest border border-outline-variant overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A small circular avatar of a tech support agent with a friendly smile, wearing a professional headset. The lighting is clean and modern, evoking a high-end customer service experience in a corporate tech environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3uXpMaXBPzx_4YWKIpfMkf8Qs3w1FvbBhAlTB9N8AiP_xmULlYuuIJxUp8N9rbv5KrMC5Y6NezgukGYVEudOs1wsreQ7Y9CnBNJmVgtdRrJybRlPC9WdBJjY4jxuK5Sny0zjt1cL2VplAU7k4Gq0maEldSWZZFaoQZe-FFQoQ2R2jc0Urz0hzIBBj2Vz0erTtDNvZl_9r69r0NHD6Bb48tUWKHseZwRWZF1kLxQlYIjD7x5Bu85vPrJ7UI2s7Ww_YiktvRjdmO3P6"/>
+</div>
+<span class="font-body-sm text-on-surface-variant italic">Assignee: Alex Chen</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Group: Suggested Actions (Bento Style) -->
+<div class="space-y-md">
+<h2 class="font-label-sm text-label-sm uppercase tracking-widest text-on-surface-variant/60">Quick Actions</h2>
+<div class="grid grid-cols-2 gap-sm">
+<button class="flex flex-col items-center justify-center p-lg bg-secondary-container text-on-secondary-container rounded-3xl gap-sm">
+<span class="material-symbols-outlined text-[32px]">add_circle</span>
+<span class="font-label-md">New Case</span>
+</button>
+<button class="flex flex-col items-center justify-center p-lg bg-surface-container-high text-on-surface rounded-3xl gap-sm">
+<span class="material-symbols-outlined text-[32px] text-primary">download</span>
+<span class="font-label-md">Latest SDK</span>
+</button>
+</div>
+</div>
+<!-- Recent Searches List -->
+<div class="space-y-md pb-lg">
+<h2 class="font-label-sm text-label-sm uppercase tracking-widest text-on-surface-variant/60">Recent Searches</h2>
+<div class="space-y-0">
+<div class="flex items-center gap-md py-md border-b border-outline-variant/20 active:bg-surface-container-low px-xs transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">history</span>
+<span class="font-body-md flex-1">Database migration scripts</span>
+<span class="material-symbols-outlined text-outline-variant">north_west</span>
+</div>
+<div class="flex items-center gap-md py-md border-b border-outline-variant/20 active:bg-surface-container-low px-xs transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">history</span>
+<span class="font-body-md flex-1">API Authentication v2</span>
+<span class="material-symbols-outlined text-outline-variant">north_west</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Floating Action Button -->
+<button class="fixed bottom-24 right-md w-14 h-14 bg-primary text-on-primary rounded-2xl shadow-xl flex items-center justify-center z-50 active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' 1;">qr_code_scanner</span>
+</button>
+<!-- Bottom Navigation Bar (Mobile) -->
+<nav class="fixed bottom-0 left-0 right-0 h-[72px] bg-surface-container-lowest border-t border-outline-variant/20 flex items-center justify-around px-md z-50">
+<a class="flex flex-col items-center gap-1 group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-active:text-primary transition-colors">dashboard</span>
+<span class="text-[10px] font-label-sm text-on-surface-variant">Dashboard</span>
+</a>
+<a class="flex flex-col items-center gap-1 group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-active:text-primary transition-colors">inventory_2</span>
+<span class="text-[10px] font-label-sm text-on-surface-variant">Products</span>
+</a>
+<!-- Active Search Tab -->
+<a class="flex flex-col items-center gap-1 text-primary" href="#">
+<div class="relative">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">search</span>
+<div class="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full"></div>
+</div>
+<span class="text-[10px] font-label-sm font-bold">Search</span>
+</a>
+<a class="flex flex-col items-center gap-1 group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-active:text-primary transition-colors">download</span>
+<span class="text-[10px] font-label-sm text-on-surface-variant">Downloads</span>
+</a>
+<a class="flex flex-col items-center gap-1 group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-active:text-primary transition-colors">account_circle</span>
+<span class="text-[10px] font-label-sm text-on-surface-variant">Profile</span>
+</a>
+</nav>
+<script>
+        // Micro-interaction: Search input focus animation
+        const searchInput = document.querySelector('input[type="text"]');
+        const searchIcon = document.querySelector('.material-symbols-outlined.absolute.left-4');
+
+        searchInput.addEventListener('focus', () => {
+            searchIcon.style.transform = 'scale(1.1) translateX(2px)';
+            searchIcon.style.transition = 'transform 0.2s ease-out';
+        });
+
+        searchInput.addEventListener('blur', () => {
+            searchIcon.style.transform = 'scale(1) translateX(0)';
+        });
+
+        // Simple scroll event to add shadow to header
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if (window.scrollY > 10) {
+                header.classList.add('shadow-md');
+            } else {
+                header.classList.remove('shadow-md');
+            }
+        });
+    </script>
+</body></html>

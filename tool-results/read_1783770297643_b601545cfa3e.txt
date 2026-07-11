@@ -1,0 +1,490 @@
+     1→    }catch(_e){}</script><meta charset="utf-8"></head><body class="bg-background font-body-md text-on-surface overflow-x-hidden">
+     2→<!-- SideNavBar (from JSON) -->
+     3→<aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-lowest border-r border-outline-variant shadow-sm flex flex-col py-md z-50">
+     4→<div class="px-lg mb-xl">
+     5→<h1 class="font-headline-sm text-headline-sm font-bold text-primary">QBIT Hub</h1>
+     6→<p class="text-on-surface-variant font-label-sm text-label-sm">Enterprise SaaS</p>
+     7→</div>
+     8→<nav class="flex-1 overflow-y-auto custom-scrollbar px-sm space-y-xs">
+     9→<a href="#" class="flex items-center gap-md px-md py-sm rounded-lg transition-all duration-200 text-on-surface-variant hover:bg-surface-container-low group cursor-pointer active:scale-95">
+    10→<span class="material-symbols-outlined">dashboard</span>
+    11→<span class="font-body-sm text-body-sm">Dashboard</span>
+    12→</a>
+    13→<a href="#" class="flex items-center gap-md px-md py-sm rounded-lg transition-all duration-200 text-on-surface-variant hover:bg-surface-container-low group cursor-pointer active:scale-95">
+    14→<span class="material-symbols-outlined">inventory_2</span>
+    15→<span class="font-body-sm text-body-sm">Products</span>
+    16→</a>
+    17→<a href="#" class="flex items-center gap-md px-md py-sm rounded-lg transition-all duration-200 text-on-surface-variant hover:bg-surface-container-low group cursor-pointer active:scale-95">
+    18→<span class="material-symbols-outlined">settings_input_component</span>
+    19→<span class="font-body-sm text-body-sm">Drivers</span>
+    20→</a>
+    21→<a href="#" class="flex items-center gap-md px-md py-sm rounded-lg transition-all duration-200 text-primary font-semibold border-l-4 border-primary bg-surface-container group cursor-pointer active:scale-95">
+    22→<span class="material-symbols-outlined">menu_book</span>
+    23→<span class="font-body-sm text-body-sm">Installation Guides</span>
+    24→</a>
+    25→<a href="#" class="flex items-center gap-md px-md py-sm rounded-lg transition-all duration-200 text-on-surface-variant hover:bg-surface-container-low group cursor-pointer active:scale-95">
+    26→<span class="material-symbols-outlined">play_circle</span>
+    27→<span class="font-body-sm text-body-sm">Videos</span>
+    28→</a>
+    29→<a href="#" class="flex items-center gap-md px-md py-sm rounded-lg transition-all duration-200 text-on-surface-variant hover:bg-surface-container-low group cursor-pointer active:scale-95">
+    30→<span class="material-symbols-outlined">download</span>
+    31→<span class="font-body-sm text-body-sm">Downloads</span>
+    32→</a>
+    33→<a href="#" class="flex items-center gap-md px-md py-sm rounded-lg transition-all duration-200 text-on-surface-variant hover:bg-surface-container-low group cursor-pointer active:scale-95">
+    34→<span class="material-symbols-outlined">library_books</span>
+    35→<span class="font-body-sm text-body-sm">Knowledge Base</span>
+    36→</a>
+    37→<a href="#" class="flex items-center gap-md px-md py-sm rounded-lg transition-all duration-200 text-on-surface-variant hover:bg-surface-container-low group cursor-pointer active:scale-95">
+    38→<span class="material-symbols-outlined">build</span>
+    39→<span class="font-body-sm text-body-sm">Troubleshooting</span>
+    40→</a>
+    41→<a href="#" class="flex items-center gap-md px-md py-sm rounded-lg transition-all duration-200 text-on-surface-variant hover:bg-surface-container-low group cursor-pointer active:scale-95">
+    42→<span class="material-symbols-outlined">bookmark</span>
+    43→<span class="font-body-sm text-body-sm">Bookmarks</span>
+    44→</a>
+    45→<a href="#" class="flex items-center gap-md px-md py-sm rounded-lg transition-all duration-200 text-on-surface-variant hover:bg-surface-container-low group cursor-pointer active:scale-95">
+    46→<span class="material-symbols-outlined">history</span>
+    47→<span class="font-body-sm text-body-sm">Recent Files</span>
+    48→</a>
+    49→<a href="#" class="flex items-center gap-md px-md py-sm rounded-lg transition-all duration-200 text-on-surface-variant hover:bg-surface-container-low group cursor-pointer active:scale-95">
+    50→<span class="material-symbols-outlined">contact_support</span>
+    51→<span class="font-body-sm text-body-sm">Support</span>
+    52→</a>
+    53→<a href="#" class="flex items-center gap-md px-md py-sm rounded-lg transition-all duration-200 text-on-surface-variant hover:bg-surface-container-low group cursor-pointer active:scale-95">
+    54→<span class="material-symbols-outlined">settings</span>
+    55→<span class="font-body-sm text-body-sm">Settings</span>
+    56→</a>
+    57→</nav>
+    58→<div class="mt-auto px-sm pt-md border-t border-outline-variant">
+    59→<button class="flex w-full items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors">
+    60→<span class="material-symbols-outlined">menu_open</span>
+    61→<span class="font-body-sm text-body-sm">Collapse</span>
+    62→</button>
+    63→</div>
+    64→</aside>
+    65→<!-- TopNavBar (from JSON) -->
+    66→<header class="fixed top-0 right-0 w-[calc(100%-256px)] h-16 bg-surface-container-lowest/80 backdrop-blur-md border-b border-outline-variant flex justify-between items-center px-lg z-40 shadow-sm">
+    67→<div class="flex items-center flex-1">
+    68→<div class="relative w-full max-w-md group">
+    69→<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+    70→<input type="text" placeholder="Search product, model..." class="w-full pl-10 pr-4 py-2 bg-surface-container-low border-none rounded-full font-body-sm text-body-sm focus:ring-2 focus:ring-primary/20 transition-all">
+    71→</div>
+    72→</div>
+    73→<div class="flex items-center gap-lg">
+    74→<div class="flex items-center gap-md">
+    75→<button class="p-2 text-on-surface-variant hover:text-primary transition-colors active:opacity-80">
+    76→<span class="material-symbols-outlined">notifications</span>
+    77→</button>
+    78→<button class="p-2 text-on-surface-variant hover:text-primary transition-colors active:opacity-80">
+    79→<span class="material-symbols-outlined">dark_mode</span>
+    80→</button>
+    81→<button class="p-2 text-on-surface-variant hover:text-primary transition-colors active:opacity-80">
+    82→<span class="material-symbols-outlined">apps</span>
+    83→</button>
+    84→</div>
+    85→<div class="h-8 w-px bg-outline-variant"></div>
+    86→<div class="flex items-center gap-sm cursor-pointer group">
+    87→<div class="w-8 h-8 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant">
+    88→<img class="w-full h-full object-cover" data-alt="A professional headshot of a business executive in a high-tech corporate office. The user is dressed in a smart navy blue blazer, looking directly at the camera with a confident yet approachable expression. Soft morning light enters through a large window, creating a crisp and high-end enterprise aesthetic consistent with the QBIT Hub design language." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9w4J-FS1PU6z-8BYzgRJSy_aBMCpKY_6Mt5xyGYwfwuortCRS7Yvo633ygcESsbLygU7RwVFjMApAf3CLM4mVCgqkG-jjk_QVJKYXjZNvohm8ef6tCn3Z4rfe9Ehgr_dbzmcqq0yF6r9D3S2MgDmxIllQH9HfCnCvoUkRYrd1c8vY0VMB95cHzf8D5kOxDOrU2im-cTAaCWZJ8TeB1BhlN41E1h6OroMq6sndX4eAj92Xo8QsLPEdqJy360dKFX5SZSnTSY6ZtWIT">
+    89→</div>
+    90→<span class="font-label-md text-label-md text-on-surface-variant group-hover:text-primary transition-colors">Admin User</span>
+    91→</div>
+    92→</div>
+    93→</header>
+    94→<!-- Main Content Canvas -->
+    95→<main class="ml-64 pt-16 min-h-screen">
+    96→<div class="max-w-container-max mx-auto p-xl">
+    97→<!-- Hero Header Section -->
+    98→<section class="mb-3xl flex flex-col items-center text-center">
+    99→<div class="mb-lg px-4 py-1 bg-primary-container text-on-primary-container rounded-full inline-block font-label-sm text-label-sm uppercase tracking-wider">
+   100→                    Resource Center
+   101→                </div>
+   102→<h2 class="font-display-sm text-display-sm text-on-surface mb-md">Driver Download Center</h2>
+   103→<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">
+   104→                    Download official QBIT drivers, firmware, software, SDKs and manuals from one place.
+   105→                </p>
+   106→<!-- Large Central Search -->
+   107→<div class="mt-xl w-full max-w-3xl relative">
+   108→<span class="material-symbols-outlined absolute left-6 top-1/2 -translate-y-1/2 text-outline text-3xl">search</span>
+   109→<input class="w-full pl-16 pr-24 py-5 bg-white border border-outline-variant rounded-2xl font-body-md text-body-md shadow-xl focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none" placeholder="Search product, model number, driver version, firmware or software..." type="text">
+   110→<button class="absolute right-4 top-1/2 -translate-y-1/2 px-lg py-2 bg-primary text-white font-label-md text-label-md rounded-xl hover:bg-primary-container hover:text-on-primary-container transition-all">
+   111→                        Search
+   112→                    </button>
+   113→</div>
+   114→<!-- Quick Filter Chips -->
+   115→<div class="flex flex-wrap justify-center gap-md mt-lg">
+   116→<button class="px-lg py-sm bg-primary text-white rounded-full font-label-md text-label-md transition-all shadow-md">All Products</button>
+   117→<button class="px-lg py-sm bg-white text-on-surface-variant border border-outline-variant rounded-full font-label-md text-label-md hover:bg-surface-container transition-all">Windows POS</button>
+   118→<button class="px-lg py-sm bg-white text-on-surface-variant border border-outline-variant rounded-full font-label-md text-label-md hover:bg-surface-container transition-all">Android POS</button>
+   119→<button class="px-lg py-sm bg-white text-on-surface-variant border border-outline-variant rounded-full font-label-md text-label-md hover:bg-surface-container transition-all">Thermal Printer</button>
+   120→<button class="px-lg py-sm bg-white text-on-surface-variant border border-outline-variant rounded-full font-label-md text-label-md hover:bg-surface-container transition-all">Barcode Scanner</button>
+   121→<button class="px-lg py-sm bg-white text-on-surface-variant border border-outline-variant rounded-full font-label-md text-label-md hover:bg-surface-container transition-all">Kiosks</button>
+   122→</div>
+   123→</section>
+   124→<!-- Featured Section (Bento Layout) -->
+   125→<section class="mb-3xl grid grid-cols-1 md:grid-cols-3 gap-lg">
+   126→<!-- Latest Driver -->
+   127→<div class="bg-white p-lg rounded-xl border border-outline-variant shadow-sm relative overflow-hidden group">
+   128→<div class="absolute top-0 right-0 p-4 opacity-10 text-primary scale-[3] group-hover:scale-[3.5] transition-transform duration-500">
+   129→<span class="material-symbols-outlined">bolt</span>
+   130→</div>
+   131→<div class="relative z-10">
+   132→<span class="font-label-sm text-label-sm text-primary mb-sm block">NEW RELEASE</span>
+   133→<h3 class="font-headline-sm text-headline-sm text-on-surface mb-xs">Latest Driver</h3>
+   134→<p class="font-body-sm text-body-sm text-on-surface-variant mb-md">Universal Thermal Printer v2.4.1</p>
+   135→<a class="inline-flex items-center gap-xs font-label-md text-label-md text-primary hover:underline" href="#">
+   136→                            Quick Download <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+   137→</a>
+   138→</div>
+   139→</div>
+   140→<!-- Recommended Firmware -->
+   141→<div class="bg-white p-lg rounded-xl border border-outline-variant shadow-sm relative overflow-hidden group">
+   142→<div class="absolute top-0 right-0 p-4 opacity-10 text-secondary scale-[3] group-hover:scale-[3.5] transition-transform duration-500">
+   143→<span class="material-symbols-outlined">verified</span>
+   144→</div>
+   145→<div class="relative z-10">
+   146→<span class="font-label-sm text-label-sm text-secondary mb-sm block">STABLE BUILD</span>
+   147→<h3 class="font-headline-sm text-headline-sm text-on-surface mb-xs">Recommended Firmware</h3>
+   148→<p class="font-body-sm text-body-sm text-on-surface-variant mb-md">HUB-X Series Security Patch</p>
+   149→<a class="inline-flex items-center gap-xs font-label-md text-label-md text-primary hover:underline" href="#">
+   150→                            View Firmware <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+   151→</a>
+   152→</div>
+   153→</div>
+   154→<!-- Most Downloaded -->
+   155→<div class="bg-white p-lg rounded-xl border border-outline-variant shadow-sm relative overflow-hidden group">
+   156→<div class="absolute top-0 right-0 p-4 opacity-10 text-on-surface-variant scale-[3] group-hover:scale-[3.5] transition-transform duration-500">
+   157→<span class="material-symbols-outlined">trending_up</span>
+   158→</div>
+   159→<div class="relative z-10">
+   160→<span class="font-label-sm text-label-sm text-on-surface-variant mb-sm block">POPULAR</span>
+   161→<h3 class="font-headline-sm text-headline-sm text-on-surface mb-xs">Most Downloaded</h3>
+   162→<p class="font-body-sm text-body-sm text-on-surface-variant mb-md">Barcode Scanner SDK v1.9</p>
+   163→<a class="inline-flex items-center gap-xs font-label-md text-label-md text-primary hover:underline" href="#">
+   164→                            Browse All <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+   165→</a>
+   166→</div>
+   167→</div>
+   168→</section>
+   169→<!-- Main Filter & Grid Layout -->
+   170→<div class="flex flex-col lg:flex-row gap-gutter">
+   171→<!-- Left Sidebar (Filters) -->
+   172→<aside class="w-full lg:w-72 flex-shrink-0">
+   173→<div class="bg-white p-lg rounded-xl border border-outline-variant shadow-sm sticky top-24">
+   174→<div class="flex items-center justify-between mb-xl">
+   175→<h4 class="font-headline-sm text-headline-sm text-on-surface">Filters</h4>
+   176→<button class="text-primary font-label-sm text-label-sm hover:underline">Clear all</button>
+   177→</div>
+   178→<div class="space-y-xl">
+   179→<!-- Category -->
+   180→<div>
+   181→<h5 class="font-label-md text-label-md text-on-surface mb-md">Product Category</h5>
+   182→<div class="space-y-sm">
+   183→<label class="flex items-center gap-md cursor-pointer group">
+   184→<input class="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary transition-all" type="checkbox">
+   185→<span class="font-body-sm text-body-sm text-on-surface-variant group-hover:text-on-surface">POS Terminals</span>
+   186→</label>
+   187→<label class="flex items-center gap-md cursor-pointer group">
+   188→<input checked="" class="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary transition-all" type="checkbox">
+   189→<span class="font-body-sm text-body-sm text-on-surface-variant group-hover:text-on-surface">Thermal Printers</span>
+   190→</label>
+   191→<label class="flex items-center gap-md cursor-pointer group">
+   192→<input class="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary transition-all" type="checkbox">
+   193→<span class="font-body-sm text-body-sm text-on-surface-variant group-hover:text-on-surface">Scanners</span>
+   194→</label>
+   195→</div>
+   196→</div>
+   197→<!-- Operating System -->
+   198→<div>
+   199→<h5 class="font-label-md text-label-md text-on-surface mb-md">Operating System</h5>
+   200→<div class="grid grid-cols-1 gap-sm">
+   201→<select class="w-full bg-surface-container-low border-none rounded-lg font-body-sm text-body-sm px-md py-sm focus:ring-2 focus:ring-primary/20">
+   202→<option>Windows 11 (64-bit)</option>
+   203→<option>Windows 10 (64-bit)</option>
+   204→<option>Ubuntu Linux 22.04</option>
+   205→<option>Android 13.0</option>
+   206→</select>
+   207→</div>
+   208→</div>
+   209→<!-- Driver Type -->
+   210→<div>
+   211→<h5 class="font-label-md text-label-md text-on-surface mb-md">Type</h5>
+   212→<div class="flex flex-wrap gap-sm">
+   213→<button class="px-md py-xs bg-surface-container text-primary font-label-sm text-label-sm rounded-lg border border-primary/20">Driver</button>
+   214→<button class="px-md py-xs bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm rounded-lg hover:bg-surface-container transition-all">Firmware</button>
+   215→<button class="px-md py-xs bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm rounded-lg hover:bg-surface-container transition-all">SDK</button>
+   216→<button class="px-md py-xs bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm rounded-lg hover:bg-surface-container transition-all">Utility</button>
+   217→</div>
+   218→</div>
+   219→<!-- Release Year -->
+   220→<div>
+   221→<h5 class="font-label-md text-label-md text-on-surface mb-md">Release Year</h5>
+   222→<input class="w-full h-1 bg-surface-container-high rounded-lg appearance-none cursor-pointer accent-primary" max="2024" min="2020" step="1" type="range">
+   223→<div class="flex justify-between mt-sm font-label-sm text-label-sm text-on-surface-variant">
+   224→<span class="">2020</span>
+   225→<span class="">2024</span>
+   226→</div>
+   227→</div>
+   228→</div>
+   229→</div>
+   230→</aside>
+   231→<!-- Main Grid (Driver List) -->
+   232→<div class="flex-1 space-y-lg space-y-gutter">
+   233→<!-- Search Stats & Sorting -->
+   234→<div class="flex flex-col sm:flex-row items-center justify-between gap-md mb-md">
+   235→<span class="font-body-sm text-body-sm text-on-surface-variant">Showing <strong>24</strong> drivers for "Thermal Printer"</span>
+   236→<div class="flex items-center gap-sm">
+   237→<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Sort By:</span>
+   238→<select class="bg-transparent border-none font-label-md text-label-md text-primary focus:ring-0 cursor-pointer">
+   239→<option>Newest Release</option>
+   240→<option>Most Popular</option>
+   241→<option>A-Z</option>
+   242→</select>
+   243→</div>
+   244→</div>
+   245→<!-- Driver Card 1 -->
+   246→<div class="bg-white rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-shadow group p-lg">
+   247→<div class="p-lg flex flex-col md:flex-row gap-lg">
+   248→<div class="w-16 h-16 bg-surface-container-low rounded-xl flex items-center justify-center text-primary flex-shrink-0">
+   249→<span class="material-symbols-outlined text-4xl">print</span>
+   250→</div>
+   251→<div class="flex-1">
+   252→<div class="flex flex-wrap items-center gap-md mb-xs">
+   253→<h3 class="font-headline-sm text-headline-sm text-on-surface">Universal Thermal Printer Driver v2.4.0</h3>
+   254→<span class="flex items-center gap-xs px-sm py-xs bg-secondary-container/10 text-secondary font-label-sm text-label-sm rounded-md">
+   255→<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+   256→                                        Verified Official
+   257→                                    </span>
+   258→</div>
+   259→<div class="flex flex-wrap gap-xl mb-md font-body-sm text-body-sm text-on-surface-variant">
+   260→<div class="flex items-center gap-sm font-body-sm">
+   261→<span class="material-symbols-outlined text-[18px]">devices</span>
+   262→                                        HUB-X Pro Series
+   263→                                    </div>
+   264→<div class="flex items-center gap-sm font-label-sm text-on-surface-variant">
+   265→<span class="material-symbols-outlined text-[18px]">calendar_today</span>
+   266→                                        Oct 12, 2023
+   267→                                    </div>
+   268→<div class="flex items-center gap-sm">
+   269→<span class="material-symbols-outlined text-[18px]">save</span>
+   270→                                        12.4 MB
+   271→                                    </div>
+   272→</div>
+   273→<div class="flex gap-sm mb-lg">
+   274→<span class="px-md py-xs text-on-surface-variant font-label-sm text-label-sm rounded-full bg-surface-container-high">Windows 11</span>
+   275→<span class="px-md py-xs text-on-surface-variant font-label-sm text-label-sm rounded-full bg-surface-container-high">Windows 10</span>
+   276→</div>
+   277→<!-- Release Notes Preview -->
+   278→<div class="bg-background/50 p-md rounded-lg mb-lg border border-outline-variant/30">
+   279→<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-1 italic">
+   280→                                        Added support for high-speed USB 3.1 connections and fixed intermittent connectivity issues with the HUB-X Pro models...
+   281→                                    </p>
+   282→</div>
+   283→</div>
+   284→<div class="flex flex-col gap-sm md:w-48">
+   285→<button class="w-full px-lg py-md bg-primary text-white font-label-md text-label-md rounded-xl shadow-sm hover:bg-primary-container hover:text-on-primary-container transition-all flex items-center justify-center gap-md">
+   286→<span class="material-symbols-outlined text-[20px]">download</span>
+   287→                                    Download
+   288→                                </button>
+   289→<button class="w-full px-lg py-md bg-white border border-outline-variant text-on-surface font-label-md text-label-md rounded-xl hover:bg-surface-container-low transition-all">
+   290→                                    Release Notes
+   291→                                </button>
+   292→</div>
+   293→</div>
+   294→</div>
+   295→<!-- Driver Card 2 -->
+   296→<div class="bg-white rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-shadow group p-lg">
+   297→<div class="p-lg flex flex-col md:flex-row gap-lg">
+   298→<div class="w-16 h-16 bg-surface-container-low rounded-xl flex items-center justify-center text-secondary flex-shrink-0">
+   299→<span class="material-symbols-outlined text-4xl">terminal</span>
+   300→</div>
+   301→<div class="flex-1">
+   302→<div class="flex flex-wrap items-center gap-md mb-xs">
+   303→<h3 class="font-headline-sm text-headline-sm text-on-surface">Advanced POS Terminal Firmware v4.1.2</h3>
+   304→<span class="px-sm py-xs bg-error-container/10 text-error font-label-sm text-label-sm rounded-md uppercase tracking-tight">Critical Update</span>
+   305→</div>
+   306→<div class="flex flex-wrap gap-xl mb-md font-body-sm text-body-sm text-on-surface-variant">
+   307→<div class="flex items-center gap-sm font-body-sm">
+   308→<span class="material-symbols-outlined text-[18px]">devices</span>
+   309→                                        POS-2000 &amp; 3000
+   310→                                    </div>
+   311→<div class="flex items-center gap-sm font-label-sm text-on-surface-variant">
+   312→<span class="material-symbols-outlined text-[18px]">calendar_today</span>
+   313→                                        Nov 05, 2023
+   314→                                    </div>
+   315→<div class="flex items-center gap-sm">
+   316→<span class="material-symbols-outlined text-[18px]">save</span>
+   317→                                        45.8 MB
+   318→                                    </div>
+   319→</div>
+   320→<div class="flex gap-sm mb-lg">
+   321→<span class="px-md py-xs text-on-surface-variant font-label-sm text-label-sm rounded-full bg-surface-container-high">Embedded OS</span>
+   322→</div>
+   323→<div class="bg-background/50 p-md rounded-lg mb-lg border border-outline-variant/30">
+   324→<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-1 italic">
+   325→                                        Patches vulnerability CVE-2023-5421 and improves battery management for portable POS units.
+   326→                                    </p>
+   327→</div>
+   328→</div>
+   329→<div class="flex flex-col gap-sm md:w-48">
+   330→<button class="w-full px-lg py-md bg-primary text-white font-label-md text-label-md rounded-xl shadow-sm hover:bg-primary-container hover:text-on-primary-container transition-all flex items-center justify-center gap-md">
+   331→<span class="material-symbols-outlined text-[20px]">download</span>
+   332→                                    Download
+   333→                                </button>
+   334→<button class="w-full px-lg py-md bg-white border border-outline-variant text-on-surface font-label-md text-label-md rounded-xl hover:bg-surface-container-low transition-all">
+   335→                                    Release Notes
+   336→                                </button>
+   337→</div>
+   338→</div>
+   339→</div>
+   340→<!-- Driver Card 3 -->
+   341→<div class="bg-white rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-shadow group p-lg">
+   342→<div class="p-lg flex flex-col md:flex-row gap-lg">
+   343→<div class="w-16 h-16 bg-surface-container-low rounded-xl flex items-center justify-center text-tertiary flex-shrink-0">
+   344→<span class="material-symbols-outlined text-4xl">integration_instructions</span>
+   345→</div>
+   346→<div class="flex-1">
+   347→<div class="flex flex-wrap items-center gap-md mb-xs">
+   348→<h3 class="font-headline-sm text-headline-sm text-on-surface">Barcode Scanner SDK for Android</h3>
+   349→<span class="px-sm py-xs bg-tertiary-container/10 text-tertiary font-label-sm text-label-sm rounded-md">Developer Kit</span>
+   350→</div>
+   351→<div class="flex flex-wrap gap-xl mb-md font-body-sm text-body-sm text-on-surface-variant">
+   352→<div class="flex items-center gap-sm font-body-sm">
+   353→<span class="material-symbols-outlined text-[18px]">devices</span>
+   354→                                        Scanner Q-Series
+   355→                                    </div>
+   356→<div class="flex items-center gap-sm font-label-sm text-on-surface-variant">
+   357→<span class="material-symbols-outlined text-[18px]">calendar_today</span>
+   358→                                        Dec 12, 2023
+   359→                                    </div>
+   360→<div class="flex items-center gap-sm">
+   361→<span class="material-symbols-outlined text-[18px]">save</span>
+   362→                                        128 MB
+   363→                                    </div>
+   364→</div>
+   365→<div class="flex gap-sm mb-lg">
+   366→<span class="px-md py-xs text-on-surface-variant font-label-sm text-label-sm rounded-full bg-surface-container-high">Android 10+</span>
+   367→</div>
+   368→<div class="bg-background/50 p-md rounded-lg mb-lg border border-outline-variant/30">
+   369→<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-1 italic">
+   370→                                        Full development kit including libraries, headers, and sample code for integrating Q-series scanners.
+   371→                                    </p>
+   372→</div>
+   373→</div>
+   374→<div class="flex flex-col gap-sm md:w-48">
+   375→<button class="w-full px-lg py-md bg-primary text-white font-label-md text-label-md rounded-xl shadow-sm hover:bg-primary-container hover:text-on-primary-container transition-all flex items-center justify-center gap-md">
+   376→<span class="material-symbols-outlined text-[20px]">download</span>
+   377→                                    Download
+   378→                                </button>
+   379→<button class="w-full px-lg py-md bg-white border border-outline-variant text-on-surface font-label-md text-label-md rounded-xl hover:bg-surface-container-low transition-all">
+   380→                                    Release Notes
+   381→                                </button>
+   382→</div>
+   383→</div>
+   384→</div>
+   385→<!-- Pagination -->
+   386→<div class="flex justify-center items-center gap-sm pt-xl">
+   387→<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container-low transition-colors">
+   388→<span class="material-symbols-outlined">chevron_left</span>
+   389→</button>
+   390→<button class="w-10 h-10 flex items-center justify-center rounded-lg bg-primary text-white font-label-md text-label-md">1</button>
+   391→<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container-low">2</button>
+   392→<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container-low">3</button>
+   393→<span class="px-md text-on-surface-variant">...</span>
+   394→<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container-low">12</button>
+   395→<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container-low transition-colors">
+   396→<span class="material-symbols-outlined">chevron_right</span>
+   397→</button>
+   398→</div>
+   399→</div>
+   400→<!-- Right Sidebar (Recent Activity) -->
+   401→<aside class="w-full lg:w-80 flex-shrink-0">
+   402→<div class="bg-white p-lg rounded-xl border border-outline-variant shadow-sm sticky top-24">
+   403→<h4 class="font-headline-sm text-headline-sm text-on-surface mb-lg flex items-center gap-md">
+   404→<span class="material-symbols-outlined text-primary">history</span>
+   405→                            Recent History
+   406→                        </h4>
+   407→<div class="space-y-lg">
+   408→<div class="relative pl-8 before:content-[''] before:absolute before:left-[11px] before:top-8 before:bottom-[-20px] before:w-[2px] before:bg-surface-container-high last:before:hidden">
+   409→<div class="absolute left-0 top-1 w-6 h-6 rounded-full bg-primary-container text-primary flex items-center justify-center z-10">
+   410→<span class="material-symbols-outlined text-[14px]">download</span>
+   411→</div>
+   412→<div>
+   413→<p class="font-label-md text-label-md text-on-surface">Thermal Driver v2.4.0</p>
+   414→<p class="font-body-sm text-body-sm text-on-surface-variant">2 hours ago</p>
+   415→</div>
+   416→</div>
+   417→<div class="relative pl-8 before:content-[''] before:absolute before:left-[11px] before:top-8 before:bottom-[-20px] before:w-[2px] before:bg-surface-container-high last:before:hidden">
+   418→<div class="absolute left-0 top-1 w-6 h-6 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center z-10">
+   419→<span class="material-symbols-outlined text-[14px]">visibility</span>
+   420→</div>
+   421→<div>
+   422→<p class="font-label-md text-label-md text-on-surface">Scanner SDK v1.9</p>
+   423→<p class="font-body-sm text-body-sm text-on-surface-variant">Yesterday</p>
+   424→</div>
+   425→</div>
+   426→<div class="relative pl-8">
+   427→<div class="absolute left-0 top-1 w-6 h-6 rounded-full bg-primary-container text-primary flex items-center justify-center z-10">
+   428→<span class="material-symbols-outlined text-[14px]">download</span>
+   429→</div>
+   430→<div>
+   431→<p class="font-label-md text-label-md text-on-surface">POS Security Patch</p>
+   432→<p class="font-body-sm text-body-sm text-on-surface-variant">Oct 24, 2023</p>
+   433→</div>
+   434→</div>
+   435→</div>
+   436→<button class="w-full mt-xl py-sm text-primary font-label-md text-label-md border border-primary/20 rounded-lg hover:bg-primary/5 transition-all">
+   437→                            View All Activity
+   438→                        </button>
+   439→</div>
+   440→<!-- Tech Portal Graphic / CTA -->
+   441→<div class="mt-lg rounded-xl overflow-hidden shadow-md relative h-64 border border-outline-variant">
+   442→<img class="absolute inset-0 w-full h-full object-cover" data-alt="A futuristic, high-tech enterprise technology portal showcasing a white sleek POS system, a thermal printer, and a handheld barcode scanner on a minimalist white table. The scene is bright and airy with soft cyan ambient light accents, reflecting a high-performance, premium corporate aesthetic typical of QBIT Hub hardware solutions. Professional studio lighting emphasizes clean lines and industrial design quality." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCHkLv7_K5DCmEVCadJtxwMVrU_EI7fRuQMxlXn8yjE1wbr0HAcDH1Hc2_mMZJ6wkfLCCp-6yi07-B86nLtpyJbZ6JN3jicq5Gcf_4t4iCtC7iT-rDOzWdtNt7hMuc0OqIpOkjUe3hZP_NQk7-26k_9nWP-9CyxZnYI1AizzY6MVbLuHfHSJASGDgXKX3Zj_j1ULKukwxpx0Yc3U1CfhlbscAEasaI0T6-BZt3ZAikmoS1B1v8lEFSspOC5SzDYLCFHTFwwgbK0navy">
+   443→<div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-lg">
+   444→<h5 class="text-white font-headline-sm text-headline-sm mb-xs">Need Hardware Support?</h5>
+   445→<p class="text-white/80 font-body-sm text-body-sm mb-md">Our enterprise support team is available 24/7 for remote assistance.</p>
+   446→<a class="inline-flex items-center gap-sm text-white font-label-md text-label-md group" href="#">
+   447→                                Contact Support 
+   448→                                <span class="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+   449→</a>
+   450→</div>
+   451→</div>
+   452→</aside>
+   453→</div>
+   454→<!-- Empty State Illustration (Hidden by default) -->
+   455→<section class="hidden my-3xl flex flex-col items-center justify-center text-center py-2xl bg-white rounded-3xl border border-dashed border-outline-variant" id="empty-state">
+   456→<div class="w-48 h-48 bg-surface-container-low rounded-full flex items-center justify-center mb-xl">
+   457→<span class="material-symbols-outlined text-6xl text-outline opacity-40">find_in_page</span>
+   458→</div>
+   459→<h3 class="font-headline-md text-headline-md text-on-surface mb-md">No drivers found</h3>
+   460→<p class="font-body-md text-body-md text-on-surface-variant max-w-sm mb-xl">
+   461→                    We couldn't find any results matching your filters. Try adjusting your search or clearing some filters.
+   462→                </p>
+   463→<button class="px-xl py-md bg-primary text-white font-label-md text-label-md rounded-xl hover:shadow-lg transition-shadow">
+   464→                    Reset All Filters
+   465→                </button>
+   466→</section>
+   467→</div>
+   468→</main>
+   469→<!-- Micro-interaction Scripts -->
+   470→<script>
+   471→        // Simple search input animation
+   472→        const searchInput = document.querySelector('input[type="text"]');
+   473→        searchInput.addEventListener('focus', () => {
+   474→            searchInput.parentElement.classList.add('scale-[1.02]');
+   475→        });
+   476→        searchInput.addEventListener('blur', () => {
+   477→            searchInput.parentElement.classList.remove('scale-[1.02]');
+   478→        });
+   479→
+   480→        // Filter toggling (Visual simulation)
+   481→        const filterChecks = document.querySelectorAll('input[type="checkbox"]');
+   482→        filterChecks.forEach(check => {
+   483→            check.addEventListener('change', function() {
+   484→                // In a real app, this would trigger a filter function
+   485→                console.log('Filter updated:', this.nextElementSibling.textContent);
+   486→            });
+   487→        });
+   488→    </script>
+   489→
+   490→</body></html>

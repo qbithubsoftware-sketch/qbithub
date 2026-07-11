@@ -1,0 +1,472 @@
+     1→     1→<!DOCTYPE html><html class="light" lang="en"><head>
+     2→     2→<meta charset="utf-8">
+     3→     3→<meta content="width=device-width, initial-scale=1.0" name="viewport">
+     4→     4→<title>QBIT Hub Admin Control Center</title>
+     5→     5→<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+     6→     6→<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+     7→     7→<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+     8→     8→<script id="tailwind-config">
+     9→     9→      tailwind.config = {
+    10→    10→        darkMode: "class",
+    11→    11→        theme: {
+    12→    12→          extend: {
+    13→    13→            "colors": {
+    14→    14→                    "tertiary-fixed": "#e0e3e5",
+    15→    15→                    "surface-variant": "#dce2f7",
+    16→    16→                    "primary": "#0043c8",
+    17→    17→                    "surface": "#f9f9ff",
+    18→    18→                    "on-tertiary-container": "#e7e9eb",
+    19→    19→                    "secondary-fixed": "#dbe1ff",
+    20→    20→                    "background": "#f9f9ff",
+    21→    21→                    "on-secondary": "#ffffff",
+    22→    22→                    "on-error-container": "#93000a",
+    23→    23→                    "surface-dim": "#d3daef",
+    24→    24→                    "on-primary-fixed-variant": "#003ab2",
+    25→    25→                    "tertiary-fixed-dim": "#c4c7c9",
+    26→    26→                    "on-tertiary-fixed-variant": "#444749",
+    27→    27→                    "surface-tint": "#004ee7",
+    28→    28→                    "on-tertiary-fixed": "#191c1e",
+    29→    29→                    "on-secondary-fixed-variant": "#003ea8",
+    30→    30→                    "inverse-on-surface": "#edf0ff",
+    31→    31→                    "surface-container-high": "#e1e8fd",
+    32→    32→                    "primary-container": "#0057ff",
+    33→    33→                    "primary-fixed": "#dce1ff",
+    34→    34→                    "error": "#ba1a1a",
+    35→    35→                    "surface-container-lowest": "#ffffff",
+    36→    36→                    "tertiary-container": "#66696b",
+    37→    37→                    "on-secondary-fixed": "#00174b",
+    38→    38→                    "on-primary-fixed": "#001550",
+    39→    39→                    "primary-fixed-dim": "#b6c4ff",
+    40→    40→                    "surface-container-highest": "#dce2f7",
+    41→    41→                    "on-error": "#ffffff",
+    42→    42→                    "tertiary": "#4e5153",
+    43→    43→                    "on-surface-variant": "#434656",
+    44→    44→                    "on-background": "#141b2b",
+    45→    45→                    "on-tertiary": "#ffffff",
+    46→    46→                    "outline-variant": "#c3c5d9",
+    47→    47→                    "error-container": "#ffdad6",
+    48→    48→                    "outline": "#737688",
+    49→    49→                    "on-primary": "#ffffff",
+    50→    50→                    "surface-container-low": "#f1f3ff",
+    51→    51→                    "surface-bright": "#f9f9ff",
+    52→    52→                    "secondary-container": "#316bf3",
+    53→    53→                    "secondary": "#0051d5",
+    54→    54→                    "on-primary-container": "#e5e8ff",
+    55→    55→                    "inverse-primary": "#b6c4ff",
+    56→    56→                    "surface-container": "#e9edff",
+    57→    57→                    "inverse-surface": "#293040",
+    58→    58→                    "secondary-fixed-dim": "#b4c5ff",
+    59→    59→                    "on-secondary-container": "#fefcff",
+    60→    60→                    "on-surface": "#141b2b"
+    61→    61→            },
+    62→    62→            "borderRadius": {
+    63→    63→                    "DEFAULT": "0.25rem",
+    64→    64→                    "lg": "0.5rem",
+    65→    65→                    "xl": "0.75rem",
+    66→    66→                    "full": "9999px"
+    67→    67→            },
+    68→    68→            "spacing": {
+    69→    69→                    "sm": "8px",
+    70→    70→                    "xs": "4px",
+    71→    71→                    "md": "16px",
+    72→    72→                    "gutter": "24px",
+    73→    73→                    "margin-desktop": "32px",
+    74→    74→                    "2xl": "48px",
+    75→    75→                    "xl": "32px",
+    76→    76→                    "unit": "8px",
+    77→    77→                    "lg": "24px",
+    78→    78→                    "3xl": "64px",
+    79→    79→                    "container-max": "1440px",
+    80→    80→                    "margin-mobile": "16px"
+    81→    81→            },
+    82→    82→            "fontFamily": {
+    83→    83→                    "headline-lg": ["Inter"],
+    84→    84→                    "headline-sm": ["Inter"],
+    85→    85→                    "label-sm": ["Inter"],
+    86→    86→                    "body-md": ["Inter"],
+    87→    87→                    "headline-md": ["Inter"],
+    88→    88→                    "display-sm": ["Inter"],
+    89→    89→                    "body-sm": ["Inter"],
+    90→    90→                    "body-lg": ["Inter"],
+    91→    91→                    "label-md": ["Inter"],
+    92→    92→                    "display-lg": ["Inter"]
+    93→    93→            }
+    94→    94→          }
+    95→    95→        }
+    96→    96→      }
+    97→    97→    </script>
+    98→    98→<style>
+    99→    99→        body { font-family: 'Inter', sans-serif; }
+   100→   100→        .glass-card {
+   101→   101→            background: rgba(255, 255, 255, 0.8);
+   102→   102→            backdrop-filter: blur(12px);
+   103→   103→            border: 1px solid rgba(226, 232, 240, 1);
+   104→   104→        }
+   105→   105→        .material-symbols-outlined {
+   106→   106→            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+   107→   107→        }
+   108→   108→        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+   109→   109→        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+   110→   110→        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+   111→   111→        @keyframes float {
+   112→   112→            0% { transform: translateY(0px); }
+   113→   113→            50% { transform: translateY(-4px); }
+   114→   114→            100% { transform: translateY(0px); }
+   115→   115→        }
+   116→   116→        .animate-float { animation: float 3s ease-in-out infinite; }
+   117→   117→    </style>
+   118→   118→</head>
+   119→   119→<body class="bg-background text-on-surface selection:bg-primary-container selection:text-on-primary-container">
+   120→   120→<!-- Side Navigation Shell -->
+   121→   121→<aside class="w-64 h-screen fixed left-0 top-0 bg-surface-container-low flex flex-col py-md border-r border-outline-variant z-50">
+   122→   122→<div class="px-gutter mb-3xl">
+   123→   123→<h1 class="font-headline-sm text-headline-sm font-bold text-primary">QBIT Hub</h1>
+   124→   124→<p class="text-[10px] uppercase tracking-widest text-outline font-bold mt-1">Control Center</p>
+   125→   125→</div>
+   126→   126→<nav class="flex-1 space-y-1 px-sm overflow-y-auto custom-scrollbar">
+   127→   127→<!-- Active: Dashboard -->
+   128→   128→<a class="flex items-center px-md py-sm rounded-lg text-primary bg-primary-container/10 border-l-4 border-primary transition-colors duration-200 ease-in-out group" href="#">
+   129→   129→<span class="material-symbols-outlined mr-md">dashboard</span>
+   130→   130→<span class="font-body-md text-body-md font-medium">Dashboard</span>
+   131→   131→</a>
+   132→   132→<a class="flex items-center px-md py-sm rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors duration-200 ease-in-out" href="#">
+   133→   133→<span class="material-symbols-outlined mr-md">inventory_2</span>
+   134→   134→<span class="font-body-md text-body-md">Products</span>
+   135→   135→</a>
+   136→   136→<a class="flex items-center px-md py-sm rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors duration-200 ease-in-out" href="#">
+   137→   137→<span class="material-symbols-outlined mr-md">local_shipping</span>
+   138→   138→<span class="font-body-md text-body-md">Drivers</span>
+   139→   139→</a>
+   140→   140→<a class="flex items-center px-md py-sm rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors duration-200 ease-in-out" href="#">
+   141→   141→<span class="material-symbols-outlined mr-md">menu_book</span>
+   142→   142→<span class="font-body-md text-body-md">Manuals</span>
+   143→   143→</a>
+   144→   144→<a class="flex items-center px-md py-sm rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors duration-200 ease-in-out" href="#">
+   145→   145→<span class="material-symbols-outlined mr-md">videocam</span>
+   146→   146→<span class="font-body-md text-body-md">Videos</span>
+   147→   147→</a>
+   148→   148→<a class="flex items-center px-md py-sm rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors duration-200 ease-in-out" href="#">
+   149→   149→<span class="material-symbols-outlined mr-md">group</span>
+   150→   150→<span class="font-body-md text-body-md">Users</span>
+   151→   151→</a>
+   152→   152→<a class="flex items-center px-md py-sm rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors duration-200 ease-in-out" href="#">
+   153→   153→<span class="material-symbols-outlined mr-md">monitoring</span>
+   154→   154→<span class="font-body-md text-body-md">Analytics</span>
+   155→   155→</a>
+   156→   156→<div class="pt-2xl border-t border-outline-variant mt-2xl opacity-50 px-md pb-sm font-label-sm text-label-sm uppercase tracking-tighter">System</div>
+   157→   157→<a class="flex items-center px-md py-sm rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors duration-200 ease-in-out" href="#">
+   158→   158→<span class="material-symbols-outlined mr-md">settings</span>
+   159→   159→<span class="font-body-md text-body-md">Settings</span>
+   160→   160→</a>
+   161→   161→</nav>
+   162→   162→<div class="px-md mt-auto">
+   163→   163→<div class="p-md bg-surface-container-highest rounded-xl flex items-center gap-md">
+   164→   164→<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold">A</div>
+   165→   165→<div class="flex-1 overflow-hidden">
+   166→   166→<p class="text-body-sm font-bold truncate">Admin User</p>
+   167→   167→<p class="text-[10px] text-outline truncate">Super Administrator</p>
+   168→   168→</div>
+   169→   169→</div>
+   170→   170→</div>
+   171→   171→</aside>
+   172→   172→<!-- Top Navigation Shell -->
+   173→   173→<header class="fixed top-0 right-0 left-64 h-16 bg-surface flex justify-between items-center px-gutter z-40 border-b border-outline-variant">
+   174→   174→<div class="flex items-center gap-xl w-1/2">
+   175→   175→<div class="relative w-full max-w-md">
+   176→   176→<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline">search</span>
+   177→   177→<input class="w-full pl-xl pr-md py-xs bg-surface-container-low border border-outline-variant rounded-full font-label-md text-label-md focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all" placeholder="Global search commands..." type="text">
+   178→   178→</div>
+   179→   179→</div>
+   180→   180→<div class="flex items-center gap-md">
+   181→   181→<button class="p-xs hover:bg-surface-container rounded-full transition-all relative">
+   182→   182→<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+   183→   183→<span class="absolute top-0 right-0 w-2 h-2 bg-error rounded-full border-2 border-surface"></span>
+   184→   184→</button>
+   185→   185→<button class="p-xs hover:bg-surface-container rounded-full transition-all">
+   186→   186→<span class="material-symbols-outlined text-on-surface-variant">help_outline</span>
+   187→   187→</button>
+   188→   188→<div class="h-6 w-px bg-outline-variant mx-xs"></div>
+   189→   189→<button class="flex items-center gap-sm px-sm py-xs hover:bg-surface-container rounded-full transition-all">
+   190→   190→<img class="w-8 h-8 rounded-full border border-outline-variant" data-alt="A professional studio portrait of a technology executive, minimalist grey background, wearing a clean charcoal suit, sharp focus, professional high-end lighting, corporate aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAypwUFAE7XsOsqYciP2rPmlHqdkd_ZdlyeYUoevLXd7iRSfFc2mNHS8gq9pbqiBfV51hk2HgE4YIvXlqnidadF3ZMxw6i_Bfp-jvhgi3JRbddCvW_bsxfj7vxKRpxRDmD1QHJJHZbPeSX7ikO3vB8P-JtBOoxfjvaDuYxh_0RWzzQ7u8jEOfcuPjL0DDLaFKj1R8GZtzX372NRh9krvs_7GPOtnUpT_xkdQh0yTEAV-w2i_7tYiDoA853AceJJgGpkyw716Q7dEFSh">
+   191→   191→<span class="material-symbols-outlined text-outline">keyboard_arrow_down</span>
+   192→   192→</button>
+   193→   193→</div>
+   194→   194→</header>
+   195→   195→<!-- Main Content Canvas -->
+   196→   196→<main class="ml-64 pt-16 min-h-screen bg-background p-margin-desktop">
+   197→   197→<!-- Dashboard Header -->
+   198→   198→<div class="flex flex-col md:flex-row md:items-end justify-between gap-xl mb-3xl">
+   199→   199→<div><h2 class="font-headline-md text-headline-md text-on-surface mb-xs tracking-tight">Admin Control Center</h2><p class="font-body-md text-body-md text-on-surface-variant max-w-2xl">Manage products, drivers, manuals, videos, users and application settings.</p></div>
+   200→   200→<div class="flex items-center gap-md self-center">
+   201→   201→<button class="flex items-center gap-sm px-md py-sm bg-surface text-on-surface border border-outline-variant rounded-lg font-label-md hover:bg-surface-container-high transition-all">
+   202→   202→<span class="material-symbols-outlined">person_add</span>
+   203→   203→                    Invite User
+   204→   204→                </button>
+   205→   205→<button class="flex items-center gap-sm px-md py-sm bg-secondary-container text-on-secondary-container rounded-lg font-label-md hover:opacity-90 transition-all">
+   206→   206→<span class="material-symbols-outlined">upload</span>
+   207→   207→                    Upload Driver
+   208→   208→                </button>
+   209→   209→<button class="flex items-center gap-sm px-md py-sm bg-primary text-on-primary rounded-lg font-label-md hover:shadow-lg hover:shadow-primary/20 transition-all">
+   210→   210→<span class="material-symbols-outlined">add</span>
+   211→   211→                    Add Product
+   212→   212→                </button>
+   213→   213→</div>
+   214→   214→</div>
+   215→   215→<!-- KPI Grid -->
+   216→   216→<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 mb-3xl gap-lg">
+   217→   217→<!-- KPI 1 -->
+   218→   218→<div class="glass-card hover:border-primary/50 transition-all group p-lg shadow-sm rounded-lg">
+   219→   219→<div class="flex items-start justify-between mb-md">
+   220→   220→<div class="p-sm bg-primary/10 rounded-lg text-primary">
+   221→   221→<span class="material-symbols-outlined">inventory_2</span>
+   222→   222→</div>
+   223→   223→<span class="text-label-sm font-bold text-primary">+12%</span>
+   224→   224→</div>
+   225→   225→<p class="text-label-md text-on-surface-variant font-medium">Total Products</p>
+   226→   226→<h3 class="text-display-sm font-display-sm mt-xs">124</h3>
+   227→   227→</div>
+   228→   228→<!-- KPI 2 -->
+   229→   229→<div class="glass-card hover:border-primary/50 transition-all group p-lg shadow-sm rounded-lg">
+   230→   230→<div class="flex items-start justify-between mb-md">
+   231→   231→<div class="p-sm bg-secondary-container/10 rounded-lg text-secondary">
+   232→   232→<span class="material-symbols-outlined">group</span>
+   233→   233→</div>
+   234→   234→<span class="text-label-sm font-bold text-secondary">+8.4%</span>
+   235→   235→</div>
+   236→   236→<p class="text-label-md text-on-surface-variant font-medium">Active Users</p>
+   237→   237→<h3 class="text-display-sm font-display-sm mt-xs">856</h3>
+   238→   238→</div>
+   239→   239→<!-- KPI 3 -->
+   240→   240→<div class="glass-card hover:border-primary/50 transition-all group p-lg shadow-sm rounded-lg">
+   241→   241→<div class="flex items-start justify-between mb-md">
+   242→   242→<div class="p-sm bg-tertiary-fixed/40 rounded-lg text-tertiary">
+   243→   243→<span class="material-symbols-outlined">local_shipping</span>
+   244→   244→</div>
+   245→   245→<span class="text-label-sm font-bold text-on-surface-variant">Stable</span>
+   246→   246→</div>
+   247→   247→<p class="text-label-md text-on-surface-variant font-medium">Drivers</p>
+   248→   248→<h3 class="text-display-sm font-display-sm mt-xs">42</h3>
+   249→   249→</div>
+   250→   250→<!-- KPI 4 -->
+   251→   251→<div class="glass-card hover:border-primary/50 transition-all group p-lg shadow-sm rounded-lg">
+   252→   252→<div class="flex items-start justify-between mb-md">
+   253→   253→<div class="p-sm bg-surface-container-highest rounded-lg text-on-surface">
+   254→   254→<span class="material-symbols-outlined">menu_book</span>
+   255→   255→</div>
+   256→   256→<span class="text-label-sm font-bold text-on-surface-variant">+2</span>
+   257→   257→</div>
+   258→   258→<p class="text-label-md text-on-surface-variant font-medium">Manuals</p>
+   259→   259→<h3 class="text-display-sm font-display-sm mt-xs">18</h3>
+   260→   260→</div>
+   261→   261→<!-- KPI 5: Storage -->
+   262→   262→<div class="glass-card hover:border-primary/50 transition-all group bg-gradient-to-br from-white to-surface-container-low p-lg shadow-sm rounded-lg">
+   263→   263→<div class="flex items-start justify-between mb-md">
+   264→   264→<div class="p-sm bg-error/10 rounded-lg text-error">
+   265→   265→<span class="material-symbols-outlined">storage</span>
+   266→   266→</div>
+   267→   267→<span class="text-label-sm font-bold text-error">Critical</span>
+   268→   268→</div>
+   269→   269→<p class="text-label-md text-on-surface-variant font-medium">Storage Used</p>
+   270→   270→<h3 class="text-display-sm font-display-sm mt-xs">65%</h3>
+   271→   271→<div class="w-full bg-outline-variant/20 h-1.5 rounded-full mt-md overflow-hidden">
+   272→   272→<div class="bg-error h-full rounded-full animate-pulse" style="width: 65%;"></div>
+   273→   273→</div>
+   274→   274→</div>
+   275→   275→</div>
+   276→   276→<div class="grid grid-cols-1 lg:grid-cols-12 gap-xl">
+   277→   277→<!-- Left Side: Table & Analytics -->
+   278→   278→<div class="lg:col-span-8 space-y-xl">
+   279→   279→<!-- Analytics Preview -->
+   280→   280→<section class="glass-card rounded-2xl overflow-hidden">
+   281→   281→<div class="px-xl py-lg border-b border-outline-variant flex items-center justify-between">
+   282→   282→<h4 class="font-headline-sm text-headline-sm">Download Trends</h4>
+   283→   283→<div class="flex gap-md">
+   284→   284→<div class="flex items-center gap-xs">
+   285→   285→<div class="w-2 h-2 rounded-full bg-primary"></div>
+   286→   286→<span class="text-label-sm text-on-surface-variant">Drivers</span>
+   287→   287→</div>
+   288→   288→<div class="flex items-center gap-xs">
+   289→   289→<div class="w-2 h-2 rounded-full bg-secondary-container"></div>
+   290→   290→<span class="text-label-sm text-on-surface-variant">Manuals</span>
+   291→   291→</div>
+   292→   292→</div>
+   293→   293→</div>
+   294→   294→<div class="p-xl h-64 relative overflow-hidden bg-surface-container-lowest">
+   295→   295→<!-- Simulated Chart -->
+   296→   296→<div class="absolute inset-0 p-xl flex items-end justify-between gap-md opacity-60">
+   297→   297→<div class="w-full bg-primary-container/20 rounded-t-lg transition-all duration-700 h-[30%]"></div>
+   298→   298→<div class="w-full bg-primary-container/20 rounded-t-lg transition-all duration-700 h-[45%]"></div>
+   299→   299→<div class="w-full bg-primary-container/20 rounded-t-lg transition-all duration-700 h-[65%]"></div>
+   300→   300→<div class="w-full bg-primary-container/20 rounded-t-lg transition-all duration-700 h-[55%]"></div>
+   301→   301→<div class="w-full bg-primary-container/20 rounded-t-lg transition-all duration-700 h-[80%]"></div>
+   302→   302→<div class="w-full bg-primary-container/20 rounded-t-lg transition-all duration-700 h-[60%]"></div>
+   303→   303→<div class="w-full bg-primary-container/20 rounded-t-lg transition-all duration-700 h-[90%]"></div>
+   304→   304→</div>
+   305→   305→<div class="absolute inset-0 p-xl flex items-end justify-between gap-md"><div class="w-full bg-primary/40 rounded-t-lg transition-all duration-700 h-[20%]"></div><div class="w-full bg-primary/50 rounded-t-lg transition-all duration-700 h-[35%]"></div><div class="w-full bg-primary/60 rounded-t-lg transition-all duration-700 h-[55%]"></div><div class="w-full bg-primary/70 rounded-t-lg transition-all duration-700 h-[45%]"></div><div class="w-full bg-primary/80 rounded-t-lg transition-all duration-700 h-[70%]"></div><div class="w-full bg-primary/90 rounded-t-lg transition-all duration-700 h-[50%]"></div><div class="w-full bg-primary rounded-t-lg transition-all duration-700 h-[85%]"></div></div>
+   306→   306→<!-- Glassy Overlay for specific points -->
+   307→   307→<div class="absolute bottom-1/2 left-[70%] bg-surface px-md py-sm rounded-lg shadow-xl border border-outline-variant z-10 animate-float">
+   308→   308→<p class="text-label-sm font-bold">Aug 24</p>
+   309→   309→<p class="text-body-sm text-primary">Drivers: 2.4k</p>
+   310→   310→</div>
+   311→   311→</div>
+   312→   312→</section>
+   313→   313→<!-- Recent Uploads Table -->
+   314→   314→<section class="glass-card rounded-2xl overflow-hidden">
+   315→   315→<div class="px-xl py-lg border-b border-outline-variant flex items-center justify-between">
+   316→   316→<h4 class="font-headline-sm text-headline-sm">Recent Uploads</h4>
+   317→   317→<button class="text-primary font-label-md hover:underline">View all uploads</button>
+   318→   318→</div>
+   319→   319→<div class="overflow-x-auto">
+   320→   320→<table class="w-full text-left">
+   321→   321→<thead class="bg-surface-container-low">
+   322→   322→<tr>
+   323→   323→<th class="px-xl py-md font-label-sm text-outline uppercase tracking-wider">Image</th>
+   324→   324→<th class="px-md py-md font-label-sm text-outline uppercase tracking-wider">Product Name</th>
+   325→   325→<th class="px-md py-md font-label-sm text-outline uppercase tracking-wider">Category</th>
+   326→   326→<th class="px-md py-md font-label-sm text-outline uppercase tracking-wider">Status</th>
+   327→   327→<th class="px-xl py-md font-label-sm text-outline uppercase tracking-wider">Last Updated</th>
+   328→   328→</tr>
+   329→   329→</thead>
+   330→   330→<tbody class="divide-y divide-outline-variant">
+   331→   331→<!-- Row 1 -->
+   332→   332→<tr class="hover:bg-surface-container-high transition-colors">
+   333→   333→<td class="px-xl py-md">
+   334→   334→<div class="w-12 h-12 rounded bg-surface-container-highest border border-outline-variant overflow-hidden">
+   335→   335→<img class="w-full h-full object-cover" data-alt="A macro shot of a sleek industrial quantum computing module, brushed metal texture, blue glowing indicator lights, extremely high-tech enterprise design, minimalist laboratory setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuANwztao28-LAzEeuKt3vs5VKlMsWT0BSfbPFU1cXEsaW4YfmEf51bej4D7OdyAzBFKOa0xhjoUq_VA7BxETrhXOSsuWpjXRndF3QQLabVjDfU342uzv-KpxLt8pCmTS1jNdQf2a66d2xqv7lur9B_EBKEBa6QIT9Ze03I4ABcrd5o4W3_hl5eTcepNYFOt4AfQC-IY3bsjyW0PFNC8ffS2NNI91JHEXdZIggkHA8CYszZxVMLeOENr0fKqOtIPLrQbk1r1XdYd2UHb">
+   336→   336→</div>
+   337→   337→</td>
+   338→   338→<td class="px-md py-md font-body-md font-medium">Q-Core Engine V2</td>
+   339→   339→<td class="px-md py-md text-on-surface-variant font-label-md">Hardware</td>
+   340→   340→<td class="px-md py-md">
+   341→   341→<span class="inline-flex items-center gap-sm px-sm py-xs bg-primary/10 text-primary text-[10px] font-bold rounded-full uppercase">
+   342→   342→<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+   343→   343→                                            Published
+   344→   344→                                        </span>
+   345→   345→</td>
+   346→   346→<td class="px-xl py-md text-on-surface-variant text-label-md">2 mins ago</td>
+   347→   347→</tr>
+   348→   348→<!-- Row 2 -->
+   349→   349→<tr class="hover:bg-surface-container-high transition-colors">
+   350→   350→<td class="px-xl py-md">
+   351→   351→<div class="w-12 h-12 rounded bg-surface-container-highest border border-outline-variant overflow-hidden">
+   352→   352→<img class="w-full h-full object-cover" data-alt="Stylized blue architectural blueprint of a data center floor plan, digital grid background, high-contrast white lines, clean technical illustration for enterprise software dashboard." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUzybAfyt9GTrxSCHRtxAPUL_8JKwobqKxO9bfFjtciXtrBMn917ZoUT8_NDRQtGPu_CdEhB58uPfC_No_hul8JTSIixw7RJfYz1Cmk4csgUiCLVy26yw6UNmlQAkYHgeCSwEHNmPWurd1JBJmC_repnBPPkVvCAQCEafDEArm3IPP7Vno9Ortfw2UH8tWXNO7_27-A7_S7F8bBzAzwyWfmenHqVsxnXnyA6avBuhMiCAaKinlC9QrKZ_XHfjdaquUz6p4XqudvB7A">
+   353→   353→</div>
+   354→   354→</td>
+   355→   355→<td class="px-md py-md font-body-md font-medium">Network Map 2024</td>
+   356→   356→<td class="px-md py-md text-on-surface-variant font-label-md">Manual</td>
+   357→   357→<td class="px-md py-md">
+   358→   358→<span class="inline-flex items-center gap-sm px-sm py-xs bg-tertiary-fixed/50 text-tertiary text-[10px] font-bold rounded-full uppercase">
+   359→   359→<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+   360→   360→                                            Draft
+   361→   361→                                        </span>
+   362→   362→</td>
+   363→   363→<td class="px-xl py-md text-on-surface-variant text-label-md">1 hour ago</td>
+   364→   364→</tr>
+   365→   365→<!-- Row 3 -->
+   366→   366→<tr class="hover:bg-surface-container-high transition-colors">
+   367→   367→<td class="px-xl py-md">
+   368→   368→<div class="w-12 h-12 rounded bg-surface-container-highest border border-outline-variant overflow-hidden">
+   369→   369→<img class="w-full h-full object-cover" data-alt="Minimalist abstract representation of a software driver interface, geometric shapes in shades of deep blue and light grey, professional technical aesthetic, soft shadows." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAdg4Fr-VwKHyR58DMfKgcuIaW7ih3cIo1GXccJ-WV1AXkv2CpXR8Iz07j5UMwqmbqHfvvhxZZF3QA-tyzYQRGlV_giDLFIx3UP14VMYhiKB1MCYrmHMq4x94NXl-mKTs-t19AdW6L26CCjmdTsDi8hyoI82qG_HBD0kKbWfG0M7Kyhl1e5LJOyfujaySI1t3F7ptKxqrB-nWjQ80HMmx0-pGvOtnogcf70wCElxoU7qTzWRthMbk_lVjZBMH8lt6wWFVoXRNtwEpe6">
+   370→   370→</div>
+   371→   371→</td>
+   372→   372→<td class="px-md py-md font-body-md font-medium">PCIe Kernel Driver</td>
+   373→   373→<td class="px-md py-md text-on-surface-variant font-label-md">Drivers</td>
+   374→   374→<td class="px-md py-md">
+   375→   375→<span class="inline-flex items-center gap-sm px-sm py-xs bg-primary/10 text-primary text-[10px] font-bold rounded-full uppercase">
+   376→   376→<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+   377→   377→                                            Published
+   378→   378→                                        </span>
+   379→   379→</td>
+   380→   380→<td class="px-xl py-md text-on-surface-variant text-label-md">Yesterday</td>
+   381→   381→</tr>
+   382→   382→</tbody>
+   383→   383→</table>
+   384→   384→</div>
+   385→   385→</section>
+   386→   386→</div>
+   387→   387→<!-- Right Side: Activity Logs -->
+   388→   388→<div class="lg:col-span-4">
+   389→   389→<section class="glass-card rounded-2xl h-full flex flex-col">
+   390→   390→<div class="px-xl py-lg border-b border-outline-variant flex items-center justify-between bg-surface-container-lowest sticky top-0">
+   391→   391→<h4 class="font-headline-sm text-headline-sm">Activity Logs</h4>
+   392→   392→<button class="p-xs hover:bg-surface-container rounded-full transition-all">
+   393→   393→<span class="material-symbols-outlined text-outline">more_vert</span>
+   394→   394→</button>
+   395→   395→</div>
+   396→   396→<div class="flex-1 p-xl overflow-y-auto custom-scrollbar space-y-lg">
+   397→   397→<!-- Log 1 -->
+   398→   398→<div class="relative pl-xl border-l-2 border-outline-variant">
+   399→   399→<div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-primary border-4 border-background"></div>
+   400→   400→<div class="mb-xs">
+   401→   401→<span class="font-bold text-body-sm">Alex Johnson</span>
+   402→   402→<span class="text-on-surface-variant text-body-sm">uploaded a new product manual</span>
+   403→   403→</div>
+   404→   404→<div class="flex items-center gap-sm mb-sm p-sm bg-surface-container-low rounded-lg border border-outline-variant">
+   405→   405→<span class="material-symbols-outlined text-primary text-body-md">picture_as_pdf</span>
+   406→   406→<span class="text-label-sm font-medium truncate">Setup_Guide_V3.pdf</span>
+   407→   407→</div>
+   408→   408→<span class="text-label-sm text-outline">2 minutes ago</span>
+   409→   409→</div>
+   410→   410→<!-- Log 2 -->
+   411→   411→<div class="relative pl-xl border-l-2 border-outline-variant">
+   412→   412→<div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-secondary-container border-4 border-background"></div>
+   413→   413→<div class="mb-xs">
+   414→   414→<span class="font-bold text-body-sm">Sarah Chen</span>
+   415→   415→<span class="text-on-surface-variant text-body-sm">updated Driver #42</span>
+   416→   416→</div>
+   417→   417→<span class="text-label-sm text-outline">15 minutes ago</span>
+   418→   418→</div>
+   419→   419→<!-- Log 3 -->
+   420→   420→<div class="relative pl-xl border-l-2 border-outline-variant">
+   421→   421→<div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-error border-4 border-background"></div>
+   422→   422→<div class="mb-xs">
+   423→   423→<span class="font-bold text-body-sm">System</span>
+   424→   424→<span class="text-on-surface-variant text-body-sm">Security alert: Unrecognized login attempt from IP 192.168.1.45</span>
+   425→   425→</div>
+   426→   426→<span class="text-label-sm text-outline">1 hour ago</span>
+   427→   427→</div>
+   428→   428→<!-- Log 4 -->
+   429→   429→<div class="relative pl-xl border-l-2 border-outline-variant">
+   430→   430→<div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-surface-variant border-4 border-background"></div>
+   431→   431→<div class="mb-xs">
+   432→   432→<span class="font-bold text-body-sm">Admin</span>
+   433→   433→<span class="text-on-surface-variant text-body-sm">invited 3 new team members</span>
+   434→   434→</div>
+   435→   435→<div class="flex -space-x-2 mt-xs">
+   436→   436→<div class="w-8 h-8 rounded-full border-2 border-background bg-primary-fixed flex items-center justify-center text-[10px] font-bold">MK</div>
+   437→   437→<div class="w-8 h-8 rounded-full border-2 border-background bg-secondary-fixed flex items-center justify-center text-[10px] font-bold">PT</div>
+   438→   438→<div class="w-8 h-8 rounded-full border-2 border-background bg-tertiary-fixed flex items-center justify-center text-[10px] font-bold">RL</div>
+   439→   439→</div>
+   440→   440→<span class="text-label-sm text-outline">3 hours ago</span>
+   441→   441→</div>
+   442→   442→<!-- Log 5 -->
+   443→   443→<div class="relative pl-xl border-l-2 border-outline-variant opacity-60">
+   444→   444→<div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-outline-variant border-4 border-background"></div>
+   445→   445→<div class="mb-xs">
+   446→   446→<span class="font-bold text-body-sm">Automator</span>
+   447→   447→<span class="text-on-surface-variant text-body-sm">Backups completed successfully</span>
+   448→   448→</div>
+   449→   449→<span class="text-label-sm text-outline">Yesterday at 11:45 PM</span>
+   450→   450→</div>
+   451→   451→</div>
+   452→   452→<div class="p-xl bg-surface-container-low border-t border-outline-variant">
+   453→   453→<button class="w-full py-sm text-center text-label-md font-bold text-primary hover:bg-primary/5 rounded-lg transition-all">View All Activity</button>
+   454→   454→</div>
+   455→   455→</section>
+   456→   456→</div>
+   457→   457→</div>
+   458→   458→</main>
+   459→   459→<!-- FAB (Suppressed based on prompt focus on dashboard management, but included if needed for global add) -->
+   460→   460→<!-- Determined suppression since dashboard is broad, but Add Product is a key CTA already in header -->
+   461→   461→<script>
+   462→   462→        // Micro-interaction for table rows or charts could be added here
+   463→   463→        document.querySelectorAll('tr').forEach(row => {
+   464→   464→            row.addEventListener('click', () => {
+   465→   465→                console.log('Navigating to item details...');
+   466→   466→            });
+   467→   467→        });
+   468→   468→    </script>
+   469→   469→
+   470→   470→
+   471→   471→
+   472→   472→</body></html>

@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>InstalCore - Installation Center</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        .custom-shadow {
+            box-shadow: 0 10px 15px -3px rgba(17, 24, 39, 0.05), 0 4px 6px -2px rgba(17, 24, 39, 0.03);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .nav-indicator {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "secondary-fixed-dim": "#b4c5ff",
+                      "outline": "#737688",
+                      "background": "#f9f9ff",
+                      "on-secondary-container": "#fefcff",
+                      "inverse-surface": "#293040",
+                      "surface-container": "#e9edff",
+                      "on-tertiary-container": "#e7e9eb",
+                      "on-secondary-fixed-variant": "#003ea8",
+                      "tertiary": "#4e5153",
+                      "on-surface-variant": "#434656",
+                      "on-secondary-fixed": "#00174b",
+                      "secondary-container": "#316bf3",
+                      "inverse-primary": "#b6c4ff",
+                      "inverse-on-surface": "#edf0ff",
+                      "error-container": "#ffdad6",
+                      "on-surface": "#141b2b",
+                      "surface-container-high": "#e1e8fd",
+                      "surface-container-low": "#f1f3ff",
+                      "primary": "#0043c8",
+                      "surface-container-lowest": "#ffffff",
+                      "surface": "#f9f9ff",
+                      "secondary-fixed": "#dbe1ff",
+                      "on-tertiary": "#ffffff",
+                      "surface-bright": "#f9f9ff",
+                      "tertiary-container": "#66696b",
+                      "secondary": "#0051d5",
+                      "primary-fixed-dim": "#b6c4ff",
+                      "on-error": "#ffffff",
+                      "tertiary-fixed-dim": "#c4c7c9",
+                      "on-primary-fixed-variant": "#003ab2",
+                      "on-error-container": "#93000a",
+                      "surface-tint": "#004ee7",
+                      "on-tertiary-fixed": "#191c1e",
+                      "error": "#ba1a1a",
+                      "on-background": "#141b2b",
+                      "surface-dim": "#d3daef",
+                      "surface-container-highest": "#dce2f7",
+                      "on-tertiary-fixed-variant": "#444749",
+                      "tertiary-fixed": "#e0e3e5",
+                      "primary-container": "#0057ff",
+                      "on-primary-container": "#e5e8ff",
+                      "outline-variant": "#c3c5d9",
+                      "on-primary-fixed": "#001550",
+                      "on-primary": "#ffffff",
+                      "surface-variant": "#dce2f7",
+                      "on-secondary": "#ffffff",
+                      "primary-fixed": "#dce1ff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "lg": "24px",
+                      "container-max": "1440px",
+                      "xs": "4px",
+                      "unit": "8px",
+                      "md": "16px",
+                      "margin-mobile": "16px",
+                      "gutter": "24px",
+                      "2xl": "48px",
+                      "sm": "8px",
+                      "margin-desktop": "32px",
+                      "xl": "32px",
+                      "3xl": "64px"
+              },
+              "fontFamily": {
+                      "headline-sm": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "body-md": ["Inter"],
+                      "label-md": ["Inter"],
+                      "display-lg": ["Inter"],
+                      "label-sm": ["Inter"],
+                      "display-sm": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "body-sm": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "headline-lg-mobile": ["Inter"]
+              },
+              "fontSize": {
+                      "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                      "headline-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                      "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "display-sm": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}]
+              }
+            },
+          },
+        }
+      </script>
+</head>
+<body class="bg-background text-on-background min-h-screen overflow-x-hidden">
+<!-- SideNavBar (Shared Component) -->
+<aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-low dark:bg-inverse-surface border-r border-outline-variant dark:border-outline flex flex-col h-screen overflow-y-auto z-50">
+<div class="px-6 py-8">
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-inverse-primary">InstalCore</h1>
+<p class="font-label-md text-label-md text-on-surface-variant opacity-70">Enterprise Portal</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-surface-container dark:hover:bg-tertiary-container hover:text-primary transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-surface-container dark:hover:bg-tertiary-container hover:text-primary transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span class="font-label-md text-label-md">Products</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-surface-container dark:hover:bg-tertiary-container hover:text-primary transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="settings_input_component">settings_input_component</span>
+<span class="font-label-md text-label-md">Drivers</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 border-l-4 border-primary text-primary font-bold bg-surface-container-high dark:bg-surface-variant transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="menu_book" style="font-variation-settings: 'FILL' 1;">menu_book</span>
+<span class="font-label-md text-label-md">Installation Guides</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-surface-container dark:hover:bg-tertiary-container hover:text-primary transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="video_library">video_library</span>
+<span class="font-label-md text-label-md">Videos</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-surface-container dark:hover:bg-tertiary-container hover:text-primary transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="download">download</span>
+<span class="font-label-md text-label-md">Downloads</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-surface-container dark:hover:bg-tertiary-container hover:text-primary transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</nav>
+<div class="p-6 border-t border-outline-variant mt-auto">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold">
+                    EP
+                </div>
+<div>
+<p class="font-label-md text-label-md font-bold text-on-surface">Senior Engineer</p>
+<p class="text-[10px] uppercase tracking-wider text-outline">Terminal ID: 4920</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- TopNavBar (Shared Component) -->
+<header class="fixed top-0 right-0 w-[calc(100%-256px)] h-16 flex justify-between items-center px-8 z-40 bg-white/80 backdrop-blur-md border-b border-outline-variant dark:border-outline">
+<div class="flex items-center gap-4 w-1/2">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-lg">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-lg py-2 pl-10 pr-4 text-body-sm focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Search across enterprise assets..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<button class="relative text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">help</span>
+</button>
+<div class="h-8 w-px bg-outline-variant"></div>
+<div class="flex items-center gap-2 cursor-pointer group">
+<img class="w-8 h-8 rounded-full border-2 border-primary/20 group-hover:border-primary transition-colors" data-alt="A professional headshot of a senior hardware engineer in a high-tech lab environment. The lighting is soft and natural with blue and white tones matching the corporate identity. Minimalist background with subtle blurred machinery. 8k resolution, cinematic quality." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTSeEdwdJbKat2cpUqqcJFxGyY8XQfRvBNr9j8DnqNmQvfdpUhaGGr0b_RSOHpo6gw3mye7478B-gPQ0HSIATI0L3Vm-VS18ogS4hacqZ_jjweZ9WVycJn95ZCq1Io_FEoG4Zh7Sr5ys69SREEnFgCuwVHMkgAq9iRnkr9-gwxnIlHJwm2vFCZuNo0Pg-lJN-9hszeAt5sdmu1nz-PHS-GxRiCFmsPacwPRysqrsyBGz5LsvhuT64nRGKnOusvUkS1kuHWHPpuEGJy"/>
+<span class="material-symbols-outlined text-outline">expand_more</span>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-64 pt-16 min-h-screen">
+<div class="max-w-7xl mx-auto p-margin-desktop space-y-xl">
+<!-- Header Section -->
+<section class="relative rounded-3xl overflow-hidden min-h-[280px] flex flex-col justify-center px-12 text-on-primary-container bg-primary-container">
+<div class="absolute inset-0 opacity-20">
+
+</div>
+<div class="relative z-10 space-y-6">
+<div class="space-y-2">
+<h2 class="font-display-sm text-display-sm">Installation Center</h2>
+<p class="font-body-lg text-body-lg opacity-90 max-w-2xl">Access centralized technical documentation, wiring schematics, and configuration protocols for all QBIT enterprise hardware.</p>
+</div>
+<div class="flex gap-4 max-w-2xl">
+<div class="relative flex-1">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary">search</span>
+<input class="w-full h-14 pl-12 pr-4 rounded-xl bg-white border-none text-on-surface focus:ring-4 focus:ring-primary/20 shadow-lg text-body-md" placeholder="Search installation guides, videos..." type="text"/>
+</div>
+<button class="h-14 px-8 bg-inverse-surface text-inverse-on-surface rounded-xl font-bold flex items-center gap-2 hover:bg-on-surface transition-all">
+<span class="material-symbols-outlined">filter_list</span>
+                            Filter
+                        </button>
+</div>
+</div>
+</section>
+<!-- Quick Access Bento -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
+<!-- Card 1 -->
+<div class="group bg-surface-container-lowest p-lg rounded-2xl border border-outline-variant hover:border-primary hover:shadow-xl transition-all cursor-pointer">
+<div class="flex items-start justify-between mb-md">
+<div class="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-2xl">menu_book</span>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-transform group-hover:translate-x-1">arrow_forward</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm mb-xs">Installation Guides</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Step-by-step PDF manuals and interactive web guides for all hardware.</p>
+</div>
+<!-- Card 2 -->
+<div class="group bg-surface-container-lowest p-lg rounded-2xl border border-outline-variant hover:border-primary hover:shadow-xl transition-all cursor-pointer">
+<div class="flex items-start justify-between mb-md">
+<div class="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-2xl">video_library</span>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-transform group-hover:translate-x-1">arrow_forward</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm mb-xs">Installation Videos</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">High-definition walkthroughs of unboxing and hardware mounting.</p>
+</div>
+<!-- Card 3 -->
+<div class="group bg-surface-container-lowest p-lg rounded-2xl border border-outline-variant hover:border-primary hover:shadow-xl transition-all cursor-pointer">
+<div class="flex items-start justify-between mb-md">
+<div class="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-2xl">bolt</span>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-transform group-hover:translate-x-1">arrow_forward</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm mb-xs">Quick Setup</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Rapid deployment checklists for field engineers and technicians.</p>
+</div>
+<!-- Card 4 -->
+<div class="group bg-surface-container-lowest p-lg rounded-2xl border border-outline-variant hover:border-primary hover:shadow-xl transition-all cursor-pointer">
+<div class="flex items-start justify-between mb-md">
+<div class="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-2xl">account_tree</span>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-transform group-hover:translate-x-1">arrow_forward</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm mb-xs">Wiring Diagrams</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Low-voltage electrical schematics and pinout specifications.</p>
+</div>
+<!-- Card 5 -->
+<div class="group bg-surface-container-lowest p-lg rounded-2xl border border-outline-variant hover:border-primary hover:shadow-xl transition-all cursor-pointer">
+<div class="flex items-start justify-between mb-md">
+<div class="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-2xl">settings_applications</span>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-transform group-hover:translate-x-1">arrow_forward</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm mb-xs">Configuration Guides</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">OS provisioning, network setup, and peripheral mapping details.</p>
+</div>
+<!-- Card 6 -->
+<div class="group bg-surface-container-lowest p-lg rounded-2xl border border-outline-variant hover:border-primary hover:shadow-xl transition-all cursor-pointer">
+<div class="flex items-start justify-between mb-md">
+<div class="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-2xl">error_outline</span>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-transform group-hover:translate-x-1">arrow_forward</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm mb-xs">Troubleshooting</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Common failure modes, diagnostic codes, and resolution steps.</p>
+</div>
+</section>
+<!-- Product Selection Grid -->
+<section class="space-y-lg">
+<div class="flex items-end justify-between border-b border-outline-variant pb-md">
+<div class="space-y-1">
+<h2 class="font-headline-lg text-headline-lg">Product Selection</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Select a hardware category to browse specific documentation.</p>
+</div>
+<button class="text-primary font-bold hover:underline">View All Products</button>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-md">
+<!-- Category Card 1 -->
+<div class="group relative aspect-square rounded-2xl overflow-hidden cursor-pointer">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110" data-alt="A sleek, modern Windows-based POS terminal with a high-resolution touch screen, displayed in a bright, clean retail environment. The design is professional and enterprise-grade with a white and blue color scheme. 8k architectural photography style." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA6xDJzl-PiScEs-RT4MH9TOp57ujlMtdMj91M0Z-LQd8qJ6Yu8qvg5jMHx_5nk-JXtwIDrmA7ZjObdgpv-568gengnlAUK8VD5jQU7kImIb0J3LETeI8MZjutj4f81-s1qkLdJwWiu6dx8JRQ5NNwRJoe8TqHQURI7ITASIBs6v1T5wwb9mY1P1nCPdO3dlBVGOHDi31ROUpctaOpH5fAJD3Xbi9zvRHmmqJcDp-F5pjAVGIPeEm-xb81dGIGBx1cEqnkXZOIgj9Xc')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+<div class="absolute bottom-0 left-0 p-lg text-white">
+<p class="font-label-sm text-label-sm opacity-70 mb-xs">TERMINALS</p>
+<h4 class="font-headline-sm text-headline-sm">Windows POS</h4>
+</div>
+</div>
+<!-- Category Card 2 -->
+<div class="group relative aspect-square rounded-2xl overflow-hidden cursor-pointer">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110" data-alt="A compact Android-powered mobile POS device with an ergonomic grip, being used in a trendy cafe. The lighting is warm yet professional, highlighting the high-performance display and rugged build. Minimalist tech aesthetic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBE9wJZQ2h3ucAtyElBpqGT7rwfgt-Zmo5Ktn4lSs7Hf-IpIxMCi8PbGyZpPcQH46Ir6XpvEnpN8iHh327Kwf8oLxGrwgzjy2edDdf2ytFHJCWNP7mm6-Rf4CBSA_8IZ3fJmhVdIkb6QwwCCLXU4708FIhx8nKvgDbBo7u4YseNek20eU9kkEILSnfOjJRMm5p9t1RJG4tLP8tlBixIoHI_y_-3oz__0SR05Bb_ys-LZBINRkXixDhQFb2TihCzham7AXj2DB7QVSZd')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+<div class="absolute bottom-0 left-0 p-lg text-white">
+<p class="font-label-sm text-label-sm opacity-70 mb-xs">MOBILE</p>
+<h4 class="font-headline-sm text-headline-sm">Android POS</h4>
+</div>
+</div>
+<!-- Category Card 3 -->
+<div class="group relative aspect-square rounded-2xl overflow-hidden cursor-pointer">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110" data-alt="A high-speed professional thermal printer for receipts, showing its internal paper loading mechanism. The device is sleek matte black with subtle LED indicators. Modern clean office lighting." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCvUQjWMCoY3SRbBXHuTRHcaCe3wMVxMTltS8MutlR5N3Ug-82iPslEk8hIf-sWH_mUTib3Ib3b0A350fmLKxJEXbKuJ5fb5mxOsrAOjxGS3GAYJpvZmYeGbur2RUphwLesBxEt8UjypzaVERrFI54H_pv3TZLiawCowV3q-r2LOaS93yPKhq3AOtSjWTVKRyh0yT8gzIgMvEo0p7KQrcDGipnFp1Er-TMKQ3GH3hOSWcp0IXWanvhhWr9q1ely9GSITFgOZNF-o8LP')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+<div class="absolute bottom-0 left-0 p-lg text-white">
+<p class="font-label-sm text-label-sm opacity-70 mb-xs">PERIPHERALS</p>
+<h4 class="font-headline-sm text-headline-sm">Thermal Printer</h4>
+</div>
+</div>
+<!-- Category Card 4 -->
+<div class="group relative aspect-square rounded-2xl overflow-hidden cursor-pointer">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110" data-alt="An industrial-grade wireless barcode scanner being used in a vast, organized warehouse. The scene emphasizes durability and precision technology with cool blue tones and sharp lighting." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDDjyV0r-lwTFI1TcF65KZOQ8aSgu4CfgXwUzdNeaok5Fb5-XZp_isZqFRnSNvQ997PlT6mppttmTF4e3SFdXJJlYmqRZ6oqyEPJs7hA3bzzmFy0vakOwEDjHKeba6oi_mD68fi4g66x2_3uhWaEpbPXgcWwlWpiJm_DdPh2HQ0XUcIfhqjH6Ji9OW4kXSWF1XTH4GFFGPIaT4nLC2QCD607Fnvl35tM_7TEUWpQbWQLi1bi_kAbWSpOnM8fstnrKCJOhbeuVrQjWH2')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+<div class="absolute bottom-0 left-0 p-lg text-white">
+<p class="font-label-sm text-label-sm opacity-70 mb-xs">SCANNING</p>
+<h4 class="font-headline-sm text-headline-sm">Barcode Scanner</h4>
+</div>
+</div>
+<!-- Category Card 5 -->
+<div class="group relative aspect-square rounded-2xl overflow-hidden cursor-pointer">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110" data-alt="A large, standalone interactive self-service kiosk with a vibrant 4k display. The kiosk is installed in a modern airport terminal lobby. High-end industrial design with clean lines and premium materials." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBFuX89p_1Sw8tHydIDSnFSEiJjZc5ifZIrxKYuNX5EnuVNd20jWXtUN__EuYVqHYi_qwbYmI42fU50yw1jRXmArP6daAsM1_xyacAtCfe1c9r8Orgt9tXYY3lzhHxj8Wg7Szgm4UweEGCm1g1Yhl_mIRb2d1QOi1PRomPulDUONvRuCyjiIk8MP8Id4JvnYJsZS7XbOacGNtWTiT4lXVnax3PmNgjgqrRcs68VPCodSt-4PaY-xQ3cvCdIHigoGcYX07B0EKJprNp9')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+<div class="absolute bottom-0 left-0 p-lg text-white">
+<p class="font-label-sm text-label-sm opacity-70 mb-xs">SELF-SERVICE</p>
+<h4 class="font-headline-sm text-headline-sm">Kiosk</h4>
+</div>
+</div>
+</div>
+</section>
+<!-- Recently Viewed & Progress -->
+<section class="space-y-lg">
+<div class="flex items-end justify-between">
+<h2 class="font-headline-lg text-headline-lg">Recently Viewed Guides</h2>
+<span class="text-body-sm text-outline">Showing 3 most recent tasks</span>
+</div>
+<div class="space-y-md">
+<!-- Progress Item 1 -->
+<div class="flex items-center gap-lg bg-white p-lg rounded-2xl border border-outline-variant hover:shadow-md transition-all">
+<div class="w-16 h-16 rounded-xl bg-surface-container flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-3xl">desktop_windows</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start mb-sm">
+<div>
+<h5 class="font-headline-sm text-headline-sm text-on-surface truncate">Windows Terminal Elite X2 Configuration</h5>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Section 4: BIOS and Peripheral Sync</p>
+</div>
+<span class="bg-primary/10 text-primary px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">Active</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex-1 h-2 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 75%"></div>
+</div>
+<span class="font-label-md text-label-md text-on-surface whitespace-nowrap">75% Complete</span>
+</div>
+</div>
+<button class="px-6 py-2 bg-primary text-white font-bold rounded-lg hover:bg-primary-container transition-colors shrink-0">Resume</button>
+</div>
+<!-- Progress Item 2 -->
+<div class="flex items-center gap-lg bg-white p-lg rounded-2xl border border-outline-variant hover:shadow-md transition-all">
+<div class="w-16 h-16 rounded-xl bg-surface-container flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-3xl">print</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start mb-sm">
+<div>
+<h5 class="font-headline-sm text-headline-sm text-on-surface truncate">TP-800 Thermal Printer Wiring Schematic</h5>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Section 2: Parallel Port Pinout Configuration</p>
+</div>
+<span class="bg-primary/10 text-primary px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest text-secondary">In Review</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex-1 h-2 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 30%"></div>
+</div>
+<span class="font-label-md text-label-md text-on-surface whitespace-nowrap">30% Complete</span>
+</div>
+</div>
+<button class="px-6 py-2 bg-primary text-white font-bold rounded-lg hover:bg-primary-container transition-colors shrink-0">Resume</button>
+</div>
+<!-- Progress Item 3 -->
+<div class="flex items-center gap-lg bg-white p-lg rounded-2xl border border-outline-variant hover:shadow-md transition-all opacity-70 hover:opacity-100">
+<div class="w-16 h-16 rounded-xl bg-surface-container flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-3xl">dns</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start mb-sm">
+<div>
+<h5 class="font-headline-sm text-headline-sm text-on-surface truncate">Kiosk Core Server Connectivity Setup</h5>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Completed Section: Static IP Assignment</p>
+</div>
+<span class="bg-success-container text-on-success-container px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-emerald-100 text-emerald-800">Complete</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex-1 h-2 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-emerald-500 rounded-full" style="width: 100%"></div>
+</div>
+<span class="font-label-md text-label-md text-on-surface whitespace-nowrap">100% Complete</span>
+</div>
+</div>
+<button class="px-6 py-2 border border-outline-variant text-on-surface font-bold rounded-lg hover:bg-surface-container transition-colors shrink-0">Review</button>
+</div>
+</div>
+</section>
+</div>
+<!-- Footer Info -->
+<footer class="mt-3xl border-t border-outline-variant bg-surface-container-low p-2xl">
+<div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-lg">
+<div class="space-y-xs">
+<p class="font-headline-sm text-headline-sm text-primary">InstalCore Hub</p>
+<p class="text-body-sm text-on-surface-variant">Enterprise Hardware Installation Management System v4.2.1</p>
+</div>
+<div class="flex gap-lg">
+<a class="text-body-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Documentation Policy</a>
+<a class="text-body-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Support Portal</a>
+<a class="text-body-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Security Standards</a>
+</div>
+<div class="flex gap-4">
+<button class="p-2 rounded-lg border border-outline-variant text-outline hover:text-primary hover:border-primary transition-all">
+<span class="material-symbols-outlined">share</span>
+</button>
+<button class="p-2 rounded-lg border border-outline-variant text-outline hover:text-primary hover:border-primary transition-all">
+<span class="material-symbols-outlined">print</span>
+</button>
+</div>
+</div>
+</footer>
+</main>
+<!-- Contextual FAB -->
+<button class="fixed bottom-margin-desktop right-margin-desktop w-16 h-16 bg-primary text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50 group">
+<span class="material-symbols-outlined text-3xl group-hover:rotate-90 transition-transform">add</span>
+<div class="absolute right-full mr-4 bg-inverse-surface text-inverse-on-surface px-4 py-2 rounded-lg text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+            New Installation Report
+        </div>
+</button>
+<script>
+        // Simple search interaction
+        const searchInput = document.querySelector('input[placeholder="Search installation guides, videos..."]');
+        searchInput.addEventListener('focus', () => {
+            searchInput.parentElement.classList.add('scale-105');
+        });
+        searchInput.addEventListener('blur', () => {
+            searchInput.parentElement.classList.remove('scale-105');
+        });
+
+        // Horizontal scroll for product selection on mobile if needed
+        // (Handled by standard grid-cols-2)
+    </script>
+</body></html>
