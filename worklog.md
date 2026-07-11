@@ -529,3 +529,42 @@ Stage Summary:
 - Full auth flow: login → role-based redirect → authenticated session → sign out → back to login.
 - RBAC enforced at AuthGuard level: unauthenticated users blocked from protected screens, authenticated users blocked from screens outside their role.
 - Theme persistence: localStorage key "qbit-theme", respects prefers-color-scheme when set to system.
+
+---
+Task ID: home-dashboard
+Agent: main
+Task: Implement Home Dashboard with all sections as reusable components, matching Stitch design exactly
+
+Work Log:
+- Inspected existing HomePage.tsx (monolithic 293-line file) and the original Stitch home_qbit_hub design HTML.
+- Created src/components/qbit/dashboard/ directory with 17 reusable section components:
+  1. types.ts — typed placeholder interfaces for all dashboard data shapes
+  2. SectionHeader.tsx — reusable header with title, accent dot, action link, CarouselNav
+  3. WelcomeHero.tsx — hero banner with greeting, live clock, alerts, illustration (matches Stitch light gradient)
+  4. UniversalSearch.tsx — glass-card search overlapping hero, ⌘K shortcut, Ask AI button
+  5. SystemStatus.tsx — 4-col KPI grid (Total Products, Drivers, Manuals, Videos)
+  6. QuickAccess.tsx — 6-card centered grid (Products, Drivers, Install Guides, Manuals, Troubleshooting, KB)
+  7. FeaturedProducts.tsx — horizontal carousel with nav arrows, gradient product cards
+  8. ContinueWorking.tsx — recent files sidebar card with play indicators
+  9. SystemUpdates.tsx — vertical timeline with circular nodes
+  10. PopularDownloads.tsx — 3-col grid of download cards with size/count metadata
+  11. Bookmarks.tsx — bookmark list with remove buttons + empty state
+  12. PinnedResources.tsx — 4-col pinned card grid with gradient headers
+  13. Announcements.tsx — 3-col announcement cards with dismiss buttons
+  14. RecentActivity.tsx — reusable activity feed component (drop-in for any dashboard)
+  15. AIAssistant.tsx — floating chat widget with expand/collapse
+  16. DashboardSkeleton.tsx — shimmer loading placeholder matching full layout
+  17. EmptyState.tsx — reusable empty state with icon, title, description, CTA
+- Created placeholder-data.ts with typed static data for all sections (no APIs, no mock APIs).
+- Created index.ts barrel export for clean imports.
+- Refactored HomePage.tsx from 293-line monolith → 100-line composition of reusable components.
+- Fixed lint errors: UniversalSearch destructuring syntax (removed `?` from destructuring pattern), WelcomeHero setState-in-effect (wrapped in tick() function).
+- Verified: lint 0 errors, TypeScript 0 errors in dashboard files, dev server HTTP 200, browser verified all 12 sections render correctly on desktop/tablet/mobile.
+
+Stage Summary:
+- 19 new files created (17 components + types + placeholder-data + barrel export).
+- 1 file refactored (HomePage.tsx — composed from reusable components, no UI redesign).
+- 0 existing components overwritten.
+- All sections match Stitch design: hero gradient, search overlap, KPI grid, quick access, carousel, continue working, timeline, downloads, bookmarks, pinned resources, announcements, activity, AI assistant.
+- Responsive: mobile (1-2 col), tablet (2-3 col), desktop (3-4 col + sidebar layout).
+- Reusable: every section is independently importable and can be dropped into other dashboards with different data.
