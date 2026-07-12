@@ -37,10 +37,111 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+
+  /* ===== QBIT Hub Material 3 Color Tokens (Tailwind CSS 4) ===== */
+  --color-qbit-primary: #0043c8;
+  --color-qbit-on-primary: #ffffff;
+  --color-qbit-primary-container: #0057ff;
+  --color-qbit-on-primary-container: #e5e8ff;
+  --color-qbit-secondary: #0051d5;
+  --color-qbit-on-secondary: #ffffff;
+  --color-qbit-secondary-container: #316bf3;
+  --color-qbit-on-secondary-container: #fefcff;
+  --color-qbit-tertiary: #4e5153;
+  --color-qbit-on-tertiary: #ffffff;
+  --color-qbit-tertiary-container: #66696b;
+  --color-qbit-on-tertiary-container: #e7e9eb;
+  --color-qbit-error: #ba1a1a;
+  --color-qbit-on-error: #ffffff;
+  --color-qbit-error-container: #ffdad6;
+  --color-qbit-on-error-container: #93000a;
+  --color-qbit-background: #f9f9ff;
+  --color-qbit-on-background: #141b2b;
+  --color-qbit-surface: #f9f9ff;
+  --color-qbit-surface-bright: #f9f9ff;
+  --color-qbit-surface-dim: #d3daef;
+  --color-qbit-surface-variant: #dce2f7;
+  --color-qbit-surface-tint: #004ee7;
+  --color-qbit-surface-container-lowest: #ffffff;
+  --color-qbit-surface-container-low: #f1f3ff;
+  --color-qbit-surface-container: #e9edff;
+  --color-qbit-surface-container-high: #e1e8fd;
+  --color-qbit-surface-container-highest: #dce2f7;
+  --color-qbit-on-surface: #141b2b;
+  --color-qbit-on-surface-variant: #434656;
+  --color-qbit-outline: #737688;
+  --color-qbit-outline-variant: #c3c5d9;
+  --color-qbit-inverse-surface: #293040;
+  --color-qbit-inverse-on-surface: #edf0ff;
+  --color-qbit-inverse-primary: #b6c4ff;
+  --color-qbit-primary-fixed: #dce1ff;
+  --color-qbit-primary-fixed-dim: #b6c4ff;
+  --color-qbit-secondary-fixed: #dbe1ff;
+  --color-qbit-secondary-fixed-dim: #b4c5ff;
+  --color-qbit-tertiary-fixed: #e0e3e5;
+  --color-qbit-tertiary-fixed-dim: #c4c7c9;
+  --color-qbit-on-primary-fixed: #001550;
+  --color-qbit-on-primary-fixed-variant: #003ab2;
+  --color-qbit-on-secondary-fixed: #00174b;
+  --color-qbit-on-secondary-fixed-variant: #003ea8;
+  --color-qbit-on-tertiary-fixed: #191c1e;
+  --color-qbit-on-tertiary-fixed-variant: #444749;
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+}
+
+/* ===== QBIT Hub Colors as Tailwind CSS 4 Theme (generates utility classes) ===== */
+@theme {
+  --color-qbit-primary: #0043c8;
+  --color-qbit-on-primary: #ffffff;
+  --color-qbit-primary-container: #0057ff;
+  --color-qbit-on-primary-container: #e5e8ff;
+  --color-qbit-secondary: #0051d5;
+  --color-qbit-on-secondary: #ffffff;
+  --color-qbit-secondary-container: #316bf3;
+  --color-qbit-on-secondary-container: #fefcff;
+  --color-qbit-tertiary: #4e5153;
+  --color-qbit-on-tertiary: #ffffff;
+  --color-qbit-tertiary-container: #66696b;
+  --color-qbit-on-tertiary-container: #e7e9eb;
+  --color-qbit-error: #ba1a1a;
+  --color-qbit-on-error: #ffffff;
+  --color-qbit-error-container: #ffdad6;
+  --color-qbit-on-error-container: #93000a;
+  --color-qbit-background: #f9f9ff;
+  --color-qbit-on-background: #141b2b;
+  --color-qbit-surface: #f9f9ff;
+  --color-qbit-surface-bright: #f9f9ff;
+  --color-qbit-surface-dim: #d3daef;
+  --color-qbit-surface-variant: #dce2f7;
+  --color-qbit-surface-tint: #004ee7;
+  --color-qbit-surface-container-lowest: #ffffff;
+  --color-qbit-surface-container-low: #f1f3ff;
+  --color-qbit-surface-container: #e9edff;
+  --color-qbit-surface-container-high: #e1e8fd;
+  --color-qbit-surface-container-highest: #dce2f7;
+  --color-qbit-on-surface: #141b2b;
+  --color-qbit-on-surface-variant: #434656;
+  --color-qbit-outline: #737688;
+  --color-qbit-outline-variant: #c3c5d9;
+  --color-qbit-inverse-surface: #293040;
+  --color-qbit-inverse-on-surface: #edf0ff;
+  --color-qbit-inverse-primary: #b6c4ff;
+  --color-qbit-primary-fixed: #dce1ff;
+  --color-qbit-primary-fixed-dim: #b6c4ff;
+  --color-qbit-secondary-fixed: #dbe1ff;
+  --color-qbit-secondary-fixed-dim: #b4c5ff;
+  --color-qbit-tertiary-fixed: #e0e3e5;
+  --color-qbit-tertiary-fixed-dim: #c4c7c9;
+  --color-qbit-on-primary-fixed: #001550;
+  --color-qbit-on-primary-fixed-variant: #003ab2;
+  --color-qbit-on-secondary-fixed: #00174b;
+  --color-qbit-on-secondary-fixed-variant: #003ea8;
+  --color-qbit-on-tertiary-fixed: #191c1e;
+  --color-qbit-on-tertiary-fixed-variant: #444749;
 }
 
 :root {
