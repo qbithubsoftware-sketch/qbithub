@@ -6,7 +6,17 @@ import { QbitButton } from "@/components/qbit/primitives/QbitButton";
 import { ScreenSwitcher } from "@/components/qbit/shells/ScreenSwitcher";
 import { ContactForm } from "@/components/qbit/portal/ContactForm";
 import { PublicDownloadGrid } from "@/components/qbit/portal/PublicDownloadCard";
-import { PUBLIC_DOWNLOADS } from "@/lib/portal/placeholder-data";
+import { PublicProductLayout } from "@/components/qbit/portal/PublicProductLayout";
+import {
+  PUBLIC_DOWNLOADS,
+  T800_PUBLIC_DETAIL,
+  T800_FAQS,
+  T800_TROUBLESHOOTING,
+  T800_ACCESSORIES,
+  T800_SUPPORT_CARDS,
+  T800_VIDEOS,
+  getRelatedProducts,
+} from "@/lib/portal/placeholder-data";
 import { useNavigation } from "@/lib/navigation/store";
 
 type DownloadCard = {
@@ -714,6 +724,20 @@ export function QbitT800ProductOverviewPage() {
             </div>
           </div>
         </section>
+
+        {/* ============ Full Product Detail Layout ============ */}
+        {/* Composed from reusable portal components — gallery, specs, downloads, videos, FAQs, troubleshooting, accessories, support, contact, QR */}
+        <PublicProductLayout
+          product={T800_PUBLIC_DETAIL}
+          downloads={PUBLIC_DOWNLOADS}
+          faqs={T800_FAQS}
+          troubleshooting={T800_TROUBLESHOOTING}
+          accessories={T800_ACCESSORIES}
+          supportCards={T800_SUPPORT_CARDS}
+          videos={T800_VIDEOS}
+          relatedProducts={getRelatedProducts(T800_PUBLIC_DETAIL.id)}
+          publicUrl="https://hub.qbit.com/products/qbit-t-800"
+        />
       </main>
 
       {/* ============ Footer ============ */}

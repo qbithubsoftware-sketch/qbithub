@@ -10,6 +10,18 @@ export { NewsletterSignup } from "./NewsletterSignup";
 export { PublicArticleCard, PublicArticleGrid } from "./PublicArticleCard";
 export { PublicHeader } from "./PublicHeader";
 export { PublicFooter } from "./PublicFooter";
+export { HeroGallery } from "./HeroGallery";
+export { ProductOverview } from "./ProductOverview";
+export { SpecificationTable } from "./SpecificationTable";
+export { DownloadAssets } from "./DownloadAssets";
+export { YouTubeGallery } from "./YouTubeGallery";
+export { PublicFAQAccordion } from "./PublicFAQAccordion";
+export { PublicTroubleshooting } from "./PublicTroubleshooting";
+export { SupportCards } from "./SupportCards";
+export { ShareModal } from "./ShareModal";
+export { QRCodeCard, QRCodeButton } from "./QRCodeCard";
+export { RelatedProducts } from "./RelatedProducts";
+export { PublicProductLayout } from "./PublicProductLayout";
 
 export type {
   PublicProductCard as PublicProductCardType,
@@ -20,4 +32,9 @@ export type {
   PublicCategoryFilter,
   ContactFormData,
   NewsletterSignupData,
+  PublicFAQEntry,
+  PublicTroubleshootingEntry,
+  PublicAccessory,
+  SupportCardItem,
+  PublicYouTubeVideo,
 } from "@/lib/portal/types";

@@ -12,6 +12,11 @@ import type {
   PublicArticleCard,
   PublicAnnouncement,
   PublicCategoryFilter,
+  PublicFAQEntry,
+  PublicTroubleshootingEntry,
+  PublicAccessory,
+  SupportCardItem,
+  PublicYouTubeVideo,
 } from "./types";
 
 // ---------------------------------------------------------------------
@@ -123,3 +128,85 @@ export const PUBLIC_ANNOUNCEMENTS: PublicAnnouncement[] = [
   { id: "an2", title: "Firmware 4.0 Global Rollout", body: "Global rollout of Firmware 4.0 for all Retail Units is now live.", type: "firmware_release", severity: "info", createdAt: "Yesterday" },
   { id: "an4", title: "Driver Update: Nexus X1", body: "Critical security patch for Nexus X1 hub controller. CVE-2023-5421 patched.", type: "driver_update", severity: "critical", createdAt: "1 week ago" },
 ];
+
+// ---------------------------------------------------------------------
+// Product page: FAQs
+// ---------------------------------------------------------------------
+
+export const T800_FAQS: PublicFAQEntry[] = [
+  { id: "faq-1", question: "What is the expected lifespan of the T-800 touch screen?", answer: "The T-800 touch screen is rated for 50 million touches per point, which typically translates to 7-10 years of enterprise use under normal retail conditions." },
+  { id: "faq-2", question: "Can I upgrade the memory or storage?", answer: "Storage is field-upgradeable via the M.2 NVMe slot (up to 2TB). Memory (RAM) is soldered for stability and cannot be upgraded after purchase." },
+  { id: "faq-3", question: "Is global on-site support available?", answer: "Yes, Enterprise Care is available in 45+ countries with next-business-day on-site service. Contact our sales team for SLA details and pricing." },
+  { id: "faq-4", question: "What operating systems are supported?", answer: "Windows 11 IoT Enterprise (pre-installed), Ubuntu 22.04 LTS, and Android 13 (via dual-boot partition). Windows 10 IoT is supported until EOL in 2025." },
+  { id: "faq-5", question: "Does the T-800 support dual displays?", answer: "Yes, the HDMI port supports a second customer-facing display up to 4K resolution at 60Hz. Use the QBIT Duo X-200 for integrated dual-screen setups." },
+  { id: "faq-6", question: "What is the warranty period?", answer: "The T-800 comes with a 3-year limited warranty covering parts and labor. Extended 5-year warranty is available at checkout." },
+];
+
+// ---------------------------------------------------------------------
+// Product page: Troubleshooting
+// ---------------------------------------------------------------------
+
+export const T800_TROUBLESHOOTING: PublicTroubleshootingEntry[] = [
+  {
+    id: "ts-1",
+    problem: "Thermal printer not printing",
+    causes: ["USB cable disconnected", "Driver not installed", "Paper roll empty", "Print head overheated"],
+    solutions: ["Verify USB connection at both ends", "Download and install the Universal Thermal Printer Driver", "Replace the paper roll with 80mm thermal paper", "Allow 5 minutes cooldown for the print head"],
+  },
+  {
+    id: "ts-2",
+    problem: "Touch screen unresponsive",
+    causes: ["Screen calibration drift", "Driver conflict", "Firmware version mismatch"],
+    solutions: ["Run the QBIT Touch Calibration Utility", "Reinstall the touch driver from the Downloads section", "Update to firmware v4.1.2 or later"],
+  },
+  {
+    id: "ts-3",
+    problem: "Network connection drops intermittently",
+    causes: ["Faulty LAN cable", "IP address conflict", "Switch port disabled"],
+    solutions: ["Replace with a Cat6 shielded cable (max 100m)", "Assign a static IP outside the DHCP range", "Contact your IT administrator to enable the switch port"],
+  },
+];
+
+// ---------------------------------------------------------------------
+// Product page: Compatible accessories
+// ---------------------------------------------------------------------
+
+export const T800_ACCESSORIES: PublicAccessory[] = [
+  { id: "acc-1", name: "Cash Drawer CD-24V", subtitle: "24V electronic cash drawer", icon: "account_balance_wallet", gradient: "from-amber-500 to-orange-600" },
+  { id: "acc-2", name: "Barcode Scanner Q-200", subtitle: "2D imager, hands-free", icon: "barcode_scanner", gradient: "from-emerald-500 to-teal-600" },
+  { id: "acc-3", name: "Customer Display CD-15", subtitle: "15-inch customer-facing display", icon: "tv", gradient: "from-fuchsia-600 to-purple-700" },
+  { id: "acc-4", name: "Thermal Printer HUB-X Pro", subtitle: "80mm thermal receipt printer", icon: "print", gradient: "from-slate-700 to-slate-900" },
+  { id: "acc-5", name: "UPS Backup 1500VA", subtitle: "Uninterruptible power supply", icon: "battery_charging_full", gradient: "from-cyan-500 to-blue-600" },
+  { id: "acc-6", name: "Wall Mount Bracket", subtitle: "VESA-compatible mounting kit", icon: "mountain", gradient: "from-rose-500 to-pink-600" },
+];
+
+// ---------------------------------------------------------------------
+// Product page: YouTube videos
+// ---------------------------------------------------------------------
+
+export const T800_VIDEOS: PublicYouTubeVideo[] = [
+  { id: "vid-1", title: "QBIT T-800 Complete Setup Walkthrough", youtubeId: "dQw4w9WgXcQ", duration: "12:45", featured: true },
+  { id: "vid-2", title: "Hardware Installation Guide", youtubeId: "dQw4w9WgXcQ", duration: "2:45" },
+  { id: "vid-3", title: "Software Configuration", youtubeId: "dQw4w9WgXcQ", duration: "5:12" },
+  { id: "vid-4", title: "Maintenance Basics", youtubeId: "dQw4w9WgXcQ", duration: "1:30" },
+];
+
+// ---------------------------------------------------------------------
+// Product page: Support cards
+// ---------------------------------------------------------------------
+
+export const T800_SUPPORT_CARDS: SupportCardItem[] = [
+  { id: "sup-1", title: "WhatsApp Support", meta: "24/7 Priority Chat", icon: "chat", href: "https://wa.me/15551002000", variant: "primary" },
+  { id: "sup-2", title: "Call Technical Team", meta: "Mon-Fri, 9am - 6pm", icon: "call", href: "tel:+15551002000", variant: "outline" },
+  { id: "sup-3", title: "Email Assistance", meta: "1-Hour Response Time", icon: "mail", href: "mailto:support@qbithub.io", variant: "outline" },
+  { id: "sup-4", title: "Request a Demo", meta: "On-site or virtual demo", icon: "play_circle", href: "#contact", variant: "outline" },
+  { id: "sup-5", title: "Contact Sales", meta: "Get a custom quote", icon: "storefront", href: "mailto:sales@qbithub.io", variant: "outline" },
+];
+
+// ---------------------------------------------------------------------
+// Related products (filtered from PUBLIC_PRODUCTS, excluding current)
+// ---------------------------------------------------------------------
+
+export function getRelatedProducts(currentId: string): PublicProductCard[] {
+  return PUBLIC_PRODUCTS.filter((p) => p.id !== currentId).slice(0, 4);
+}

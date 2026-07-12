@@ -751,3 +751,37 @@ Stage Summary:
 - 5 new public API routes (no auth required, internal/restricted downloads never exposed).
 - Component reuse: PublicCatalog reuses EmptyState from dashboard; PublicDownloadCard reuses QbitButton + Icon + useToast; ContactForm reuses QbitButton + Icon + useToast; NewsletterSignup reuses QbitButton + useToast; all portal components reuse existing primitives.
 - Security: public downloads API only returns visibility="public" items; internal and restricted downloads are NEVER returned to public users; the storagePath field is NEVER selected in public API responses.
+
+---
+Task ID: customer-public-portal-full
+Agent: main
+Task: Implement complete Customer Public Portal with all product page sections, share modal, QR code, YouTube gallery, and reusable layout
+
+Work Log:
+- Inspected existing portal components (9 from previous turn), public API routes (5), and placeholder data.
+- Extended src/lib/portal/types.ts with 5 new interfaces (PublicFAQEntry, PublicTroubleshootingEntry, PublicAccessory, SupportCardItem, PublicYouTubeVideo).
+- Extended src/lib/portal/placeholder-data.ts with full T-800 product page data: 6 FAQs, 3 troubleshooting entries, 6 compatible accessories, 4 YouTube videos, 5 support cards, getRelatedProducts helper.
+- Created 12 reusable portal components:
+  1. HeroGallery.tsx — image gallery with thumbnails, fullscreen modal, zoom, lazy loading, navigation arrows
+  2. ProductOverview.tsx — description + key features grid
+  3. SpecificationTable.tsx — specs table with print button
+  4. DownloadAssets.tsx — reuses PublicDownloadGrid (only public assets)
+  5. YouTubeGallery.tsx — featured video + related videos grid, YouTube IFrame embed modal
+  6. PublicFAQAccordion.tsx — REUSES FAQAccordion from knowledge module
+  7. PublicTroubleshooting.tsx — troubleshooting cards with causes + solutions
+  8. SupportCards.tsx — 5 support cards (WhatsApp, Call, Email, Demo, Sales)
+  9. ShareModal.tsx — copy link, WhatsApp, Email, QR code, Native Share API
+  10. QRCodeCard.tsx — QR code generator + QRCodeButton
+  11. RelatedProducts.tsx — reuses PublicProductGrid
+  12. PublicProductLayout.tsx — composes all 12 sections in order (gallery, overview, specs, downloads, videos, installation guide, FAQs, troubleshooting, accessories, related products, support, contact, QR)
+- Updated index.ts barrel export.
+- Wired QbitT800ProductOverviewPage.tsx: added PublicProductLayout with all data (T800_PUBLIC_DETAIL, PUBLIC_DOWNLOADS, T800_FAQS, T800_TROUBLESHOOTING, T800_ACCESSORIES, T800_SUPPORT_CARDS, T800_VIDEOS, related products).
+- Verified: lint 0 errors, TypeScript 0 errors, browser verified all 12 sections render on marketing page, Share modal opens with Copy/WhatsApp/Email/QR, QR code generates correctly with product URL.
+
+Stage Summary:
+- 12 new component files created.
+- 2 existing files extended (types.ts, placeholder-data.ts).
+- 1 existing page wired to use PublicProductLayout (QbitT800ProductOverviewPage.tsx).
+- Component reuse: PublicFAQAccordion reuses FAQAccordion from knowledge module; DownloadAssets reuses PublicDownloadGrid; RelatedProducts reuses PublicProductGrid; YouTubeGallery reuses YouTube IFrame embed pattern from installation module; all portal components reuse existing primitives (Icon, QbitButton, TagBadge, SurfaceCard, SectionHeader, EmptyState, Dialog).
+- Security: only public assets are shown; internal/restricted downloads never exposed; QR code encodes only the public product URL.
+- Share modal: supports Copy Link, WhatsApp, Email, QR Code, and Native Share API (where supported).

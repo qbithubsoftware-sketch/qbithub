@@ -103,3 +103,46 @@ export interface PublicCategoryFilter {
   icon: string;
   productCount: number;
 }
+
+/** FAQ entry for the public product page. */
+export interface PublicFAQEntry {
+  id: string;
+  question: string;
+  answer: string;
+}
+
+/** Troubleshooting entry for the public product page. */
+export interface PublicTroubleshootingEntry {
+  id: string;
+  problem: string;
+  causes: string[];
+  solutions: string[];
+}
+
+/** Compatible accessory card. */
+export interface PublicAccessory {
+  id: string;
+  name: string;
+  subtitle: string;
+  icon: string;
+  gradient: string;
+}
+
+/** Support card (WhatsApp, Call, Email, Demo, Sales). */
+export interface SupportCardItem {
+  id: string;
+  title: string;
+  meta: string;
+  icon: string;
+  href: string;
+  variant: "primary" | "outline";
+}
+
+/** YouTube video for the public product page. */
+export interface PublicYouTubeVideo {
+  id: string;
+  title: string;
+  youtubeId: string;
+  duration: string;
+  featured?: boolean;
+}
