@@ -9,6 +9,13 @@ import { ADMIN_NAV } from "@/lib/navigation/nav-config";
 import { BulkActionToolbar } from "@/components/qbit/admin/BulkActionToolbar";
 import { AssetManager } from "@/components/qbit/admin/AssetManager";
 import { ADMIN_ASSETS } from "@/lib/admin/placeholder-data";
+import { ImportWizard } from "@/components/qbit/cms/ImportWizard";
+import { ImportLog } from "@/components/qbit/cms/ImportLog";
+import { MediaManager } from "@/components/qbit/cms/MediaManager";
+import { VersionHistory } from "@/components/qbit/cms/VersionHistory";
+import { SEOEditor } from "@/components/qbit/cms/SEOEditor";
+import { QRManager } from "@/components/qbit/cms/QRManager";
+import { ExportPanel } from "@/components/qbit/cms/ExportPanel";
 import {
   Table,
   TableBody,
@@ -492,6 +499,27 @@ export function ProductManagementPage() {
         {/* Extended: Unified Asset Manager                              */}
         {/* ------------------------------------------------------------ */}
         <AssetManager assets={ADMIN_ASSETS} />
+
+        {/* ===== CMS: Import Wizard ===== */}
+        <ImportWizard />
+
+        {/* ===== CMS: Import History ===== */}
+        <ImportLog />
+
+        {/* ===== CMS: Media Library ===== */}
+        <MediaManager />
+
+        {/* ===== CMS: Version History ===== */}
+        <VersionHistory entityName="QBIT T-800" />
+
+        {/* ===== CMS: SEO Management ===== */}
+        <SEOEditor />
+
+        {/* ===== CMS: QR Code Manager ===== */}
+        <QRManager />
+
+        {/* ===== CMS: Bulk Export ===== */}
+        <ExportPanel />
       </div>
     </AppShell>
   );
