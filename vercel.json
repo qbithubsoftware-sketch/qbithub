@@ -3,14 +3,5 @@
   "framework": "nextjs",
   "buildCommand": "next build",
   "installCommand": "npm install",
-  "regions": ["bom1"],
-  "env": {
-    "NEXTAUTH_URL": "https://qbithub.vercel.app",
-    "NEXTAUTH_SECRET": "7z2cl7rX8dkCew9N+Gwrd7nK0+7B7ZKuCDFaOS3Ox0E="
-  },
-  "build": {
-    "env": {
-      "DATABASE_URL": "file:/tmp/custom.db"
-    }
-  }
+  "regions": ["bom1"]
 }
