@@ -777,11 +777,14 @@ function AssistantBubble({
   copied: boolean;
   onSuggestion: (text: string) => void;
 }) {
+  const isDiagnostic = message.type === "diagnostic";
+  const diagMessage = isDiagnostic ? (message as AssistantDiagnosticMessage) : null;
+
   return (
     <div className="flex max-w-3xl gap-4">
       <AssistantAvatar />
       <div className="space-y-4">
-        {message.type === "greeting" || message.type === "text" ? (
+        {!isDiagnostic ? (
           <div className="rounded-2xl rounded-tl-none border border-qbit-outline-variant/30 bg-qbit-surface-container-low p-4 text-base text-qbit-on-surface">
             {message.content}
           </div>
@@ -789,17 +792,17 @@ function AssistantBubble({
           <div className="space-y-4 rounded-2xl rounded-tl-none border border-qbit-outline-variant/30 bg-qbit-surface-container-low p-4 text-base text-qbit-on-surface shadow-sm">
             <p>
               To resolve the{" "}
-              <strong className="font-semibold">{message.title}</strong>, please follow these
+              <strong className="font-semibold">{diagMessage!.title}</strong>, please follow these
               steps:
             </p>
             <ol className="list-inside list-decimal space-y-1 font-medium">
-              {message.steps.map((step) => (
+              {diagMessage!.steps.map((step) => (
                 <li key={step}>{step}</li>
               ))}
             </ol>
             <div className="group relative rounded-lg bg-qbit-inverse-surface p-4 font-mono text-sm text-qbit-inverse-on-surface">
               <code id="qbit-diagnostic-code" className="block break-all">
-                {message.code}
+                {diagMessage!.code}
               </code>
               <button
                 type="button"
@@ -811,9 +814,9 @@ function AssistantBubble({
                 {copied ? "Copied" : "Copy"}
               </button>
             </div>
-            <p className="text-sm">{message.closing}</p>
+            <p className="text-sm">{diagMessage!.closing}</p>
             <div className="flex flex-wrap items-center gap-4 pt-1">
-              {message.links.map((link) => (
+              {diagMessage!.links.map((link) => (
                 <button
                   key={link.label}
                   type="button"
@@ -910,7 +913,7 @@ function FAQSection() {
 }
 
 function CategoriesGridSection() {
-  const navigate = useNavigation();
+  const navigate = useNavigation((s) => s.navigate);
   return (
     <section className="space-y-6">
       <SectionHeader title="Browse by Category" accentDot />
