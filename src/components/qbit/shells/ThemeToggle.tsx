@@ -19,7 +19,7 @@ import { Icon } from "@/components/qbit/primitives/Icon";
 
 type ThemeChoice = "light" | "dark" | "system";
 
-const ORDER: ThemeChoice[] = ["light", "dark", "system"];
+const ORDER: ThemeChoice[] = ["dark", "light", "system"];
 
 const LABEL: Record<ThemeChoice, string> = {
   light: "Light",

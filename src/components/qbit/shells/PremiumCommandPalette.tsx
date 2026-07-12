@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { Icon } from "@/components/qbit/primitives/Icon";
 import {
@@ -76,12 +76,15 @@ export function PremiumCommandPalette() {
   const [recent, setRecent] = useState<CommandEntry[]>([]);
   const navigate = useNavigation((s) => s.navigate);
 
-  // Global Ctrl+K / Cmd+K shortcut
+  // Global Ctrl+K / Cmd+K shortcut — uses a ref to always read latest open state
+  const openRef = useRef(false);
+  useEffect(() => { openRef.current = open; }, [open]);
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
-        setOpen((o) => !o);
+        setOpen(!openRef.current);
       }
     };
     window.addEventListener("keydown", handler);

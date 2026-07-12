@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { Icon } from "@/components/qbit/primitives/Icon";
 import { SurfaceCard } from "@/components/qbit/primitives/GlassCard";
 import { StatusBadge } from "@/components/qbit/primitives/StatusBadge";
 import { QbitButton } from "@/components/qbit/primitives/QbitButton";
 import { SectionHeader } from "@/components/qbit/dashboard/SectionHeader";
+import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,6 +23,9 @@ const VISIBILITY_VARIANT = {
 } as const;
 
 const TYPE_FILTERS = ["All", "Driver", "Firmware", "SDK", "Utility", "Manual", "Datasheet", "Warranty", "Video"] as const;
+
+const notifyComingSoon = (toast: ReturnType<typeof useToast>["toast"], feature: string) =>
+  toast({ title: `${feature} coming soon`, description: "This feature is under development." });
 
 /**
  * AssetManager — unified asset manager table for drivers, firmware, SDK,
@@ -43,6 +47,7 @@ export function AssetManager({
   onDelete?: (a: AdminAssetRow) => void;
   onUpload?: () => void;
 }) {
+  const { toast } = useToast();
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("All");
 
@@ -63,7 +68,7 @@ export function AssetManager({
         title="Asset Manager"
         accentDot
         rightContent={
-          <QbitButton size="sm" variant="primary" icon="upload" onClick={onUpload}>
+          <QbitButton size="sm" variant="primary" icon="upload" onClick={() => onUpload ?? notifyComingSoon(toast, "Asset Upload")}>
             Upload Asset
           </QbitButton>
         }
@@ -152,19 +157,19 @@ export function AssetManager({
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onSelect={() => onEdit?.(asset)}>
+                        <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onSelect={() => onEdit?.(asset) ?? notifyComingSoon(toast, "Edit Asset")}>
                           <Icon name="edit" className="text-[16px]" /> Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
+                        <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onSelect={() => notifyComingSoon(toast, "Replace Version")}>
                           <Icon name="upgrade" className="text-[16px]" /> Replace Version
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
+                        <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onSelect={() => notifyComingSoon(toast, "Toggle Visibility")}>
                           <Icon name="visibility" className="text-[16px]" /> Toggle Visibility
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onSelect={() => onArchive?.(asset)}>
+                        <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onSelect={() => onArchive?.(asset) ?? notifyComingSoon(toast, "Archive Asset")}>
                           <Icon name="archive" className="text-[16px]" /> Archive
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="flex items-center gap-2 cursor-pointer text-red-600" onSelect={() => onDelete?.(asset)}>
+                        <DropdownMenuItem className="flex items-center gap-2 cursor-pointer text-red-600" onSelect={() => onDelete?.(asset) ?? notifyComingSoon(toast, "Delete Asset")}>
                           <Icon name="delete" className="text-[16px]" /> Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
