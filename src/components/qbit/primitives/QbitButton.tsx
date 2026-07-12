@@ -17,13 +17,13 @@ export interface QbitButtonProps
 }
 
 const VARIANT_CLASS: Record<QbitButtonVariant, string> = {
-  primary: "bg-qbit-primary text-qbit-on-primary hover:bg-qbit-primary-container hover:shadow-md",
-  "primary-container": "bg-qbit-primary-container text-qbit-on-primary-container hover:brightness-110 hover:shadow-md",
-  secondary: "bg-qbit-secondary-container text-qbit-on-secondary-container hover:brightness-110",
-  outline: "border border-qbit-outline-variant bg-transparent text-qbit-on-surface hover:bg-qbit-surface-container",
-  danger: "bg-qbit-error text-qbit-on-error hover:brightness-110",
-  ghost: "text-qbit-on-surface-variant hover:bg-qbit-surface-container",
-  surface: "bg-qbit-surface-container-low text-qbit-on-surface hover:bg-qbit-surface-container border border-qbit-outline-variant/60",
+  primary: "bg-qbit-primary text-qbit-on-primary hover:bg-qbit-primary-container hover:shadow-lg hover:shadow-qbit-primary/20 active:scale-[0.98]",
+  "primary-container": "bg-qbit-primary-container text-qbit-on-primary-container hover:brightness-110 hover:shadow-md active:scale-[0.98]",
+  secondary: "bg-qbit-secondary-container text-qbit-on-secondary-container hover:brightness-110 hover:shadow-md active:scale-[0.98]",
+  outline: "border border-qbit-outline-variant bg-transparent text-qbit-on-surface hover:bg-qbit-surface-container hover:border-qbit-outline active:scale-[0.98]",
+  danger: "bg-qbit-error text-qbit-on-error hover:brightness-110 hover:shadow-md hover:shadow-qbit-error/20 active:scale-[0.98]",
+  ghost: "text-qbit-on-surface-variant hover:bg-qbit-surface-container active:scale-[0.98]",
+  surface: "bg-qbit-surface-container-low text-qbit-on-surface hover:bg-qbit-surface-container border border-qbit-outline-variant/60 active:scale-[0.98]",
 };
 
 const SIZE_CLASS: Record<QbitButtonSize, string> = {
@@ -47,7 +47,7 @@ export function QbitButton({
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center font-semibold transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none",
+        "inline-flex items-center justify-center font-semibold transition-all duration-200 active:scale-95 disabled:opacity-40 disabled:pointer-events-none disabled:active:scale-100",
         VARIANT_CLASS[variant],
         SIZE_CLASS[size],
         fullWidth && "w-full",

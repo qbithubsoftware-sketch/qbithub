@@ -33,8 +33,8 @@ export function SurfaceCard({
   return (
     <div
       className={cn(
-        "bg-qbit-surface-container-lowest border border-qbit-outline-variant rounded-xl shadow-sm",
-        hover && "card-hover-lift",
+        "bg-qbit-surface-container-lowest border border-qbit-outline-variant/60 rounded-xl shadow-sm transition-all duration-200",
+        hover && "hover:shadow-md hover:border-qbit-outline-variant",
         className,
       )}
       {...rest}

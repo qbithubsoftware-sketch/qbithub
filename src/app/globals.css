@@ -488,11 +488,11 @@
 
 /* ===== Card Consistency ===== */
 .card-hover-lift {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 .card-hover-lift:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px -6px rgba(17, 24, 39, 0.08), 0 4px 8px -4px rgba(17, 24, 39, 0.04);
+  box-shadow: 0 8px 24px -8px rgba(17, 24, 39, 0.06), 0 2px 6px -2px rgba(17, 24, 39, 0.03);
 }
 
 /* ===== Animation Utilities ===== */
@@ -511,3 +511,22 @@
   z-index: 10;
   background: var(--qbit-surface-container-low, #f1f3ff);
 }
+
+/* ===== Premium Typography Hierarchy ===== */
+.text-display { font-size: 36px; line-height: 44px; font-weight: 700; letter-spacing: -0.02em; }
+.text-heading { font-size: 24px; line-height: 32px; font-weight: 600; letter-spacing: -0.01em; }
+.text-title { font-size: 20px; line-height: 28px; font-weight: 600; }
+.text-subtitle { font-size: 16px; line-height: 24px; font-weight: 500; }
+.text-body { font-size: 14px; line-height: 22px; font-weight: 400; }
+.text-caption { font-size: 12px; line-height: 16px; font-weight: 500; }
+.text-metadata { font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+
+/* ===== Premium Shadows ===== */
+.shadow-premium-sm { box-shadow: 0 1px 3px 0 rgba(17, 24, 39, 0.04), 0 1px 2px 0 rgba(17, 24, 39, 0.02); }
+.shadow-premium-md { box-shadow: 0 4px 12px -2px rgba(17, 24, 39, 0.06), 0 2px 4px -1px rgba(17, 24, 39, 0.03); }
+.shadow-premium-lg { box-shadow: 0 12px 28px -6px rgba(17, 24, 39, 0.08), 0 4px 10px -2px rgba(17, 24, 39, 0.04); }
+.shadow-premium-xl { box-shadow: 0 20px 40px -8px rgba(17, 24, 39, 0.10), 0 8px 16px -4px rgba(17, 24, 39, 0.05); }
+
+/* ===== Premium Transitions ===== */
+.transition-premium { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+.transition-premium-slow { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }

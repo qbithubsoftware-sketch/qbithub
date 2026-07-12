@@ -43,7 +43,7 @@ export function TopBar({
   rightTextIcon,
 }: TopBarProps) {
   return (
-    <header className="fixed top-0 right-0 z-30 flex h-16 items-center gap-3 border-b border-qbit-outline-variant bg-qbit-surface-container-lowest/80 px-4 backdrop-blur-md md:px-6"
+    <header className="fixed top-0 right-0 z-30 flex h-16 items-center gap-3 border-b border-qbit-outline-variant/60 bg-qbit-surface-container-lowest/80 px-4 backdrop-blur-xl md:px-6"
       style={{ left: "var(--sidebar-width, 256px)" }}
     >
       {/* Mobile menu */}
@@ -75,7 +75,7 @@ export function TopBar({
           onChange={(e) => onSearchChange?.(e.target.value)}
           onFocus={onSearchFocus}
           placeholder={searchPlaceholder}
-          className="w-full rounded-full border border-transparent bg-qbit-surface-container py-2 pl-10 pr-3 text-sm text-qbit-on-surface placeholder:text-qbit-on-surface-variant/70 transition-all focus:bg-white focus:ring-2 focus:ring-qbit-primary/40 focus:border-qbit-primary"
+          className="w-full rounded-full border border-transparent bg-qbit-surface-container py-2 pl-10 pr-3 text-sm text-qbit-on-surface placeholder:text-qbit-on-surface-variant/60 transition-all duration-200 focus:bg-white focus:ring-2 focus:ring-qbit-primary/20 focus:border-qbit-primary focus:shadow-sm"
         />
         {showSearchKbd && (
           <kbd className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded border border-qbit-outline-variant bg-white px-1.5 py-0.5 text-[10px] font-bold text-qbit-on-surface-variant">
@@ -116,11 +116,11 @@ export function TopBar({
       <div className="flex items-center gap-1">
         {rightExtras}
         {/* Standard action icons — all h-9 w-9 for consistent touch targets */}
-        <button aria-label="Notifications" className="relative flex h-9 w-9 items-center justify-center rounded-lg text-qbit-on-surface-variant hover:bg-qbit-surface-container transition-colors">
+        <button aria-label="Notifications" className="relative flex h-9 w-9 items-center justify-center rounded-lg text-qbit-on-surface-variant hover:bg-qbit-surface-container transition-all duration-200 hover:text-qbit-on-surface">
           <Icon name="notifications" className="text-[20px]" />
-          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-qbit-error" />
+          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-qbit-error ring-2 ring-qbit-surface-container-lowest" />
         </button>
-        <button aria-label="Help" className="hidden md:flex h-9 w-9 items-center justify-center rounded-lg text-qbit-on-surface-variant hover:bg-qbit-surface-container transition-colors">
+        <button aria-label="Help" className="hidden md:flex h-9 w-9 items-center justify-center rounded-lg text-qbit-on-surface-variant hover:bg-qbit-surface-container transition-all duration-200 hover:text-qbit-on-surface">
           <Icon name="help" className="text-[20px]" />
         </button>
         <ThemeToggle />
