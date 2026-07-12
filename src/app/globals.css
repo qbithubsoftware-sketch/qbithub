@@ -530,3 +530,59 @@
 /* ===== Premium Transitions ===== */
 .transition-premium { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
 .transition-premium-slow { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+
+/* ===== Animation System (Enterprise-grade, 150-250ms) ===== */
+@keyframes qbit-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes qbit-fade-in-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes qbit-fade-in-down {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes qbit-scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes qbit-slide-in-right {
+  from { opacity: 0; transform: translateX(12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes qbit-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Animation utility classes */
+.animate-qbit-fade-in { animation: qbit-fade-in 0.2s ease-out; }
+.animate-qbit-fade-in-up { animation: qbit-fade-in-up 0.25s ease-out; }
+.animate-qbit-fade-in-down { animation: qbit-fade-in-down 0.25s ease-out; }
+.animate-qbit-scale-in { animation: qbit-scale-in 0.2s ease-out; }
+.animate-qbit-slide-in-right { animation: qbit-slide-in-right 0.25s ease-out; }
+
+/* ===== Premium Skeleton Shimmer ===== */
+.skeleton-premium {
+  background: linear-gradient(
+    90deg,
+    rgba(226, 232, 240, 0.4) 0%,
+    rgba(226, 232, 240, 0.7) 50%,
+    rgba(226, 232, 240, 0.4) 100%
+  );
+  background-size: 200% 100%;
+  animation: qbit-shimmer 1.5s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+/* ===== Page Transition ===== */
+.page-transition-enter {
+  animation: qbit-fade-in-up 0.25s ease-out;
+}
+
+/* ===== Premium Table Row Hover ===== */
+tbody tr {
+  transition: background-color 0.15s ease;
+}

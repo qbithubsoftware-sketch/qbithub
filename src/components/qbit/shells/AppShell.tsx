@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Sidebar, type SidebarVariant, type NavItem } from "./Sidebar";
 import { TopBar, type TopBarProps } from "./TopBar";
+import { PageTransition } from "./PageTransition";
 import type { ScreenId } from "@/lib/navigation/store";
 
 export interface AppShellProps {
@@ -77,7 +78,9 @@ export function AppShell({
         )}
       >
         <div className={cn("mx-auto p-4 md:p-6 lg:p-8", mainMaxWidth, mainClassName)}>
-          {children}
+          <PageTransition>
+            {children}
+          </PageTransition>
         </div>
       </main>
     </div>
