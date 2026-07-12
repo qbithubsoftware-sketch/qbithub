@@ -42,20 +42,24 @@ export function WelcomeHero({
     : "—";
 
   return (
-    <section className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center bg-gradient-to-br from-qbit-surface-container-low to-qbit-surface border border-qbit-outline-variant rounded-2xl overflow-hidden p-6 md:p-8 relative">
+    <section className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center bg-gradient-to-br from-qbit-surface-container-low to-qbit-surface border border-qbit-outline-variant/50 rounded-2xl overflow-hidden p-6 md:p-8 relative">
       <div className="md:col-span-7 z-10">
-        <span className="inline-block px-3 py-1 bg-qbit-primary/10 text-qbit-primary rounded-full text-xs font-semibold mb-4">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-qbit-primary/10 text-qbit-primary rounded-full text-xs font-semibold mb-4">
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+          </span>
           System Online • 99.9% Uptime
         </span>
-        <h2 className="text-[36px] leading-[44px] font-bold text-qbit-on-surface mb-1">
+        <h2 className="text-3xl md:text-4xl font-bold text-qbit-on-surface mb-1">
           {greeting}, {userName}.
         </h2>
-        <h3 className="text-[24px] leading-[32px] font-semibold text-qbit-on-surface-variant mb-8 opacity-80">
+        <h3 className="text-lg md:text-xl font-semibold text-qbit-on-surface-variant mb-6 opacity-80">
           Welcome back to QBIT Hub
         </h3>
-        <div className="flex flex-wrap items-center gap-8">
+        <div className="flex flex-wrap items-center gap-6">
           <div className="flex flex-col">
-            <span className="text-xs font-semibold uppercase tracking-widest text-qbit-outline">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-qbit-on-surface-variant/60">
               Current Session
             </span>
             <span className="text-lg font-semibold text-qbit-on-surface">
@@ -63,21 +67,22 @@ export function WelcomeHero({
             </span>
           </div>
           <div className="flex flex-col">
-            <span className="text-xs font-semibold uppercase tracking-widest text-qbit-outline">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-qbit-on-surface-variant/60">
               Active Alerts
             </span>
-            <span className="text-lg font-semibold text-qbit-error flex items-center gap-1.5">
-              <Icon name="warning" className="text-[18px]" filled />
+            <span className="text-base font-semibold text-qbit-error flex items-center gap-1.5">
+              <Icon name="warning" className="text-[16px]" filled />
               2 Critical Updates
             </span>
           </div>
         </div>
       </div>
-      <div className="md:col-span-5 relative h-48 md:h-full flex items-center justify-center">
+      <div className="md:col-span-5 relative h-40 md:h-full flex items-center justify-center">
         <img
           src={heroImage}
           alt="Enterprise portal hero illustration"
-          className="object-contain max-h-72 w-full drop-shadow-2xl transition-transform hover:scale-105 duration-700"
+          loading="lazy"
+          className="object-contain max-h-64 w-full drop-shadow-xl transition-transform hover:scale-105 duration-700"
         />
       </div>
     </section>

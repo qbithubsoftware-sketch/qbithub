@@ -16,21 +16,21 @@ export function QuickAccess({ items }: { items: QuickAccessItem[] }) {
   return (
     <section>
       <SectionHeader title="Quick Access" accentDot />
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {items.map((item) => (
           <button
             key={item.label}
             onClick={() => item.screen && navigate(item.screen)}
-            className="flex flex-col items-center text-center p-6 bg-qbit-surface-container-lowest border border-qbit-outline-variant rounded-2xl hover:border-qbit-primary hover:bg-qbit-primary/5 transition-all group"
+            className="flex flex-col items-center text-center p-5 bg-qbit-surface-container-lowest border border-qbit-outline-variant/50 rounded-xl hover:border-qbit-primary/40 hover:bg-qbit-primary/5 hover:shadow-sm transition-all duration-200 group"
           >
             <Icon
               name={item.icon}
-              className="text-qbit-primary mb-2 text-[36px] transition-transform group-hover:rotate-12"
+              className="text-qbit-primary mb-2 text-[32px] transition-transform duration-200 group-hover:scale-110"
             />
-            <span className="text-sm font-medium text-qbit-on-surface mb-1">
+            <span className="text-sm font-medium text-qbit-on-surface mb-0.5">
               {item.label}
             </span>
-            <span className="text-[10px] text-qbit-outline">{item.sub}</span>
+            <span className="text-[10px] text-qbit-on-surface-variant/70">{item.sub}</span>
           </button>
         ))}
       </div>

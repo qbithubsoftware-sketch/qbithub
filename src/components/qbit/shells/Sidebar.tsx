@@ -65,7 +65,7 @@ export function Sidebar({
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 flex h-full flex-col border-r border-qbit-outline-variant/60 bg-qbit-surface-container-lowest shadow-sm transition-all duration-300 ease-in-out",
+        "fixed left-0 top-0 z-40 flex h-full flex-col border-r border-qbit-outline-variant/50 bg-qbit-surface-container-lowest transition-all duration-300 ease-in-out",
         collapsed ? "w-20" : "w-64",
         className,
       )}
@@ -115,11 +115,11 @@ export function Sidebar({
                 <button
                   onClick={() => item.screen && navigate(item.screen)}
                   className={cn(
-                    "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                    "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
                     collapsed && "justify-center px-0",
                     active
                       ? "sidebar-active-indicator bg-qbit-primary-container/10 text-qbit-primary font-semibold"
-                      : "text-qbit-on-surface-variant hover:bg-qbit-surface-container-high hover:text-qbit-on-surface",
+                      : "text-qbit-on-surface-variant hover:bg-qbit-surface-container-low hover:text-qbit-on-surface",
                   )}
                   title={collapsed ? item.label : undefined}
                 >

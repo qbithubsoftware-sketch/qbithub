@@ -32,9 +32,9 @@ export function KpiCard({
   const deltaIcon = deltaVariant === "up" ? "trending_up" : deltaVariant === "down" ? "trending_down" : "remove";
 
   return (
-    <SurfaceCard className={cn("p-4 hover:shadow-md transition-shadow", className)}>
-      <div className="flex justify-between items-start mb-2">
-        <span className={cn("flex h-8 w-8 items-center justify-center rounded-lg", iconBg)}>
+    <SurfaceCard className={cn("p-4 hover:shadow-md transition-all duration-200", className)}>
+      <div className="flex justify-between items-start mb-3">
+        <span className={cn("flex h-9 w-9 items-center justify-center rounded-lg", iconBg)}>
           <Icon name={icon} className="text-[20px]" />
         </span>
         {delta && (
@@ -44,8 +44,8 @@ export function KpiCard({
           </span>
         )}
       </div>
-      <p className="text-xs font-semibold text-qbit-outline">{label}</p>
-      <p className="text-[20px] font-semibold text-qbit-on-surface">{value}</p>
+      <p className="text-xs font-medium text-qbit-on-surface-variant">{label}</p>
+      <p className="text-xl font-semibold text-qbit-on-surface mt-0.5">{value}</p>
     </SurfaceCard>
   );
 }

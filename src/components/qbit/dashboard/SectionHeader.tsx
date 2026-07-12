@@ -16,18 +16,15 @@ export function SectionHeader({
   className,
 }: {
   title: string;
-  /** Show a small primary-colored dot after the title (Stitch pattern). */
   accentDot?: boolean;
-  /** If provided, renders a text-link action button on the right. */
   actionLabel?: string;
   onAction?: () => void;
-  /** Alternative to actionLabel — render arbitrary content on the right. */
   rightContent?: React.ReactNode;
   className?: string;
 }) {
   return (
     <div className={cn("flex items-center justify-between mb-4", className)}>
-      <h3 className="text-[20px] font-semibold text-qbit-on-surface flex items-center gap-2">
+      <h3 className="text-lg font-semibold text-qbit-on-surface flex items-center gap-2">
         {title}
         {accentDot && <span className="w-1.5 h-1.5 rounded-full bg-qbit-primary" />}
       </h3>
@@ -35,7 +32,7 @@ export function SectionHeader({
         actionLabel && (
           <button
             onClick={onAction}
-            className="text-xs font-semibold text-qbit-primary hover:underline"
+            className="text-xs font-semibold text-qbit-primary hover:underline transition-colors"
           >
             {actionLabel}
           </button>
@@ -58,16 +55,16 @@ export function CarouselNav({
       <button
         onClick={onPrev}
         aria-label="Previous"
-        className="flex h-8 w-8 items-center justify-center rounded-lg bg-qbit-surface-container text-qbit-on-surface-variant hover:bg-qbit-primary hover:text-white transition-colors"
+        className="flex h-8 w-8 items-center justify-center rounded-lg bg-qbit-surface-container text-qbit-on-surface-variant hover:bg-qbit-primary hover:text-white transition-all duration-200 active:scale-95"
       >
         <Icon name="chevron_left" className="text-[18px]" />
       </button>
       <button
         onClick={onNext}
         aria-label="Next"
-        className="flex h-8 w-8 items-center justify-center rounded-lg bg-qbit-surface-container text-qbit-on-surface-variant hover:bg-qbit-primary hover:text-white transition-colors"
+        className="flex h-8 w-8 items-center justify-center rounded-lg bg-qbit-surface-container text-qbit-on-surface-variant hover:bg-qbit-primary hover:text-white transition-all duration-200 active:scale-95"
       >
-        <Icon name="chevron_right" className="text-[18px]" />
+        <Icon name="chevron_right" className="text-[18px]"      />
       </button>
     </div>
   );

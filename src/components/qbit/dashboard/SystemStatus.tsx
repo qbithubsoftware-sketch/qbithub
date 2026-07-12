@@ -11,7 +11,7 @@ import type { SystemStatusItem } from "./types";
  */
 export function SystemStatus({ items }: { items: SystemStatusItem[] }) {
   return (
-    <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
       {items.map((item) => (
         <SystemStatusCard key={item.label} item={item} />
       ))}
@@ -27,25 +27,28 @@ function SystemStatusCard({ item }: { item: SystemStatusItem }) {
         ? "text-qbit-error"
         : "text-qbit-on-surface-variant";
 
+  const deltaIcon = item.deltaVariant === "up" ? "trending_up" : item.deltaVariant === "down" ? "trending_down" : "remove";
+
   return (
-    <SurfaceCard className="p-4 hover:shadow-md transition-shadow">
-      <div className="flex justify-between items-start mb-2">
+    <SurfaceCard className="p-4 hover:shadow-md transition-all duration-200">
+      <div className="flex justify-between items-start mb-3">
         <span
           className={cn(
-            "flex h-8 w-8 items-center justify-center rounded-lg",
+            "flex h-9 w-9 items-center justify-center rounded-lg",
             item.iconBg ?? "bg-qbit-primary/10 text-qbit-primary",
           )}
         >
           <Icon name={item.icon} className="text-[20px]" />
         </span>
         {item.delta && (
-          <span className={cn("text-xs font-medium flex items-center", deltaColor)}>
+          <span className={cn("text-xs font-medium flex items-center gap-0.5", deltaColor)}>
+            <Icon name={deltaIcon} className="text-[14px]" />
             {item.delta}
           </span>
         )}
       </div>
-      <p className="text-xs font-semibold text-qbit-outline">{item.label}</p>
-      <p className="text-[20px] font-semibold text-qbit-on-surface">{item.value}</p>
+      <p className="text-xs font-medium text-qbit-on-surface-variant">{item.label}</p>
+      <p className="text-xl font-semibold text-qbit-on-surface mt-0.5">{item.value}</p>
     </SurfaceCard>
   );
 }

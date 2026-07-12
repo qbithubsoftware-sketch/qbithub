@@ -12,8 +12,8 @@ export function GlassCard({
   return (
     <div
       className={cn(
-        "glass-card rounded-xl shadow-sm",
-        hover && "card-hover-lift",
+        "glass-card rounded-xl shadow-sm transition-all duration-200",
+        hover && "hover:shadow-md hover:-translate-y-0.5",
         className,
       )}
       {...rest}
@@ -33,8 +33,8 @@ export function SurfaceCard({
   return (
     <div
       className={cn(
-        "bg-qbit-surface-container-lowest border border-qbit-outline-variant/60 rounded-xl shadow-sm transition-all duration-200",
-        hover && "hover:shadow-md hover:border-qbit-outline-variant",
+        "bg-qbit-surface-container-lowest border border-qbit-outline-variant/50 rounded-xl shadow-sm transition-all duration-200",
+        hover && "hover:shadow-md hover:-translate-y-0.5 hover:border-qbit-outline-variant",
         className,
       )}
       {...rest}
@@ -58,7 +58,7 @@ export function Pill({
     <span
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium",
-        "bg-qbit-surface-container-low text-qbit-on-surface-variant border border-qbit-outline-variant/60",
+        "bg-qbit-surface-container-low text-qbit-on-surface-variant border border-qbit-outline-variant/50",
         className,
       )}
     >

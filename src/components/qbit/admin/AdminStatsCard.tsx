@@ -11,17 +11,13 @@ const DELTA_CLASS = {
   neutral: "text-qbit-on-surface-variant",
 } as const;
 
-/**
- * AdminStatsCard — KPI widget matching the Stitch design exactly.
- * Uses p-4 padding, hover:shadow-md, icon with p-xs bg color.
- */
 export function AdminStatsCard({ stat }: { stat: AdminStatItem }) {
   const deltaIcon = stat.deltaVariant === "up" ? "trending_up" : stat.deltaVariant === "down" ? "trending_down" : "remove";
 
   return (
-    <SurfaceCard className="p-4 hover:shadow-md transition-shadow">
-      <div className="flex justify-between items-start mb-2">
-        <span className={cn("flex h-8 w-8 items-center justify-center rounded-lg", stat.iconBg ?? "bg-qbit-primary/10 text-qbit-primary")}>
+    <SurfaceCard className="p-4 hover:shadow-md transition-all duration-200">
+      <div className="flex justify-between items-start mb-3">
+        <span className={cn("flex h-9 w-9 items-center justify-center rounded-lg", stat.iconBg ?? "bg-qbit-primary/10 text-qbit-primary")}>
           <Icon name={stat.icon} className="text-[20px]" />
         </span>
         {stat.delta && (
@@ -31,13 +27,12 @@ export function AdminStatsCard({ stat }: { stat: AdminStatItem }) {
           </span>
         )}
       </div>
-      <p className="text-xs font-semibold text-qbit-outline">{stat.label}</p>
-      <p className="text-[20px] font-semibold text-qbit-on-surface">{stat.value}</p>
+      <p className="text-xs font-medium text-qbit-on-surface-variant">{stat.label}</p>
+      <p className="text-xl font-semibold text-qbit-on-surface mt-0.5">{stat.value}</p>
     </SurfaceCard>
   );
 }
 
-/** Grid of AdminStatsCards. */
 export function AdminStatsGrid({ stats }: { stats: AdminStatItem[] }) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
