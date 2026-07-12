@@ -32,7 +32,7 @@ export function KpiCard({
   const deltaIcon = deltaVariant === "up" ? "trending_up" : deltaVariant === "down" ? "trending_down" : "remove";
 
   return (
-    <SurfaceCard className={cn("p-5 card-hover-lift", className)}>
+    <SurfaceCard className={cn("p-4 card-hover-lift", className)}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-xs font-semibold uppercase tracking-wider text-qbit-on-surface-variant">

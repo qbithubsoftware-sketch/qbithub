@@ -120,6 +120,45 @@
     @apply bg-background text-foreground;
     font-feature-settings: "cv11", "ss01";
   }
+
+  /* ===== Focus States (Accessibility) ===== */
+  *:focus-visible {
+    outline: 2px solid rgba(0, 67, 200, 0.4);
+    outline-offset: 2px;
+  }
+
+  /* ===== Smooth Scrolling ===== */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* ===== Reduced Motion (Accessibility) ===== */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* ===== Scrollbar Styling (global) ===== */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--qbit-outline-variant, #c3c5d9);
+    border-radius: 8px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--qbit-outline, #737688);
+  }
 }
 
 /* ===== QBIT Hub Design System Custom Classes ===== */
@@ -254,14 +293,7 @@
   box-shadow: 0 0 0 3px rgba(0, 87, 255, 0.15), 0 8px 16px -4px rgba(0, 67, 200, 0.3);
 }
 
-/* Card hover lift */
-.card-hover-lift {
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
-.card-hover-lift:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px -8px rgba(17, 24, 39, 0.1), 0 4px 8px -4px rgba(17, 24, 39, 0.05);
-}
+/* Card hover lift — subtle, enterprise-quality (overrides duplicate below) */
 
 /* Command palette backdrop */
 .command-palette-backdrop {
@@ -340,4 +372,41 @@
 .signature-pad {
   background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
   background-size: 20px 20px;
+}
+
+/* ===== Z-Index Tokens (enterprise stacking order) ===== */
+:root {
+  --z-sidebar: 40;
+  --z-topbar: 30;
+  --z-dropdown: 50;
+  --z-drawer: 55;
+  --z-modal: 60;
+  --z-toast: 70;
+  --z-tooltip: 80;
+}
+
+/* ===== Card Consistency ===== */
+.card-hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card-hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px -6px rgba(17, 24, 39, 0.08), 0 4px 8px -4px rgba(17, 24, 39, 0.04);
+}
+
+/* ===== Animation Utilities ===== */
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up {
+  animation: fade-in-up 0.3s ease-out;
+}
+
+/* ===== Table Sticky Header ===== */
+.sticky-header thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--qbit-surface-container-low, #f1f3ff);
 }

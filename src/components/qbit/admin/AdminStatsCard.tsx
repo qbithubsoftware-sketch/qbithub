@@ -20,7 +20,7 @@ export function AdminStatsCard({ stat }: { stat: AdminStatItem }) {
   const deltaIcon = stat.deltaVariant === "up" ? "trending_up" : stat.deltaVariant === "down" ? "trending_down" : "remove";
 
   return (
-    <SurfaceCard className="p-4 hover:shadow-md transition-shadow">
+    <SurfaceCard className="p-4 card-hover-lift">
       <div className="flex items-start justify-between gap-2 mb-2">
         <span className={cn("flex h-9 w-9 items-center justify-center rounded-lg", stat.iconBg ?? "bg-qbit-primary/10 text-qbit-primary")}>
           <Icon name={stat.icon} className="text-[20px]" />

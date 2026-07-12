@@ -43,7 +43,7 @@ export function TopBar({
   rightTextIcon,
 }: TopBarProps) {
   return (
-    <header className="fixed top-0 right-0 z-40 flex h-16 items-center gap-3 border-b border-qbit-outline-variant bg-qbit-surface-container-lowest/80 px-4 backdrop-blur-md md:px-6"
+    <header className="fixed top-0 right-0 z-30 flex h-16 items-center gap-3 border-b border-qbit-outline-variant bg-qbit-surface-container-lowest/80 px-4 backdrop-blur-md md:px-6"
       style={{ left: "var(--sidebar-width, 256px)" }}
     >
       {/* Mobile menu */}
@@ -113,20 +113,20 @@ export function TopBar({
       )}
 
       {/* Right extras */}
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1">
         {rightExtras}
-        {/* Standard action icons */}
-        <button className="relative flex h-9 w-9 items-center justify-center rounded-lg text-qbit-on-surface-variant hover:bg-qbit-surface-container transition-colors">
+        {/* Standard action icons — all h-9 w-9 for consistent touch targets */}
+        <button aria-label="Notifications" className="relative flex h-9 w-9 items-center justify-center rounded-lg text-qbit-on-surface-variant hover:bg-qbit-surface-container transition-colors">
           <Icon name="notifications" className="text-[20px]" />
           <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-qbit-error" />
         </button>
-        <button className="hidden md:flex h-9 w-9 items-center justify-center rounded-lg text-qbit-on-surface-variant hover:bg-qbit-surface-container transition-colors">
+        <button aria-label="Help" className="hidden md:flex h-9 w-9 items-center justify-center rounded-lg text-qbit-on-surface-variant hover:bg-qbit-surface-container transition-colors">
           <Icon name="help" className="text-[20px]" />
         </button>
         <ThemeToggle />
         <ScreenSwitcher />
         {user && (
-          <div className="pl-1">
+          <div className="pl-1 ml-1 border-l border-qbit-outline-variant/40">
             <ProfileMenu />
           </div>
         )}
