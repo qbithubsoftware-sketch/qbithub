@@ -4,6 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/qbit/primitives/Icon";
 import { QbitButton } from "@/components/qbit/primitives/QbitButton";
 import { ScreenSwitcher } from "@/components/qbit/shells/ScreenSwitcher";
+import { ContactForm } from "@/components/qbit/portal/ContactForm";
+import { PublicDownloadGrid } from "@/components/qbit/portal/PublicDownloadCard";
+import { PUBLIC_DOWNLOADS } from "@/lib/portal/placeholder-data";
 import { useNavigation } from "@/lib/navigation/store";
 
 type DownloadCard = {
@@ -635,6 +638,32 @@ export function QbitT800ProductOverviewPage() {
                 </div>
               ))}
             </div>
+          </div>
+        </section>
+
+        {/* ---------- Public Downloads ---------- */}
+        <section className="scroll-reveal bg-qbit-surface-container-low px-4 py-16 md:px-8">
+          <div className="mx-auto max-w-7xl">
+            <h2 className="mb-2 text-center text-headline-lg font-headline-lg">
+              Public Downloads
+            </h2>
+            <p className="mb-8 text-center text-body-lg text-qbit-on-surface-variant">
+              Free drivers, manuals, and datasheets for your QBIT hardware.
+            </p>
+            <PublicDownloadGrid downloads={PUBLIC_DOWNLOADS} />
+          </div>
+        </section>
+
+        {/* ---------- Contact Form ---------- */}
+        <section className="scroll-reveal bg-white px-4 py-16 md:px-8">
+          <div className="mx-auto max-w-2xl">
+            <h2 className="mb-2 text-center text-headline-lg font-headline-lg">
+              Get in Touch
+            </h2>
+            <p className="mb-8 text-center text-body-lg text-qbit-on-surface-variant">
+              Have a question about the QBIT T-800? Our team responds within 1 business hour.
+            </p>
+            <ContactForm productId="qbit-t800" productName="QBIT T-800" />
           </div>
         </section>
 

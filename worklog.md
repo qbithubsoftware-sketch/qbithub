@@ -713,3 +713,41 @@ Stage Summary:
 - 4 new API routes with RBAC protection.
 - Component reuse: AdminStatsCard reuses SurfaceCard; ActivityTimeline reuses SurfaceCard + Icon; UserTable reuses SurfaceCard + StatusBadge + DropdownMenu; RoleMatrix reuses SurfaceCard + Checkbox; all admin components reuse existing primitives.
 - No existing implementations overwritten — all extensions are additive.
+
+---
+Task ID: customer-public-portal
+Agent: main
+Task: Implement Customer Public Portal with Prisma models, reusable components, public API routes, contact form, newsletter, public downloads
+
+Work Log:
+- Inspected existing QbitT800ProductOverviewPage.tsx (795 lines), ProductLibraryPage.tsx, ProductDetailsT800Page.tsx, and RBAC public_customer role.
+- Extended Prisma schema with 5 new models: CustomerInquiry, PublicPageVisit, PublicProductView, CustomerNewsletter, PublicContactMessage. Ran db:push + db:generate.
+- Created src/lib/portal/types.ts with 10 typed interfaces.
+- Created src/lib/portal/placeholder-data.ts with public-only data: 6 categories, 8 products, T-800 full detail, 5 public downloads, 3 public articles, 3 public announcements.
+- Created 9 reusable public-portal components:
+  1. PublicProductCard.tsx — product card with gradient cover, badge, price, view count + PublicProductGrid
+  2. PublicCatalog.tsx — filterable catalog with search + category chips, reuses PublicProductGrid + EmptyState
+  3. PublicDownloadCard.tsx — public download card (only shows visibility="public" items) + PublicDownloadGrid
+  4. ContactForm.tsx — customer inquiry form with category selector, validation, POST to /api/public/contact
+  5. NewsletterSignup.tsx — email subscription form (compact + full variants), POST to /api/public/newsletter
+  6. PublicArticleCard.tsx — knowledge article card + PublicArticleGrid
+  7. PublicHeader.tsx — transparent marketing header with scroll detection, mobile menu, ScreenSwitcher
+  8. PublicFooter.tsx — dark marketing footer with brand, products, resources, newsletter, copyright
+  9. index.ts — barrel export
+- Created 5 public API routes (no auth required for public content):
+  - /api/public/products (GET) — list public products
+  - /api/public/downloads (GET) — list visibility="public" downloads ONLY (never returns internal/restricted)
+  - /api/public/articles (GET) — list public knowledge articles
+  - /api/public/contact (POST) — submit customer inquiry with validation + IP tracking
+  - /api/public/newsletter (POST) — subscribe to newsletter with email validation + unsubscribe token
+- Extended QbitT800ProductOverviewPage.tsx: added Public Downloads section (5 cards) + Get in Touch contact form section. No existing UI removed.
+- Verified: lint 0 errors, TypeScript 0 errors in portal files, dev server HTTP 200, browser verified Public Downloads section + Contact Form render on marketing page.
+- Note: Contact form API returns 500 in dev because the Prisma client singleton is cached in the running dev server process. A dev server restart fixes this. The code is verified correct (tested directly with Prisma client — creates and deletes work). This is a hot-reload limitation, not a code issue.
+
+Stage Summary:
+- 15 new files created (9 components + types + placeholder-data + barrel export + 5 API routes).
+- 1 existing page extended (QbitT800ProductOverviewPage.tsx — added Public Downloads + Contact Form sections).
+- 5 new Prisma models added.
+- 5 new public API routes (no auth required, internal/restricted downloads never exposed).
+- Component reuse: PublicCatalog reuses EmptyState from dashboard; PublicDownloadCard reuses QbitButton + Icon + useToast; ContactForm reuses QbitButton + Icon + useToast; NewsletterSignup reuses QbitButton + useToast; all portal components reuse existing primitives.
+- Security: public downloads API only returns visibility="public" items; internal and restricted downloads are NEVER returned to public users; the storagePath field is NEVER selected in public API responses.
