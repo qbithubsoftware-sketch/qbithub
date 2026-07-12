@@ -813,3 +813,99 @@ model PublicContactMessage {
   @@index([handled])
   @@index([category])
 }
+
+// =====================================================
+// Enterprise AI Assistant models
+// =====================================================
+
+/// AI conversation session.
+model AIConversation {
+  id          String   @id @default(cuid())
+  userId      String?
+  title       String   @default("New Conversation")
+  pinned      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  messages    AIMessage[]
+
+  @@index([userId])
+  @@index([pinned])
+}
+
+/// A single message in an AI conversation.
+model AIMessage {
+  id              String   @id @default(cuid())
+  conversationId  String
+  conversation    AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role            String   // "user" | "assistant" | "system"
+  content         String
+  model           String?  // AI model used (e.g. "glm-4")
+  provider        String?  // "zai" | "openai" | "gemini" | "claude" | "local"
+  tokensUsed      Int      @default(0)
+  responseTimeMs  Int?     // latency in milliseconds
+  createdAt       DateTime @default(now())
+
+  sourceRefs      SourceReference[]
+  feedback        AIFeedback[]
+
+  @@index([conversationId])
+  @@index([role])
+}
+
+/// Search history entry (user questions asked to the AI).
+model SearchHistory {
+  id          String   @id @default(cuid())
+  userId      String?
+  query       String
+  resultCount Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+/// Suggested question shown in the chat UI.
+model SuggestedQuestion {
+  id          String   @id @default(cuid())
+  question    String
+  category    String   // "installation" | "drivers" | "troubleshooting" | "firmware" | "general"
+  icon        String?
+  sortOrder   Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@index([active])
+  @@index([category])
+}
+
+/// User feedback on an AI message.
+model AIFeedback {
+  id          String   @id @default(cuid())
+  messageId   String
+  message     AIMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId      String?
+  rating      String   // "helpful" | "not_helpful"
+  comment     String?
+  createdAt   DateTime @default(now())
+
+  @@index([messageId])
+  @@index([rating])
+}
+
+/// Source reference — documents/sources used by the AI to generate a response.
+model SourceReference {
+  id          String   @id @default(cuid())
+  messageId   String
+  message     AIMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  sourceType  String   // "product" | "driver" | "manual" | "article" | "guide" | "faq" | "troubleshooting" | "video"
+  sourceId    String?
+  title       String
+  url         String?
+  excerpt     String?  // relevant snippet
+  relevance   Float    @default(0) // 0-1 relevance score
+  createdAt   DateTime @default(now())
+
+  @@index([messageId])
+  @@index([sourceType])
+}

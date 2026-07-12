@@ -8,6 +8,7 @@ import { SectionHeader } from "@/components/qbit/dashboard/SectionHeader";
 import { TroubleshootingCard } from "@/components/qbit/knowledge/TroubleshootingCard";
 import { ErrorCodeCard } from "@/components/qbit/knowledge/ErrorCodeCard";
 import { FAQAccordion } from "@/components/qbit/knowledge/FAQAccordion";
+import { AIChatWindow } from "@/components/qbit/ai/AIChatWindow";
 import { AI_SUPPORT_NAV } from "@/lib/navigation/nav-config";
 import { useNavigation, type ScreenId } from "@/lib/navigation/store";
 import {
@@ -716,6 +717,17 @@ export function AISupportCenterPage() {
               Explore All Articles
             </QbitButton>
           </div>
+        </section>
+
+        {/* ================================================================ */}
+        {/* Enterprise AI Assistant (RAG-powered)                            */}
+        {/* ================================================================ */}
+        <section className="space-y-6">
+          <SectionHeader title="Enterprise AI Assistant" accentDot />
+          <p className="text-sm text-qbit-on-surface-variant -mt-2">
+            Ask questions about installation, drivers, troubleshooting, and more. The AI answers using only QBIT Hub data — never invents product information.
+          </p>
+          <AIChatWindow />
         </section>
 
         {/* ================================================================ */}

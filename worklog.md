@@ -816,3 +816,36 @@ Stage Summary:
 - SEO: JSON-LD Product schema + BreadcrumbList schema + Open Graph + Twitter Card + canonical URL + dynamic title.
 - Public search: no auth required, searches only public products.
 - Security: public-search screen has empty permissions array (public access); RBAC remains enforced for all internal screens.
+
+---
+Task ID: enterprise-ai-assistant
+Agent: main
+Task: Implement RAG-ready Enterprise AI Assistant with provider abstraction, document retrieval, chat UI, source references, search history
+
+Work Log:
+- Extended Prisma schema with 6 new models: AIConversation, AIMessage, SearchHistory, SuggestedQuestion, AIFeedback, SourceReference. Ran db:push + generate.
+- Created RAG-ready architecture in src/lib/ai/:
+  1. types.ts — 11 provider-agnostic interfaces (AIProvider, AIRequest, AIResponse, SourceDocument, RetrievalResult, etc.)
+  2. provider.ts — AIProvider interface + ZAIProvider (z-ai-web-dev-sdk adapter) + MockProvider (fallback) + getAIProvider() factory
+  3. retrieval.ts — Document retrieval service that searches Knowledge Base articles, Downloads (public only), FAQs, Troubleshooting, Error Codes, Products, Installation Guides. Uses keyword-based relevance scoring (replaceable with vector embeddings).
+  4. prompt-builder.ts — System prompt builder with QBIT Hub context injection, RBAC awareness (filters internal sources for public users), conversation history management.
+  5. placeholder-data.ts — 6 suggested questions.
+- Created /api/ai/chat API route: POST endpoint that executes the full RAG pipeline (retrieve → build prompt → call AI provider → store conversation → return response + sources).
+- Created 6 reusable AI chat components:
+  1. AIChatWindow.tsx — complete chat interface with message list, suggested questions, input bar, search history sidebar, copy/feedback actions
+  2. MessageBubble.tsx — renders user/assistant messages with Markdown support (headings, bold, italic, lists, tables, code blocks), loading state (typing dots), copy/thumbs-up/thumbs-down actions
+  3. SuggestedQuestions.tsx — clickable question chips
+  4. SourceReferences.tsx — source documents used by AI (SourceReferences + RelatedAssets)
+  5. SearchHistory.tsx — sidebar with pinned + recent questions
+  6. index.ts — barrel export
+- Extended AISupportCenterPage.tsx: added "Enterprise AI Assistant" section with AIChatWindow.
+- Verified: lint 0 errors, TypeScript 0 errors, browser verified AI chat works (sends message, gets response with step-by-step installation guide, Related Assets shown, suggested questions displayed).
+- Provider abstraction: ZAIProvider uses ZAI.create() (static factory), MockProvider returns structured responses for development without API key. New providers (OpenAI, Gemini, Claude, self-hosted) can be added by implementing the AIProvider interface — no other code changes needed.
+
+Stage Summary:
+- 11 new files created (6 components + 4 lib files + 1 API route + barrel export).
+- 1 existing page extended (AISupportCenterPage.tsx).
+- 6 new Prisma models added.
+- 1 new API route (/api/ai/chat with RAG pipeline).
+- RAG architecture: Document Retrieval → Prompt Builder → AI Provider → Source References — all swappable.
+- Security: public users only receive public content in retrieval pipeline; internal sources filtered out.
