@@ -19,6 +19,7 @@ import { ShareModal } from "./ShareModal";
 import { QRCodeCard } from "./QRCodeCard";
 import { RelatedProducts } from "./RelatedProducts";
 import { ContactForm } from "./ContactForm";
+import { ProductSEO } from "./ProductSEO";
 
 import type {
   PublicProductDetail,
@@ -73,6 +74,20 @@ export function PublicProductLayout({
 
   return (
     <div className="flex min-h-screen flex-col bg-white text-qbit-on-surface">
+      {/* SEO: JSON-LD structured data + dynamic meta tags */}
+      <ProductSEO
+        product={{
+          name: product.name,
+          description: product.description,
+          model: product.model,
+          category: product.category,
+          availability: product.availability,
+          url: publicUrl,
+          image: product.galleryImages[0]?.url,
+          brand: "QBIT Hub",
+        }}
+      />
+
       {/* Spacer for fixed header */}
       <div className="h-[72px] shrink-0" />
 

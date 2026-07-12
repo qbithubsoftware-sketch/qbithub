@@ -40,6 +40,8 @@ const SCREENS: ScreenEntry[] = [
   // Search
   { id: "universal-search-command-center", label: "Universal Search (Desktop)", group: "Search", icon: "search" },
   { id: "universal-search-mobile", label: "Universal Search (Mobile)", group: "Search", icon: "smartphone" },
+  // Public portal
+  { id: "public-search", label: "Public Product Search", group: "Public", icon: "manage_search" },
 ];
 
 const GROUPS = Array.from(new Set(SCREENS.map((s) => s.group)));

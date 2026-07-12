@@ -17,7 +17,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "QBIT Hub — Enterprise Portal",
+  title: {
+    default: "QBIT Hub — Enterprise Portal",
+    template: "%s | QBIT Hub",
+  },
   description:
     "QBIT Hub is the enterprise control center for installation engineers, field operations, product management, and AI-powered technical support.",
   keywords: [
@@ -27,25 +30,55 @@ export const metadata: Metadata = {
     "Installation",
     "Driver Management",
     "Field Engineering",
+    "POS Terminal",
+    "Thermal Printer",
+    "Barcode Scanner",
+    "Firmware",
   ],
   authors: [{ name: "QBIT Hub Technology Group" }],
+  creator: "QBIT Hub Technology Group",
+  publisher: "QBIT Hub Technology Group",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  alternates: {
+    canonical: "https://hub.qbit.com",
+  },
   icons: {
     icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
   },
   openGraph: {
     title: "QBIT Hub — Enterprise Portal",
     description:
-      "Precision engineering for modern POS systems. Manage hardware lifecycles, installation workflows, and driver deployments.",
+      "Precision engineering for modern POS systems. Manage hardware lifecycles, installation workflows, and driver deployments across your global enterprise fleet.",
     url: "https://hub.qbit.com",
     siteName: "QBIT Hub",
     type: "website",
+    locale: "en_US",
+    images: [
+      {
+        url: "https://hub.qbit.com/qbit-logo.png",
+        width: 1200,
+        height: 630,
+        alt: "QBIT Hub Enterprise Portal",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "QBIT Hub — Enterprise Portal",
     description:
       "Precision engineering for modern POS systems across your global enterprise fleet.",
+    images: ["https://hub.qbit.com/qbit-logo.png"],
   },
+  category: "technology",
 };
 
 export default function RootLayout({

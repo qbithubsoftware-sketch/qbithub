@@ -22,6 +22,7 @@ export { ShareModal } from "./ShareModal";
 export { QRCodeCard, QRCodeButton } from "./QRCodeCard";
 export { RelatedProducts } from "./RelatedProducts";
 export { PublicProductLayout } from "./PublicProductLayout";
+export { ProductSEO } from "./ProductSEO";
 
 export type {
   PublicProductCard as PublicProductCardType,

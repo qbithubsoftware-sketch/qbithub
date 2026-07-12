@@ -34,7 +34,9 @@ export type ScreenId =
   | "system-settings"
   // Search
   | "universal-search-command-center"
-  | "universal-search-mobile";
+  | "universal-search-mobile"
+  // Public portal
+  | "public-search";
 
 interface NavigationState {
   current: ScreenId;

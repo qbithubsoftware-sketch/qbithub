@@ -23,6 +23,7 @@ import { SystemSettingsPage } from "@/components/qbit/pages/SystemSettingsPage";
 import { UniversalSearchCommandCenterPage } from "@/components/qbit/pages/UniversalSearchCommandCenterPage";
 import { UniversalSearchMobilePage } from "@/components/qbit/pages/UniversalSearchMobilePage";
 import { QbitT800ProductOverviewPage } from "@/components/qbit/pages/QbitT800ProductOverviewPage";
+import { PublicSearchPage } from "@/components/qbit/pages/PublicSearchPage";
 
 export default function Home() {
   const current = useNavigation((s) => s.current);
@@ -71,6 +72,8 @@ export default function Home() {
         return <UniversalSearchMobilePage />;
       case "product-overview":
         return <QbitT800ProductOverviewPage />;
+      case "public-search":
+        return <PublicSearchPage />;
       default:
         return <LoginPage />;
     }

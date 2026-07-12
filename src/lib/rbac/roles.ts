@@ -137,6 +137,9 @@ export const SCREEN_PERMISSIONS: Record<ScreenId, Role[]> = {
     "dealer",
     "viewer",
   ],
+
+  // Public portal — no auth required
+  "public-search": [],
 };
 
 /**

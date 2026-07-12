@@ -785,3 +785,34 @@ Stage Summary:
 - Component reuse: PublicFAQAccordion reuses FAQAccordion from knowledge module; DownloadAssets reuses PublicDownloadGrid; RelatedProducts reuses PublicProductGrid; YouTubeGallery reuses YouTube IFrame embed pattern from installation module; all portal components reuse existing primitives (Icon, QbitButton, TagBadge, SurfaceCard, SectionHeader, EmptyState, Dialog).
 - Security: only public assets are shown; internal/restricted downloads never exposed; QR code encodes only the public product URL.
 - Share modal: supports Copy Link, WhatsApp, Email, QR Code, and Native Share API (where supported).
+
+---
+Task ID: customer-public-portal-seo
+Agent: main
+Task: Complete Customer Public Portal with SEO metadata, JSON-LD structured data, public search page, and route wiring
+
+Work Log:
+- Inspected existing portal: 21 components + 5 API routes already in place from previous turns.
+- Identified gaps: SEO metadata (JSON-LD, Open Graph, Twitter Card), public search page route, dynamic meta tags.
+- Created ProductSEO.tsx — client-side SEO component that injects:
+  - JSON-LD Product schema (name, description, model, brand, availability, url, image)
+  - JSON-LD BreadcrumbList schema (Home > Products > Category > Product)
+  - Dynamic meta tags (og:title, og:description, og:type, og:url, og:image, twitter:card, twitter:title, twitter:description, twitter:image)
+  - Dynamic canonical URL link
+  - Dynamic document title
+  - Cleanup on unmount (removes all injected elements)
+- Enhanced layout.tsx metadata: added title template ("%s | QBIT Hub"), robots directives (index, follow, max-image-preview), canonical URL, Open Graph images with dimensions, Twitter Card images, publisher, creator, category.
+- Added "public-search" screen to navigation store (ScreenId type) and RBAC permissions (empty array = public, no auth required).
+- Added "public-search" to ScreenSwitcher dropdown (Public group).
+- Created PublicSearchPage.tsx — public product search page composing PublicHeader + PublicCatalog (with search + category filters) + PublicFooter. No auth required.
+- Wired PublicSearchPage into page.tsx router (case "public-search").
+- Added ProductSEO to PublicProductLayout — injects JSON-LD + meta tags for every product page.
+- Updated barrel export (index.ts) to include ProductSEO.
+- Verified: lint 0 errors, TypeScript 0 errors, browser verified JSON-LD schemas (Product + BreadcrumbList) render on product page, meta tags (og:title, og:type=product, twitter:card, canonical URL) all correct, public search page renders with 8 products + category filters.
+
+Stage Summary:
+- 3 new files created (ProductSEO.tsx, PublicSearchPage.tsx).
+- 5 existing files extended (layout.tsx, store.ts, roles.ts, page.tsx, ScreenSwitcher.tsx, PublicProductLayout.tsx, index.ts).
+- SEO: JSON-LD Product schema + BreadcrumbList schema + Open Graph + Twitter Card + canonical URL + dynamic title.
+- Public search: no auth required, searches only public products.
+- Security: public-search screen has empty permissions array (public access); RBAC remains enforced for all internal screens.
