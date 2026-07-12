@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Sidebar, type SidebarVariant, type NavItem } from "./Sidebar";
 import { TopBar, type TopBarProps } from "./TopBar";
 import { PageTransition } from "./PageTransition";
+import { PremiumCommandPalette } from "./PremiumCommandPalette";
 import type { ScreenId } from "@/lib/navigation/store";
 
 export interface AppShellProps {
@@ -83,6 +84,9 @@ export function AppShell({
           </PageTransition>
         </div>
       </main>
+
+      {/* Premium Command Palette (Ctrl+K) */}
+      <PremiumCommandPalette />
     </div>
   );
 }
