@@ -24,44 +24,28 @@ export function KpiCard({
   className,
 }: KpiCardProps) {
   const deltaClass = {
-    up: "text-emerald-600 bg-emerald-50",
-    down: "text-red-600 bg-red-50",
-    neutral: "text-qbit-on-surface-variant bg-qbit-surface-container-high",
+    up: "text-emerald-600",
+    down: "text-qbit-error",
+    neutral: "text-qbit-on-surface-variant",
   }[deltaVariant];
 
   const deltaIcon = deltaVariant === "up" ? "trending_up" : deltaVariant === "down" ? "trending_down" : "remove";
 
   return (
-    <SurfaceCard className={cn("p-4 card-hover-lift", className)}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold uppercase tracking-wider text-qbit-on-surface-variant">
-            {label}
-          </p>
-          <p className="mt-2 text-[28px] font-bold leading-tight text-qbit-on-surface">
-            {value}
-          </p>
-          {delta && (
-            <span
-              className={cn(
-                "mt-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold",
-                deltaClass,
-              )}
-            >
-              <Icon name={deltaIcon} className="text-[12px]" />
-              {delta}
-            </span>
-          )}
-        </div>
-        <div
-          className={cn(
-            "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
-            iconBg,
-          )}
-        >
-          <Icon name={icon} className="text-[22px]" />
-        </div>
+    <SurfaceCard className={cn("p-4 hover:shadow-md transition-shadow", className)}>
+      <div className="flex justify-between items-start mb-2">
+        <span className={cn("flex h-8 w-8 items-center justify-center rounded-lg", iconBg)}>
+          <Icon name={icon} className="text-[20px]" />
+        </span>
+        {delta && (
+          <span className={cn("text-xs font-medium flex items-center gap-0.5", deltaClass)}>
+            <Icon name={deltaIcon} className="text-[14px]" />
+            {delta}
+          </span>
+        )}
       </div>
+      <p className="text-xs font-semibold text-qbit-outline">{label}</p>
+      <p className="text-[20px] font-semibold text-qbit-on-surface">{value}</p>
     </SurfaceCard>
   );
 }

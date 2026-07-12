@@ -118,8 +118,8 @@ export function Sidebar({
                     "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
                     collapsed && "justify-center px-0",
                     active
-                      ? "sidebar-active-indicator bg-qbit-surface-container text-qbit-primary font-semibold"
-                      : "text-qbit-on-surface-variant hover:bg-qbit-surface-container-low",
+                      ? "sidebar-active-indicator bg-qbit-primary-container/10 text-qbit-primary font-semibold"
+                      : "text-qbit-on-surface-variant hover:bg-qbit-surface-container-high",
                   )}
                   title={collapsed ? item.label : undefined}
                 >
@@ -149,7 +149,7 @@ export function Sidebar({
                 <button
                   onClick={() => item.screen && navigate(item.screen)}
                   className={cn(
-                    "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-qbit-on-surface-variant transition-all hover:bg-qbit-surface-container-low",
+                    "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-qbit-on-surface-variant transition-all hover:bg-qbit-surface-container-high",
                     collapsed && "justify-center px-0",
                   )}
                   title={collapsed ? item.label : undefined}
@@ -162,7 +162,7 @@ export function Sidebar({
           </ul>
         )}
         {!collapsed && (
-          <div className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-qbit-surface-container-low transition-colors">
+          <div className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-qbit-surface-container-high transition-colors">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-qbit-primary text-sm font-bold text-qbit-on-primary">
               {user.initials ?? user.name.split(" ").map((p) => p[0]).slice(0, 2).join("")}
             </div>

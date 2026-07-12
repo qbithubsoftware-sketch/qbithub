@@ -75,7 +75,7 @@ export function TopBar({
           onChange={(e) => onSearchChange?.(e.target.value)}
           onFocus={onSearchFocus}
           placeholder={searchPlaceholder}
-          className="w-full rounded-full border border-qbit-outline-variant/60 bg-qbit-surface-container-low py-2 pl-10 pr-3 text-sm text-qbit-on-surface placeholder:text-qbit-on-surface-variant/70 transition-all focus:bg-white focus:ring-2 focus:ring-qbit-primary/40 focus:border-qbit-primary"
+          className="w-full rounded-full border border-transparent bg-qbit-surface-container py-2 pl-10 pr-3 text-sm text-qbit-on-surface placeholder:text-qbit-on-surface-variant/70 transition-all focus:bg-white focus:ring-2 focus:ring-qbit-primary/40 focus:border-qbit-primary"
         />
         {showSearchKbd && (
           <kbd className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded border border-qbit-outline-variant bg-white px-1.5 py-0.5 text-[10px] font-bold text-qbit-on-surface-variant">

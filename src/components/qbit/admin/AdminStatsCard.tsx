@@ -6,28 +6,27 @@ import { SurfaceCard } from "@/components/qbit/primitives/GlassCard";
 import type { AdminStatItem } from "@/lib/admin/types";
 
 const DELTA_CLASS = {
-  up: "text-emerald-600 bg-emerald-50",
-  down: "text-red-600 bg-red-50",
-  neutral: "text-qbit-on-surface-variant bg-qbit-surface-container-high",
+  up: "text-emerald-600",
+  down: "text-qbit-error",
+  neutral: "text-qbit-on-surface-variant",
 } as const;
 
 /**
- * AdminStatsCard — reusable KPI widget for the admin dashboard.
- * Extends the existing KpiCard pattern but adds the `category` field
- * for grouping.
+ * AdminStatsCard — KPI widget matching the Stitch design exactly.
+ * Uses p-4 padding, hover:shadow-md, icon with p-xs bg color.
  */
 export function AdminStatsCard({ stat }: { stat: AdminStatItem }) {
   const deltaIcon = stat.deltaVariant === "up" ? "trending_up" : stat.deltaVariant === "down" ? "trending_down" : "remove";
 
   return (
-    <SurfaceCard className="p-4 card-hover-lift">
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <span className={cn("flex h-9 w-9 items-center justify-center rounded-lg", stat.iconBg ?? "bg-qbit-primary/10 text-qbit-primary")}>
+    <SurfaceCard className="p-4 hover:shadow-md transition-shadow">
+      <div className="flex justify-between items-start mb-2">
+        <span className={cn("flex h-8 w-8 items-center justify-center rounded-lg", stat.iconBg ?? "bg-qbit-primary/10 text-qbit-primary")}>
           <Icon name={stat.icon} className="text-[20px]" />
         </span>
         {stat.delta && (
-          <span className={cn("text-[11px] font-semibold flex items-center gap-0.5 px-1.5 py-0.5 rounded-full", DELTA_CLASS[stat.deltaVariant ?? "neutral"])}>
-            <Icon name={deltaIcon} className="text-[12px]" />
+          <span className={cn("text-xs font-medium flex items-center gap-0.5", DELTA_CLASS[stat.deltaVariant ?? "neutral"])}>
+            <Icon name={deltaIcon} className="text-[14px]" />
             {stat.delta}
           </span>
         )}
