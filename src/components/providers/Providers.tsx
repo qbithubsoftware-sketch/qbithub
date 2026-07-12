@@ -12,6 +12,7 @@
 import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "next-themes";
 import type { ReactNode } from "react";
+import { TourProvider } from "@/lib/tour/tour-context";
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
@@ -23,7 +24,9 @@ export function Providers({ children }: { children: ReactNode }) {
         disableTransitionOnChange={false}
         storageKey="qbit-theme"
       >
-        {children}
+        <TourProvider>
+          {children}
+        </TourProvider>
       </ThemeProvider>
     </SessionProvider>
   );

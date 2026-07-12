@@ -6,6 +6,9 @@ import { Sidebar, type SidebarVariant, type NavItem } from "./Sidebar";
 import { TopBar, type TopBarProps } from "./TopBar";
 import { PageTransition } from "./PageTransition";
 import { PremiumCommandPalette } from "./PremiumCommandPalette";
+import { TourOverlay } from "@/components/qbit/tour/TourOverlay";
+import { WelcomeScreen } from "@/components/qbit/tour/WelcomeScreen";
+import { HelpCenter } from "@/components/qbit/tour/HelpCenter";
 import type { ScreenId } from "@/lib/navigation/store";
 
 export interface AppShellProps {
@@ -87,6 +90,13 @@ export function AppShell({
 
       {/* Premium Command Palette (Ctrl+K) */}
       <PremiumCommandPalette />
+
+      {/* Interactive Product Tour */}
+      <WelcomeScreen />
+      <TourOverlay />
+
+      {/* Help Center (floating button) */}
+      <HelpCenter />
     </div>
   );
 }
