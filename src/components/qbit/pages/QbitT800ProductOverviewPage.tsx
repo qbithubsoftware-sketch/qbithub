@@ -726,7 +726,8 @@ export function QbitT800ProductOverviewPage() {
         </section>
 
         {/* ============ Full Product Detail Layout ============ */}
-        {/* Composed from reusable portal components — gallery, specs, downloads, videos, FAQs, troubleshooting, accessories, support, contact, QR */}
+        {/* Only render if product detail data exists */}
+        {T800_PUBLIC_DETAIL && (
         <PublicProductLayout
           product={T800_PUBLIC_DETAIL}
           downloads={PUBLIC_DOWNLOADS}
@@ -738,6 +739,7 @@ export function QbitT800ProductOverviewPage() {
           relatedProducts={getRelatedProducts(T800_PUBLIC_DETAIL.id)}
           publicUrl="https://hub.qbit.com/products/qbit-t-800"
         />
+        )}
       </main>
 
       {/* ============ Footer ============ */}

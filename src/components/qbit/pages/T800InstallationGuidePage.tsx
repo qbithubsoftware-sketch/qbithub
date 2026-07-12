@@ -42,8 +42,10 @@ export function T800InstallationGuidePage() {
   const navigate = useNavigation((s) => s.navigate);
   const { toast } = useToast();
 
+  const guide = T800_GUIDE!;
+
   // ---- Step state (which steps are completed) ----
-  const [steps, setSteps] = useState<InstallationStep[]>(T800_GUIDE.steps);
+  const [steps, setSteps] = useState<InstallationStep[]>(guide?.steps ?? []);
   const [currentStepIdx, setCurrentStepIdx] = useState(1); // Step 2 is active initially
 
   // ---- Wiring diagram viewer state ----
@@ -51,7 +53,7 @@ export function T800InstallationGuidePage() {
 
   // ---- Related downloads (filtered from DOWNLOADS by relatedDownloadIds) ----
   const relatedDownloads: DownloadItem[] = DOWNLOADS.filter((d) =>
-    T800_GUIDE.relatedDownloadIds.includes(d.id),
+    guide.relatedDownloadIds.includes(d.id),
   );
 
   // ---- Progress calculation ----
@@ -124,6 +126,32 @@ export function T800InstallationGuidePage() {
     return { ...s, status: "pending" as const };
   });
 
+  if (!guide) {
+    return (
+      <AppShell
+        variant="instalcore"
+        brand={{ title: "InstalCore", tagline: "Enterprise Portal", icon: "hub" }}
+        navItems={INSTALCORE_NAV}
+        activeScreen="t800-installation-guide"
+        user={USER}
+        topBar={{ searchPlaceholder: "Search documentation...", user: USER }}
+      >
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-qbit-surface-container text-qbit-on-surface-variant/40 mb-4">
+            <Icon name="build" className="text-[32px]" />
+          </div>
+          <p className="text-sm font-semibold text-qbit-on-surface">No Installation Guide Available</p>
+          <p className="mt-1.5 text-xs text-qbit-on-surface-variant max-w-xs leading-relaxed">
+            No installation guide has been created yet. Check back later or contact your administrator.
+          </p>
+          <QbitButton size="sm" variant="outline" icon="arrow_back" className="mt-5" onClick={() => navigate("installation-center")}>
+            Back to Installation Center
+          </QbitButton>
+        </div>
+      </AppShell>
+    );
+  }
+
   return (
     <AppShell
       variant="instalcore"
@@ -141,7 +169,7 @@ export function T800InstallationGuidePage() {
       <div className="space-y-8 pb-12">
         {/* ===== Header ===== */}
         <InstallationHeader
-          guide={T800_GUIDE}
+          guide={guide}
           breadcrumb={[
             { label: "Products" },
             { label: "POS Systems" },
@@ -231,10 +259,10 @@ export function T800InstallationGuidePage() {
         <RelatedVideos videos={T800_RELATED_VIDEOS} />
 
         {/* ===== Troubleshooting ===== */}
-        <TroubleshootingSection entries={T800_GUIDE.troubleshooting} />
+        <TroubleshootingSection entries={guide.troubleshooting} />
 
         {/* ===== FAQ ===== */}
-        <InstallationFAQ faqs={T800_GUIDE.faqs} />
+        <InstallationFAQ faqs={guide.faqs} />
       </div>
     </AppShell>
   );
