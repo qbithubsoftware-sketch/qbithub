@@ -20,6 +20,11 @@ import { QbitButton } from "@/components/qbit/primitives/QbitButton";
 import { ProgressTracker } from "@/components/qbit/primitives/ProgressTracker";
 import { useNavigation } from "@/lib/navigation/store";
 import { ADMIN_NAV } from "@/lib/navigation/nav-config";
+import { AdminStatsGrid } from "@/components/qbit/admin/AdminStatsCard";
+import { AnalyticsCards } from "@/components/qbit/admin/AnalyticsCards";
+import { AuditLogTable } from "@/components/qbit/admin/AuditLogTable";
+import { AnnouncementManager } from "@/components/qbit/admin/AnnouncementManager";
+import { ADMIN_STATS, ANALYTICS_CARDS, AUDIT_LOGS, ANNOUNCEMENTS } from "@/lib/admin/placeholder-data";
 
 /* ------------------------------------------------------------------ */
 /* Types                                                              */
@@ -490,6 +495,31 @@ export function AdminDashboardPage() {
             </SurfaceCard>
           </div>
         </div>
+
+        {/* ------------------------------------------------------------ */}
+        {/* Extended: Full Admin Stats Grid                              */}
+        {/* ------------------------------------------------------------ */}
+        <AdminStatsGrid stats={ADMIN_STATS} />
+
+        {/* ------------------------------------------------------------ */}
+        {/* Extended: Analytics Cards                                    */}
+        {/* ------------------------------------------------------------ */}
+        <AnalyticsCards cards={ANALYTICS_CARDS} />
+
+        {/* ------------------------------------------------------------ */}
+        {/* Extended: Announcement Manager                               */}
+        {/* ------------------------------------------------------------ */}
+        <AnnouncementManager announcements={ANNOUNCEMENTS} />
+
+        {/* ------------------------------------------------------------ */}
+        {/* Extended: Audit Log Table                                    */}
+        {/* ------------------------------------------------------------ */}
+        <section className="space-y-4">
+          <h3 className="text-[20px] font-semibold text-qbit-on-surface flex items-center gap-2">
+            Audit Logs
+          </h3>
+          <AuditLogTable logs={AUDIT_LOGS} />
+        </section>
       </div>
     </AppShell>
   );

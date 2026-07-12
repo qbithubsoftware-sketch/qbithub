@@ -16,6 +16,9 @@ import { GlassCard } from "@/components/qbit/primitives/GlassCard";
 import { QbitButton } from "@/components/qbit/primitives/QbitButton";
 import { useNavigation } from "@/lib/navigation/store";
 import { ADMIN_NAV } from "@/lib/navigation/nav-config";
+import { RoleMatrix as ExtendedRoleMatrix } from "@/components/qbit/admin/RoleMatrix";
+import { UserTable } from "@/components/qbit/admin/UserTable";
+import { PERMISSION_KEYS, PERMISSION_MATRIX, ADMIN_USERS } from "@/lib/admin/placeholder-data";
 import {
   Table,
   TableBody,
@@ -574,6 +577,26 @@ export function UserRoleManagementPage() {
             </GlassCard>
           </div>
         )}
+
+        {/* ------------------------------------------------------------ */}
+        {/* Extended: Enterprise User Table (with search, filter, actions) */}
+        {/* ------------------------------------------------------------ */}
+        <section className="space-y-4">
+          <h3 className="text-[20px] font-semibold text-qbit-on-surface">
+            Enterprise User Management
+          </h3>
+          <UserTable users={ADMIN_USERS} />
+        </section>
+
+        {/* ------------------------------------------------------------ */}
+        {/* Extended: Full Permission Matrix (10 permissions)             */}
+        {/* ------------------------------------------------------------ */}
+        <section className="space-y-4">
+          <h3 className="text-[20px] font-semibold text-qbit-on-surface">
+            Full Permission Matrix (10 Permissions)
+          </h3>
+          <ExtendedRoleMatrix rows={PERMISSION_MATRIX} permissionKeys={PERMISSION_KEYS} />
+        </section>
       </div>
     </AppShell>
   );

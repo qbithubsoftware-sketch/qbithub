@@ -7,6 +7,8 @@ import { SurfaceCard } from "@/components/qbit/primitives/GlassCard";
 import { QbitButton } from "@/components/qbit/primitives/QbitButton";
 import { StatusBadge } from "@/components/qbit/primitives/StatusBadge";
 import { ADMIN_NAV } from "@/lib/navigation/nav-config";
+import { SettingsPanel } from "@/components/qbit/admin/SettingsPanel";
+import { SYSTEM_SETTINGS, ADMIN_NOTIFICATIONS } from "@/lib/admin/placeholder-data";
 import {
   Select,
   SelectContent,
@@ -461,6 +463,53 @@ export function SystemSettingsPage() {
             Save All Changes
           </QbitButton>
         </div>
+
+        {/* ------------------------------------------------------------ */}
+        {/* Extended: Company Information Settings                        */}
+        {/* ------------------------------------------------------------ */}
+        <SettingsPanel
+          title="Company Information"
+          icon="business"
+          settings={SYSTEM_SETTINGS.filter((s) => s.category === "company")}
+        />
+
+        {/* ------------------------------------------------------------ */}
+        {/* Extended: Admin Notifications                                 */}
+        {/* ------------------------------------------------------------ */}
+        <section className="space-y-4">
+          <h3 className="text-[20px] font-semibold text-qbit-on-surface">
+            Admin Notifications
+          </h3>
+          <div className="space-y-2">
+            {ADMIN_NOTIFICATIONS.map((n) => (
+              <SurfaceCard key={n.id} className={`p-4 ${n.read ? "opacity-70" : ""}`}>
+                <div className="flex items-start gap-3">
+                  <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
+                    n.type === "error" ? "bg-qbit-error-container text-qbit-on-error-container" :
+                    n.type === "warning" ? "bg-amber-100 text-amber-700" :
+                    n.type === "success" ? "bg-emerald-100 text-emerald-700" :
+                    "bg-qbit-primary/10 text-qbit-primary"
+                  }`}>
+                    <Icon name={
+                      n.type === "error" ? "error" :
+                      n.type === "warning" ? "warning" :
+                      n.type === "success" ? "check_circle" :
+                      "info"
+                    } className="text-[18px]" filled />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-qbit-on-surface">{n.title}</p>
+                    <p className="text-xs text-qbit-on-surface-variant">{n.message}</p>
+                    <p className="text-[10px] text-qbit-outline mt-1">{n.createdAt}</p>
+                  </div>
+                  {n.actionLabel && (
+                    <QbitButton size="sm" variant="outline">{n.actionLabel}</QbitButton>
+                  )}
+                </div>
+              </SurfaceCard>
+            ))}
+          </div>
+        </section>
       </div>
     </AppShell>
   );

@@ -671,3 +671,45 @@ Stage Summary:
 - No new YouTube player created (reuses existing RelatedVideos from installation module).
 - No new search system created (reuses existing search input pattern).
 - No AI chat built (existing AI assistant chat in AISupportCenterPage preserved as-is).
+
+---
+Task ID: admin-control-center
+Agent: main
+Task: Implement Enterprise Admin Control Center with Prisma models, reusable components, API routes, and extend existing admin pages
+
+Work Log:
+- Inspected all 4 existing admin pages: AdminDashboardPage (550 lines), UserRoleManagementPage (580 lines), ProductManagementPage (490 lines), SystemSettingsPage (467 lines).
+- Extended Prisma schema with 10 new models: AuditLog, SystemSetting, Announcement, SystemMetric, ActivityFeed, AssetCategory, Permission, RolePermission, UserPreference, AdminNotification. Added back-relation on User. Ran db:push + generate.
+- Created src/lib/admin/types.ts with 16 typed interfaces.
+- Created src/lib/admin/placeholder-data.ts with full data: 14 admin stats, 6 system health items, 3 recent uploads, 5 activity feed entries, 8 audit logs, 4 announcements, 6 users, 7 permission matrix rows with 10 permissions, 5 products, 8 assets, 4 analytics cards, 4 admin notifications, 8 system settings.
+- Created 10 reusable admin components:
+  1. AdminStatsCard.tsx — KPI widget with icon, value, delta, category grouping + AdminStatsGrid
+  2. AuditLogTable.tsx — enterprise audit log table (user, action, entity, date, IP)
+  3. ActivityTimeline.tsx — vertical timeline of activity feed entries with dots, attachments, invitees
+  4. UserTable.tsx — enterprise user management table with search, status filter, dropdown actions (view, edit, suspend, activate, reset password, delete)
+  5. RoleMatrix.tsx — permission matrix supporting 10 permissions with locked/viewOnly states
+  6. BulkActionToolbar.tsx — sticky toolbar for bulk delete/publish/archive/category-change/export
+  7. AnnouncementManager.tsx — CRUD interface for announcements with type, severity, visibility, active toggle
+  8. AnalyticsCards.tsx — grid of ranked analytics cards (most viewed/downloaded/watched)
+  9. AssetManager.tsx — unified asset manager table with search, type filters, per-row dropdown actions
+  10. SettingsPanel.tsx — form renderer for system settings (text, email, phone, url, select, toggle, image) + SettingsGrid
+- Created index.ts barrel export.
+- Created 4 secure API routes with RBAC protection (admin-only):
+  - /api/admin/audit-logs (GET, POST)
+  - /api/admin/announcements (GET, POST)
+  - /api/admin/settings (GET, PUT)
+  - /api/admin/metrics (GET, POST)
+  All routes enforce administrator role via getServerSession + authOptions.
+- Extended AdminDashboardPage.tsx: added AdminStatsGrid, AnalyticsCards, AnnouncementManager, AuditLogTable sections (no existing UI removed).
+- Extended UserRoleManagementPage.tsx: added enterprise UserTable (with search/filter/actions) and full RoleMatrix (10 permissions) sections.
+- Extended ProductManagementPage.tsx: added unified AssetManager section.
+- Extended SystemSettingsPage.tsx: added Company Information SettingsPanel and Admin Notifications sections.
+- Verified: lint 0 errors, TypeScript 0 errors in admin files, dev server HTTP 200, browser verified all new sections render on Admin Dashboard (Total Assets, Knowledge Articles, Analytics, Announcement Manager, Audit Logs).
+
+Stage Summary:
+- 15 new files created (10 components + types + placeholder-data + barrel export + 4 API routes).
+- 4 existing pages extended (no existing UI removed — new sections appended).
+- 10 new Prisma models added.
+- 4 new API routes with RBAC protection.
+- Component reuse: AdminStatsCard reuses SurfaceCard; ActivityTimeline reuses SurfaceCard + Icon; UserTable reuses SurfaceCard + StatusBadge + DropdownMenu; RoleMatrix reuses SurfaceCard + Checkbox; all admin components reuse existing primitives.
+- No existing implementations overwritten — all extensions are additive.

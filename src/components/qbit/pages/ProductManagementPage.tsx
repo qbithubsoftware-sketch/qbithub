@@ -6,6 +6,9 @@ import { Icon } from "@/components/qbit/primitives/Icon";
 import { KpiCard } from "@/components/qbit/primitives/KpiCard";
 import { QbitButton } from "@/components/qbit/primitives/QbitButton";
 import { ADMIN_NAV } from "@/lib/navigation/nav-config";
+import { BulkActionToolbar } from "@/components/qbit/admin/BulkActionToolbar";
+import { AssetManager } from "@/components/qbit/admin/AssetManager";
+import { ADMIN_ASSETS } from "@/lib/admin/placeholder-data";
 import {
   Table,
   TableBody,
@@ -484,6 +487,11 @@ export function ProductManagementPage() {
             </div>
           </div>
         </div>
+
+        {/* ------------------------------------------------------------ */}
+        {/* Extended: Unified Asset Manager                              */}
+        {/* ------------------------------------------------------------ */}
+        <AssetManager assets={ADMIN_ASSETS} />
       </div>
     </AppShell>
   );

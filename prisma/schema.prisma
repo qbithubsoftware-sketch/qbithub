@@ -570,3 +570,167 @@ model ArticleFeedback {
 
   @@index([articleId])
 }
+
+// =====================================================
+// Enterprise Admin Control Center models
+// =====================================================
+
+/// Enterprise audit log — tracks every administrative action.
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  userName    String?  // denormalised for quick display
+  action      String   // "login" | "logout" | "create" | "edit" | "delete" | "download" | "upload" | "role_change" | "settings_change" | "product_update"
+  entity      String   // "user" | "product" | "driver" | "article" | "guide" | "setting" | etc.
+  entityId    String?
+  entityName  String?  // human-readable name of the affected entity
+  description String?
+  ipAddress   String?
+  userAgent   String?
+  metadata    String?  // JSON string of additional context
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([entity])
+  @@index([createdAt])
+}
+
+/// System-wide key/value settings (company info, brand, defaults).
+model SystemSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique // "company_name" | "brand_logo_url" | "support_email" | etc.
+  value       String   // JSON-encoded value
+  category    String   @default("general") // "company" | "branding" | "application" | "security" | "backup"
+  description String?
+  updatedAt   DateTime @updatedAt
+  updatedBy   String?  // user id of the admin who last changed it
+}
+
+/// Announcement / maintenance notice / system message.
+model Announcement {
+  id          String   @id @default(cuid())
+  title       String
+  body        String
+  type        String   @default("info") // "info" | "maintenance" | "driver_update" | "firmware_release" | "system_message"
+  severity    String   @default("info") // "info" | "warning" | "critical"
+  visibility  String   @default("public") // "public" | "internal" | "hidden"
+  targetRoles String?  // JSON string array of role ids; null = all roles
+  startsAt    DateTime?
+  endsAt      DateTime?
+  active      Boolean  @default(true)
+  createdBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([type])
+  @@index([visibility])
+  @@index([active])
+}
+
+/// Aggregated system metric (for dashboard widgets + analytics).
+model SystemMetric {
+  id          String   @id @default(cuid())
+  metric      String   // "total_products" | "total_drivers" | "downloads_today" | "active_users" | etc.
+  value       Int
+  unit        String?  // "count" | "bytes" | "percent"
+  category    String   // "inventory" | "usage" | "health"
+  recordedAt  DateTime @default(now())
+
+  @@index([metric])
+  @@index([category])
+  @@index([recordedAt])
+}
+
+/// Activity feed entry (lighter than AuditLog — for dashboard timelines).
+model ActivityFeed {
+  id          String   @id @default(cuid())
+  userId      String?
+  userName    String?
+  action      String   // "uploaded" | "updated" | "deleted" | "downloaded" | "invited" | "completed"
+  entity      String
+  entityName  String?
+  icon        String?  // Material Symbol name
+  dotColor    String   @default("primary") // "primary" | "secondary" | "error" | "neutral"
+  attachment  String?  // JSON { icon, label }
+  invitees    String?  // JSON string array of initials
+  dim         Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+/// Asset category (for unified asset manager — extends DownloadCategory).
+model AssetCategory {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  icon        String?
+  parentId    String?  // self-reference for nested categories
+  parent      AssetCategory? @relation("AssetCategoryHierarchy", fields: [parentId], references: [id])
+  children    AssetCategory[] @relation("AssetCategoryHierarchy")
+  sortOrder   Int      @default(0)
+  visible     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@index([parentId])
+  @@index([sortOrder])
+}
+
+/// Permission definition (view, create, edit, delete, upload, download, publish, approve, manage_users, manage_settings).
+model Permission {
+  id          String   @id @default(cuid())
+  key         String   @unique // "view" | "create" | "edit" | "delete" | "upload" | "download" | "publish" | "approve" | "manage_users" | "manage_settings"
+  label       String   // "View" | "Create" | etc.
+  description String?
+  category    String   @default("general") // "general" | "admin"
+  sortOrder   Int      @default(0)
+
+  rolePermissions RolePermission[]
+}
+
+/// Many-to-many between Role (string on User) and Permission.
+model RolePermission {
+  id           String   @id @default(cuid())
+  role         String   // "administrator" | "support_engineer" | etc.
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+
+  @@unique([role, permissionId])
+  @@index([role])
+}
+
+/// Per-user UI preferences (theme, density, notification toggles).
+model UserPreference {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  theme           String   @default("system") // "light" | "dark" | "system"
+  density         String   @default("comfortable") // "comfortable" | "compact"
+  emailNotifications Boolean @default(true)
+  pushNotifications Boolean @default(true)
+  sidebarCollapsed Boolean @default(false)
+  dashboardLayout String?  // JSON for custom widget arrangement
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+}
+
+/// Admin notification (in-app banner / toast for administrators).
+model AdminNotification {
+  id          String   @id @default(cuid())
+  title       String
+  message     String
+  type        String   @default("info") // "info" | "warning" | "error" | "success"
+  category    String   @default("system") // "system" | "security" | "storage" | "user"
+  actionUrl   String?
+  actionLabel String?
+  read        Boolean  @default(false)
+  targetUserId String? // null = all admins
+  createdAt   DateTime @default(now())
+
+  @@index([read])
+  @@index([category])
+  @@index([targetUserId])
+}
