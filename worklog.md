@@ -568,3 +568,35 @@ Stage Summary:
 - All sections match Stitch design: hero gradient, search overlap, KPI grid, quick access, carousel, continue working, timeline, downloads, bookmarks, pinned resources, announcements, activity, AI assistant.
 - Responsive: mobile (1-2 col), tablet (2-3 col), desktop (3-4 col + sidebar layout).
 - Reusable: every section is independently importable and can be dropped into other dashboards with different data.
+
+---
+Task ID: driver-download-center
+Agent: main
+Task: Implement Driver Download Center with Prisma models, reusable components, secure downloads, drawer, version timeline, manuals, SDK/utilities
+
+Work Log:
+- Inspected existing DriverDownloadCenterPage.tsx (674-line monolith) and existing primitives/shells.
+- Extended Prisma schema with 11 new models: OperatingSystem, DownloadCategory, Download, DownloadOS, ReleaseNote, DownloadHistory, FavoriteDownload, Driver, DriverVersion, Firmware, SDK, Utility, Manual. Ran db:push + generate.
+- Created src/lib/downloads/types.ts with 12 typed interfaces (DownloadItem, DownloadFilters, DownloadVersionEntry, ReleaseNoteEntry, ManualItem, etc.).
+- Created src/lib/downloads/placeholder-data.ts with typed static data (4 downloads, 3 featured cards, 3 history entries, 5 manuals, OS/category lookup tables).
+- Created 10 reusable download-center components:
+  1. DownloadCard.tsx — reusable card with badges (Featured/Latest/Verified), Download/Favorite/share buttons, OS tags, release notes preview, compact mode
+  2. SearchFilters.tsx — split into DownloadHero (centered hero + search + chips) + SearchFilters (sidebar with OS select, category checkboxes, latest toggle, year slider)
+  3. DownloadDrawer.tsx — right-side Sheet drawer with Description, Supported Products, Supported OS, Installation Instructions, Release Notes, Known Issues, Version History, sticky Download button
+  4. VersionTimeline.tsx — professional vertical timeline with current/previous versions, changes, bug fixes, security updates
+  5. ReleaseNotes.tsx — changelog display with Changes/Bug Fixes/Security Updates sections
+  6. DownloadHistory.tsx — sidebar card with 3 tabs (Recent/Popular/Favorites), compact download rows
+  7. FavoriteDownloads.tsx — full-width favorites section with empty state
+  8. PDFPreview.tsx — modal PDF viewer with page nav, download button, PDF.js placeholder
+  9. ManualsSection.tsx — grid of 5 manual cards (Quick Start, Installation, User Manual, Warranty, Datasheet) with View PDF + Download buttons
+  10. SDKUtilitiesSection.tsx — SDK + Utility download card grids
+- Created secure download API route at src/app/api/downloads/[id]/route.ts: enforces visibility (public/internal/restricted), checks session + role, increments download count, records history, returns signed URL (placeholder).
+- Refactored DriverDownloadCenterPage.tsx from 674-line monolith → ~450-line composition of reusable components with full state management (filters, favorites, drawer, PDF preview).
+- Verified: lint 0 errors, TypeScript 0 errors in download files, dev server HTTP 200, browser verified all sections render (hero, filters, download cards, featured bento, SDK/utility sections, manuals, favorites, download drawer with 7 detail sections, PDF preview modal, favorite toast).
+
+Stage Summary:
+- 14 new files created (10 components + types + placeholder-data + barrel export + API route).
+- 1 file refactored (DriverDownloadCenterPage.tsx).
+- 11 new Prisma models added.
+- Secure download architecture: visibility enforcement (public/internal/restricted), session + RBAC check, download count tracking, history recording, signed URL generation (placeholder for Supabase/UploadThing).
+- All components reusable: DownloadCard, VersionTimeline, ReleaseNotes, DownloadDrawer, DownloadHistory, FavoriteDownloads, SearchFilters, PDFPreview, ManualsSection, SDKUtilitiesSection.

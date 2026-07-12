@@ -22,6 +22,9 @@ model User {
   passwordHash String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  downloadHistory    DownloadHistory[]
+  favoriteDownloads  FavoriteDownload[]
 }
 
 model Post {
@@ -32,4 +35,191 @@ model Post {
   authorId  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// =====================================================
+// Driver Download Center models
+// =====================================================
+
+/// Lookup table — normalised list of operating systems (Windows 11, Ubuntu 22.04, …)
+model OperatingSystem {
+  id        String   @id @default(cuid())
+  name      String   @unique // "Windows 11", "Ubuntu 22.04", "Android 13.0"
+  slug      String   @unique // "win11", "ubuntu-2204", "android-13"
+  icon      String?  // Material Symbol name, e.g. "desktop_windows"
+  sortIndex Int      @default(0)
+  createdAt DateTime @default(now())
+
+  downloads DownloadOS[]
+}
+
+/// Lookup table — download categories (Driver, Firmware, SDK, Utility, Manual)
+model DownloadCategory {
+  id        String   @id @default(cuid())
+  name      String   @unique // "Driver", "Firmware", "SDK", "Utility", "Manual"
+  slug      String   @unique // "driver", "firmware", "sdk", "utility", "manual"
+  icon      String?  // Material Symbol name
+  sortIndex Int      @default(0)
+  createdAt DateTime @default(now())
+
+  downloads Download[]
+}
+
+/// Master record for a downloadable file.  Only metadata + a secure storage
+/// path are stored here — the binary itself lives in cloud storage.
+model Download {
+  id            String   @id @default(cuid())
+  productId     String?  // reference to the product this download belongs to
+  name          String   // "Universal Thermal Printer Driver"
+  version       String   // "v2.4.1"
+  categoryId    String
+  category      DownloadCategory @relation(fields: [categoryId], references: [id])
+  releaseDate   DateTime
+  fileSize      Int      // bytes
+  storagePath   String   // secure cloud-storage key (never exposed to client)
+  checksum      String?  // SHA-256 hash for integrity verification
+  visibility    String   @default("public") // "public" | "internal" | "restricted"
+  featured      Boolean  @default(false)
+  latest        Boolean  @default(false)
+  downloadCount Int      @default(0)
+  description   String?
+  installInstructions String?
+  knownIssues   String?
+  supportedProducts String? // JSON string array of product names/models
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  operatingSystems DownloadOS[]
+  releaseNotes    ReleaseNote[]
+  downloadHistory DownloadHistory[]
+  favorites       FavoriteDownload[]
+
+  @@index([categoryId])
+  @@index([visibility])
+  @@index([featured])
+  @@index([latest])
+}
+
+/// Many-to-many join between Download and OperatingSystem.
+model DownloadOS {
+  downloadId String
+  osId      String
+  download  Download @relation(fields: [downloadId], references: [id], onDelete: Cascade)
+  os        OperatingSystem @relation(fields: [osId], references: [id], onDelete: Cascade)
+
+  @@id([downloadId, osId])
+  @@index([osId])
+}
+
+/// Versioned release notes for a download (changelog, bug fixes, security updates).
+model ReleaseNote {
+  id          String   @id @default(cuid())
+  downloadId  String
+  download    Download @relation(fields: [downloadId], references: [id], onDelete: Cascade)
+  version     String   // "v2.4.1"
+  releaseDate DateTime
+  changes     String   // JSON string array of change descriptions
+  bugFixes    String?  // JSON string array
+  securityUpdates String? // JSON string array
+  isCurrent   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([downloadId])
+  @@index([isCurrent])
+}
+
+/// Tracks every download event for analytics + user history.
+model DownloadHistory {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  downloadId  String
+  download    Download @relation(fields: [downloadId], references: [id], onDelete: Cascade)
+  downloadedAt DateTime @default(now())
+  ipAddress   String?
+  userAgent   String?
+
+  @@index([userId])
+  @@index([downloadId])
+  @@index([downloadedAt])
+}
+
+/// User-favourited downloads for quick access.
+model FavoriteDownload {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  downloadId String
+  download   Download @relation(fields: [downloadId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, downloadId])
+  @@index([userId])
+}
+
+/// Driver master record (one per physical driver family, e.g. "Universal Thermal Printer Driver").
+model Driver {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  productId   String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  versions DriverVersion[]
+}
+
+/// Individual version of a driver (v2.4.0, v2.4.1, …) linked to a Download record.
+model DriverVersion {
+  id        String   @id @default(cuid())
+  driverId  String
+  driver    Driver   @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  version   String
+  downloadId String? // optional link to the Download record
+  releaseDate DateTime
+  isCurrent  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([driverId])
+  @@index([isCurrent])
+}
+
+/// Firmware master record.
+model Firmware {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  productId   String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+/// SDK master record.
+model SDK {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  productId   String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+/// Utility master record (helper tools, config utilities, etc.).
+model Utility {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  productId   String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+/// Manual master record.
+model Manual {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  productId   String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
