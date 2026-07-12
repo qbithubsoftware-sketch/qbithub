@@ -600,3 +600,40 @@ Stage Summary:
 - 11 new Prisma models added.
 - Secure download architecture: visibility enforcement (public/internal/restricted), session + RBAC check, download count tracking, history recording, signed URL generation (placeholder for Supabase/UploadThing).
 - All components reusable: DownloadCard, VersionTimeline, ReleaseNotes, DownloadDrawer, DownloadHistory, FavoriteDownloads, SearchFilters, PDFPreview, ManualsSection, SDKUtilitiesSection.
+
+---
+Task ID: installation-center
+Agent: main
+Task: Implement Installation Center with Prisma models, reusable components, step-by-step guides, wiring diagrams, YouTube videos, troubleshooting, FAQ
+
+Work Log:
+- Inspected existing InstallationCenterPage.tsx (452-line monolith) and T800InstallationGuidePage.tsx (448-line monolith).
+- Extended Prisma schema with 9 new models: InstallationGuide, InstallationStep, RequiredTool, SafetyInstruction, ConfigurationGuide, WiringDiagram, InstallationChecklist, ProductInstallationGuide, InstallationFAQ. Ran db:push + generate.
+- Created src/lib/installation/types.ts with 15 typed interfaces.
+- Created src/lib/installation/placeholder-data.ts with full T-800 guide data (5 steps, 6 tools, 4 safety instructions, 4 config guides, 3 wiring diagrams, 9 checklist items, 4 FAQs, 3 troubleshooting entries, 3 related videos) + landing page data (6 quick access cards, 5 product categories, 3 latest guides, 3 popular guides, 3 recent guides).
+- Created 12 reusable installation-center components:
+  1. InstallationHeader.tsx — breadcrumb, title, product, time, difficulty, version, view count, badges
+  2. GuideStep.tsx — step number, title, description, image, time, warning, tip, required tool, related download/manual/video buttons, mark-complete button
+  3. InstallationTimeline.tsx — vertical timeline composing GuideStep entries
+  4. ProgressTrackerNav.tsx — progress bar with Previous/Next/Mark Complete buttons (reuses ProgressTracker primitive)
+  5. Checklist.tsx — grouped checklist with progress bar, checkbox toggle, export button, completion banner
+  6. RequiredTools.tsx — grid of tool cards with In Box/BYO badges
+  7. WiringDiagramViewer.tsx — grid of diagram thumbnails + fullscreen modal with zoom/reset/download
+  8. RelatedDownloads.tsx — REUSES DownloadCard from downloads module (no duplication)
+  9. RelatedVideos.tsx — YouTube thumbnail grid + modal with embedded YouTube IFrame player (videos hosted on YouTube only)
+  10. TroubleshootingSection.tsx — common problems, possible causes, solutions, related assets/videos
+  11. InstallationFAQ.tsx — accordion FAQ with expand/collapse
+  12. GuideCard.tsx — card for latest/popular guides grid
+- Created index.ts barrel export.
+- Refactored InstallationCenterPage.tsx from 452-line monolith → ~200-line composition: hero, quick access bento, product selection, latest guides (GuideCard), popular guides (GuideCard), recently viewed guides, footer, FAB.
+- Refactored T800InstallationGuidePage.tsx from 448-line monolith → ~200-line composition: InstallationHeader, ProgressTrackerNav, InstallationTimeline with GuideStep, RequiredTools, Checklist, WiringDiagramViewer, RelatedDownloads, RelatedVideos, TroubleshootingSection, InstallationFAQ, Help Widget.
+- Verified: lint 0 errors, TypeScript 0 errors in installation files, dev server HTTP 200, browser verified all sections render on both Installation Center (landing) and T-800 Installation Guide (step-by-step) pages.
+
+Stage Summary:
+- 14 new files created (12 components + types + placeholder-data + barrel export).
+- 2 files refactored (InstallationCenterPage.tsx, T800InstallationGuidePage.tsx).
+- 9 new Prisma models added.
+- Component reuse: RelatedDownloads reuses DownloadCard from downloads module, ProgressTrackerNav reuses ProgressTracker primitive, InstallationTimeline reuses GuideStep, SectionHeader reused from dashboard module.
+- YouTube videos: embedded via official YouTube IFrame API, no video uploads, no video storage.
+- PDF manuals: reuses existing PDFPreview component from downloads module (via RelatedDownloads → DownloadCard → onViewDetails).
+- Download system: reuses existing secure download API route (/api/downloads/[id]).
