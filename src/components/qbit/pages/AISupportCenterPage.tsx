@@ -4,8 +4,18 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { AppShell } from "@/components/qbit/shells/AppShell";
 import { Icon } from "@/components/qbit/primitives/Icon";
 import { QbitButton } from "@/components/qbit/primitives/QbitButton";
+import { SectionHeader } from "@/components/qbit/dashboard/SectionHeader";
+import { TroubleshootingCard } from "@/components/qbit/knowledge/TroubleshootingCard";
+import { ErrorCodeCard } from "@/components/qbit/knowledge/ErrorCodeCard";
+import { FAQAccordion } from "@/components/qbit/knowledge/FAQAccordion";
 import { AI_SUPPORT_NAV } from "@/lib/navigation/nav-config";
 import { useNavigation, type ScreenId } from "@/lib/navigation/store";
+import {
+  TROUBLESHOOTING_ISSUES,
+  COMMON_ERRORS,
+  FAQS,
+  KNOWLEDGE_CATEGORIES,
+} from "@/lib/knowledge/placeholder-data";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
@@ -707,6 +717,26 @@ export function AISupportCenterPage() {
             </QbitButton>
           </div>
         </section>
+
+        {/* ================================================================ */}
+        {/* Troubleshooting Center                                           */}
+        {/* ================================================================ */}
+        <TroubleshootingCenterSection />
+
+        {/* ================================================================ */}
+        {/* Common Error Codes                                               */}
+        {/* ================================================================ */}
+        <CommonErrorCodesSection />
+
+        {/* ================================================================ */}
+        {/* FAQ Section                                                      */}
+        {/* ================================================================ */}
+        <FAQSection />
+
+        {/* ================================================================ */}
+        {/* Categories Grid                                                  */}
+        {/* ================================================================ */}
+        <CategoriesGridSection />
       </div>
     </AppShell>
   );
@@ -830,5 +860,66 @@ function TypingBubble() {
         </span>
       </div>
     </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Knowledge Base & Troubleshooting Sections                           */
+/* ------------------------------------------------------------------ */
+
+function TroubleshootingCenterSection() {
+  return (
+    <section className="space-y-6">
+      <SectionHeader title="Troubleshooting Center" accentDot />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {TROUBLESHOOTING_ISSUES.map((issue) => (
+          <TroubleshootingCard key={issue.id} issue={issue} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function CommonErrorCodesSection() {
+  return (
+    <section className="space-y-6">
+      <SectionHeader title="Common Error Codes" accentDot />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {COMMON_ERRORS.map((error) => (
+          <ErrorCodeCard key={error.id} error={error} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function FAQSection() {
+  return <FAQAccordion faqs={FAQS} searchable />;
+}
+
+function CategoriesGridSection() {
+  const navigate = useNavigation();
+  return (
+    <section className="space-y-6">
+      <SectionHeader title="Browse by Category" accentDot />
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        {KNOWLEDGE_CATEGORIES.map((cat) => (
+          <button
+            key={cat.id}
+            onClick={() => navigate("installation-center")}
+            className="group flex flex-col items-start gap-2 rounded-2xl border border-qbit-outline-variant bg-qbit-surface-container-lowest p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-md"
+          >
+            <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${cat.color} text-white`}>
+              <Icon name={cat.icon} className="text-[20px]" filled />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-qbit-on-surface truncate">{cat.name}</p>
+              <p className="text-[10px] text-qbit-on-surface-variant">{cat.articleCount} articles</p>
+            </div>
+            <Icon name="arrow_forward" className="text-[16px] text-qbit-on-surface-variant group-hover:text-qbit-primary group-hover:translate-x-1 transition-all" />
+          </button>
+        ))}
+      </div>
+    </section>
   );
 }

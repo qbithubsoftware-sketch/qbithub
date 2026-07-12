@@ -637,3 +637,37 @@ Stage Summary:
 - YouTube videos: embedded via official YouTube IFrame API, no video uploads, no video storage.
 - PDF manuals: reuses existing PDFPreview component from downloads module (via RelatedDownloads → DownloadCard → onViewDetails).
 - Download system: reuses existing secure download API route (/api/downloads/[id]).
+
+---
+Task ID: knowledge-base-troubleshooting
+Agent: main
+Task: Implement Knowledge Base & Troubleshooting module with Prisma models, reusable components, FAQ, troubleshooting cards, error codes, bookmarks, feedback
+
+Work Log:
+- Inspected existing AISupportCenterPage.tsx (835 lines) and existing installation/downloads/dashboard components for reuse opportunities.
+- Extended Prisma schema with 11 new models: KnowledgeCategory, KnowledgeArticle, ArticleSection, FAQ, TroubleshootingIssue, TroubleshootingStep, CommonError, Solution, RelatedAsset, ArticleBookmark, ArticleFeedback. Added back-relation on User model. Ran db:push + generate.
+- Created src/lib/knowledge/types.ts with 15 typed interfaces.
+- Created src/lib/knowledge/placeholder-data.ts with full data: 12 categories, 3 articles with rich-text content, 8 FAQs, 4 troubleshooting issues (each with symptoms/causes/steps), 8 common error codes, 3 related videos, 3 bookmarks.
+- Created 9 reusable knowledge-base components:
+  1. KnowledgeCard.tsx — article card with gradient cover, category, title, excerpt, difficulty, meta
+  2. ArticleViewer.tsx — professional documentation layout with rich-text renderer (paragraphs, headings, callouts [info/tip/warning/danger], code blocks with copy, tables, images, ordered/unordered lists) + feedback bar
+  3. FAQAccordion.tsx — searchable accordion with bookmark support, reuses pattern from InstallationFAQ
+  4. TroubleshootingCard.tsx — expandable issue card with symptoms, causes, step-by-step resolution, related assets
+  5. ErrorCodeCard.tsx — error code card with severity color-coding (info/warning/error), meaning, cause, resolution
+  6. RelatedContent.tsx — REUSES RelatedDownloads + RelatedVideos from installation module (no duplication)
+  7. ArticleSearch.tsx — hero search + filter chips + results grid, reuses KnowledgeCard + EmptyState
+  8. BookmarkButton.tsx — reusable toggle bookmark button
+  9. ArticleFeedback.tsx — feedback bar with helpful/not-helpful/suggest/report actions + inline textarea
+- Created index.ts barrel export.
+- Refactored AISupportCenterPage.tsx: added 4 new sections (Troubleshooting Center, Common Error Codes, FAQ, Browse by Category) composing the new components. No existing UI removed — new sections appended after existing Knowledge Base section.
+- Verified: lint 0 errors, TypeScript 0 errors in new knowledge files (pre-existing TS errors in AssistantBubble remain from original implementation but don't block build), dev server HTTP 200, browser verified all 4 new sections render correctly on the AI Support Center page.
+
+Stage Summary:
+- 12 new files created (9 components + types + placeholder-data + barrel export).
+- 1 file extended (AISupportCenterPage.tsx — added 4 new sections + imports).
+- 11 new Prisma models added.
+- Component reuse: RelatedContent reuses RelatedDownloads + RelatedVideos from installation module; FAQAccordion reuses expand/collapse pattern from InstallationFAQ; SectionHeader reused from dashboard; EmptyState reused from dashboard; StatusBadge/TagBadge reused from primitives.
+- No new PDF viewer created (reuses existing PDFPreview from downloads module).
+- No new YouTube player created (reuses existing RelatedVideos from installation module).
+- No new search system created (reuses existing search input pattern).
+- No AI chat built (existing AI assistant chat in AISupportCenterPage preserved as-is).

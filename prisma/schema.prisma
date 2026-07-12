@@ -25,6 +25,7 @@ model User {
 
   downloadHistory    DownloadHistory[]
   favoriteDownloads  FavoriteDownload[]
+  articleBookmarks   ArticleBookmark[]
 }
 
 model Post {
@@ -371,4 +372,201 @@ model InstallationFAQ {
   createdAt   DateTime @default(now())
 
   @@index([guideId])
+}
+// =====================================================
+// Knowledge Base & Troubleshooting models
+// =====================================================
+
+/// Lookup table — knowledge article categories (Products, Drivers, Installation, Firmware, Networking, etc.)
+model KnowledgeCategory {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  icon        String?  // Material Symbol name
+  description String?
+  color       String?  // tailwind gradient class, e.g. "from-qbit-primary to-qbit-secondary"
+  sortIndex   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  articles    KnowledgeArticle[]
+}
+
+/// Knowledge article master record.
+model KnowledgeArticle {
+  id              String   @id @default(cuid())
+  title           String
+  slug            String   @unique
+  excerpt         String
+  content         String   // rich-text JSON (sections, paragraphs, callouts, code blocks)
+  categoryId      String
+  category        KnowledgeCategory @relation(fields: [categoryId], references: [id])
+  author          String
+  authorAvatar    String?
+  readingTime     Int      // minutes
+  difficulty      String   // "Beginner" | "Intermediate" | "Expert"
+  featured        Boolean  @default(false)
+  popular         Boolean  @default(false)
+  latest          Boolean  @default(false)
+  viewCount       Int      @default(0)
+  helpfulCount    Int      @default(0)
+  notHelpfulCount Int      @default(0)
+  relatedProductIds String? // JSON string array of product ids
+  relatedDownloadIds String? // JSON string array of download ids
+  relatedGuideIds String? // JSON string array of installation guide ids
+  relatedVideoUrls String? // JSON string array of YouTube URLs
+  relatedFaqIds   String? // JSON string array of FAQ ids
+  publishedAt     DateTime
+  updatedAt       DateTime @updatedAt
+  createdAt       DateTime @default(now())
+
+  sections        ArticleSection[]
+  bookmarks       ArticleBookmark[]
+  feedback        ArticleFeedback[]
+
+  @@index([categoryId])
+  @@index([featured])
+  @@index([popular])
+  @@index([latest])
+}
+
+/// A titled section within a knowledge article.
+model ArticleSection {
+  id          String   @id @default(cuid())
+  articleId   String
+  article     KnowledgeArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  title       String
+  content     String   // rich-text content
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([articleId])
+}
+
+/// Frequently asked question.
+model FAQ {
+  id              String   @id @default(cuid())
+  question        String
+  answer          String
+  categoryId      String?
+  relatedFaqIds   String?  // JSON string array
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([categoryId])
+}
+
+/// Troubleshooting issue master record.
+model TroubleshootingIssue {
+  id              String   @id @default(cuid())
+  title           String
+  slug            String   @unique
+  productId       String?
+  symptoms        String   // JSON string array of symptom descriptions
+  causes          String   // JSON string array of possible causes
+  resolution      String   // summary of the resolution
+  relatedDownloadIds String? // JSON string array
+  relatedManualIds String? // JSON string array
+  relatedGuideIds String? // JSON string array
+  relatedVideoUrls String? // JSON string array
+  difficulty      String   // "Beginner" | "Intermediate" | "Expert"
+  viewCount       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  steps           TroubleshootingStep[]
+
+  @@index([productId])
+}
+
+/// A single step in a troubleshooting resolution.
+model TroubleshootingStep {
+  id              String   @id @default(cuid())
+  issueId         String
+  issue           TroubleshootingIssue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  stepNumber      Int
+  title           String
+  description     String
+  warning         String?
+  tip             String?
+  createdAt       DateTime @default(now())
+
+  @@index([issueId])
+  @@index([stepNumber])
+}
+
+/// Common error code lookup (e.g. E001, ERR_PRINTER_01).
+model CommonError {
+  id              String   @id @default(cuid())
+  code            String   @unique // "E001", "ERR_PRINTER_01"
+  meaning         String
+  possibleCause   String
+  resolution      String
+  productId       String?
+  productName     String?
+  severity        String   @default("warning") // "info" | "warning" | "error"
+  createdAt       DateTime @default(now())
+
+  @@index([productId])
+  @@index([severity])
+}
+
+/// A solution linked to a troubleshooting issue or common error.
+model Solution {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  issueId     String?
+  errorId     String?
+  steps       String?  // JSON string array of resolution steps
+  createdAt   DateTime @default(now())
+
+  @@index([issueId])
+  @@index([errorId])
+}
+
+/// Related-asset link (flexible — can point to a download, manual, guide, or video).
+model RelatedAsset {
+  id          String   @id @default(cuid())
+  assetType   String   // "download" | "manual" | "guide" | "video" | "product"
+  assetId     String?
+  assetUrl    String?
+  label       String
+  icon        String?
+  issueId     String?
+  errorId     String?
+  articleId   String?
+  createdAt   DateTime @default(now())
+
+  @@index([issueId])
+  @@index([errorId])
+  @@index([articleId])
+}
+
+/// User-bookmarked article (or FAQ or troubleshooting page).
+model ArticleBookmark {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  articleId   String
+  article     KnowledgeArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  bookmarkType String  @default("article") // "article" | "faq" | "troubleshooting"
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, articleId])
+  @@index([userId])
+}
+
+/// Feedback on a knowledge article.
+model ArticleFeedback {
+  id          String   @id @default(cuid())
+  userId      String?
+  articleId   String
+  article     KnowledgeArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  rating      String   // "helpful" | "not_helpful"
+  comment     String?
+  feedbackType String  @default("rating") // "rating" | "suggestion" | "report"
+  createdAt   DateTime @default(now())
+
+  @@index([articleId])
 }
