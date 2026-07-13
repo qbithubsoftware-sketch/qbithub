@@ -163,6 +163,9 @@ export const SCREEN_PERMISSIONS: Record<ScreenId, Role[]> = {
   // Dr. QBIT Device Passport & Driver Intelligence — engineers + admin
   "dr-qbit-passport": ["administrator", "installation_engineer", "support_engineer"],
 
+  // Dr. QBIT Firmware Intelligence — engineers + admin (no sales access)
+  "dr-qbit-firmware": ["administrator", "installation_engineer", "support_engineer"],
+
   // Notification Automation Engine — admin-only management screens.
   "notification-center": ["administrator", "installation_engineer", "support_engineer"],
   "notification-template-manager": ["administrator"],

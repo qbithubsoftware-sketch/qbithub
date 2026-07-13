@@ -51,6 +51,8 @@ export type ScreenId =
   | "dr-qbit-detection"
   // Dr. QBIT Device Passport & Driver Intelligence — Version 2
   | "dr-qbit-passport"
+  // Dr. QBIT Firmware Intelligence — Version 2
+  | "dr-qbit-firmware"
   // Notification Automation Engine — Version 2
   | "notification-center"
   | "notification-template-manager"

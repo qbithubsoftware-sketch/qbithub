@@ -1,0 +1,53 @@
+/**
+ * GET /api/dr-qbit/firmware/[passportId] — firmware info for a specific passport
+ *
+ * Returns FirmwareInformation + latest release details + compatibility status.
+ */
+
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { requireAuth } from "@/lib/notifications/auth";
+import { mapFirmwareInfoDTO } from "../route";
+
+interface Params {
+  params: Promise<{ passportId: string }>;
+}
+
+export async function GET(req: NextRequest, { params }: Params) {
+  const session = await requireAuth();
+  if (!session) {
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  }
+
+  const { passportId } = await params;
+
+  const info = await db.firmwareInformation.findUnique({
+    where: { passportId },
+    include: {
+      passport: { include: { product: true } },
+      latestRelease: {
+        include: {
+          firmware: true,
+          download: { select: { storagePath: true, fileSize: true, checksum: true } },
+        },
+      },
+    },
+  });
+
+  if (!info) {
+    return NextResponse.json(
+      { error: "Firmware information not found for this passport" },
+      { status: 404 },
+    );
+  }
+
+  // Enrich with download URL + file size from Download record
+  const enriched = {
+    ...info,
+    latestDownloadUrl: info.latestRelease?.download?.storagePath ?? null,
+    latestFileSize: info.latestRelease?.download?.fileSize ?? info.latestFileSize,
+    latestChecksum: info.latestRelease?.download?.checksum ?? info.latestChecksum,
+  };
+
+  return NextResponse.json(mapFirmwareInfoDTO(enriched));
+}

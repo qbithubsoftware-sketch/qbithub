@@ -96,6 +96,7 @@ model Download {
   releaseNotes    ReleaseNote[]
   downloadHistory DownloadHistory[]
   favorites       FavoriteDownload[]
+  firmwareReleases FirmwareRelease[]
 
   @@index([categoryId])
   @@index([visibility])
@@ -195,6 +196,8 @@ model Firmware {
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  releases    FirmwareRelease[]
 }
 
 /// SDK master record.
@@ -1625,6 +1628,7 @@ model QbitProduct {
   detectedDevices    DetectedDevice[]
   unknownDeviceMaps  UnknownDevice[]
   devicePassports    DevicePassport[]
+  firmwareCompat     FirmwareCompatibility[]
 }
 
 /// Hardware signature — the matching fingerprint for a known product.
@@ -1836,6 +1840,8 @@ model DevicePassport {
   driverInfo      DriverInformation?
   warranty        DeviceWarranty?
   driverHistory   DriverHistory[]
+  firmwareInfo    FirmwareInformation?
+  firmwareHistory FirmwareHistory[]
 
   @@index([productId])
   @@index([serialNumber])
@@ -1914,6 +1920,154 @@ model DriverHistory {
   // Actor
   performedBy     String?                         // User.id or "system" or "desktop-agent"
   performedByName String?
+  // Notes
+  notes           String?
+  occurredAt      DateTime @default(now())
+
+  @@index([passportId])
+  @@index([occurredAt])
+  @@index([eventType])
+}
+
+// =====================================================
+// Dr. QBIT Firmware Intelligence — Version 2
+// =====================================================
+//
+// Enterprise firmware management for POS devices.
+// Detects installed firmware, compares with QBIT Firmware Library,
+// recommends updates — but NEVER starts firmware updates automatically.
+//
+// Reuses existing:
+//   - Firmware (master record) + Download (file storage) from Download Center
+//   - DevicePassport (from Device Passport module)
+//   - QbitProduct (from Product Library)
+//
+// Creates new:
+//   - FirmwareRelease — versioned firmware release (links to Download for file)
+//   - FirmwareInformation — installed vs latest comparison per passport
+//   - FirmwareHistory — audit trail of firmware changes
+//   - FirmwareCompatibility — model + hardware ID compatibility matrix
+
+/// Versioned firmware release — one per firmware version.
+/// Links to the existing Firmware master record + Download for file storage.
+/// Never duplicates firmware file storage — reuses Download.storagePath.
+model FirmwareRelease {
+  id              String   @id @default(cuid())
+  firmwareId      String                          // links to existing Firmware master
+  firmware        Firmware @relation(fields: [firmwareId], references: [id], onDelete: Cascade)
+  // Version info
+  version         String                          // "4.0.2"
+  buildNumber     String?                         // "build-4021"
+  releaseDate     DateTime
+  // File (reuses existing Download — no duplicate storage)
+  downloadId      String?                         // links to Download record
+  download        Download? @relation(fields: [downloadId], references: [id])
+  fileSize        Int?                            // bytes (from Download)
+  checksum        String?                         // SHA-256 hash for integrity
+  // Release metadata
+  releaseNotes    String?                         // changelog text
+  releaseNotesHtml String?                        // HTML formatted notes
+  isCritical      Boolean  @default(false)        // security/critical update
+  isLatest        Boolean  @default(false)        // current latest version
+  isStable        Boolean  @default(true)         // stable vs beta
+  // Compatibility
+  supportedModels String?                         // JSON array: ["T-800", "T-800 Pro"]
+  supportedHardwareIds String?                    // JSON array of hardware ID patterns
+  minOsVersion    String?                         // minimum OS required
+  // Metadata
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  compatibility   FirmwareCompatibility[]
+  history         FirmwareHistory[]
+  information     FirmwareInformation[]
+
+  @@index([firmwareId])
+  @@index([version])
+  @@index([isLatest])
+  @@index([releaseDate])
+}
+
+/// Firmware compatibility matrix — which device models + hardware IDs
+/// are compatible with which firmware release.
+model FirmwareCompatibility {
+  id              String   @id @default(cuid())
+  firmwareReleaseId String
+  firmwareRelease   FirmwareRelease @relation(fields: [firmwareReleaseId], references: [id], onDelete: Cascade)
+  // Compatibility criteria
+  productId       String?                         // QbitProduct.id (optional — for product-specific compat)
+  product         QbitProduct? @relation(fields: [productId], references: [id])
+  deviceModel     String                          // "T-800", "BS-550", "HUB-X-Pro"
+  hardwareIdPattern String?                       // regex or glob pattern for hardware ID
+  vendorId        String?                         // USB VID constraint
+  productIdCode   String?                         // USB PID constraint
+  // Compatibility status
+  isCompatible    Boolean  @default(true)
+  notes           String?                         // e.g. "Requires driver v2.4+"
+  createdAt       DateTime @default(now())
+
+  @@index([firmwareReleaseId])
+  @@index([productId])
+  @@index([deviceModel])
+  @@index([vendorId, productIdCode])
+}
+
+/// Firmware information — installed vs latest comparison per device passport.
+/// One row per passport (updated when firmware info changes).
+/// Follows the same pattern as DriverInformation.
+model FirmwareInformation {
+  id              String   @id @default(cuid())
+  passportId      String   @unique
+  passport        DevicePassport @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  // Installed firmware (from Desktop Agent scan — never invented)
+  installedVersion    String?                     // "4.0.2" or null if not available
+  installedBuildNumber String?
+  installedFirmwareDate DateTime?
+  installedFirmwareVendor String?
+  installedCompatibility String?                  // "Compatible" | "Unknown" | "Incompatible"
+  // Latest available (from FirmwareRelease)
+  latestReleaseId String?
+  latestRelease   FirmwareRelease? @relation(fields: [latestReleaseId], references: [id])
+  latestVersion   String?
+  latestReleaseDate DateTime?
+  latestDownloadUrl String?
+  latestFileSize  Int?
+  latestChecksum  String?
+  latestReleaseNotes String?
+  // Comparison result
+  firmwareStatus  String   @default("unknown")  // "healthy" | "update_available" | "unsupported" | "unknown"
+  // Safety check
+  compatibilityChecked Boolean @default(false)
+  isCompatible    Boolean  @default(true)        // false = update blocked
+  compatibilityReason String?                    // why blocked (if applicable)
+  // Metadata
+  lastCheckedAt   DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([passportId])
+  @@index([firmwareStatus])
+  @@index([latestReleaseId])
+}
+
+/// Firmware history — audit trail of firmware changes on a device.
+/// One row per firmware event (install, update, rollback, scan).
+model FirmwareHistory {
+  id              String   @id @default(cuid())
+  passportId      String
+  passport        DevicePassport @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  // Event data
+  eventType       String                          // "install" | "update" | "rollback" | "scan" | "block"
+  oldVersion      String?
+  newVersion      String?
+  firmwareReleaseId String?
+  firmwareRelease   FirmwareRelease? @relation(fields: [firmwareReleaseId], references: [id])
+  // Actor
+  performedBy     String?                         // User.id or "system" or "desktop-agent"
+  performedByName String?
+  // Update method
+  updateMethod    String?                         // "usb" | "lan" | "wifi" | "manual"
   // Notes
   notes           String?
   occurredAt      DateTime @default(now())
