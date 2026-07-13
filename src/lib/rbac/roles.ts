@@ -154,6 +154,9 @@ export const SCREEN_PERMISSIONS: Record<ScreenId, Role[]> = {
   // Customer Live Tracking Portal — public, no auth (uses secure token in URL)
   "customer-tracking-portal": [],
 
+  // Engineer Mobile Portal (PWA) — installation engineers + admin
+  "mobile-engineer": ["administrator", "installation_engineer", "support_engineer"],
+
   // Notification Automation Engine — admin-only management screens.
   "notification-center": ["administrator", "installation_engineer", "support_engineer"],
   "notification-template-manager": ["administrator"],
@@ -188,7 +191,7 @@ export function homeScreenForRole(role: Role): ScreenId {
     case "administrator":
       return "home";
     case "installation_engineer":
-      return "fsm-dashboard";
+      return "mobile-engineer";
     case "support_engineer":
       return "ai-support-center";
     case "sales_executive":

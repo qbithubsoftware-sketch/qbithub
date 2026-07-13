@@ -1,0 +1,73 @@
+{
+  "name": "QBIT Hub — Engineer Portal",
+  "short_name": "QBIT Engineer",
+  "description": "Mobile-first PWA for QBIT installation engineers — track jobs, capture photos, get customer signatures, and access Dr. QBIT diagnostics on the field.",
+  "start_url": "/?screen=mobile-engineer",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FCFBFF",
+  "theme_color": "#00639B",
+  "categories": ["business", "productivity", "utilities"],
+  "lang": "en",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/icons/screenshot-mobile.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Engineer Dashboard"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Today's Jobs",
+      "short_name": "Today",
+      "description": "View today's scheduled jobs",
+      "url": "/?screen=mobile-engineer&filter=today",
+      "icons": [{ "src": "/icons/shortcut-today.png", "sizes": "96x96", "type": "image/png" }]
+    },
+    {
+      "name": "Dr. QBIT",
+      "short_name": "Dr. QBIT",
+      "description": "Launch AI diagnostics assistant",
+      "url": "/?screen=ai-support-center",
+      "icons": [{ "src": "/icons/shortcut-drqbit.png", "sizes": "96x96", "type": "image/png" }]
+    },
+    {
+      "name": "Notifications",
+      "short_name": "Alerts",
+      "description": "View in-app notifications",
+      "url": "/?screen=notification-center",
+      "icons": [{ "src": "/icons/shortcut-notifications.png", "sizes": "96x96", "type": "image/png" }]
+    }
+  ],
+  "prefer_related_applications": false
+}

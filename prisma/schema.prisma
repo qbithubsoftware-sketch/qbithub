@@ -1529,3 +1529,62 @@ model InstallationRating {
   @@index([engineerId])
   @@index([averageRating])
 }
+
+// =====================================================
+// Engineer Mobile Portal (PWA) — Version 2
+// =====================================================
+//
+// PWA-specific models for field engineer mobile operations:
+//   - EngineerLocation: GPS tracking for "On The Way" status
+//   - OfflineSyncQueue: mutations made offline, synced when back online
+
+/// Engineer GPS location ping — written by the mobile app periodically
+/// and on status transitions (e.g. when engineer clicks "On The Way").
+model EngineerLocation {
+  id              String   @id @default(cuid())
+  engineerId      String                          // User.id
+  workOrderId     String?                         // optional link to active job
+  geoLat          Float
+  geoLng          Float
+  accuracy        Float?                          // meters
+  heading         Float?                          // degrees (0-360)
+  speed           Float?                          // m/s
+  batteryLevel    Float?                          // 0-1
+  isOnline        Boolean  @default(true)
+  capturedAt      DateTime @default(now())
+  createdAt       DateTime @default(now())
+
+  @@index([engineerId, capturedAt])
+  @@index([workOrderId])
+  @@index([capturedAt])
+}
+
+/// Offline sync queue — one row per mutation made while offline.
+/// The mobile app writes to this table when it can't reach the server,
+/// then a background sync (or next-online trigger) replays the mutation.
+model OfflineSyncQueue {
+  id              String   @id @default(cuid())
+  engineerId      String                          // User.id
+  // Mutation details
+  method          String                          // "PATCH" | "POST"
+  url             String                          // "/api/fsm/work-orders/wo_94281"
+  body            String                          // JSON string
+  // Sync state
+  status          String   @default("pending")   // "pending" | "syncing" | "synced" | "failed"
+  attempts        Int      @default(0)
+  maxAttempts     Int      @default(5)
+  lastAttemptAt   DateTime?
+  syncedAt        DateTime?
+  // Result (filled after sync)
+  responseStatus  Int?
+  responseBody    String?
+  error           String?
+  // Client metadata
+  clientQueueId   String?                         // ID generated on client (IndexedDB)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([engineerId, status])
+  @@index([status, createdAt])
+  @@index([clientQueueId])
+}

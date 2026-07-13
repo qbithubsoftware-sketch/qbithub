@@ -45,6 +45,8 @@ export type ScreenId =
   | "fsm-customer-tracking"
   // Customer Live Tracking Portal — Version 2
   | "customer-tracking-portal"
+  // Engineer Mobile Portal (PWA) — Version 2
+  | "mobile-engineer"
   // Notification Automation Engine — Version 2
   | "notification-center"
   | "notification-template-manager"
