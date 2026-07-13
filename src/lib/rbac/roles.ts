@@ -150,6 +150,12 @@ export const SCREEN_PERMISSIONS: Record<ScreenId, Role[]> = {
 
   // Public customer tracking — no auth required.
   "fsm-customer-tracking": [],
+
+  // Notification Automation Engine — admin-only management screens.
+  "notification-center": ["administrator", "installation_engineer", "support_engineer"],
+  "notification-template-manager": ["administrator"],
+  "notification-history": ["administrator"],
+  "notification-reminders": ["administrator"],
 };
 
 /**

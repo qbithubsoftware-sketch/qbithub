@@ -1132,6 +1132,10 @@ model WorkOrder {
   notes           EngineerNote[]
   report          CompletionReport?
   notifications   NotificationLog[]
+  inAppNotifications Notification[]
+  reminders       Reminder[]
+  emailQueue      EmailQueue[]
+  whatsappQueue   WhatsAppQueue[]
 
   @@index([status])
   @@index([assignedEngineerId])
@@ -1229,16 +1233,197 @@ model NotificationLog {
   id              String   @id @default(cuid())
   workOrderId     String
   workOrder       WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
-  channel         String                       // "email" | "whatsapp" | "sms"
-  template        String                       // "job_assigned" | "engineer_accepted" | etc.
+  channel         String                       // "email" | "whatsapp" | "sms" | "in_app"
+  templateCode    String   @default("legacy")  // template code (e.g. "customer.job_assigned.whatsapp")
+  templateId      String?                      // optional FK to NotificationTemplate
+  templateRef     NotificationTemplate? @relation(fields: [templateId], references: [id])
   recipient       String                       // email or phone
+  recipientRole   String   @default("customer") // "admin" | "engineer" | "customer"
   subject         String?
   body            String
-  status          String   @default("sent")   // "queued" | "sent" | "failed"
+  status          String   @default("sent")   // "queued" | "sent" | "failed" | "read"
+  attempts        Int      @default(0)
   sentAt          DateTime @default(now())
+  deliveredAt     DateTime?
+  readAt          DateTime?
   error           String?
+  providerName    String?
+  providerMessageId String?
 
   @@index([workOrderId])
   @@index([channel])
   @@index([sentAt])
+  @@index([status])
+  @@index([recipientRole])
 }
+
+// =====================================================
+// Notification Automation Engine — Version 2
+// =====================================================
+//
+// Centralised notification system with provider abstraction.
+// Extends the existing NotificationLog (FSM audit trail) with:
+//   - NotificationTemplate — reusable WhatsApp/Email/SMS templates
+//   - Notification — in-app notifications (admin/engineer inbox)
+//   - EmailQueue — outbound email queue (provider-independent)
+//   - WhatsAppQueue — outbound WhatsApp queue (provider-independent)
+//   - Reminder — scheduled job reminders (1d/2h/30min before visit)
+//
+// The existing NotificationLog remains the immutable audit trail
+// for every outbound message. New models sit alongside it.
+
+/// Reusable notification template — one per (event × channel).
+/// Variables use {{VarName}} syntax, substituted by the template engine.
+model NotificationTemplate {
+  id              String   @id @default(cuid())
+  code            String   @unique               // "customer.job_assigned.whatsapp"
+  name            String                          // "Customer: Job Assigned (WhatsApp)"
+  event           String                          // "job_assigned" | "engineer_accepted" | ...
+  recipientType   String                          // "admin" | "engineer" | "customer"
+  channel         String                          // "email" | "whatsapp" | "sms" | "in_app"
+  subject         String?                         // email only
+  body            String                          // template body with {{Var}} placeholders
+  htmlBody        String?                         // email only — HTML version
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  notifications   Notification[]                  // in-app notifications spawned from this template
+  emailQueue      EmailQueue[]
+  whatsappQueue   WhatsAppQueue[]
+  logs            NotificationLog[]
+
+  @@index([event])
+  @@index([channel])
+  @@index([recipientType])
+  @@index([isActive])
+}
+
+/// In-app notification — surfaced in the admin/engineer Notification Center.
+/// Stored separately from NotificationLog (which is for outbound messages).
+model Notification {
+  id              String   @id @default(cuid())
+  recipientId     String                          // User.id (admin or engineer)
+  recipientType   String                          // "admin" | "engineer"
+  title           String
+  message         String
+  category        String   @default("system")    // "system" | "job" | "reminder" | "alert"
+  priority        String   @default("normal")    // "low" | "normal" | "high" | "urgent"
+  actionUrl       String?                         // deep link into the app
+  actionLabel     String?
+  readAt          DateTime?
+  archivedAt      DateTime?
+  // Link to template + work order for traceability
+  templateId      String?
+  template        NotificationTemplate? @relation(fields: [templateId], references: [id])
+  workOrderId     String?
+  workOrder       WorkOrder? @relation(fields: [workOrderId], references: [id])
+  // Metadata for filtering / dedup
+  metadata        String?                         // JSON string
+  createdAt       DateTime @default(now())
+
+  @@index([recipientId, readAt])
+  @@index([recipientType])
+  @@index([category])
+  @@index([createdAt])
+  @@index([workOrderId])
+}
+
+/// Email queue — provider-independent outbound email queue.
+/// Workers (or cron) process this queue and call the configured EmailProvider.
+model EmailQueue {
+  id              String   @id @default(cuid())
+  toAddress       String
+  fromAddress     String   @default("noreply@qbithub.com")
+  replyTo         String?
+  subject         String
+  textBody        String
+  htmlBody        String?
+  // Status lifecycle: queued → sent | failed | retried
+  status          String   @default("queued")    // "queued" | "sent" | "failed" | "retried"
+  attempts        Int      @default(0)
+  maxAttempts     Int      @default(3)
+  nextRetryAt     DateTime?
+  sentAt          DateTime?
+  lastError       String?
+  // Linkage
+  templateId      String?
+  template        NotificationTemplate? @relation(fields: [templateId], references: [id])
+  workOrderId     String?
+  workOrder       WorkOrder? @relation(fields: [workOrderId], references: [id])
+  recipientUserId String?
+  // Provider tracking
+  providerName    String?                         // "sendgrid" | "ses" | "console"
+  providerMessageId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([status, nextRetryAt])
+  @@index([workOrderId])
+  @@index([recipientUserId])
+  @@index([createdAt])
+}
+
+/// WhatsApp queue — provider-independent outbound WhatsApp queue.
+/// Workers process this queue and call the configured WhatsAppProvider.
+model WhatsAppQueue {
+  id              String   @id @default(cuid())
+  toPhone         String                          // E.164 format: +919876543210
+  templateName    String?                         // WhatsApp Business template name (for approved templates)
+  body            String                          // message body (variables already substituted)
+  // Status lifecycle: queued → sent | failed | retried
+  status          String   @default("queued")    // "queued" | "sent" | "failed" | "retried"
+  attempts        Int      @default(0)
+  maxAttempts     Int      @default(3)
+  nextRetryAt     DateTime?
+  sentAt          DateTime?
+  lastError       String?
+  // Linkage
+  templateId      String?
+  template        NotificationTemplate? @relation(fields: [templateId], references: [id])
+  workOrderId     String?
+  workOrder       WorkOrder? @relation(fields: [workOrderId], references: [id])
+  recipientUserId String?
+  // Provider tracking
+  providerName    String?                         // "twilio" | "gupshup" | "console"
+  providerMessageId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([status, nextRetryAt])
+  @@index([workOrderId])
+  @@index([recipientUserId])
+  @@index([createdAt])
+}
+
+/// Scheduled reminder for a work order.
+/// Cron job scans for due reminders and dispatches notifications.
+model Reminder {
+  id              String   @id @default(cuid())
+  workOrderId     String
+  workOrder       WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  recipientType   String                          // "engineer" | "customer"
+  recipientId     String?                         // User.id (engineer) — null for customer (uses work order phone)
+  recipientContact String                         // phone or email
+  offsetMinutes   Int                             // negative offset from scheduledDate: -1440 (1d), -120 (2h), -30 (30min)
+  offsetLabel     String                          // "1 Day Before" | "2 Hours Before" | "30 Minutes Before"
+  channels        String                          // JSON array: ["in_app", "whatsapp", "email"]
+  // Status lifecycle
+  status          String   @default("scheduled")  // "scheduled" | "sent" | "skipped" | "cancelled"
+  dueAt           DateTime                        // computed: scheduledDate + offsetMinutes
+  sentAt          DateTime?
+  // Linkage
+  notificationLogIds String?                      // JSON array of NotificationLog IDs created
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([status, dueAt])
+  @@index([workOrderId])
+  @@index([recipientType])
+}
+
+/// Extend the existing NotificationLog with optional template linkage
+/// (non-breaking — the field is nullable so existing rows are unaffected).
+/// NOTE: NotificationLog already exists in the schema. The relation
+/// NotificationTemplate.logs is declared above and Prisma will create
+/// the nullable foreign key column automatically when we push.

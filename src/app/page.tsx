@@ -29,6 +29,10 @@ import { FSMWorkOrderDetailPage } from "@/components/qbit/pages/FSMWorkOrderDeta
 import { FSMWorkOrderCompletionPage } from "@/components/qbit/pages/FSMWorkOrderCompletionPage";
 import { FSMCustomerAssetHistoryPage } from "@/components/qbit/pages/FSMCustomerAssetHistoryPage";
 import { FSMCustomerTrackingPage } from "@/components/qbit/pages/FSMCustomerTrackingPage";
+import { NotificationCenterPage } from "@/components/qbit/pages/NotificationCenterPage";
+import { NotificationTemplateManagerPage } from "@/components/qbit/pages/NotificationTemplateManagerPage";
+import { NotificationHistoryPage } from "@/components/qbit/pages/NotificationHistoryPage";
+import { NotificationRemindersPage } from "@/components/qbit/pages/NotificationRemindersPage";
 
 export default function Home() {
   const current = useNavigation((s) => s.current);
@@ -90,6 +94,15 @@ export default function Home() {
         return <FSMCustomerAssetHistoryPage />;
       case "fsm-customer-tracking":
         return <FSMCustomerTrackingPage />;
+      // Notification Automation Engine — Version 2
+      case "notification-center":
+        return <NotificationCenterPage />;
+      case "notification-template-manager":
+        return <NotificationTemplateManagerPage />;
+      case "notification-history":
+        return <NotificationHistoryPage />;
+      case "notification-reminders":
+        return <NotificationRemindersPage />;
       default:
         return <LoginPage />;
     }

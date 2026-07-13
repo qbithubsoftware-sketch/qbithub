@@ -564,7 +564,7 @@ async function main() {
       data: {
         workOrderId: n.woId,
         channel: n.channel,
-        template: n.template,
+        templateCode: n.template,
         recipient: n.recipient,
         subject: n.subject ?? "",
         body: n.body,

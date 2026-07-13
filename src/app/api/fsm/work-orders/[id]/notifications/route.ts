@@ -35,12 +35,15 @@ export async function GET(req: NextRequest, { params }: Params) {
     items: notifications.map((n) => ({
       id: n.id,
       channel: n.channel,
-      template: n.template,
+      template: n.templateCode,
+      templateCode: n.templateCode,
       recipient: n.recipient,
+      recipientRole: n.recipientRole,
       subject: n.subject,
       body: n.body,
       status: n.status,
       sentAt: n.sentAt.toISOString(),
+      providerName: n.providerName,
     })),
   });
 }

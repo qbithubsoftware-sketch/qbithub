@@ -153,36 +153,93 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     },
   });
 
-  // Auto-send notification (logged only — no real email/WhatsApp provider wired)
-  const templateMap: Record<string, string> = {
-    accepted: "engineer_accepted",
-    on_the_way: "engineer_on_the_way",
-    arrived: "engineer_arrived",
-    start: "installation_started",
-    complete: newStatus === "completed" ? "installation_completed" : "service_completed",
+  // Dispatch notifications through the central Notification Automation Engine.
+  // Maps FSM actions to NotificationEvent codes — the engine handles channel
+  // routing, template lookup, variable substitution, and audit logging.
+  const eventMap: Record<string, import("@/lib/notifications/types").NotificationEvent> = {
+    accept: "customer_engineer_accepted",
+    on_the_way: "customer_engineer_on_the_way",
+    arrived: "customer_engineer_arrived",
+    start: newStatus === "installing"
+      ? (updated.type === "relocation"
+          ? "customer_relocation_started"
+          : updated.type === "troubleshooting" || updated.type === "inspection" || updated.type === "device_health_check"
+            ? "customer_service_started"
+            : "customer_installation_started")
+      : "customer_installation_started",
+    complete: newStatus === "completed"
+      ? (updated.type === "relocation"
+          ? "customer_relocation_completed"
+          : updated.type === "troubleshooting" || updated.type === "inspection" || updated.type === "device_health_check"
+            ? "customer_service_completed"
+            : "customer_installation_completed")
+      : "customer_service_completed",
   };
-  const template = templateMap[action];
-  if (template) {
-    const messageTemplates: Record<string, string> = {
-      engineer_accepted: `QBIT Hub: Engineer ${session.user.name ?? ""} has accepted your job ${wo.jobNumber}.`,
-      engineer_on_the_way: `QBIT Hub: Engineer is on the way for job ${wo.jobNumber}. ETA shortly.`,
-      engineer_arrived: `QBIT Hub: Engineer has arrived on site for job ${wo.jobNumber}.`,
-      installation_started: `QBIT Hub: Installation has started for job ${wo.jobNumber}.`,
-      installation_completed: `QBIT Hub: Your installation ${wo.jobNumber} is now complete. Thank you for choosing QBIT.`,
-      service_completed: `QBIT Hub: Service visit ${wo.jobNumber} is complete. Tracking link: https://hub.qbit.com/track/${wo.publicTrackingCode}`,
-    };
+  const customerEvent = eventMap[action];
+  if (customerEvent) {
+    const { dispatch } = await import("@/lib/notifications/dispatcher");
+    const scheduledDateStr = updated.scheduledDate.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
 
-    await db.notificationLog.create({
-      data: {
-        workOrderId: id,
-        channel: updated.customer.phone ? "whatsapp" : "email",
-        template,
-        recipient: updated.customer.phone ?? updated.customer.email ?? "",
-        subject: template.startsWith("installation") ? `QBIT Hub — ${wo.jobNumber}` : "",
-        body: messageTemplates[template] ?? "",
-        status: "sent",
+    // Notify customer
+    await dispatch({
+      event: customerEvent,
+      recipientType: "customer",
+      recipientContact: updated.customer.phone ?? undefined,
+      recipientName: updated.customer.name,
+      workOrderId: id,
+      variables: {
+        CustomerName: updated.customer.name,
+        CustomerPhone: updated.customer.phone ?? "",
+        CustomerEmail: updated.customer.email ?? "",
+        EngineerName: session.user.name ?? "your engineer",
+        JobNumber: wo.jobNumber,
+        JobType: updated.type.replace(/_/g, " "),
+        JobStatus: newStatus,
+        Date: scheduledDateStr,
+        Time: updated.scheduledTime ?? "",
+        ProductName: updated.asset?.productName ?? "",
+        TrackingURL: `https://qbithub.vercel.app/?track=${wo.publicTrackingCode}`,
       },
     });
+
+    // Notify admin for key events
+    const adminEventMap: Record<string, import("@/lib/notifications/types").NotificationEvent> = {
+      accept: "engineer_accepts",
+      complete: newStatus === "completed"
+        ? (updated.type === "relocation" ? "relocation_completed" : "service_completed")
+        : "job_completed",
+    };
+    const adminEvent = adminEventMap[action];
+    if (adminEvent) {
+      // Find admins to notify
+      const admins = await db.user.findMany({
+        where: { role: "administrator" },
+        select: { id: true, email: true, name: true },
+      });
+      for (const admin of admins) {
+        await dispatch({
+          event: adminEvent,
+          recipientType: "admin",
+          recipientId: admin.id,
+          recipientContact: admin.email,
+          recipientName: admin.name ?? "Admin",
+          workOrderId: id,
+          variables: {
+            EngineerName: session.user.name ?? "",
+            JobNumber: wo.jobNumber,
+            JobType: updated.type.replace(/_/g, " "),
+            JobStatus: newStatus,
+            CustomerName: updated.customer.name,
+            Date: scheduledDateStr,
+            Time: updated.scheduledTime ?? "",
+          },
+        });
+      }
+    }
   }
 
   return NextResponse.json({ workOrder: toWorkOrderCardDTO(updated) });

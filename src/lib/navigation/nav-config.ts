@@ -76,9 +76,20 @@ export const FSM_NAV: NavItem[] = [
   { label: "Dashboard", icon: "dashboard", screen: "fsm-dashboard" },
   { label: "Work Orders", icon: "assignment", screen: "fsm-dashboard" },
   { label: "Asset History", icon: "history", screen: "fsm-customer-asset-history" },
+  { label: "Notifications", icon: "notifications", screen: "notification-center" },
   { label: "Dr. QBIT", icon: "smart_toy", screen: "ai-support-center" },
   { label: "Knowledge Base", icon: "library_books", screen: "ai-support-center" },
   { label: "Support", icon: "contact_support", screen: "ai-support-center" },
+];
+
+/** Notification Automation Engine sidebar items — admin only. */
+export const NOTIFICATION_NAV: NavItem[] = [
+  { label: "Notification Center", icon: "notifications", screen: "notification-center" },
+  { label: "Templates", icon: "description", screen: "notification-template-manager" },
+  { label: "History", icon: "history", screen: "notification-history" },
+  { label: "Reminders", icon: "schedule", screen: "notification-reminders" },
+  { label: "Dashboard", icon: "dashboard", screen: "home" },
+  { label: "Settings", icon: "settings", screen: "system-settings" },
 ];
 
 export type { ScreenId };

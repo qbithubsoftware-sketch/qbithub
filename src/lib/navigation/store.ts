@@ -42,7 +42,12 @@ export type ScreenId =
   | "fsm-work-order-detail"
   | "fsm-work-order-completion"
   | "fsm-customer-asset-history"
-  | "fsm-customer-tracking";
+  | "fsm-customer-tracking"
+  // Notification Automation Engine — Version 2
+  | "notification-center"
+  | "notification-template-manager"
+  | "notification-history"
+  | "notification-reminders";
 
 interface NavigationState {
   current: ScreenId;
