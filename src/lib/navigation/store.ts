@@ -49,6 +49,8 @@ export type ScreenId =
   | "mobile-engineer"
   // Dr. QBIT Device Detection Engine — Version 2
   | "dr-qbit-detection"
+  // Dr. QBIT Device Passport & Driver Intelligence — Version 2
+  | "dr-qbit-passport"
   // Notification Automation Engine — Version 2
   | "notification-center"
   | "notification-template-manager"

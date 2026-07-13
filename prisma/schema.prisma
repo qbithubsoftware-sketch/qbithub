@@ -1624,6 +1624,7 @@ model QbitProduct {
   hardwareSignatures HardwareSignature[]
   detectedDevices    DetectedDevice[]
   unknownDeviceMaps  UnknownDevice[]
+  devicePassports    DevicePassport[]
 }
 
 /// Hardware signature — the matching fingerprint for a known product.
@@ -1729,6 +1730,9 @@ model DetectedDevice {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
+  // Device Passport (one-to-one — created when device is matched to a product)
+  passport        DevicePassport?
+
   @@index([scanSessionId])
   @@index([connectionType])
   @@index([status])
@@ -1769,4 +1773,152 @@ model UnknownDevice {
   @@index([vendorId, productIdCode])
   @@index([mappedProductId])
   @@index([hardwareId])
+}
+
+// =====================================================
+// Dr. QBIT Device Passport & Driver Intelligence — Version 2
+// =====================================================
+//
+// After a successful device scan, Dr. QBIT automatically creates a
+// Digital Device Passport — the single source of truth for that device.
+//
+// The passport links:
+//   - DetectedDevice (hardware scan data)
+//   - QbitProduct (Product Library match)
+//   - DriverInformation (installed + latest driver intelligence)
+//   - DeviceWarranty (warranty status + remaining days)
+//   - DriverHistory (audit trail of driver changes)
+//
+// Reuses existing models — no duplication of Product Library or Download Center.
+
+/// Digital Device Passport — the single source of truth for a detected device.
+/// Created automatically when a DetectedDevice is matched to a QbitProduct.
+/// One passport per unique hardware identity (serial number or VID+PID+port).
+model DevicePassport {
+  id              String   @id @default(cuid())
+  passportNumber  String   @unique                // "PASS-2026-00001"
+  // Link to detected device + product
+  detectedDeviceId String? @unique
+  detectedDevice   DetectedDevice? @relation(fields: [detectedDeviceId], references: [id])
+  productId       String?
+  product         QbitProduct? @relation(fields: [productId], references: [id])
+  // Hardware identity (denormalized for search + display)
+  hardwareId      String?
+  vendorId        String?
+  productIdCode   String?
+  serialNumber    String?
+  deviceName      String?
+  manufacturer    String?
+  brand           String?
+  model           String?
+  connectionType  String?
+  port            String?
+  usbVersion      String?
+  osInfo          String?
+  architecture    String?
+  macAddress      String?
+  ipAddress       String?
+  // Device status (computed from driver intelligence + scan data)
+  deviceStatus    String   @default("ready")     // "ready" | "driver_missing" | "driver_outdated" | "unsupported" | "unknown"
+  // Customer link (optional — set when device is associated with a customer asset)
+  customerAssetId String?
+  // Timeline (denormalized for fast display)
+  firstDetectedAt DateTime @default(now())
+  lastScannedAt   DateTime?
+  lastDriverUpdateAt DateTime?
+  lastFirmwareUpdateAt DateTime?
+  lastInstallationAt DateTime?
+  lastServiceAt   DateTime?
+  // Metadata
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  driverInfo      DriverInformation?
+  warranty        DeviceWarranty?
+  driverHistory   DriverHistory[]
+
+  @@index([productId])
+  @@index([serialNumber])
+  @@index([vendorId, productIdCode])
+  @@index([hardwareId])
+  @@index([customerAssetId])
+  @@index([deviceStatus])
+}
+
+/// Driver intelligence — installed vs latest driver comparison.
+/// One row per passport (updated when driver info changes).
+model DriverInformation {
+  id              String   @id @default(cuid())
+  passportId      String   @unique
+  passport        DevicePassport @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  // Installed driver (from Desktop Agent scan)
+  installedDriverName    String?
+  installedDriverVersion String?
+  installedDriverProvider String?
+  installedDriverDate    DateTime?
+  // Latest available (from QBIT Driver Library — DriverVersion table)
+  latestDriverVersion    String?
+  latestDriverReleaseDate DateTime?
+  latestDriverDownloadUrl String?
+  latestDriverFileSize   Int?                    // bytes
+  latestDriverReleaseNotes String?
+  // Comparison result
+  driverStatus    String   @default("unknown")  // "installed" | "update_available" | "missing" | "unsupported"
+  // OS compatibility
+  supportedOses   String?                         // JSON array: ["Windows 11", "Windows 10", "Ubuntu 22.04"]
+  // Metadata
+  lastCheckedAt   DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([passportId])
+  @@index([driverStatus])
+}
+
+/// Device warranty — linked to customer asset purchase date.
+model DeviceWarranty {
+  id              String   @id @default(cuid())
+  passportId      String   @unique
+  passport        DevicePassport @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  // Warranty data
+  purchaseDate    DateTime?
+  warrantyStartDate DateTime?
+  warrantyExpiryDate DateTime?
+  warrantyStatus  String   @default("unknown")  // "active" | "expired" | "void" | "unknown"
+  warrantyDaysRemaining Int?                      // computed: days until expiry (negative = expired)
+  // Extended warranty
+  extendedWarranty Boolean  @default(false)
+  extendedExpiryDate DateTime?
+  // Provider
+  warrantyProvider String?
+  // Metadata
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([passportId])
+  @@index([warrantyStatus])
+}
+
+/// Driver history — audit trail of driver changes on this device.
+/// One row per driver event (install, update, rollback, uninstall).
+model DriverHistory {
+  id              String   @id @default(cuid())
+  passportId      String
+  passport        DevicePassport @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  // Event data
+  eventType       String                          // "install" | "update" | "rollback" | "uninstall" | "scan"
+  oldVersion      String?
+  newVersion      String?
+  driverName      String?
+  driverProvider  String?
+  // Actor
+  performedBy     String?                         // User.id or "system" or "desktop-agent"
+  performedByName String?
+  // Notes
+  notes           String?
+  occurredAt      DateTime @default(now())
+
+  @@index([passportId])
+  @@index([occurredAt])
+  @@index([eventType])
 }
