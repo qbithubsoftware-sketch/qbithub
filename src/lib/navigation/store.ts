@@ -53,6 +53,8 @@ export type ScreenId =
   | "dr-qbit-passport"
   // Dr. QBIT Firmware Intelligence — Version 2
   | "dr-qbit-firmware"
+  // Dr. QBIT AI Diagnostics Engine — Version 2
+  | "dr-qbit-diagnostics"
   // Notification Automation Engine — Version 2
   | "notification-center"
   | "notification-template-manager"

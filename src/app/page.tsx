@@ -34,6 +34,7 @@ import { MobileEngineerPage } from "@/components/qbit/pages/MobileEngineerPage";
 import { DrQbitDeviceDetectionPage } from "@/components/qbit/pages/DrQbitDeviceDetectionPage";
 import { DrQbitDevicePassportPage } from "@/components/qbit/pages/DrQbitDevicePassportPage";
 import { DrQbitFirmwareIntelligencePage } from "@/components/qbit/pages/DrQbitFirmwareIntelligencePage";
+import { DrQbitDiagnosticsPage } from "@/components/qbit/pages/DrQbitDiagnosticsPage";
 import { NotificationCenterPage } from "@/components/qbit/pages/NotificationCenterPage";
 import { NotificationTemplateManagerPage } from "@/components/qbit/pages/NotificationTemplateManagerPage";
 import { NotificationHistoryPage } from "@/components/qbit/pages/NotificationHistoryPage";
@@ -114,6 +115,9 @@ export default function Home() {
       // Dr. QBIT Firmware Intelligence — Version 2
       case "dr-qbit-firmware":
         return <DrQbitFirmwareIntelligencePage />;
+      // Dr. QBIT AI Diagnostics Engine — Version 2
+      case "dr-qbit-diagnostics":
+        return <DrQbitDiagnosticsPage />;
       // Notification Automation Engine — Version 2
       case "notification-center":
         return <NotificationCenterPage />;

@@ -1842,6 +1842,7 @@ model DevicePassport {
   driverHistory   DriverHistory[]
   firmwareInfo    FirmwareInformation?
   firmwareHistory FirmwareHistory[]
+  diagnosticSessions DiagnosticSession[]
 
   @@index([productId])
   @@index([serialNumber])
@@ -2075,4 +2076,159 @@ model FirmwareHistory {
   @@index([passportId])
   @@index([occurredAt])
   @@index([eventType])
+}
+
+// =====================================================
+// Dr. QBIT AI Diagnostics Engine — Version 2
+// =====================================================
+//
+// Intelligent diagnostics engine that analyzes detected devices and
+// recommends troubleshooting steps. NEVER guesses — only reports confirmed
+// information from Windows APIs, device responses, or the QBIT Knowledge Base.
+//
+// Reuses existing:
+//   - DevicePassport + DriverInformation + FirmwareInformation (device state)
+//   - KnowledgeArticle + TroubleshootingIssue + CommonError (KB recommendations)
+//   - QbitProduct (product context)
+//
+// Creates new:
+//   - DiagnosticSession — one diagnostic run
+//   - DiagnosticFinding — confirmed issues found during analysis
+//   - DiagnosticRecommendation — recommended actions per finding
+//   - HealthScore — overall health assessment per category
+
+/// One diagnostic run — analyzes a device passport and produces findings +
+/// recommendations + health score.
+model DiagnosticSession {
+  id              String   @id @default(cuid())
+  sessionToken    String   @unique
+  passportId      String
+  passport        DevicePassport @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  // Engineer who ran the diagnostics
+  engineerId      String?
+  engineerName    String?
+  // Scan context
+  agentVersion    String?
+  osInfo          String?
+  hostname        String?
+  scanDurationMs  Int?
+  // Overall health score (0-100)
+  overallScore    Int      @default(0)
+  healthGrade     String   @default("unknown")  // "excellent" | "good" | "attention" | "critical" | "unknown"
+  // Category scores (0-100 each)
+  driverScore     Int      @default(0)
+  firmwareScore   Int      @default(0)
+  connectionScore Int      @default(0)
+  deviceStatusScore Int    @default(0)
+  compatibilityScore Int   @default(0)
+  knowledgeScore  Int      @default(0)
+  // Summary
+  findingsCount   Int      @default(0)
+  confirmedCount  Int      @default(0)
+  possibleCount   Int      @default(0)
+  recommendationsCount Int @default(0)
+  // Status
+  status          String   @default("completed")  // "running" | "completed" | "failed"
+  startedAt       DateTime @default(now())
+  completedAt     DateTime?
+  // Metadata
+  createdAt       DateTime @default(now())
+
+  findings        DiagnosticFinding[]
+  recommendations DiagnosticRecommendation[]
+  healthScore     HealthScore?
+
+  @@index([passportId])
+  @@index([engineerId])
+  @@index([healthGrade])
+  @@index([startedAt])
+  @@index([status])
+}
+
+/// A confirmed or possible finding during diagnostics.
+/// NEVER invented — only based on detected device state + documented rules.
+model DiagnosticFinding {
+  id              String   @id @default(cuid())
+  sessionId       String
+  session         DiagnosticSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  // Category + severity
+  category        String                          // "driver" | "firmware" | "connection" | "device_status" | "compatibility" | "windows"
+  severity        String   @default("info")      // "info" | "warning" | "error" | "critical"
+  // Finding details
+  title           String
+  description     String
+  // Certainty level — NEVER guesses
+  certainty       String   @default("confirmed") // "confirmed" | "possible" | "unable_to_confirm"
+  // Evidence (what was detected that led to this finding)
+  evidence        String?                         // JSON array of evidence strings
+  // KB link (optional — links to existing KnowledgeArticle)
+  kbArticleId     String?
+  // Recommended action
+  recommendedAction String?
+  // Metadata
+  createdAt       DateTime @default(now())
+
+  recommendations DiagnosticRecommendation[]
+
+  @@index([sessionId])
+  @@index([category])
+  @@index([severity])
+  @@index([certainty])
+}
+
+/// A recommended action — links a finding to specific resources
+/// (driver download, firmware download, manual, video, KB article, etc.)
+model DiagnosticRecommendation {
+  id              String   @id @default(cuid())
+  sessionId       String
+  session         DiagnosticSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  findingId       String?
+  finding         DiagnosticFinding? @relation(fields: [findingId], references: [id], onDelete: Cascade)
+  // Recommendation details
+  title           String
+  description     String?
+  // Action type
+  actionType      String                          // "download_driver" | "download_firmware" | "open_manual" | "watch_video" | "open_troubleshooting" | "run_test_print" | "restart_spooler" | "verify_connection" | "power_cycle" | "load_paper" | "contact_support"
+  // Resource link (optional — URL or screen to navigate to)
+  resourceUrl     String?
+  resourceScreen  String?
+  // Priority
+  priority        String   @default("normal")    // "low" | "normal" | "high" | "urgent"
+  // Metadata
+  createdAt       DateTime @default(now())
+
+  @@index([sessionId])
+  @@index([findingId])
+  @@index([actionType])
+  @@index([priority])
+}
+
+/// Health score breakdown — stored separately for fast dashboard queries.
+/// One row per diagnostic session.
+model HealthScore {
+  id              String   @id @default(cuid())
+  sessionId       String   @unique
+  session         DiagnosticSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  // Overall
+  overallScore    Int
+  overallGrade    String                          // "excellent" | "good" | "attention" | "critical"
+  // Per-category breakdown (0-100)
+  driverScore     Int
+  driverGrade     String
+  firmwareScore   Int
+  firmwareGrade   String
+  connectionScore Int
+  connectionGrade String
+  deviceStatusScore Int
+  deviceStatusGrade String
+  compatibilityScore Int
+  compatibilityGrade String
+  knowledgeScore  Int
+  knowledgeGrade  String
+  // Score calculation metadata
+  scoringRules    String?                         // JSON: which rules were applied
+  createdAt       DateTime @default(now())
+
+  @@index([sessionId])
+  @@index([overallGrade])
 }
