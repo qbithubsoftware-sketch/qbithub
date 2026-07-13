@@ -157,6 +157,9 @@ export const SCREEN_PERMISSIONS: Record<ScreenId, Role[]> = {
   // Engineer Mobile Portal (PWA) — installation engineers + admin
   "mobile-engineer": ["administrator", "installation_engineer", "support_engineer"],
 
+  // Dr. QBIT Device Detection Engine — engineers + admin (no sales access)
+  "dr-qbit-detection": ["administrator", "installation_engineer", "support_engineer"],
+
   // Notification Automation Engine — admin-only management screens.
   "notification-center": ["administrator", "installation_engineer", "support_engineer"],
   "notification-template-manager": ["administrator"],

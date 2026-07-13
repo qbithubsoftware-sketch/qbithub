@@ -31,6 +31,7 @@ import { FSMCustomerAssetHistoryPage } from "@/components/qbit/pages/FSMCustomer
 import { FSMCustomerTrackingPage } from "@/components/qbit/pages/FSMCustomerTrackingPage";
 import { CustomerTrackingPortalPage } from "@/components/qbit/pages/CustomerTrackingPortalPage";
 import { MobileEngineerPage } from "@/components/qbit/pages/MobileEngineerPage";
+import { DrQbitDeviceDetectionPage } from "@/components/qbit/pages/DrQbitDeviceDetectionPage";
 import { NotificationCenterPage } from "@/components/qbit/pages/NotificationCenterPage";
 import { NotificationTemplateManagerPage } from "@/components/qbit/pages/NotificationTemplateManagerPage";
 import { NotificationHistoryPage } from "@/components/qbit/pages/NotificationHistoryPage";
@@ -102,6 +103,9 @@ export default function Home() {
       // Engineer Mobile Portal (PWA) — Version 2
       case "mobile-engineer":
         return <MobileEngineerPage />;
+      // Dr. QBIT Device Detection Engine — Version 2
+      case "dr-qbit-detection":
+        return <DrQbitDeviceDetectionPage />;
       // Notification Automation Engine — Version 2
       case "notification-center":
         return <NotificationCenterPage />;

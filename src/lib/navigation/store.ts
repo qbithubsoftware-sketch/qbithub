@@ -47,6 +47,8 @@ export type ScreenId =
   | "customer-tracking-portal"
   // Engineer Mobile Portal (PWA) — Version 2
   | "mobile-engineer"
+  // Dr. QBIT Device Detection Engine — Version 2
+  | "dr-qbit-detection"
   // Notification Automation Engine — Version 2
   | "notification-center"
   | "notification-template-manager"

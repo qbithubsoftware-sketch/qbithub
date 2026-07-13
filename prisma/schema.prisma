@@ -1588,3 +1588,185 @@ model OfflineSyncQueue {
   @@index([status, createdAt])
   @@index([clientQueueId])
 }
+
+// =====================================================
+// Dr. QBIT Device Detection Engine — Version 2
+// =====================================================
+//
+// Hardware discovery + identification. NO AI diagnostics.
+// NO driver installation. NO firmware updates.
+//
+// Architecture: Device → Desktop Agent → Secure Local API → QBIT Hub
+// The browser never directly accesses low-level hardware.
+// A Windows Desktop Companion Agent scans USB/COM/LAN/WiFi and
+// POSTs results to /api/dr-qbit/scan (authenticated with DESKTOP_AGENT_SECRET).
+
+/// Known product in the QBIT catalog — used as the matching target for
+/// detected devices. Created lazily: when an admin maps an unknown device,
+/// the target product is created here (or linked if it already exists).
+model QbitProduct {
+  id              String   @id @default(cuid())
+  name            String                          // "QBIT T-800 Thermal Printer"
+  brand           String   @default("QBIT")       // "QBIT" | "Epson" | "Zebra" | etc.
+  manufacturer    String?                         // "QBIT Technologies"
+  model           String   @unique                // "T-800"
+  deviceType      String                          // "thermal_printer" | "barcode_scanner" | etc.
+  description     String?
+  // Resource links (reuse existing modules)
+  driverDownloadUrl   String?
+  manualUrl           String?
+  installationGuideUrl String?
+  knowledgeBaseUrl    String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  hardwareSignatures HardwareSignature[]
+  detectedDevices    DetectedDevice[]
+  unknownDeviceMaps  UnknownDevice[]
+}
+
+/// Hardware signature — the matching fingerprint for a known product.
+/// One product can have multiple signatures (e.g. different USB PIDs for
+/// different regional variants).
+model HardwareSignature {
+  id              String   @id @default(cuid())
+  productId       String
+  product         QbitProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  // Primary matching keys
+  vendorId        String?                         // USB VID (e.g. "0x04B8" for Epson)
+  productIdCode   String?                         // USB PID (e.g. "0x0202")
+  hardwareId      String?                         // composite hardware ID
+  manufacturer    String?                         // for matching non-USB devices
+  model           String?                         // for matching by model name
+  // Network signature (for LAN/WiFi devices)
+  macPrefix       String?                         // first 3 octets of MAC (OUI)
+  openPorts       String?                         // JSON array of ports, e.g. [9100, 515]
+  // Metadata
+  connectionType  String?                         // "usb" | "com" | "lan" | "wifi"
+  notes           String?
+  createdAt       DateTime @default(now())
+
+  @@index([productId])
+  @@index([vendorId, productIdCode])
+  @@index([macPrefix])
+}
+
+/// A scan session — one run of the Desktop Agent scanner.
+/// Records who/when/how-many devices were found.
+model ScanSession {
+  id              String   @id @default(cuid())
+  sessionToken    String   @unique                // random token for this scan
+  engineerId      String?                         // User.id (null for admin-only scans)
+  engineerName    String?
+  customerId      String?                         // FSMCustomer.id (optional)
+  customerName    String?
+  workOrderId     String?                         // WorkOrder.id (optional)
+  // Scan metadata
+  agentVersion    String?                         // Desktop Agent version
+  osInfo          String?                         // "Windows 11 x64"
+  hostname        String?                         // machine that ran the scan
+  scanDurationMs  Int?                            // total scan time
+  deviceCount     Int      @default(0)
+  // Connection type counts
+  usbCount        Int      @default(0)
+  comCount        Int      @default(0)
+  lanCount        Int      @default(0)
+  wifiCount       Int      @default(0)
+  bluetoothCount  Int      @default(0)
+  // Status
+  status          String   @default("completed")  // "running" | "completed" | "failed"
+  startedAt       DateTime @default(now())
+  completedAt     DateTime?
+
+  detectedDevices DetectedDevice[]
+  unknownDevices  UnknownDevice[]
+
+  @@index([engineerId])
+  @@index([customerId])
+  @@index([startedAt])
+  @@index([status])
+}
+
+/// A device detected during a scan session. May be matched to a QbitProduct
+/// (matchedProductId set) or unmatched (null — see UnknownDevice for separate
+/// unknown-device tracking).
+model DetectedDevice {
+  id              String   @id @default(cuid())
+  scanSessionId   String
+  scanSession     ScanSession @relation(fields: [scanSessionId], references: [id], onDelete: Cascade)
+  // Connection
+  connectionType  String                          // "usb" | "com" | "lan" | "wifi" | "bluetooth"
+  port            String?                         // "COM3", "USB001", "192.168.1.50:9100"
+  // Identification
+  deviceName      String?                         // "QBIT T-800 Thermal Printer"
+  manufacturer    String?                         // "QBIT Technologies"
+  brand           String?                         // "QBIT"
+  model           String?                         // "T-800"
+  hardwareId      String?                         // composite ID
+  vendorId        String?                         // USB VID
+  productIdCode   String?                         // USB PID
+  serialNumber    String?                         // if available
+  usbVersion      String?                         // "2.0" | "3.0"
+  osInfo          String?                         // device's OS (for POS terminals)
+  architecture    String?                         // "x64" | "arm64"
+  // Network-specific
+  ipAddress       String?
+  macAddress      String?
+  hostname        String?
+  openPorts       String?                         // JSON array
+  signalQuality   Int?                            // 0-100 (WiFi)
+  // Status
+  status          String   @default("ready")     // "ready" | "offline" | "unknown" | "unsupported"
+  // Matching
+  matchedProductId String?
+  matchedProduct   QbitProduct? @relation(fields: [matchedProductId], references: [id])
+  matchConfidence  Float?                         // 0-1
+  matchMethod      String?                        // "vid_pid" | "mac_prefix" | "model" | "manual"
+  // Timestamps
+  firstDetectedAt DateTime @default(now())
+  lastSeenAt      DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([scanSessionId])
+  @@index([connectionType])
+  @@index([status])
+  @@index([matchedProductId])
+  @@index([vendorId, productIdCode])
+  @@index([macAddress])
+}
+
+/// Unknown device — a detected device that couldn't be matched to any
+/// QbitProduct. Admins can map these to existing products via DeviceMapping.
+/// Once mapped, a HardwareSignature is created so future scans auto-match.
+model UnknownDevice {
+  id              String   @id @default(cuid())
+  scanSessionId   String
+  scanSession     ScanSession @relation(fields: [scanSessionId], references: [id], onDelete: Cascade)
+  // Raw identification data
+  hardwareId      String?                         // composite ID (best effort)
+  vendorId        String?                         // USB VID
+  productIdCode   String?                         // USB PID
+  deviceName      String?                         // whatever the OS reported
+  manufacturer    String?
+  model           String?
+  connectionType  String?
+  port            String?
+  macAddress      String?
+  ipAddress       String?
+  // Mapping state
+  mappedProductId String?                         // QbitProduct.id once admin maps it
+  mappedProduct   QbitProduct? @relation(fields: [mappedProductId], references: [id])
+  mappedAt        DateTime?
+  mappedBy        String?                         // User.id of admin
+  mappedByName    String?
+  // Metadata
+  firstSeenAt     DateTime @default(now())
+  createdAt       DateTime @default(now())
+
+  @@index([scanSessionId])
+  @@index([vendorId, productIdCode])
+  @@index([mappedProductId])
+  @@index([hardwareId])
+}
