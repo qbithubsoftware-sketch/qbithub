@@ -24,6 +24,11 @@ import { UniversalSearchCommandCenterPage } from "@/components/qbit/pages/Univer
 import { UniversalSearchMobilePage } from "@/components/qbit/pages/UniversalSearchMobilePage";
 import { QbitT800ProductOverviewPage } from "@/components/qbit/pages/QbitT800ProductOverviewPage";
 import { PublicSearchPage } from "@/components/qbit/pages/PublicSearchPage";
+import { FSMDashboardPage } from "@/components/qbit/pages/FSMDashboardPage";
+import { FSMWorkOrderDetailPage } from "@/components/qbit/pages/FSMWorkOrderDetailPage";
+import { FSMWorkOrderCompletionPage } from "@/components/qbit/pages/FSMWorkOrderCompletionPage";
+import { FSMCustomerAssetHistoryPage } from "@/components/qbit/pages/FSMCustomerAssetHistoryPage";
+import { FSMCustomerTrackingPage } from "@/components/qbit/pages/FSMCustomerTrackingPage";
 
 export default function Home() {
   const current = useNavigation((s) => s.current);
@@ -74,6 +79,17 @@ export default function Home() {
         return <QbitT800ProductOverviewPage />;
       case "public-search":
         return <PublicSearchPage />;
+      // Field Service Management (FSM) — Version 2
+      case "fsm-dashboard":
+        return <FSMDashboardPage />;
+      case "fsm-work-order-detail":
+        return <FSMWorkOrderDetailPage />;
+      case "fsm-work-order-completion":
+        return <FSMWorkOrderCompletionPage />;
+      case "fsm-customer-asset-history":
+        return <FSMCustomerAssetHistoryPage />;
+      case "fsm-customer-tracking":
+        return <FSMCustomerTrackingPage />;
       default:
         return <LoginPage />;
     }

@@ -71,4 +71,14 @@ export const COMMAND_CENTER_NAV: NavItem[] = [
   { label: "Analytics", icon: "insights", screen: "admin-dashboard" },
 ];
 
+/** Field Service Management sidebar items — installation & service team only. */
+export const FSM_NAV: NavItem[] = [
+  { label: "Dashboard", icon: "dashboard", screen: "fsm-dashboard" },
+  { label: "Work Orders", icon: "assignment", screen: "fsm-dashboard" },
+  { label: "Asset History", icon: "history", screen: "fsm-customer-asset-history" },
+  { label: "Dr. QBIT", icon: "smart_toy", screen: "ai-support-center" },
+  { label: "Knowledge Base", icon: "library_books", screen: "ai-support-center" },
+  { label: "Support", icon: "contact_support", screen: "ai-support-center" },
+];
+
 export type { ScreenId };

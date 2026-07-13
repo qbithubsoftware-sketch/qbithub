@@ -59,6 +59,10 @@ export function PublicHeader({
         <button onClick={() => handleNav("driver-download-center")} className="hover:text-qbit-primary transition-colors">Downloads</button>
         <button onClick={() => handleNav("ai-support-center")} className="hover:text-qbit-primary transition-colors">Support</button>
         <button onClick={() => handleNav("installation-center")} className="hover:text-qbit-primary transition-colors">Guides</button>
+        <button onClick={() => handleNav("fsm-customer-tracking")} className="inline-flex items-center gap-1 text-qbit-primary hover:underline">
+          <Icon name="track_changes" className="text-[16px]" />
+          Track Service
+        </button>
       </nav>
 
       {/* Search (desktop, hidden on scroll for cleanliness) */}

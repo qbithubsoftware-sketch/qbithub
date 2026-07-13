@@ -22,6 +22,7 @@ const RATE_LIMITS: Record<string, RateLimitConfig> = {
   "/api/downloads": { windowMs: 60_000, maxRequests: 30 },     // 30/min
   "/api/admin": { windowMs: 60_000, maxRequests: 60 },         // 60/min
   "/api/public": { windowMs: 60_000, maxRequests: 100 },       // 100/min
+  "/api/fsm": { windowMs: 60_000, maxRequests: 60 },           // 60/min — engineers working live
 };
 
 const DEFAULT_LIMIT: RateLimitConfig = { windowMs: 60_000, maxRequests: 60 };

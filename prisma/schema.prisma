@@ -26,6 +26,7 @@ model User {
   downloadHistory    DownloadHistory[]
   favoriteDownloads  FavoriteDownload[]
   articleBookmarks   ArticleBookmark[]
+  assignedWorkOrders WorkOrder[] @relation("AssignedEngineer")
 }
 
 model Post {
@@ -1040,4 +1041,204 @@ model SlugHistory {
 
   @@index([entityType, entityId])
   @@index([oldSlug])
+}
+
+// =====================================================
+// Field Service Management (FSM) models
+// =====================================================
+//
+// Designed strictly for installation & service teams.
+// NEVER stores: price, purchase cost, profit, margin,
+// commission, invoice amount, or any sales-internal data.
+
+/// A customer site that owns one or more installed devices.
+/// Reused across multiple work orders.
+model FSMCustomer {
+  id            String   @id @default(cuid())
+  name          String                       // contact person name
+  companyName   String?
+  phone         String
+  email         String?
+  addressLine   String
+  city          String?
+  state         String?
+  postalCode    String?
+  country       String   @default("India")
+  geoLat        Float?
+  geoLng        Float?
+  notes         String?                      // public service notes ONLY — never sales notes
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  workOrders    WorkOrder[]
+  assets        FSMCustomerAsset[]
+}
+
+/// A device owned by a customer (reuses Product module for catalog link).
+/// Stores only service-relevant data — no purchase/sales info.
+model FSMCustomerAsset {
+  id             String   @id @default(cuid())
+  customerId     String
+  customer       FSMCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  productName    String                       // "QBIT T-800 Thermal Printer"
+  model          String                        // "T-800"
+  serialNumber   String   @unique
+  qrCode         String?                       // QR payload (URL or code)
+  purchaseDate   DateTime?                     // for warranty calc only — no price
+  warrantyStatus String   @default("active")   // "active" | "expired" | "void"
+  warrantyExpiry DateTime?
+  firmwareVersion String?
+  driverVersion  String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  workOrders     WorkOrder[]
+
+  @@index([customerId])
+  @@index([model])
+}
+
+/// The master work order — covers all service types.
+model WorkOrder {
+  id              String   @id @default(cuid())
+  jobNumber       String   @unique            // "WO-94281" — human-readable
+  publicTrackingCode String @unique           // for /track page (no auth)
+  type            String                       // see WorkOrderType union
+  status          String   @default("pending") // see WorkOrderStatus union
+  priority        String   @default("normal")  // "low" | "normal" | "high" | "urgent"
+  customerId      String
+  customer        FSMCustomer @relation(fields: [customerId], references: [id])
+  assetId         String?
+  asset           FSMCustomerAsset? @relation(fields: [assetId], references: [id])
+  assignedEngineerId String?                   // User.id of installation_engineer
+  assignedEngineer User? @relation("AssignedEngineer", fields: [assignedEngineerId], references: [id])
+  scheduledDate   DateTime
+  scheduledTime   String?                      // "10:30"
+  estimatedMinutes Int      @default(60)
+  startedAt       DateTime?
+  arrivedAt       DateTime?
+  completedAt     DateTime?
+  cancelledAt     DateTime?
+  rescheduledFrom DateTime?
+  rescheduledTo   DateTime?
+  description     String?
+  // Deliberately NO price/cost/margin/commission/invoice fields.
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  timeline        JobTimeline[]
+  photos          WorkOrderPhoto[]
+  signatures      CustomerSignature[]
+  notes           EngineerNote[]
+  report          CompletionReport?
+  notifications   NotificationLog[]
+
+  @@index([status])
+  @@index([assignedEngineerId])
+  @@index([customerId])
+  @@index([assetId])
+  @@index([scheduledDate])
+  @@index([type])
+}
+
+/// One row per status change — full audit trail of the job lifecycle.
+model JobTimeline {
+  id              String   @id @default(cuid())
+  workOrderId     String
+  workOrder       WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  status          String                       // the new status that was set
+  label           String                       // human label, e.g. "Engineer Arrived"
+  description     String?
+  actorId         String?                      // User.id (null for system-generated events)
+  actorName       String?
+  metadata        String?                      // JSON string for extra context
+  occurredAt      DateTime @default(now())
+
+  @@index([workOrderId])
+  @@index([occurredAt])
+}
+
+/// Photos captured before/during/after installation.
+model WorkOrderPhoto {
+  id              String   @id @default(cuid())
+  workOrderId     String
+  workOrder       WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  category        String                       // "before" | "setup" | "cables" | "after" | "issue"
+  caption         String?
+  storagePath     String                       // /uploads/fsm/wo-94281/before-1.jpg
+  thumbnailPath   String?
+  mimeType        String   @default("image/jpeg")
+  fileSize        Int      @default(0)
+  geoLat          Float?
+  geoLng          Float?
+  uploadedById    String?
+  capturedAt      DateTime @default(now())
+  createdAt       DateTime @default(now())
+
+  @@index([workOrderId])
+  @@index([category])
+}
+
+/// Customer digital signature at completion.
+model CustomerSignature {
+  id              String   @id @default(cuid())
+  workOrderId     String
+  workOrder       WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  storagePath     String                       // PNG file path
+  signerName      String
+  signedAt        DateTime @default(now())
+  ipAddress       String?
+  userAgent       String?
+
+  @@index([workOrderId])
+}
+
+/// Private notes added by the engineer during the job (never shown to customer).
+model EngineerNote {
+  id              String   @id @default(cuid())
+  workOrderId     String
+  workOrder       WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  authorId        String
+  authorName      String?
+  body            String
+  isInternal      Boolean  @default(true)     // always true — never expose to customer
+  createdAt       DateTime @default(now())
+
+  @@index([workOrderId])
+}
+
+/// Auto-generated completion report (one per work order, created on completion).
+model CompletionReport {
+  id              String   @id @default(cuid())
+  workOrderId     String   @unique
+  workOrder       WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  reportNumber    String   @unique            // "RPT-2026-94281"
+  summary         String
+  testsPerformed  String                       // JSON array of { name, result, notes }
+  partsReplaced   String?                      // JSON array
+  recommendations String?
+  pdfStoragePath  String?                      // generated PDF file
+  generatedAt     DateTime @default(now())
+  generatedById   String?
+
+  @@index([workOrderId])
+}
+
+/// Outbound notification log — email/WhatsApp sent to customer.
+model NotificationLog {
+  id              String   @id @default(cuid())
+  workOrderId     String
+  workOrder       WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  channel         String                       // "email" | "whatsapp" | "sms"
+  template        String                       // "job_assigned" | "engineer_accepted" | etc.
+  recipient       String                       // email or phone
+  subject         String?
+  body            String
+  status          String   @default("sent")   // "queued" | "sent" | "failed"
+  sentAt          DateTime @default(now())
+  error           String?
+
+  @@index([workOrderId])
+  @@index([channel])
+  @@index([sentAt])
 }

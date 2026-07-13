@@ -36,7 +36,13 @@ export type ScreenId =
   | "universal-search-command-center"
   | "universal-search-mobile"
   // Public portal
-  | "public-search";
+  | "public-search"
+  // Field Service Management (FSM) — Version 2
+  | "fsm-dashboard"
+  | "fsm-work-order-detail"
+  | "fsm-work-order-completion"
+  | "fsm-customer-asset-history"
+  | "fsm-customer-tracking";
 
 interface NavigationState {
   current: ScreenId;

@@ -140,6 +140,16 @@ export const SCREEN_PERMISSIONS: Record<ScreenId, Role[]> = {
 
   // Public portal — no auth required
   "public-search": [],
+
+  // Field Service Management (FSM) — installation & service team only.
+  // NEVER accessible to sales_executive / dealer / viewer.
+  "fsm-dashboard": ["administrator", "installation_engineer", "support_engineer"],
+  "fsm-work-order-detail": ["administrator", "installation_engineer", "support_engineer"],
+  "fsm-work-order-completion": ["administrator", "installation_engineer"],
+  "fsm-customer-asset-history": ["administrator", "installation_engineer", "support_engineer"],
+
+  // Public customer tracking — no auth required.
+  "fsm-customer-tracking": [],
 };
 
 /**
@@ -169,7 +179,7 @@ export function homeScreenForRole(role: Role): ScreenId {
     case "administrator":
       return "home";
     case "installation_engineer":
-      return "engineer-dashboard";
+      return "fsm-dashboard";
     case "support_engineer":
       return "ai-support-center";
     case "sales_executive":
