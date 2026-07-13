@@ -27,6 +27,7 @@ model User {
   favoriteDownloads  FavoriteDownload[]
   articleBookmarks   ArticleBookmark[]
   assignedWorkOrders WorkOrder[] @relation("AssignedEngineer")
+  installationRatings InstallationRating[]
 }
 
 model Post {
@@ -1136,6 +1137,8 @@ model WorkOrder {
   reminders       Reminder[]
   emailQueue      EmailQueue[]
   whatsappQueue   WhatsAppQueue[]
+  trackingTokens  TrackingToken[]
+  feedback        CustomerFeedback?
 
   @@index([status])
   @@index([assignedEngineerId])
@@ -1427,3 +1430,102 @@ model Reminder {
 /// NOTE: NotificationLog already exists in the schema. The relation
 /// NotificationTemplate.logs is declared above and Prisma will create
 /// the nullable foreign key column automatically when we push.
+
+// =====================================================
+// Customer Live Tracking Portal — Version 2
+// =====================================================
+//
+// Public tracking portal with secure random tokens, customer feedback,
+// and rating collection. Extends existing WorkOrder.publicTrackingCode
+// (legacy short code) with a dedicated TrackingToken table that supports:
+//   - Cryptographically random tokens (URL-safe, 32 chars)
+//   - View count + last-viewed tracking
+//   - Optional expiry
+//   - Optional QR code generation
+//
+// Reuses the existing JobTimeline as the StatusTimeline (no new table).
+// Reuses the existing WorkOrder + FSMCustomer + FSMCustomerAsset models.
+
+/// Secure tracking token — one per work order (1:N if rotated).
+/// Customers access /track/<token> to view their job status without login.
+model TrackingToken {
+  id              String   @id @default(cuid())
+  token           String   @unique               // 32-char URL-safe random
+  workOrderId     String
+  workOrder       WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  // Audit fields
+  viewCount       Int      @default(0)
+  lastViewedAt    DateTime?
+  lastViewedIp    String?
+  lastViewedUserAgent String?
+  // Lifecycle
+  isActive        Boolean  @default(true)
+  expiresAt       DateTime?                       // null = never expires
+  revokedAt       DateTime?
+  revokedReason   String?
+  // Source — how the customer received this token
+  source          String   @default("email")     // "email" | "whatsapp" | "sms" | "qr_code" | "manual"
+  createdAt       DateTime @default(now())
+  createdBy       String?                         // User.id of admin who created, or "system"
+
+  @@index([workOrderId])
+  @@index([isActive])
+  @@index([expiresAt])
+}
+
+/// Customer feedback submitted after job completion.
+/// One feedback per work order (enforced by unique constraint).
+model CustomerFeedback {
+  id              String   @id @default(cuid())
+  workOrderId     String   @unique
+  workOrder       WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  // Link to tracking token used to submit (for audit)
+  trackingTokenId String?
+  // Rating (1-5 stars)
+  overallRating   Int                             // 1-5
+  // Optional category breakdowns (nullable — only set if customer rates them)
+  punctualityRating Int?
+  professionalismRating Int?
+  qualityRating Int?
+  communicationRating Int?
+  // Free-form feedback
+  comment         String?                         // optional, max 2000 chars
+  recommendImprovement String?                    // optional, max 1000 chars
+  wouldRecommend  Boolean?                        // "Would you recommend QBIT to others?"
+  // Submitter metadata
+  customerName    String?
+  submittedAt     DateTime @default(now())
+  ipAddress       String?
+  userAgent       String?
+
+  @@index([workOrderId])
+  @@index([overallRating])
+  @@index([submittedAt])
+}
+
+/// Per-engineer rating aggregate — derived from CustomerFeedback but
+/// stored separately for fast dashboard queries.
+model InstallationRating {
+  id              String   @id @default(cuid())
+  engineerId      String   @unique
+  engineer        User     @relation(fields: [engineerId], references: [id], onDelete: Cascade)
+  // Aggregate stats
+  totalRatings    Int      @default(0)
+  averageRating   Float    @default(0)
+  fiveStarCount   Int      @default(0)
+  fourStarCount   Int      @default(0)
+  threeStarCount  Int      @default(0)
+  twoStarCount    Int      @default(0)
+  oneStarCount    Int      @default(0)
+  // Category averages (nullable until first rating)
+  avgPunctuality  Float?
+  avgProfessionalism Float?
+  avgQuality      Float?
+  avgCommunication Float?
+  // Last updated
+  lastRatingAt    DateTime?
+  updatedAt       DateTime @updatedAt
+
+  @@index([engineerId])
+  @@index([averageRating])
+}

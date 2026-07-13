@@ -43,6 +43,8 @@ export type ScreenId =
   | "fsm-work-order-completion"
   | "fsm-customer-asset-history"
   | "fsm-customer-tracking"
+  // Customer Live Tracking Portal — Version 2
+  | "customer-tracking-portal"
   // Notification Automation Engine — Version 2
   | "notification-center"
   | "notification-template-manager"

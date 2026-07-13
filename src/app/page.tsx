@@ -29,6 +29,7 @@ import { FSMWorkOrderDetailPage } from "@/components/qbit/pages/FSMWorkOrderDeta
 import { FSMWorkOrderCompletionPage } from "@/components/qbit/pages/FSMWorkOrderCompletionPage";
 import { FSMCustomerAssetHistoryPage } from "@/components/qbit/pages/FSMCustomerAssetHistoryPage";
 import { FSMCustomerTrackingPage } from "@/components/qbit/pages/FSMCustomerTrackingPage";
+import { CustomerTrackingPortalPage } from "@/components/qbit/pages/CustomerTrackingPortalPage";
 import { NotificationCenterPage } from "@/components/qbit/pages/NotificationCenterPage";
 import { NotificationTemplateManagerPage } from "@/components/qbit/pages/NotificationTemplateManagerPage";
 import { NotificationHistoryPage } from "@/components/qbit/pages/NotificationHistoryPage";
@@ -94,6 +95,9 @@ export default function Home() {
         return <FSMCustomerAssetHistoryPage />;
       case "fsm-customer-tracking":
         return <FSMCustomerTrackingPage />;
+      // Customer Live Tracking Portal — Version 2
+      case "customer-tracking-portal":
+        return <CustomerTrackingPortalPage />;
       // Notification Automation Engine — Version 2
       case "notification-center":
         return <NotificationCenterPage />;

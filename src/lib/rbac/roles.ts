@@ -151,6 +151,9 @@ export const SCREEN_PERMISSIONS: Record<ScreenId, Role[]> = {
   // Public customer tracking — no auth required.
   "fsm-customer-tracking": [],
 
+  // Customer Live Tracking Portal — public, no auth (uses secure token in URL)
+  "customer-tracking-portal": [],
+
   // Notification Automation Engine — admin-only management screens.
   "notification-center": ["administrator", "installation_engineer", "support_engineer"],
   "notification-template-manager": ["administrator"],
