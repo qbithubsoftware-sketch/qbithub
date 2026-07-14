@@ -32,6 +32,8 @@ model User {
   articleBookmarks    ArticleBookmark[]
   assignedWorkOrders  WorkOrder[]          @relation("AssignedEngineer")
   installationRatings InstallationRating[]
+  /// V3 — Customer account linked to this user (for public_customer role).
+  customerAccount     CustomerAccount?
 }
 
 model Post {
@@ -1704,6 +1706,8 @@ model QbitProduct {
   featureEntries     ProductFeature[]
   /// Public view log.
   views              PublicProductView[]
+  /// V3 — Purchase records linked to this product (AI Purchase Import Center).
+  purchaseRecords    PurchaseRecord[]
 
   @@index([slug])
   @@index([category])
@@ -2711,3 +2715,129 @@ model DeviceMetric {
   @@index([snapshotDate])
 }
 
+/// ============================================================
+/// V3 AI PURCHASE IMPORT CENTER — Purchase Database
+/// ============================================================
+
+/// Customer account linked to purchases. Created automatically when an
+/// admin uploads a purchase document. The customer's mobile number is
+/// the primary login identifier.
+model CustomerAccount {
+  id              String   @id @default(cuid())
+  // Login identifier — the mobile number from the original purchase invoice.
+  mobileNumber    String   @unique
+  // Alternate contact number (optional)
+  alternateMobile String?
+  email           String?
+  name            String
+  companyName     String?
+  gstNumber       String?
+  // Billing + shipping addresses (JSON string)
+  billingAddress  String?
+  shippingAddress String?
+  city            String?
+  state           String?
+  pinCode         String?
+  // Account status — "pending" means customer hasn't set a password yet.
+  status          String   @default("pending") // "pending" | "active" | "blocked"
+  // Linked User account (for NextAuth login) — null until customer sets password.
+  userId          String?  @unique
+  user            User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  purchases PurchaseRecord[]
+
+  @@index([mobileNumber])
+  @@index([email])
+  @@index([status])
+}
+
+/// A purchase record — created by AI extraction from uploaded invoices.
+model PurchaseRecord {
+  id                   String          @id @default(cuid())
+  // Purchase ID — human-readable, e.g. "PUR-2026-00001"
+  purchaseId           String          @unique
+  // Customer link
+  customerId           String
+  customer             CustomerAccount @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  // Product link (matched by model number)
+  productId            String?
+  product              QbitProduct?    @relation(fields: [productId], references: [id], onDelete: SetNull)
+  // Product details (denormalized for search)
+  productName          String
+  brand                String?
+  modelNumber          String
+  serialNumber         String?
+  quantity             Int             @default(1)
+  // Invoice details
+  invoiceNumber        String?
+  invoiceDate          DateTime?
+  purchaseDate         DateTime?
+  // Pricing
+  unitPrice            Float?
+  gstAmount            Float?
+  totalAmount          Float?
+  paymentStatus        String? // "paid" | "unpaid" | "partial"
+  // Dealer
+  dealerName           String?
+  dealerId             String?
+  // Warranty
+  warrantyPeriod       String? // e.g. "12 months", "2 years"
+  warrantyStartDate    DateTime?
+  warrantyEndDate      DateTime?
+  // Assignment (for engineer/support portal)
+  assignedEngineerId   String?
+  assignedSupportId    String?
+  // Status flags
+  installationStatus   String          @default("pending") // "pending" | "scheduled" | "completed"
+  serviceStatus        String          @default("none") // "none" | "open" | "resolved"
+  amcStatus            String          @default("none") // "none" | "active" | "expired"
+  // AI extraction metadata
+  extractionSource     String? // "ai" | "manual"
+  extractionConfidence Float? // 0-100
+  extractionRaw        String? // JSON of raw AI-extracted fields (for audit)
+  // Timestamps
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+
+  /// Original uploaded invoice documents (PDFs/images).
+  invoices PurchaseInvoice[]
+
+  @@index([customerId])
+  @@index([productId])
+  @@index([modelNumber])
+  @@index([serialNumber])
+  @@index([purchaseDate])
+  @@index([invoiceNumber])
+}
+
+/// Original uploaded invoice document (PDF/image) + AI extraction status.
+model PurchaseInvoice {
+  id               String          @id @default(cuid())
+  purchaseId       String? // null until AI extraction creates a PurchaseRecord
+  purchase         PurchaseRecord? @relation(fields: [purchaseId], references: [id], onDelete: SetNull)
+  // File metadata
+  fileName         String
+  originalName     String
+  mimeType         String
+  fileSize         Int
+  storagePath      String // URL or cloud storage path
+  // Document type
+  documentType     String // "invoice" | "gst_invoice" | "tax_invoice" | "retail_bill" |
+  // "purchase_order" | "delivery_challan" | "warranty_card" |
+  // "registration_form"
+  // AI extraction status
+  extractionStatus String          @default("pending") // "pending" | "processing" | "completed" | "failed"
+  extractionError  String?
+  // Uploaded by
+  uploadedById     String?
+  uploadedByName   String?
+  // Timestamps
+  createdAt        DateTime        @default(now())
+
+  @@index([purchaseId])
+  @@index([documentType])
+  @@index([extractionStatus])
+}

@@ -34,9 +34,24 @@ export class DatabasePurchaseProvider implements PurchaseDatabaseProvider {
     const normalized = mobileNumber.replace(/\D/g, "").replace(/^91/, "").replace(/^0/, "");
     if (normalized.length !== 10) return null;
 
-    // Look up FSMCustomer by phone field.
-    // Try exact match first, then try matching last 10 digits (in case phone
-    // is stored with country code or other prefix).
+    // ===== V3: Check CustomerAccount table FIRST (AI-imported customers) =====
+    const customerAccount = await db.customerAccount.findUnique({
+      where: { mobileNumber: normalized },
+    });
+
+    if (customerAccount) {
+      return {
+        customerId: customerAccount.id,
+        name: customerAccount.name,
+        mobileNumber: normalized,
+        email: customerAccount.email ?? null,
+        companyName: customerAccount.companyName ?? null,
+        status: customerAccount.status === "active" ? "active" : "active", // pending accounts can still verify
+        registeredAt: customerAccount.createdAt,
+      };
+    }
+
+    // ===== Fallback: Check FSMCustomer table (legacy customers) =====
     const customer = await db.fSMCustomer.findFirst({
       where: {
         OR: [
@@ -63,6 +78,36 @@ export class DatabasePurchaseProvider implements PurchaseDatabaseProvider {
   }
 
   async listPurchasesByCustomer(customerId: string): Promise<PurchaseRecord[]> {
+    // ===== V3: Check PurchaseRecord table FIRST (AI-imported purchases) =====
+    const purchaseRecords = await db.purchaseRecord.findMany({
+      where: {
+        OR: [
+          { customerId }, // CustomerAccount ID
+          { customer: { mobileNumber: { contains: customerId } } }, // fallback
+        ],
+      },
+      orderBy: { purchaseDate: "desc" },
+      take: 100,
+    });
+
+    if (purchaseRecords.length > 0) {
+      return purchaseRecords.map((p) => ({
+        invoiceNumber: p.invoiceNumber ?? p.purchaseId,
+        customerId,
+        mobileNumber: "",
+        purchaseDate: p.purchaseDate ?? p.createdAt,
+        productModel: p.modelNumber,
+        serialNumber: p.serialNumber ?? null,
+        dealerCode: p.dealerId ?? null,
+        invoiceAmount: p.totalAmount ?? null,
+        currency: "INR",
+        warrantyStartDate: p.warrantyStartDate ?? null,
+        warrantyEndDate: p.warrantyEndDate ?? null,
+        productRegistered: true,
+      }));
+    }
+
+    // ===== Fallback: Check FSMCustomerAsset table (legacy) =====
     const assets = await db.fSMCustomerAsset.findMany({
       where: { customerId },
       orderBy: { createdAt: "desc" },
@@ -71,7 +116,7 @@ export class DatabasePurchaseProvider implements PurchaseDatabaseProvider {
     return assets.map((asset) => ({
       invoiceNumber: `INV-${asset.id.slice(-8).toUpperCase()}`,
       customerId,
-      mobileNumber: "", // denormalized — not stored on asset; filled by caller if needed
+      mobileNumber: "",
       purchaseDate: asset.purchaseDate ?? asset.createdAt,
       productModel: asset.model,
       serialNumber: asset.serialNumber,
@@ -80,11 +125,35 @@ export class DatabasePurchaseProvider implements PurchaseDatabaseProvider {
       currency: "INR",
       warrantyStartDate: asset.purchaseDate ?? null,
       warrantyEndDate: asset.warrantyExpiry ?? null,
-      productRegistered: true, // if it's in FSMCustomerAsset, it's registered
+      productRegistered: true,
     }));
   }
 
   async listRegisteredProducts(customerId: string): Promise<RegisteredProductRecord[]> {
+    // ===== V3: Check PurchaseRecord table FIRST =====
+    const purchaseRecords = await db.purchaseRecord.findMany({
+      where: {
+        OR: [
+          { customerId },
+          { customer: { mobileNumber: { contains: customerId } } },
+        ],
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (purchaseRecords.length > 0) {
+      return purchaseRecords.map((p) => ({
+        registrationId: p.id,
+        customerId,
+        invoiceNumber: p.invoiceNumber ?? p.purchaseId,
+        productModel: p.modelNumber,
+        serialNumber: p.serialNumber ?? "",
+        registeredAt: p.createdAt,
+        status: "active" as const,
+      }));
+    }
+
+    // ===== Fallback: Check FSMCustomerAsset table (legacy) =====
     const assets = await db.fSMCustomerAsset.findMany({
       where: { customerId },
       orderBy: { createdAt: "desc" },
