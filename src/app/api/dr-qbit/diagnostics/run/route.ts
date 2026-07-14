@@ -5,12 +5,12 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireAuth } from "@/lib/notifications/auth";
+import { requireStaff } from "@/lib/notifications/auth";
 import { runDiagnostics } from "@/lib/diagnostics/engine";
 import type { HealthGrade } from "@/lib/diagnostics/types";
 
 export async function POST(req: NextRequest) {
-  const session = await requireAuth();
+  const session = await requireStaff();
   if (!session) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  const session = await requireAuth();
+  const session = await requireStaff();
   if (!session) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }

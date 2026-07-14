@@ -1,0 +1,799 @@
+     1→     1→"use client";
+     2→     2→
+     3→     3→import { useState, useMemo } from "react";
+     4→     4→import Link from "next/link";
+     5→     5→import { Icon } from "@/components/qbit/primitives/Icon";
+     6→     6→import { QbitButton } from "@/components/qbit/primitives/QbitButton";
+     7→     7→import { StatusBadge, TagBadge } from "@/components/qbit/primitives/StatusBadge";
+     8→     8→import { SurfaceCard } from "@/components/qbit/primitives/GlassCard";
+     9→     9→
+    10→    10→/**
+    11→    11→ * Full product detail page rendered from a shaped product object.
+    12→    12→ *
+    13→    13→ * Layout (top to bottom):
+    14→    14→ *   1. Breadcrumb + Hero (gallery + product identity + quick actions)
+    15→    15→ *   2. Long Description
+    16→    16→ *   3. Technical Specifications (table grouped by group)
+    17→    17→ *   4. Features (icon grid)
+    18→    18→ *   5. Operating Systems (icon row)
+    19→    19→ *   6. Downloads (cards: Manual, Driver, Firmware, SDK, Utility, Brochure, Datasheet, Warranty, Installation Guide)
+    20→    20→ *   7. Videos (YouTube embed or "No video available")
+    21→    21→ *   8. AI Diagnostics + Dr. QBIT support panel
+    22→    22→ *   9. QR Code + Share row
+    23→    23→ *  10. Related Products (grid — each card fully clickable)
+    24→    24→ *  11. Footer: view count, download count, last updated
+    25→    25→ */
+    26→    26→
+    27→    27→export interface ProductDetail {
+    28→    28→  id: string;
+    29→    29→  name: string;
+    30→    30→  brand: string;
+    31→    31→  manufacturer: string | null;
+    32→    32→  model: string;
+    33→    33→  slug: string;
+    34→    34→  deviceType: string;
+    35→    35→  category: string | null;
+    36→    36→  description: string | null;
+    37→    37→  longDescription: string | null;
+    38→    38→  imageUrl: string | null;
+    39→    39→  galleryImages: { url: string; alt: string }[];
+    40→    40→  specifications: { property: string; value: string; group?: string | null }[];
+    41→    41→  features: { icon: string; title: string; description: string }[];
+    42→    42→  operatingSystems: { osName: string; osIcon: string; minVersion?: string | null }[];
+    43→    43→  videos: { title: string; url: string; provider?: string; externalId?: string }[];
+    44→    44→  mediaFiles: {
+    45→    45→    id: string; type: string; title: string; url: string;
+    46→    46→    mimeType: string | null; thumbnailUrl: string | null; altText: string | null;
+    47→    47→    provider: string | null; externalId: string | null;
+    48→    48→  }[];
+    49→    49→  sku: string | null;
+    50→    50→  startingPrice: string | null;
+    51→    51→  badgeLabel: string | null;
+    52→    52→  isFeatured: boolean;
+    53→    53→  isTrending: boolean;
+    54→    54→  tags: string[];
+    55→    55→  compatibleDevices: string[];
+    56→    56→  status: string;
+    57→    57→  driverDownloadUrl: string | null;
+    58→    58→  manualUrl: string | null;
+    59→    59→  installationGuideUrl: string | null;
+    60→    60→  knowledgeBaseUrl: string | null;
+    61→    61→  brochureUrl: string | null;
+    62→    62→  datasheetUrl: string | null;
+    63→    63→  warrantyUrl: string | null;
+    64→    64→  sdkUrl: string | null;
+    65→    65→  utilityUrl: string | null;
+    66→    66→  qrCodeUrl: string | null;
+    67→    67→  seoTitle: string | null;
+    68→    68→  seoDescription: string | null;
+    69→    69→  viewCount: number;
+    70→    70→  downloadCount: number;
+    71→    71→  aiDiagnosticsSupported: boolean;
+    72→    72→  drQbitSupported: boolean;
+    73→    73→  latestDriverVersion: string | null;
+    74→    74→  latestFirmwareVersion: string | null;
+    75→    75→  lastUpdated: string;
+    76→    76→  relatedProducts: {
+    77→    77→    id: string; name: string; slug: string; brand: string; model: string;
+    78→    78→    deviceType: string; category: string | null; description: string | null;
+    79→    79→    imageUrl: string | null; startingPrice: string | null; badgeLabel: string | null;
+    80→    80→  }[];
+    81→    81→}
+    82→    82→
+    83→    83→const DEVICE_TYPE_ICON: Record<string, string> = {
+    84→    84→  thermal_printer: "print",
+    85→    85→  barcode_scanner: "barcode_scanner",
+    86→    86→  windows_pos: "desktop_windows",
+    87→    87→  android_pos: "phone_android",
+    88→    88→  cash_drawer: "point_of_sale",
+    89→    89→  customer_display: "monitor",
+    90→    90→  label_printer: "label",
+    91→    91→  kitchen_printer: "restaurant",
+    92→    92→  kiosk: "storefront",
+    93→    93→  weighing_scale: "scale",
+    94→    94→};
+    95→    95→
+    96→    96→const DOWNLOAD_TYPES: Array<{
+    97→    97→  key: string;
+    98→    98→  label: string;
+    99→    99→  icon: string;
+   100→   100→  iconBg: string;
+   101→   101→  urlField: keyof ProductDetail;
+   102→   102→  description: string;
+   103→   103→}> = [
+   104→   104→  { key: "manual", label: "Manual", icon: "description", iconBg: "bg-blue-50 text-blue-600", urlField: "manualUrl", description: "Detailed setup and configuration guide." },
+   105→   105→  { key: "driver", label: "Driver", icon: "memory", iconBg: "bg-green-50 text-green-600", urlField: "driverDownloadUrl", description: "Latest device driver for Windows/Linux." },
+   106→   106→  { key: "firmware", label: "Firmware", icon: "upgrade", iconBg: "bg-amber-50 text-amber-600", urlField: "qrCodeUrl", description: "Firmware update package (see release notes)." },
+   107→   107→  { key: "sdk", label: "SDK", icon: "code", iconBg: "bg-purple-50 text-purple-600", urlField: "sdkUrl", description: "Software Development Kit for integration." },
+   108→   108→  { key: "utility", label: "Utility", icon: "build", iconBg: "bg-orange-50 text-orange-600", urlField: "utilityUrl", description: "Configuration utility / diagnostic tool." },
+   109→   109→  { key: "brochure", label: "Brochure", icon: "picture_as_pdf", iconBg: "bg-red-50 text-red-600", urlField: "brochureUrl", description: "Marketing brochure with feature highlights." },
+   110→   110→  { key: "datasheet", label: "Datasheet", icon: "article", iconBg: "bg-cyan-50 text-cyan-600", urlField: "datasheetUrl", description: "Official technical specification document." },
+   111→   111→  { key: "warranty", label: "Warranty PDF", icon: "verified_user", iconBg: "bg-emerald-50 text-emerald-600", urlField: "warrantyUrl", description: "Standard enterprise warranty terms." },
+   112→   112→  { key: "guide", label: "Installation Guide", icon: "menu_book", iconBg: "bg-indigo-50 text-indigo-600", urlField: "installationGuideUrl", description: "Step-by-step installation walkthrough." },
+   113→   113→];
+   114→   114→
+   115→   115→function getYouTubeId(url: string): string | null {
+   116→   116→  const patterns = [
+   117→   117→    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([A-Za-z0-9_-]{11})/,
+   118→   118→  ];
+   119→   119→  for (const p of patterns) {
+   120→   120→    const m = url.match(p);
+   121→   121→    if (m) return m[1];
+   122→   122→  }
+   123→   123→  return null;
+   124→   124→}
+   125→   125→
+   126→   126→export function ProductDetailClient({ product }: { product: ProductDetail }) {
+   127→   127→  const [activeImage, setActiveImage] = useState(0);
+   128→   128→  const [copied, setCopied] = useState(false);
+   129→   129→  const [activeTab, setActiveTab] = useState<"specs" | "features" | "downloads" | "videos">("specs");
+   130→   130→
+   131→   131→  // Build gallery: prefer product.galleryImages, fall back to imageUrl, fall back to icon placeholder.
+   132→   132→  const gallery = useMemo(() => {
+   133→   133→    const imgs: { url: string; alt: string }[] = [];
+   134→   134→    if (product.galleryImages.length > 0) {
+   135→   135→      imgs.push(...product.galleryImages);
+   136→   136→    } else if (product.imageUrl) {
+   137→   137→      imgs.push({ url: product.imageUrl, alt: product.name });
+   138→   138→    }
+   139→   139→    // Also include any media files of type "image"
+   140→   140→    for (const m of product.mediaFiles) {
+   141→   141→      if (m.type === "image" && !imgs.some((i) => i.url === m.url)) {
+   142→   142→        imgs.push({ url: m.url, alt: m.altText ?? product.name });
+   143→   143→      }
+   144→   144→    }
+   145→   145→    return imgs;
+   146→   146→  }, [product]);
+   147→   147→
+   148→   148→  // Group specifications by `group` field (if present).
+   149→   149→  const specGroups = useMemo(() => {
+   150→   150→    const groups: Record<string, { property: string; value: string }[]> = {};
+   151→   151→    for (const s of product.specifications) {
+   152→   152→      const g = s.group ?? "General";
+   153→   153→      if (!groups[g]) groups[g] = [];
+   154→   154→      groups[g].push({ property: s.property, value: s.value });
+   155→   155→    }
+   156→   156→    return Object.entries(groups);
+   157→   157→  }, [product.specifications]);
+   158→   158→
+   159→   159→  // Downloads that actually have URLs
+   160→   160→  const availableDownloads = DOWNLOAD_TYPES.filter((d) => {
+   161→   161→    const v = product[d.urlField];
+   162→   162→    return typeof v === "string" && v && v.length > 0 && d.key !== "firmware";
+   163→   163→  });
+   164→   164→  // Firmware is special — it doesn't have its own URL field, but if latestFirmwareVersion is set,
+   165→   165→  // show a card that points to the downloads/knowledge base.
+   166→   166→  const hasFirmwareCard = !!product.latestFirmwareVersion;
+   167→   167→
+   168→   168→  const handleDownload = (url: string, label: string) => {
+   169→   169→    if (typeof window !== "undefined") {
+   170→   170→      window.open(url, "_blank", "noopener,noreferrer");
+   171→   171→    }
+   172→   172→  };
+   173→   173→
+   174→   174→  const handleShare = async () => {
+   175→   175→    const shareUrl = typeof window !== "undefined" ? window.location.href : `https://hub.qbit.com/products/${product.slug}`;
+   176→   176→    if (typeof navigator !== "undefined" && navigator.share) {
+   177→   177→      try {
+   178→   178→        await navigator.share({ title: product.name, text: product.description ?? "", url: shareUrl });
+   179→   179→        return;
+   180→   180→      } catch { /* fall through to clipboard */ }
+   181→   181→    }
+   182→   182→    if (typeof navigator !== "undefined" && navigator.clipboard) {
+   183→   183→      await navigator.clipboard.writeText(shareUrl);
+   184→   184→      setCopied(true);
+   185→   185→      setTimeout(() => setCopied(false), 2000);
+   186→   186→    }
+   187→   187→  };
+   188→   188→
+   189→   189→  const currentImage = gallery[activeImage];
+   190→   190→  const iconName = DEVICE_TYPE_ICON[product.deviceType] ?? "inventory_2";
+   191→   191→  const publicUrl = `https://hub.qbit.com/products/${product.slug}`;
+   192→   192→  const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(publicUrl)}`;
+   193→   193→
+   194→   194→  return (
+   195→   195→    <div className="min-h-screen bg-qbit-surface">
+   196→   196→      {/* Top bar */}
+   197→   197→      <header className="sticky top-0 z-10 border-b border-qbit-outline-variant/50 bg-qbit-surface/95 backdrop-blur">
+   198→   198→        <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3">
+   199→   199→          <Link
+   200→   200→            href="/products"
+   201→   201→            className="flex items-center gap-2 text-sm font-medium text-qbit-on-surface-variant hover:text-qbit-primary"
+   202→   202→          >
+   203→   203→            <Icon name="arrow_back" className="text-[20px]" />
+   204→   204→            All Products
+   205→   205→          </Link>
+   206→   206→          <span className="text-qbit-outline-variant">/</span>
+   207→   207→          {product.category && (
+   208→   208→            <>
+   209→   209→              <Link
+   210→   210→                href={`/products?category=${product.category}`}
+   211→   211→                className="text-sm font-medium text-qbit-on-surface-variant hover:text-qbit-primary capitalize"
+   212→   212→              >
+   213→   213→                {product.category.replace(/-/g, " ")}
+   214→   214→              </Link>
+   215→   215→              <span className="text-qbit-outline-variant">/</span>
+   216→   216→            </>
+   217→   217→          )}
+   218→   218→          <span className="truncate text-sm font-semibold text-qbit-on-surface">{product.name}</span>
+   219→   219→        </div>
+   220→   220→      </header>
+   221→   221→
+   222→   222→      <main className="mx-auto max-w-7xl px-4 py-8">
+   223→   223→        {/* ------------------- HERO ------------------- */}
+   224→   224→        <section className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+   225→   225→          {/* Gallery */}
+   226→   226→          <div className="lg:col-span-7 space-y-4">
+   227→   227→            <div className="group relative aspect-[4/3] overflow-hidden rounded-2xl border border-qbit-outline-variant bg-white shadow-sm">
+   228→   228→              {currentImage ? (
+   229→   229→                // eslint-disable-next-line @next/next/no-img-element
+   230→   230→                <img
+   231→   231→                  src={currentImage.url}
+   232→   232→                  alt={currentImage.alt}
+   233→   233→                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+   234→   234→                />
+   235→   235→              ) : (
+   236→   236→                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-qbit-surface-container-low via-white to-qbit-surface-container-high">
+   237→   237→                  <Icon name={iconName} className="text-[120px] text-qbit-primary/70" filled />
+   238→   238→                </div>
+   239→   239→              )}
+   240→   240→              <div className="absolute bottom-4 right-4 flex items-center gap-1.5 rounded-lg border border-qbit-outline-variant bg-white/80 px-3 py-1.5 shadow-sm backdrop-blur">
+   241→   241→                <Icon name="zoom_in" className="text-[14px] text-qbit-on-surface-variant" />
+   242→   242→                <span className="text-xs font-semibold text-qbit-on-surface-variant">Hover to zoom</span>
+   243→   243→              </div>
+   244→   244→            </div>
+   245→   245→
+   246→   246→            {/* Thumbnail strip */}
+   247→   247→            {gallery.length > 1 && (
+   248→   248→              <div className="hide-scrollbar flex gap-3 overflow-x-auto pb-2">
+   249→   249→                {gallery.map((img, i) => (
+   250→   250→                  <button
+   251→   251→                    key={i}
+   252→   252→                    onClick={() => setActiveImage(i)}
+   253→   253→                    className={`relative h-20 w-24 shrink-0 overflow-hidden rounded-lg border-2 transition-all ${
+   254→   254→                      i === activeImage
+   255→   255→                        ? "border-qbit-primary ring-2 ring-qbit-primary/20"
+   256→   256→                        : "border-qbit-outline-variant hover:border-qbit-primary/40"
+   257→   257→                    }`}
+   258→   258→                  >
+   259→   259→                    {/* eslint-disable-next-line @next/next/no-img-element */}
+   260→   260→                    <img src={img.url} alt={img.alt} className="h-full w-full object-cover" />
+   261→   261→                  </button>
+   262→   262→                ))}
+   263→   263→              </div>
+   264→   264→            )}
+   265→   265→          </div>
+   266→   266→
+   267→   267→          {/* Identity + quick actions */}
+   268→   268→          <div className="lg:col-span-5 space-y-5">
+   269→   269→            <div>
+   270→   270→              <div className="mb-2 flex flex-wrap items-center gap-2">
+   271→   271→                <span className="text-xs font-semibold uppercase tracking-wider text-qbit-primary">
+   272→   272→                  {product.brand}
+   273→   273→                </span>
+   274→   274→                {product.badgeLabel && (
+   275→   275→                  <TagBadge variant="primary">{product.badgeLabel}</TagBadge>
+   276→   276→                )}
+   277→   277→                {product.isTrending && (
+   278→   278→                  <TagBadge variant="secondary">Trending</TagBadge>
+   279→   279→                )}
+   280→   280→                <StatusBadge
+   281→   281→                  variant={product.status === "active" ? "success" : "neutral"}
+   282→   282→                  dot
+   283→   283→                >
+   284→   284→                  {product.status === "active" ? "Active" : product.status}
+   285→   285→                </StatusBadge>
+   286→   286→              </div>
+   287→   287→              <h1 className="text-3xl font-bold tracking-tight text-qbit-on-surface md:text-4xl">
+   288→   288→                {product.name}
+   289→   289→              </h1>
+   290→   290→              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-qbit-on-surface-variant">
+   291→   291→                <span><strong className="text-qbit-on-surface">Model:</strong> {product.model}</span>
+   292→   292→                {product.sku && <span><strong className="text-qbit-on-surface">SKU:</strong> {product.sku}</span>}
+   293→   293→                {product.manufacturer && (
+   294→   294→                  <span><strong className="text-qbit-on-surface">Manufacturer:</strong> {product.manufacturer}</span>
+   295→   295→                )}
+   296→   296→                {product.startingPrice && (
+   297→   297→                  <span className="text-base font-bold text-qbit-primary">From {product.startingPrice}</span>
+   298→   298→                )}
+   299→   299→              </div>
+   300→   300→            </div>
+   301→   301→
+   302→   302→            {product.description && (
+   303→   303→              <p className="text-sm text-qbit-on-surface-variant">{product.description}</p>
+   304→   304→            )}
+   305→   305→
+   306→   306→            {/* Quick stats */}
+   307→   307→            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+   308→   308→              <StatPill icon="visibility" label="Views" value={product.viewCount} />
+   309→   309→              <StatPill icon="download" label="Downloads" value={product.downloadCount} />
+   310→   310→              <StatPill
+   311→   311→                icon="memory"
+   312→   312→                label="Driver"
+   313→   313→                value={product.latestDriverVersion ?? "—"}
+   314→   314→              />
+   315→   315→              <StatPill
+   316→   316→                icon="upgrade"
+   317→   317→                label="Firmware"
+   318→   318→                value={product.latestFirmwareVersion ?? "—"}
+   319→   319→              />
+   320→   320→            </div>
+   321→   321→
+   322→   322→            {/* Support flags */}
+   323→   323→            <div className="flex flex-wrap gap-2">
+   324→   324→              {product.drQbitSupported && (
+   325→   325→                <div className="flex items-center gap-2 rounded-lg bg-qbit-primary-container/10 px-3 py-2 text-xs font-medium text-qbit-primary">
+   326→   326→                  <Icon name="smart_toy" className="text-[16px]" />
+   327→   327→                  Dr. QBIT Supported
+   328→   328→                </div>
+   329→   329→              )}
+   330→   330→              {product.aiDiagnosticsSupported && (
+   331→   331→                <div className="flex items-center gap-2 rounded-lg bg-qbit-secondary-container/10 px-3 py-2 text-xs font-medium text-qbit-secondary">
+   332→   332→                  <Icon name="psychology" className="text-[16px]" />
+   333→   333→                  AI Diagnostics Supported
+   334→   334→                </div>
+   335→   335→              )}
+   336→   336→            </div>
+   337→   337→
+   338→   338→            {/* OS support */}
+   339→   339→            {product.operatingSystems.length > 0 && (
+   340→   340→              <div>
+   341→   341→                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-qbit-on-surface-variant">
+   342→   342→                  Operating Systems
+   343→   343→                </p>
+   344→   344→                <div className="flex flex-wrap gap-3">
+   345→   345→                  {product.operatingSystems.map((os, i) => (
+   346→   346→                    <div key={i} className="flex items-center gap-2 rounded-lg border border-qbit-outline-variant px-3 py-1.5 text-sm text-qbit-on-surface">
+   347→   347→                      <Icon name={os.osIcon} className="text-[18px] text-qbit-primary" />
+   348→   348→                      <span>{os.osName}</span>
+   349→   349→                      {os.minVersion && (
+   350→   350→                        <span className="text-xs text-qbit-on-surface-variant">({os.minVersion}+)</span>
+   351→   351→                      )}
+   352→   352→                    </div>
+   353→   353→                  ))}
+   354→   354→                </div>
+   355→   355→              </div>
+   356→   356→            )}
+   357→   357→
+   358→   358→            {/* Primary actions */}
+   359→   359→            <div className="flex flex-wrap gap-3 border-t border-qbit-outline-variant/50 pt-4">
+   360→   360→              {product.driverDownloadUrl && (
+   361→   361→                <QbitButton
+   362→   362→                  variant="primary"
+   363→   363→                  icon="download"
+   364→   364→                  onClick={() => handleDownload(product.driverDownloadUrl!, "Driver")}
+   365→   365→                >
+   366→   366→                  Download Driver{product.latestDriverVersion ? ` ${product.latestDriverVersion}` : ""}
+   367→   367→                </QbitButton>
+   368→   368→              )}
+   369→   369→              {product.manualUrl && (
+   370→   370→                <QbitButton
+   371→   371→                  variant="outline"
+   372→   372→                  icon="menu_book"
+   373→   373→                  onClick={() => handleDownload(product.manualUrl!, "Manual")}
+   374→   374→                >
+   375→   375→                  View Manual
+   376→   376→                </QbitButton>
+   377→   377→              )}
+   378→   378→              <QbitButton
+   379→   379→                variant="ghost"
+   380→   380→                icon={copied ? "check" : "share"}
+   381→   381→                onClick={handleShare}
+   382→   382→              >
+   383→   383→                {copied ? "Link Copied" : "Share"}
+   384→   384→              </QbitButton>
+   385→   385→            </div>
+   386→   386→          </div>
+   387→   387→        </section>
+   388→   388→
+   389→   389→        {/* ------------------- TABS ------------------- */}
+   390→   390→        <section className="mt-12">
+   391→   391→          <div className="mb-6 flex flex-wrap gap-2 border-b border-qbit-outline-variant">
+   392→   392→            {[
+   393→   393→              { key: "specs", label: "Specifications", icon: "list_alt" },
+   394→   394→              { key: "features", label: "Features", icon: "stars" },
+   395→   395→              { key: "downloads", label: "Downloads", icon: "download" },
+   396→   396→              { key: "videos", label: "Videos", icon: "videocam" },
+   397→   397→            ].map((t) => (
+   398→   398→              <button
+   399→   399→                key={t.key}
+   400→   400→                onClick={() => setActiveTab(t.key as typeof activeTab)}
+   401→   401→                className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
+   402→   402→                  activeTab === t.key
+   403→   403→                    ? "border-qbit-primary text-qbit-primary"
+   404→   404→                    : "border-transparent text-qbit-on-surface-variant hover:text-qbit-on-surface"
+   405→   405→                }`}
+   406→   406→              >
+   407→   407→                <Icon name={t.icon} className="text-[18px]" />
+   408→   408→                {t.label}
+   409→   409→              </button>
+   410→   410→            ))}
+   411→   411→          </div>
+   412→   412→
+   413→   413→          {/* Specs */}
+   414→   414→          {activeTab === "specs" && (
+   415→   415→            <div className="space-y-6">
+   416→   416→              {specGroups.length > 0 ? (
+   417→   417→                specGroups.map(([group, specs]) => (
+   418→   418→                  <SurfaceCard key={group} className="overflow-hidden">
+   419→   419→                    <div className="border-b border-qbit-outline-variant/50 bg-qbit-surface-container-low px-5 py-3">
+   420→   420→                      <h3 className="text-sm font-bold uppercase tracking-wider text-qbit-on-surface">
+   421→   421→                        {group}
+   422→   422→                      </h3>
+   423→   423→                    </div>
+   424→   424→                    <table className="w-full">
+   425→   425→                      <tbody>
+   426→   426→                        {specs.map((s, i) => (
+   427→   427→                          <tr key={i} className="border-b border-qbit-outline-variant/30 last:border-0">
+   428→   428→                            <td className="w-1/3 px-5 py-3 text-sm font-medium text-qbit-on-surface-variant">
+   429→   429→                              {s.property}
+   430→   430→                            </td>
+   431→   431→                            <td className="px-5 py-3 text-sm text-qbit-on-surface">{s.value}</td>
+   432→   432→                          </tr>
+   433→   433→                        ))}
+   434→   434→                      </tbody>
+   435→   435→                    </table>
+   436→   436→                  </SurfaceCard>
+   437→   437→                ))
+   438→   438→              ) : (
+   439→   439→                <EmptyState icon="list_alt" message="No technical specifications available for this product." />
+   440→   440→              )}
+   441→   441→            </div>
+   442→   442→          )}
+   443→   443→
+   444→   444→          {/* Features */}
+   445→   445→          {activeTab === "features" && (
+   446→   446→            <div>
+   447→   447→              {product.features.length > 0 ? (
+   448→   448→                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+   449→   449→                  {product.features.map((f, i) => (
+   450→   450→                    <SurfaceCard key={i} className="p-5">
+   451→   451→                      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-qbit-primary-container/10">
+   452→   452→                        <Icon name={f.icon} className="text-[24px] text-qbit-primary" filled />
+   453→   453→                      </div>
+   454→   454→                      <h4 className="mb-1 text-base font-bold text-qbit-on-surface">{f.title}</h4>
+   455→   455→                      <p className="text-sm text-qbit-on-surface-variant">{f.description}</p>
+   456→   456→                    </SurfaceCard>
+   457→   457→                  ))}
+   458→   458→                </div>
+   459→   459→              ) : (
+   460→   460→                <EmptyState icon="stars" message="No features listed for this product." />
+   461→   461→              )}
+   462→   462→            </div>
+   463→   463→          )}
+   464→   464→
+   465→   465→          {/* Downloads */}
+   466→   466→          {activeTab === "downloads" && (
+   467→   467→            <div className="space-y-6">
+   468→   468→              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+   469→   469→                {availableDownloads.map((d) => {
+   470→   470→                  const url = product[d.urlField] as string;
+   471→   471→                  return (
+   472→   472→                    <SurfaceCard key={d.key} className="flex items-start gap-4 p-5">
+   473→   473→                      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${d.iconBg}`}>
+   474→   474→                        <Icon name={d.icon} className="text-[24px]" />
+   475→   475→                      </div>
+   476→   476→                      <div className="flex-1">
+   477→   477→                        <h4 className="text-sm font-bold text-qbit-on-surface">{d.label}</h4>
+   478→   478→                        <p className="mt-1 text-xs text-qbit-on-surface-variant">{d.description}</p>
+   479→   479→                        <button
+   480→   480→                          onClick={() => handleDownload(url, d.label)}
+   481→   481→                          className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-qbit-primary hover:underline"
+   482→   482→                        >
+   483→   483→                          Download / Open
+   484→   484→                          <Icon name="arrow_forward" className="text-[14px]" />
+   485→   485→                        </button>
+   486→   486→                      </div>
+   487→   487→                    </SurfaceCard>
+   488→   488→                  );
+   489→   489→                })}
+   490→   490→
+   491→   491→                {/* Firmware card (always shown if latestFirmwareVersion is set) */}
+   492→   492→                {hasFirmwareCard && (
+   493→   493→                  <SurfaceCard className="flex items-start gap-4 p-5">
+   494→   494→                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+   495→   495→                      <Icon name="upgrade" className="text-[24px]" />
+   496→   496→                    </div>
+   497→   497→                    <div className="flex-1">
+   498→   498→                      <h4 className="text-sm font-bold text-qbit-on-surface">Firmware</h4>
+   499→   499→                      <p className="mt-1 text-xs text-qbit-on-surface-variant">
+   500→   500→                        Latest release: <strong>{product.latestFirmwareVersion}</strong>
+   501→   501→                      </p>
+   502→   502→                      <Link
+   503→   503→                        href={product.knowledgeBaseUrl ?? "#"}
+   504→   504→                        className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-qbit-primary hover:underline"
+   505→   505→                      >
+   506→   506→                        View Release Notes
+   507→   507→                        <Icon name="arrow_forward" className="text-[14px]" />
+   508→   508→                      </Link>
+   509→   509→                    </div>
+   510→   510→                  </SurfaceCard>
+   511→   511→                )}
+   512→   512→
+   513→   513→                {/* Media-file-backed downloads (driver/firmware/sdk/utility/brochure/datasheet/warranty/manual/video) */}
+   514→   514→                {product.mediaFiles
+   515→   515→                  .filter((m) => ["driver", "firmware", "sdk", "utility", "brochure", "datasheet", "warranty", "manual"].includes(m.type))
+   516→   516→                  .filter((m) => !availableDownloads.some((d) => product[d.urlField] === m.url))
+   517→   517→                  .map((m) => (
+   518→   518→                    <SurfaceCard key={m.id} className="flex items-start gap-4 p-5">
+   519→   519→                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-qbit-secondary-container/10 text-qbit-secondary">
+   520→   520→                        <Icon name="attach_file" className="text-[24px]" />
+   521→   521→                      </div>
+   522→   522→                      <div className="flex-1">
+   523→   523→                        <h4 className="text-sm font-bold text-qbit-on-surface">{m.title}</h4>
+   524→   524→                        <p className="mt-1 text-xs capitalize text-qbit-on-surface-variant">{m.type}</p>
+   525→   525→                        <button
+   526→   526→                          onClick={() => handleDownload(m.url, m.title)}
+   527→   527→                          className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-qbit-primary hover:underline"
+   528→   528→                        >
+   529→   529→                          Download / Open
+   530→   530→                          <Icon name="arrow_forward" className="text-[14px]" />
+   531→   531→                        </button>
+   532→   532→                      </div>
+   533→   533→                    </SurfaceCard>
+   534→   534→                  ))}
+   535→   535→              </div>
+   536→   536→
+   537→   537→              {availableDownloads.length === 0 && !hasFirmwareCard && product.mediaFiles.length === 0 && (
+   538→   538→                <EmptyState icon="download" message="No downloads available for this product yet." />
+   539→   539→              )}
+   540→   540→            </div>
+   541→   541→          )}
+   542→   542→
+   543→   543→          {/* Videos */}
+   544→   544→          {activeTab === "videos" && (
+   545→   545→            <div className="space-y-6">
+   546→   546→              {product.videos.length > 0 ? (
+   547→   547→                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+   548→   548→                  {product.videos.map((v, i) => {
+   549→   549→                    const ytId = v.provider === "youtube" || v.url.includes("youtu")
+   550→   550→                      ? (v.externalId ?? getYouTubeId(v.url))
+   551→   551→                      : null;
+   552→   552→                    return (
+   553→   553→                      <SurfaceCard key={i} className="overflow-hidden">
+   554→   554→                        {ytId ? (
+   555→   555→                          <div className="aspect-video w-full">
+   556→   556→                            <iframe
+   557→   557→                              src={`https://www.youtube.com/embed/${ytId}`}
+   558→   558→                              title={v.title}
+   559→   559→                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+   560→   560→                              allowFullScreen
+   561→   561→                              className="h-full w-full"
+   562→   562→                            />
+   563→   563→                          </div>
+   564→   564→                        ) : (
+   565→   565→                          <div className="aspect-video w-full bg-qbit-surface-container">
+   566→   566→                            <div className="flex h-full w-full items-center justify-center">
+   567→   567→                              <a
+   568→   568→                                href={v.url}
+   569→   569→                                target="_blank"
+   570→   570→                                rel="noopener noreferrer"
+   571→   571→                                className="flex flex-col items-center gap-2 text-qbit-primary"
+   572→   572→                              >
+   573→   573→                                <Icon name="play_circle" className="text-[64px]" filled />
+   574→   574→                                <span className="text-sm font-medium">Open video in new tab</span>
+   575→   575→                              </a>
+   576→   576→                            </div>
+   577→   577→                          </div>
+   578→   578→                        )}
+   579→   579→                        <div className="p-4">
+   580→   580→                          <h4 className="text-sm font-bold text-qbit-on-surface">{v.title}</h4>
+   581→   581→                        </div>
+   582→   582→                      </SurfaceCard>
+   583→   583→                    );
+   584→   584→                  })}
+   585→   585→                </div>
+   586→   586→              ) : (
+   587→   587→                <EmptyState icon="videocam" message="No video available." />
+   588→   588→              )}
+   589→   589→            </div>
+   590→   590→          )}
+   591→   591→        </section>
+   592→   592→
+   593→   593→        {/* ------------------- LONG DESCRIPTION ------------------- */}
+   594→   594→        {product.longDescription && (
+   595→   595→          <section className="mt-12">
+   596→   596→            <SurfaceCard className="p-6">
+   597→   597→              <h2 className="mb-3 text-xl font-bold text-qbit-on-surface">About this product</h2>
+   598→   598→              <p className="whitespace-pre-line text-sm leading-relaxed text-qbit-on-surface-variant">
+   599→   599→                {product.longDescription}
+   600→   600→              </p>
+   601→   601→            </SurfaceCard>
+   602→   602→          </section>
+   603→   603→        )}
+   604→   604→
+   605→   605→        {/* ------------------- TAGS + COMPATIBLE DEVICES ------------------- */}
+   606→   606→        {(product.tags.length > 0 || product.compatibleDevices.length > 0) && (
+   607→   607→          <section className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
+   608→   608→            {product.tags.length > 0 && (
+   609→   609→              <SurfaceCard className="p-6">
+   610→   610→                <h3 className="mb-3 text-sm font-bold uppercase tracking-wider text-qbit-on-surface-variant">Tags</h3>
+   611→   611→                <div className="flex flex-wrap gap-2">
+   612→   612→                  {product.tags.map((t) => (
+   613→   613→                    <TagBadge key={t} variant="neutral">#{t}</TagBadge>
+   614→   614→                  ))}
+   615→   615→                </div>
+   616→   616→              </SurfaceCard>
+   617→   617→            )}
+   618→   618→            {product.compatibleDevices.length > 0 && (
+   619→   619→              <SurfaceCard className="p-6">
+   620→   620→                <h3 className="mb-3 text-sm font-bold uppercase tracking-wider text-qbit-on-surface-variant">Compatible Devices</h3>
+   621→   621→                <div className="flex flex-wrap gap-2">
+   622→   622→                  {product.compatibleDevices.map((d) => (
+   623→   623→                    <span
+   624→   624→                      key={d}
+   625→   625→                      className="flex items-center gap-1 rounded-lg border border-qbit-outline-variant px-3 py-1.5 text-xs text-qbit-on-surface"
+   626→   626→                    >
+   627→   627→                      <Icon name="check_circle" className="text-[14px] text-qbit-success" />
+   628→   628→                      {d}
+   629→   629→                    </span>
+   630→   630→                  ))}
+   631→   631→                </div>
+   632→   632→              </SurfaceCard>
+   633→   633→            )}
+   634→   634→          </section>
+   635→   635→        )}
+   636→   636→
+   637→   637→        {/* ------------------- QR CODE + SHARE ------------------- */}
+   638→   638→        <section className="mt-8">
+   639→   639→          <SurfaceCard className="flex flex-col items-center gap-6 p-6 md:flex-row md:items-start">
+   640→   640→            <div className="flex flex-col items-center gap-2">
+   641→   641→              <div className="rounded-xl border border-qbit-outline-variant bg-white p-3">
+   642→   642→                {/* eslint-disable-next-line @next/next/no-img-element */}
+   643→   643→                <img src={qrApiUrl} alt={`QR code for ${product.name}`} width={180} height={180} />
+   644→   644→              </div>
+   645→   645→              <p className="text-xs font-medium text-qbit-on-surface-variant">Scan to view on mobile</p>
+   646→   646→            </div>
+   647→   647→            <div className="flex-1">
+   648→   648→              <h3 className="text-lg font-bold text-qbit-on-surface">Share this product</h3>
+   649→   649→              <p className="mt-1 text-sm text-qbit-on-surface-variant">
+   650→   650→                Send the direct link to colleagues or customers — they&apos;ll land right here.
+   651→   651→              </p>
+   652→   652→              <div className="mt-4 flex flex-wrap gap-3">
+   653→   653→                <input
+   654→   654→                  type="text"
+   655→   655→                  readOnly
+   656→   656→                  value={publicUrl}
+   657→   657→                  className="flex-1 rounded-lg border border-qbit-outline-variant bg-qbit-surface-container-low px-3 py-2 text-sm text-qbit-on-surface-variant"
+   658→   658→                />
+   659→   659→                <QbitButton variant="primary" icon={copied ? "check" : "content_copy"} onClick={handleShare}>
+   660→   660→                  {copied ? "Copied" : "Copy Link"}
+   661→   661→                </QbitButton>
+   662→   662→              </div>
+   663→   663→              <div className="mt-4 flex flex-wrap gap-2">
+   664→   664→                <ShareButton
+   665→   665→                  icon="chat"
+   666→   666→                  label="WhatsApp"
+   667→   667→                  href={`https://wa.me/?text=${encodeURIComponent(`${product.name} — ${publicUrl}`)}`}
+   668→   668→                  color="text-[#25D366]"
+   669→   669→                />
+   670→   670→                <ShareButton
+   671→   671→                  icon="mail"
+   672→   672→                  label="Email"
+   673→   673→                  href={`mailto:?subject=${encodeURIComponent(product.name)}&body=${encodeURIComponent(`See ${product.name}: ${publicUrl}`)}`}
+   674→   674→                  color="text-qbit-primary"
+   675→   675→                />
+   676→   676→                <ShareButton
+   677→   677→                  icon="share"
+   678→   678→                  label="More…"
+   679→   679→                  href={publicUrl}
+   680→   680→                  color="text-qbit-on-surface-variant"
+   681→   681→                  onClick={handleShare}
+   682→   682→                />
+   683→   683→              </div>
+   684→   684→            </div>
+   685→   685→          </SurfaceCard>
+   686→   686→        </section>
+   687→   687→
+   688→   688→        {/* ------------------- RELATED PRODUCTS ------------------- */}
+   689→   689→        {product.relatedProducts.length > 0 && (
+   690→   690→          <section className="mt-12">
+   691→   691→            <div className="mb-6 flex items-end justify-between">
+   692→   692→              <div>
+   693→   693→                <h2 className="text-2xl font-bold tracking-tight text-qbit-on-surface">Related Products</h2>
+   694→   694→                <p className="mt-1 text-sm text-qbit-on-surface-variant">Frequently bought or viewed together.</p>
+   695→   695→              </div>
+   696→   696→            </div>
+   697→   697→            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+   698→   698→              {product.relatedProducts.map((rp) => {
+   699→   699→                const rpIcon = DEVICE_TYPE_ICON[rp.deviceType] ?? "inventory_2";
+   700→   700→                return (
+   701→   701→                  <Link
+   702→   702→                    key={rp.id}
+   703→   703→                    href={`/products/${rp.slug}`}
+   704→   704→                    className="group flex flex-col overflow-hidden rounded-2xl border border-qbit-outline-variant bg-qbit-surface-container-lowest shadow-sm transition-all duration-300 hover:shadow-xl hover:border-qbit-primary/40"
+   705→   705→                  >
+   706→   706→                    <div className="relative flex h-36 items-center justify-center overflow-hidden bg-gradient-to-br from-qbit-surface-container-high via-qbit-surface-container to-qbit-surface-container-low">
+   707→   707→                      {rp.imageUrl ? (
+   708→   708→                        // eslint-disable-next-line @next/next/no-img-element
+   709→   709→                        <img
+   710→   710→                          src={rp.imageUrl}
+   711→   711→                          alt={rp.name}
+   712→   712→                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+   713→   713→                        />
+   714→   714→                      ) : (
+   715→   715→                        <Icon name={rpIcon} className="text-[64px] text-qbit-primary/70" filled />
+   716→   716→                      )}
+   717→   717→                      {rp.badgeLabel && (
+   718→   718→                        <span className="absolute left-2 top-2 rounded-full bg-qbit-primary px-2 py-0.5 text-[10px] font-bold uppercase text-qbit-on-primary">
+   719→   719→                          {rp.badgeLabel}
+   720→   720→                        </span>
+   721→   721→                      )}
+   722→   722→                    </div>
+   723→   723→                    <div className="flex flex-1 flex-col gap-2 p-4">
+   724→   724→                      <div className="text-[10px] font-semibold uppercase tracking-wider text-qbit-primary">
+   725→   725→                        {rp.brand}
+   726→   726→                      </div>
+   727→   727→                      <h3 className="text-sm font-bold text-qbit-on-surface group-hover:text-qbit-primary">
+   728→   728→                        {rp.name}
+   729→   729→                      </h3>
+   730→   730→                      {rp.description && (
+   731→   731→                        <p className="line-clamp-2 text-xs text-qbit-on-surface-variant">{rp.description}</p>
+   732→   732→                      )}
+   733→   733→                      <div className="mt-auto flex items-center justify-between pt-2 text-xs text-qbit-primary">
+   734→   734→                        <span className="font-semibold">View Details</span>
+   735→   735→                        <Icon name="arrow_forward" className="text-[14px] transition-transform group-hover:translate-x-1" />
+   736→   736→                      </div>
+   737→   737→                    </div>
+   738→   738→                  </Link>
+   739→   739→                );
+   740→   740→              })}
+   741→   741→            </div>
+   742→   742→          </section>
+   743→   743→        )}
+   744→   744→
+   745→   745→        {/* ------------------- FOOTER ------------------- */}
+   746→   746→        <footer className="mt-12 border-t border-qbit-outline-variant/50 pt-6 text-xs text-qbit-on-surface-variant">
+   747→   747→          <div className="flex flex-wrap items-center justify-between gap-3">
+   748→   748→            <span>Last updated: {new Date(product.lastUpdated).toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}</span>
+   749→   749→            <span>{product.viewCount} views · {product.downloadCount} downloads</span>
+   750→   750→            {product.knowledgeBaseUrl && (
+   751→   751→              <Link href={product.knowledgeBaseUrl} className="font-semibold text-qbit-primary hover:underline">
+   752→   752→                Knowledge Base →
+   753→   753→              </Link>
+   754→   754→            )}
+   755→   755→          </div>
+   756→   756→        </footer>
+   757→   757→      </main>
+   758→   758→    </div>
+   759→   759→  );
+   760→   760→}
+   761→   761→
+   762→   762→function StatPill({ icon, label, value }: { icon: string; label: string; value: string | number }) {
+   763→   763→  return (
+   764→   764→    <div className="flex flex-col items-center rounded-xl border border-qbit-outline-variant/50 bg-qbit-surface-container-low px-3 py-2 text-center">
+   765→   765→      <Icon name={icon} className="mb-1 text-[20px] text-qbit-primary" />
+   766→   766→      <span className="text-xs text-qbit-on-surface-variant">{label}</span>
+   767→   767→      <span className="text-sm font-bold text-qbit-on-surface">{value}</span>
+   768→   768→    </div>
+   769→   769→  );
+   770→   770→}
+   771→   771→
+   772→   772→function ShareButton({
+   773→   773→  icon, label, href, color, onClick,
+   774→   774→}: {
+   775→   775→  icon: string; label: string; href: string; color: string; onClick?: () => void;
+   776→   776→}) {
+   777→   777→  return (
+   778→   778→    <a
+   779→   779→      href={href}
+   780→   780→      target="_blank"
+   781→   781→      rel="noopener noreferrer"
+   782→   782→      onClick={onClick}
+   783→   783→      className="flex items-center gap-2 rounded-lg border border-qbit-outline-variant px-3 py-2 text-xs font-medium text-qbit-on-surface-variant hover:bg-qbit-surface-container-low"
+   784→   784→    >
+   785→   785→      <Icon name={icon} className={`text-[16px] ${color}`} />
+   786→   786→      {label}
+   787→   787→    </a>
+   788→   788→  );
+   789→   789→}
+   790→   790→
+   791→   791→function EmptyState({ icon, message }: { icon: string; message: string }) {
+   792→   792→  return (
+   793→   793→    <div className="rounded-2xl border border-dashed border-qbit-outline-variant px-6 py-12 text-center">
+   794→   794→      <Icon name={icon} className="mx-auto text-[48px] text-qbit-on-surface-variant/40" />
+   795→   795→      <p className="mt-3 text-sm font-medium text-qbit-on-surface-variant">{message}</p>
+   796→   796→    </div>
+   797→   797→  );
+   798→   798→}
+   799→   799→

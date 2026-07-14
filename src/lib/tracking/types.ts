@@ -15,8 +15,8 @@ export interface PublicTrackingView {
   status: WorkOrderStatus;
   statusLabel: string;
 
-  // Customer (sanitized — no full address)
-  customerName: string;
+  // Customer (sanitized — name/company hidden from token-holders for privacy)
+  customerName: string | null;
   companyName: string | null;
 
   // Product

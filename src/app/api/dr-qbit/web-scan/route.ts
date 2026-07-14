@@ -12,12 +12,12 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireAuth } from "@/lib/notifications/auth";
+import { requireStaff } from "@/lib/notifications/auth";
 import { randomBytes } from "node:crypto";
 import { sanitizeText } from "@/lib/security/validation";
 
 export async function POST(req: NextRequest) {
-  const session = await requireAuth();
+  const session = await requireStaff();
   if (!session) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }

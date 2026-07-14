@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireAuth } from "@/lib/notifications/auth";
+import { requireStaff } from "@/lib/notifications/auth";
 import { mapFirmwareInfoDTO } from "../route";
 
 interface Params {
@@ -16,7 +16,7 @@ interface Params {
 export async function GET(req: NextRequest, { params }: Params) {
   try {
 
-  const session = await requireAuth();
+  const session = await requireStaff();
   if (!session) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }
@@ -30,7 +30,8 @@ export async function GET(req: NextRequest, { params }: Params) {
       latestRelease: {
         include: {
           firmware: true,
-          download: { select: { storagePath: true, fileSize: true, checksum: true } },
+          // SECURITY: Don't expose storagePath — use download ID for /api/downloads/[id]/file
+          download: { select: { id: true, fileSize: true, checksum: true } },
         },
       },
     },
@@ -46,7 +47,7 @@ export async function GET(req: NextRequest, { params }: Params) {
   // Enrich with download URL + file size from Download record
   const enriched = {
     ...info,
-    latestDownloadUrl: info.latestRelease?.download?.storagePath ?? null,
+    latestDownloadUrl: info.latestRelease?.download ? `/api/downloads/${info.latestRelease.download.id}/file` : null,
     latestFileSize: info.latestRelease?.download?.fileSize ?? info.latestFileSize,
     latestChecksum: info.latestRelease?.download?.checksum ?? info.latestChecksum,
   };

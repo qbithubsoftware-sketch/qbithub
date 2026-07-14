@@ -9,7 +9,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireAuth } from "@/lib/notifications/auth";
+import { requireStaff } from "@/lib/notifications/auth";
 import { checkCompatibility } from "@/lib/firmware/compatibility-checker";
 
 interface Params {
@@ -17,7 +17,7 @@ interface Params {
 }
 
 export async function POST(req: NextRequest, { params }: Params) {
-  const session = await requireAuth();
+  const session = await requireStaff();
   if (!session) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }

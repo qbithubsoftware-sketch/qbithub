@@ -4,13 +4,13 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireAuth } from "@/lib/notifications/auth";
+import { requireAdmin } from "@/lib/notifications/auth";
 import { safeJsonParse, safeJsonArray } from "@/lib/utils/safe-json";
 
 export async function GET(req: NextRequest) {
   try {
 
-  const session = await requireAuth();
+  const session = await requireAdmin();
   if (!session) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }

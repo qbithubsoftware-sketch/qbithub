@@ -10,14 +10,14 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireAuth } from "@/lib/notifications/auth";
+import { requireStaff } from "@/lib/notifications/auth";
 import type { FirmwareReleaseDTO } from "@/lib/firmware/types";
 import { safeJsonParse, safeJsonArray } from "@/lib/utils/safe-json";
 
 export async function GET(req: NextRequest) {
   try {
 
-  const session = await requireAuth();
+  const session = await requireStaff();
   if (!session) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }
@@ -40,7 +40,9 @@ export async function GET(req: NextRequest) {
     take: limit,
     include: {
       firmware: true,
-      download: { select: { storagePath: true, fileSize: true, checksum: true } },
+      // SECURITY: Don't expose storagePath directly — use the download ID to
+      // construct a /api/downloads/[id]/file URL that enforces visibility tiers.
+      download: { select: { id: true, fileSize: true, checksum: true } },
     },
   });
 
@@ -52,7 +54,7 @@ export async function GET(req: NextRequest) {
       version: r.version,
       buildNumber: r.buildNumber,
       releaseDate: r.releaseDate.toISOString(),
-      downloadUrl: r.download?.storagePath ?? null,
+      downloadUrl: r.download ? `/api/downloads/${r.download.id}/file` : null,
       fileSize: r.download?.fileSize ?? r.fileSize,
       checksum: r.download?.checksum ?? r.checksum,
       releaseNotes: r.releaseNotes,

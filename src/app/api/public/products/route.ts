@@ -56,7 +56,9 @@ export async function GET(req: NextRequest) {
         imageUrl: true,
         galleryImages: true,
         startingPrice: true,
-        sku: true,
+        // SECURITY: sku + serialPattern are internal-inventory fields — never expose to public.
+        // sku: true,           // removed per V3 security hardening
+        // serialPattern: true, // never selected here
         badgeLabel: true,
         isFeatured: true,
         isTrending: true,

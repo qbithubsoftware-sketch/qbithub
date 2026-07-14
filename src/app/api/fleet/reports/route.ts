@@ -5,13 +5,13 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireAuth } from "@/lib/notifications/auth";
+import { requireAdmin } from "@/lib/notifications/auth";
 import { getFleetStats } from "@/lib/fleet/queries";
 import type { FleetFilters } from "@/lib/fleet/types";
 import { sanitizeText } from "@/lib/security/validation";
 
 export async function POST(req: NextRequest) {
-  const session = await requireAuth();
+  const session = await requireAdmin();
   if (!session) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  const session = await requireAuth();
+  const session = await requireAdmin();
   if (!session) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }

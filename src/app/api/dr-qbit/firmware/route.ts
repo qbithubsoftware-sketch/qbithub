@@ -8,13 +8,13 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireAuth } from "@/lib/notifications/auth";
+import { requireStaff } from "@/lib/notifications/auth";
 import type { FirmwareInfoDTO, FirmwareStatus } from "@/lib/firmware/types";
 
 export async function GET(req: NextRequest) {
   try {
 
-  const session = await requireAuth();
+  const session = await requireStaff();
   if (!session) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }
@@ -78,7 +78,7 @@ export function mapFirmwareInfoDTO(i: {
     isCritical: boolean;
     isStable: boolean;
     downloadId: string | null;
-    download?: { storagePath: string; fileSize: number } | null;
+    download?: { id: string; fileSize: number; checksum: string | null } | null;
   } | null;
 }): FirmwareInfoDTO {
   return {

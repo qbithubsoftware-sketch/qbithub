@@ -19,6 +19,7 @@ import { matchDevice } from "@/lib/drqbit/device-matcher";
 import { type RawDetectedDevice, type DeviceConnection } from "@/lib/drqbit/types";
 import { sanitizeText } from "@/lib/security/validation";
 import { randomBytes } from "node:crypto";
+import { requireStaff } from "@/lib/notifications/auth";
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
@@ -165,8 +166,17 @@ export async function POST(req: NextRequest) {
 
 /**
  * GET /api/dr-qbit/scan — list recent scan sessions (engineer/admin view)
+ *
+ * SECURITY: This endpoint exposes engineer/customer names, work order IDs,
+ * hostnames, and OS info. Restricted to staff (administrator + installation
+ * + support engineers) only. Public customers, dealers, viewers are denied.
  */
 export async function GET(req: NextRequest) {
+  const session = await requireStaff();
+  if (!session) {
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  }
+
   const url = new URL(req.url);
   const limit = Math.min(parseInt(url.searchParams.get("limit") ?? "20", 10), 100);
 

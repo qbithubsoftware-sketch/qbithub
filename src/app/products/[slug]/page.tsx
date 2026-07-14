@@ -91,7 +91,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
       thumbnailUrl: m.thumbnailUrl ?? null, altText: m.altText ?? null,
       provider: m.provider ?? null, externalId: m.externalId ?? null,
     })),
-    sku: product.sku,
+    sku: null, // SECURITY: SKU is internal-inventory — never expose on public product page.
     startingPrice: product.startingPrice,
     badgeLabel: product.badgeLabel,
     isFeatured: product.isFeatured,

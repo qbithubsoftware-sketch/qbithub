@@ -4,7 +4,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireAuth } from "@/lib/notifications/auth";
+import { requireEngineerOrAdmin } from "@/lib/notifications/auth";
 import type { OverallTestStatus, TestStatus, TestType, TestCategory } from "@/lib/test-center/types";
 import { safeJsonParse, safeJsonArray } from "@/lib/utils/safe-json";
 
@@ -15,7 +15,7 @@ interface Params {
 export async function GET(req: NextRequest, { params }: Params) {
   try {
 
-  const session = await requireAuth();
+  const session = await requireEngineerOrAdmin();
   if (!session) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }

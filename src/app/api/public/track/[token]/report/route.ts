@@ -70,20 +70,25 @@ export async function GET(req: NextRequest, { params }: Params) {
       jobNumber: wo.jobNumber,
       type: wo.type,
       status: wo.status,
-      customerName: wo.customer.name,
-      companyName: wo.customer.companyName,
-      address: wo.customer.addressLine,
+      // SECURITY: Don't expose customer name, company, or full address to token-holders.
+      // Tokens are forwardable. Customers see their own data at /account.
+      customerName: null,
+      companyName: null,
+      address: null,
       productName: wo.asset?.productName ?? null,
       model: wo.asset?.model ?? null,
-      serialNumber: wo.asset?.serialNumber ?? null,
-      warrantyStatus: wo.asset?.warrantyStatus ?? null,
-      warrantyExpiry: wo.asset?.warrantyExpiry?.toISOString() ?? null,
+      // SECURITY: Don't expose serial number or warranty to token-holders.
+      serialNumber: null,
+      warrantyStatus: null,
+      warrantyExpiry: null,
       scheduledDate: wo.scheduledDate.toISOString(),
       scheduledTime: wo.scheduledTime,
       completedAt: wo.completedAt?.toISOString() ?? null,
-      engineerName: wo.assignedEngineer?.name ?? null,
-      signatureUrl: wo.signatures[0]?.storagePath ?? null,
-      signerName: wo.signatures[0]?.signerName ?? null,
+      // SECURITY: Don't expose engineer name — only show "Engineer assigned" status.
+      engineerName: wo.assignedEngineer ? "Engineer assigned" : null,
+      // SECURITY: Don't expose signature URL — it's a customer PII artifact.
+      signatureUrl: null,
+      signerName: null,
       signedAt: wo.signatures[0]?.signedAt.toISOString() ?? null,
     },
   });

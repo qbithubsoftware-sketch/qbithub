@@ -94,8 +94,8 @@ export async function GET(req: NextRequest, { params }: Params) {
           thumbnailUrl: m.thumbnailUrl ?? null, altText: m.altText ?? null,
           provider: m.provider ?? null, externalId: m.externalId ?? null,
         })),
-        sku: product.sku,
-        serialPattern: product.serialPattern,
+        // SECURITY: sku + serialPattern are internal-inventory fields — never expose to public.
+        // (Removed from public response per V3 security hardening.)
         startingPrice: product.startingPrice,
         badgeLabel: product.badgeLabel,
         isFeatured: product.isFeatured,

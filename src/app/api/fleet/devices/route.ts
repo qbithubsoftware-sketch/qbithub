@@ -5,14 +5,14 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/notifications/auth";
+import { requireAdmin } from "@/lib/notifications/auth";
 import { getFleetDevices } from "@/lib/fleet/queries";
 import type { FleetFilters, FleetDeviceStatus } from "@/lib/fleet/types";
 
 export async function GET(req: NextRequest) {
   try {
 
-  const session = await requireAuth();
+  const session = await requireAdmin();
   if (!session) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }

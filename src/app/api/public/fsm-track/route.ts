@@ -67,13 +67,14 @@ export const POST = apiHandler(async (req: NextRequest) => {
     status: wo.status,
     scheduledDate: wo.scheduledDate.toISOString(),
     scheduledTime: wo.scheduledTime,
-    engineerName: wo.assignedEngineer?.name ?? null,
+    // SECURITY: Don't expose engineer name publicly — only show "Engineer assigned" status.
+    engineerAssigned: !!wo.assignedEngineer,
     engineerPhone: wo.assignedEngineer ? "+91 90000 00000" : null, // masked
     productName: wo.asset?.productName ?? null,
     model: wo.asset?.model ?? null,
-    serialNumber: wo.asset?.serialNumber ?? null,
-    warrantyStatus: wo.asset?.warrantyStatus ?? null,
-    warrantyExpiry: wo.asset?.warrantyExpiry?.toISOString() ?? null,
+    // SECURITY: Don't expose serial number, warranty status, or warranty expiry to public.
+    // These are customer-PII fields and tracking codes are forwardable. Customers
+    // should log in to /account to see their full warranty details.
     milestones,
     timeline,
   });

@@ -1,27 +1,26 @@
 /**
  * GET /api/account/devices — list the authenticated user's registered devices.
  *
+ * SECURITY: Customer-scoped. Uses requireCustomer() to ensure only
+ * public_customer role can call this. The session user's email is matched
+ * against FSMCustomer.email — Customer A can never see Customer B's devices.
+ *
  * Returns: { devices: [{ id, productName, model, serialNumber, purchaseDate,
  *   warrantyStatus, warrantyExpiry, firmwareVersion, driverVersion, qrCode }] }
  *
- * Data source: joins the existing FSMCustomerAsset (customer-owned device
- * record) with DeviceWarranty (warranty details). The user's email from the
- * NextAuth session is matched against FSMCustomer.email.
- *
- * If the user has no FSMCustomer row yet (i.e. a brand-new public_customer
- * who has never had a work order), returns an empty array — the UI shows
- * an empty-state CTA.
+ * If the customer has never purchased a QBIT product (no FSMCustomer row +
+ * no FSMCustomerAsset rows), returns an empty array — the UI shows the
+ * "No registered QBIT products found" empty-state CTA.
  */
 
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth/options";
+import { requireCustomer } from "@/lib/notifications/auth";
 import { db } from "@/lib/db";
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
+  const session = await requireCustomer();
   if (!session?.user?.email) {
-    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    return NextResponse.json({ error: "Customer authentication required" }, { status: 401 });
   }
 
   // Find the FSMCustomer by email — this is the customer-asset owner.

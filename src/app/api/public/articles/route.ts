@@ -3,6 +3,9 @@
  *
  * GET: list knowledge articles with public visibility.
  * No authentication required.
+ *
+ * SECURITY: Only returns articles whose publishedAt date is in the past
+ * (i.e. actually published). Drafts/future-dated articles are hidden.
  */
 
 import { NextResponse } from "next/server";
@@ -11,11 +14,11 @@ import { db } from "@/lib/db";
 export async function GET() {
   try {
 
-  // Only return articles from public categories.
+  // SECURITY: Only return published articles (publishedAt <= now).
+  // Future-dated or null publishedAt articles are hidden from public.
   const articles = await db.knowledgeArticle.findMany({
     where: {
-      // In production, add a visibility filter on the article itself.
-      // For now, we return all published articles.
+      publishedAt: { lte: new Date() },
     },
     select: {
       id: true,

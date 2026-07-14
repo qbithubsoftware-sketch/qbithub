@@ -49,6 +49,13 @@ export function CustomerDashboard() {
       router.push("/accounts/login?from=/account");
       return;
     }
+    // SECURITY: Staff (admin/engineer/support) should not see the customer dashboard.
+    // Redirect them to /portal where their role-appropriate screens live.
+    const role = (session?.user?.role as string) ?? null;
+    if (role && role !== "public_customer") {
+      router.push("/portal");
+      return;
+    }
     void (async () => {
       try {
         const res = await fetch("/api/account/devices", { cache: "no-store" });

@@ -132,14 +132,19 @@ export async function GET(req: NextRequest, { params }: Params) {
     status: wo.status as WorkOrderStatus,
     statusLabel: WORK_ORDER_STATUS_LABELS[wo.status as WorkOrderStatus] ?? wo.status,
 
-    customerName: wo.customer.name,
-    companyName: wo.customer.companyName,
+    // SECURITY: Don't expose customer name or company name to token-holders.
+    // Tokens are forwardable via email/WhatsApp — treat as semi-public.
+    // Customers see their own info at /account after login.
+    customerName: null,
+    companyName: null,
 
     productName: wo.asset?.productName ?? null,
     model: wo.asset?.model ?? null,
-    serialNumber: wo.asset?.serialNumber ?? null,
-    warrantyStatus: wo.asset?.warrantyStatus ?? null,
-    warrantyExpiry: wo.asset?.warrantyExpiry?.toISOString() ?? null,
+    // SECURITY: Don't expose serial number, warranty status, or warranty expiry
+    // to token-holders. These are customer-PII fields.
+    serialNumber: null,
+    warrantyStatus: null,
+    warrantyExpiry: null,
     firmwareVersion: wo.asset?.firmwareVersion ?? null,
     driverVersion: wo.asset?.driverVersion ?? null,
 
@@ -147,10 +152,11 @@ export async function GET(req: NextRequest, { params }: Params) {
     scheduledTime: wo.scheduledTime,
     estimatedMinutes: wo.estimatedMinutes,
 
-    engineerName: wo.assignedEngineer?.name ?? null,
-    engineerPhone: wo.assignedEngineer ? maskPhone(wo.assignedEngineer.email ? "+91 90000 00000" : "") : null,
-    engineerInitials: getInitials(wo.assignedEngineer?.name ?? null),
-    engineerPhotoUrl: wo.assignedEngineer?.image ?? null,
+    // SECURITY: Don't expose engineer name/photo — only show initials + "assigned" status.
+    engineerName: wo.assignedEngineer ? "Engineer assigned" : null,
+    engineerPhone: wo.assignedEngineer ? maskPhone("+91 90000 00000") : null,
+    engineerInitials: wo.assignedEngineer ? "QBIT" : null,
+    engineerPhotoUrl: null,
 
     supportPhone: "1800-123-4567",
     supportEmail: "support@qbithub.com",
