@@ -115,7 +115,14 @@ export function LoginPage() {
                 }
                 const session = await getSession();
                 const role = session?.user?.role as Role | undefined;
-                navigate(role ? homeScreenForRole(role) : "home");
+                // V3 architecture: post-login, hard-navigate to /portal which mounts
+                // the Zustand app shell, then set the initial screen for the role.
+                if (typeof window !== "undefined") {
+                  if (role) navigate(homeScreenForRole(role));
+                  window.location.href = "/portal";
+                } else {
+                  navigate(role ? homeScreenForRole(role) : "home");
+                }
               }}
             >
               {/* Error banner */}
