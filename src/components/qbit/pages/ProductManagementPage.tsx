@@ -114,7 +114,9 @@ export function ProductManagementPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [showInactive, setShowInactive] = useState(false);
+  // Filter: "all" (default — admin sees everything), "active", "inactive"
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const showInactive = statusFilter !== "active";
 
   // Dialog state
   const [showCreateEdit, setShowCreateEdit] = useState(false);
@@ -139,17 +141,21 @@ export function ProductManagementPage() {
     try {
       const params = new URLSearchParams();
       if (search.trim()) params.set("search", search.trim());
-      if (showInactive) params.set("includeInactive", "true");
+      // "all" and "inactive" both need includeInactive=true; only "active" hides them
+      if (statusFilter !== "active") params.set("includeInactive", "true");
       const res = await fetch(`/api/admin/products?${params}`, { cache: "no-store" });
       if (!res.ok) throw new Error("Failed");
       const data = await res.json();
-      setProducts(data.items ?? []);
+      // Client-side filter for "inactive" only (API returns all when includeInactive=true)
+      const items = data.items ?? [];
+      const filtered = statusFilter === "inactive" ? items.filter((p: Product) => !p.isActive) : items;
+      setProducts(filtered);
     } catch {
       toast({ title: "Failed to load products", variant: "destructive" });
     } finally {
       setLoading(false);
     }
-  }, [search, showInactive, toast]);
+  }, [search, statusFilter, toast]);
 
   useEffect(() => {
     void fetchProducts();
@@ -391,18 +397,33 @@ export function ProductManagementPage() {
               placeholder="Search by name, model, brand…"
               className="flex-1 border-0 bg-transparent px-2 py-2 text-sm focus:outline-none"
             />
-            <button
-              type="button"
-              onClick={() => setShowInactive((v) => !v)}
-              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                showInactive
-                  ? "bg-qbit-warning/15 text-qbit-warning"
-                  : "bg-qbit-surface-container-high text-qbit-on-surface-variant hover:text-qbit-on-surface"
-              }`}
-            >
-              <Icon name={showInactive ? "visibility" : "visibility_off"} className="text-[16px]" />
-              {showInactive ? "Showing Inactive" : "Show Inactive"}
-            </button>
+            {/* 3-way status filter: All / Active / Inactive. Default = All so admin sees everything. */}
+            <div className="flex items-center gap-1 rounded-lg border border-qbit-outline-variant bg-qbit-surface-container-low p-1">
+              {([
+                { key: "all", label: "All", icon: "inventory_2", count: products.length },
+                { key: "active", label: "Active", icon: "check_circle", count: products.filter((p) => p.isActive).length },
+                { key: "inactive", label: "Inactive", icon: "block", count: products.filter((p) => !p.isActive).length },
+              ] as const).map((opt) => (
+                <button
+                  key={opt.key}
+                  type="button"
+                  onClick={() => setStatusFilter(opt.key)}
+                  className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
+                    statusFilter === opt.key
+                      ? opt.key === "active"
+                        ? "bg-qbit-success/15 text-qbit-success"
+                        : opt.key === "inactive"
+                          ? "bg-qbit-warning/15 text-qbit-warning"
+                          : "bg-qbit-primary text-qbit-on-primary"
+                      : "text-qbit-on-surface-variant hover:text-qbit-on-surface"
+                  }`}
+                >
+                  <Icon name={opt.icon} className="text-[14px]" />
+                  {opt.label}
+                  <span className="ml-0.5 rounded-full bg-black/10 px-1.5 text-[10px] font-bold">{opt.count}</span>
+                </button>
+              ))}
+            </div>
             {selected.size > 0 && (
               <>
                 <QbitButton variant="danger" size="sm" icon="delete" disabled={bulkBusy} onClick={handleBulkDelete}>
