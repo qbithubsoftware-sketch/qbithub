@@ -73,8 +73,8 @@ export async function POST(req: NextRequest) {
     let unknownCount = 0;
 
     for (const raw of body.devices) {
-      const vendorId = (raw.vendorId || "").toUpperCase();
-      const productIdCode = (raw.productId || "").toUpperCase();
+      const vendorId = (raw.vendorId || "").toUpperCase().replace(/^0X/, "");
+      const productIdCode = (raw.productId || "").toUpperCase().replace(/^0X/, "");
       const serialNumber = raw.serialNumber || null;
       const deviceName = raw.productName || "USB Device";
       const manufacturer = raw.manufacturerName || null;
