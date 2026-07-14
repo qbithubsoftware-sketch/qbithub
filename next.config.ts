@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   // Production hardening: do NOT ignore build errors
   typescript: {
     ignoreBuildErrors: false,
+    // Exclude ad-hoc scripts/ folder from production type-checking.
+    // Those are one-off DB seed/migration scripts, not part of the app bundle.
+    tsconfigPath: "./tsconfig.build.json",
   },
   // Enable React strict mode for production safety
   reactStrictMode: true,
@@ -49,6 +52,9 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "api.qrserver.com" },
       { protocol: "https", hostname: "hub.qbit.com" },
+      { protocol: "https", hostname: "images.unsplash.com" },
+      { protocol: "https", hostname: "img.youtube.com" },
+      { protocol: "https", hostname: "i.ytimg.com" },
     ],
   },
   // Compress responses
