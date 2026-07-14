@@ -9,6 +9,7 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { ProductCatalogClient } from "@/components/qbit/catalog/ProductCatalogClient";
+import { PublicLayout } from "@/components/qbit/public/PublicLayout";
 
 export const dynamic = "force-dynamic";
 
@@ -56,31 +57,21 @@ export default async function ProductsPage({
   });
 
   return (
-    <div className="min-h-screen bg-qbit-surface">
-      {/* Top bar — back to Hub */}
-      <header className="sticky top-0 z-10 border-b border-qbit-outline-variant/50 bg-qbit-surface/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3">
-          <Link
-            href="/"
-            className="flex items-center gap-2 text-sm font-medium text-qbit-on-surface-variant hover:text-qbit-primary"
-          >
-            <span className="material-symbols-outlined text-[20px]">arrow_back</span>
-            Back to Hub
-          </Link>
+    <PublicLayout>
+      <div className="mx-auto max-w-7xl px-4 py-8 md:px-8">
+        {/* Breadcrumb */}
+        <div className="mb-6 flex items-center gap-2 text-xs text-qbit-on-surface-variant">
+          <Link href="/" className="hover:text-qbit-primary">Home</Link>
           <span className="text-qbit-outline-variant">/</span>
-          <span className="text-sm font-semibold text-qbit-on-surface">Products</span>
+          <span className="text-qbit-on-surface">Products</span>
           {category && (
             <>
               <span className="text-qbit-outline-variant">/</span>
-              <span className="text-sm font-semibold capitalize text-qbit-primary">
-                {category.replace(/-/g, " ")}
-              </span>
+              <span className="font-semibold capitalize text-qbit-primary">{category.replace(/-/g, " ")}</span>
             </>
           )}
         </div>
-      </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-8">
         {/* Page title */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold tracking-tight text-qbit-on-surface md:text-4xl">
@@ -121,8 +112,8 @@ export default async function ProductsPage({
 
         {/* Product grid */}
         <ProductCatalogClient products={products} activeCategory={category ?? null} />
-      </main>
-    </div>
+      </div>
+    </PublicLayout>
   );
 }
 

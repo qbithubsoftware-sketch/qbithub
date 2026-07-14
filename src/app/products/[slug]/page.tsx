@@ -11,6 +11,7 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { ProductDetailClient } from "@/components/qbit/catalog/ProductDetailClient";
+import { PublicLayout } from "@/components/qbit/public/PublicLayout";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -122,7 +123,11 @@ export default async function ProductDetailPage({ params }: PageProps) {
     relatedProducts: product.relatedProducts.map((r) => r.related),
   };
 
-  return <ProductDetailClient product={shaped} />;
+  return (
+    <PublicLayout>
+      <ProductDetailClient product={shaped} />
+    </PublicLayout>
+  );
 }
 
 export async function generateMetadata({ params }: PageProps) {

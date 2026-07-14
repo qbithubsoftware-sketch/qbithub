@@ -41,7 +41,12 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         navigate("login");
       }
     }
-  }, [status, isPublic, current, navigate]);
+    // Authenticated user lands on /portal — send them to their role's home screen
+    // instead of leaving them on the "login" screen id.
+    if (status === "authenticated" && role && current === "login") {
+      navigate(roleHomeScreen(role));
+    }
+  }, [status, isPublic, current, navigate, role]);
 
   // Loading state — Stitch-styled skeleton
   if (status === "loading") {
