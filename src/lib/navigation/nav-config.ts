@@ -25,6 +25,7 @@ export const ENGINEER_FOOTER: NavItem[] = [
 export const ADMIN_NAV: NavItem[] = [
   { label: "Dashboard", icon: "dashboard", screen: "home" },
   { label: "Products", icon: "inventory_2", screen: "product-management" },
+  { label: "AI Purchase Import", icon: "auto_awesome", screen: "ai-purchase-center", badge: "NEW" },
   { label: "Drivers", icon: "local_shipping", screen: "driver-download-center" },
   { label: "Manuals", icon: "menu_book", screen: "installation-center" },
   { label: "Videos", icon: "videocam", screen: "video-training-center" },

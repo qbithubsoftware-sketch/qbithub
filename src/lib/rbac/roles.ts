@@ -100,6 +100,7 @@ export const SCREEN_PERMISSIONS: Record<ScreenId, Role[]> = {
   "user-role-management": ["super_administrator", "administrator"],
   "product-management": ["super_administrator", "administrator"],
   "system-settings": ["super_administrator", "administrator"],
+  "ai-purchase-center": ["super_administrator", "administrator"],
 
   // Installation engineer + admin
   "engineer-dashboard": ["administrator", "installation_engineer"],

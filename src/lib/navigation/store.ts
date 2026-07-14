@@ -32,6 +32,7 @@ export type ScreenId =
   | "user-role-management"
   | "product-management"
   | "system-settings"
+  | "ai-purchase-center"
   // Search
   | "universal-search-command-center"
   | "universal-search-mobile"
