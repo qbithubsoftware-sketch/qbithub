@@ -172,6 +172,9 @@ export const SCREEN_PERMISSIONS: Record<ScreenId, Role[]> = {
   // Dr. QBIT Test Center — engineers + admin only (no sales access)
   "dr-qbit-test-center": ["administrator", "installation_engineer"],
 
+  // Enterprise Fleet Manager — admin only (full fleet visibility)
+  "fleet-manager": ["administrator"],
+
   // Notification Automation Engine — admin-only management screens.
   "notification-center": ["administrator", "installation_engineer", "support_engineer"],
   "notification-template-manager": ["administrator"],
