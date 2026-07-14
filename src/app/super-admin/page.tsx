@@ -27,7 +27,7 @@ export default async function SuperAdminEntryPage() {
   const role = (session?.user?.role as string | undefined) ?? null;
 
   if (!session || !role) {
-    redirect("/accounts/login?from=/super-admin");
+    redirect("/enterprise/login?from=/super-admin");
   }
 
   if (role !== "super_administrator") {

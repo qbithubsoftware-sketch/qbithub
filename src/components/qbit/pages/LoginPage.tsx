@@ -6,7 +6,7 @@ import { Icon } from "../primitives/Icon";
 import { QbitButton } from "../primitives/QbitButton";
 import { ScreenSwitcher } from "../shells/ScreenSwitcher";
 import { useNavigation } from "@/lib/navigation/store";
-import { homeScreenForRole, type Role } from "@/lib/rbac/roles";
+import { homeScreenForRole, portalRouteForRole, type Role } from "@/lib/rbac/roles";
 
 type LoginState = "idle" | "loading" | "error";
 
@@ -115,11 +115,21 @@ export function LoginPage() {
                 }
                 const session = await getSession();
                 const role = session?.user?.role as Role | undefined;
-                // V3 architecture: post-login, hard-navigate to /portal which mounts
-                // the Zustand app shell, then set the initial screen for the role.
+                // V3 Enterprise architecture: post-login, redirect each role
+                // to its dedicated portal URL via portalRouteForRole().
+                //   super_administrator → /super-admin
+                //   administrator       → /admin
+                //   installation_engineer → /engineer
+                //   support_engineer    → /support-portal
+                //   sales/dealer/viewer → /portal
+                //   public_customer     → /customer (shouldn't happen here, but safe)
                 if (typeof window !== "undefined") {
-                  if (role) navigate(homeScreenForRole(role));
-                  window.location.href = "/portal";
+                  if (role) {
+                    navigate(homeScreenForRole(role));
+                    window.location.href = portalRouteForRole(role);
+                  } else {
+                    window.location.href = "/enterprise/login";
+                  }
                 } else {
                   navigate(role ? homeScreenForRole(role) : "home");
                 }

@@ -71,9 +71,13 @@ export const authOptions: NextAuthOptions = {
   // JWT strategy — no database session table required (works with SQLite).
   session: { strategy: "jwt" },
   pages: {
-    signIn: "/accounts/login",
-    // We don't render a separate error page — the login screen handles it.
-    error: "/accounts/login",
+    // V3: Two independent login pages.
+    // - /accounts/login    → Customer Login (Mobile Number + Password)
+    // - /enterprise/login  → Enterprise/Staff Login (Corporate Email + Password)
+    // NextAuth's default signIn page is /enterprise/login (staff). The customer
+    // login page explicitly navigates to /accounts/login for customers.
+    signIn: "/enterprise/login",
+    error: "/enterprise/login",
   },
   providers: [
     CredentialsProvider({

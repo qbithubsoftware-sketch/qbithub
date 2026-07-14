@@ -25,7 +25,7 @@ export default async function SupportPortalEntryPage() {
   const role = (session?.user?.role as string | undefined) ?? null;
 
   if (!session || !role) {
-    redirect("/accounts/login?from=/support-portal");
+    redirect("/enterprise/login?from=/support-portal");
   }
 
   if (role !== "support_engineer") {

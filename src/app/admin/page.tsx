@@ -22,7 +22,7 @@ export default async function AdminEntryPage() {
   const role = (session?.user?.role as string | undefined) ?? null;
 
   if (!session || !role) {
-    redirect("/accounts/login?from=/admin");
+    redirect("/enterprise/login?from=/admin");
   }
 
   if (role !== "administrator") {

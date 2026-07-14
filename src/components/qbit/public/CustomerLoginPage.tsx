@@ -31,14 +31,12 @@ import { signIn, getSession } from "next-auth/react";
 import { Icon } from "@/components/qbit/primitives/Icon";
 import { QbitButton } from "@/components/qbit/primitives/QbitButton";
 import { useRouter } from "next/navigation";
-import { homeScreenForRole, portalRouteForRole, type Role } from "@/lib/rbac/roles";
-import { useNavigation } from "@/lib/navigation/store";
+import { type Role } from "@/lib/rbac/roles";
 
 type LoginState = "idle" | "loading" | "error";
 
 export function CustomerLoginPage() {
   const router = useRouter();
-  const navigate = useNavigation((s) => s.navigate);
   const [mobile, setMobile] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -115,24 +113,14 @@ export function CustomerLoginPage() {
     const role = session?.user?.role as Role | undefined;
 
     if (typeof window !== "undefined") {
-      if (role) {
-        // V3: redirect every role to its dedicated portal URL.
-        // portalRouteForRole() returns:
-        //   public_customer → /customer
-        //   installation_engineer → /engineer
-        //   support_engineer → /support-portal
-        //   administrator → /admin
-        //   super_administrator → /super-admin
-        //   sales_executive/dealer/viewer → /portal
-        const targetRoute = portalRouteForRole(role);
-        // For staff roles that go to /portal, set the Zustand screen first
-        // so they land on the right dashboard.
-        if (targetRoute === "/portal" || targetRoute === "/admin" ||
-            targetRoute === "/engineer" || targetRoute === "/super-admin" ||
-            targetRoute === "/support-portal") {
-          navigate(homeScreenForRole(role));
-        }
-        window.location.href = targetRoute;
+      if (role === "public_customer") {
+        // Customer → /customer dashboard
+        window.location.href = "/customer";
+      } else if (role) {
+        // Staff (super_admin/admin/engineer/support) should NOT log in here.
+        // Redirect them to the Enterprise Login page with a message.
+        // This keeps the Customer Login and Enterprise Login fully separated.
+        window.location.href = "/enterprise/login?error=staff_use_enterprise_login";
       } else {
         // No role — fallback to customer dashboard
         window.location.href = "/customer";

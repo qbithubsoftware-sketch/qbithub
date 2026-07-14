@@ -29,14 +29,14 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const role = (session?.user?.role as Role | undefined) ?? null;
   const isPublic = canAccessScreen(null, current); // empty roles = public
 
-  // If unauthenticated and trying to view a protected screen, bounce to /accounts/login.
-  // (V3 architecture: login is now a real Next.js route at /accounts/login, not an in-app screen.)
+  // If unauthenticated and trying to view a protected screen, bounce to
+  // /enterprise/login — the Enterprise Portal login (for staff).
+  // The Customer Login at /accounts/login is separate and only for customers.
   useEffect(() => {
     if (status === "loading") return;
     if (status === "unauthenticated" && !isPublic && current !== "login") {
-      // Use a hard navigation to /accounts/login so the public portal shell takes over.
       if (typeof window !== "undefined") {
-        window.location.href = "/accounts/login?from=" + encodeURIComponent(window.location.pathname);
+        window.location.href = "/enterprise/login?from=" + encodeURIComponent(window.location.pathname);
       } else {
         navigate("login");
       }

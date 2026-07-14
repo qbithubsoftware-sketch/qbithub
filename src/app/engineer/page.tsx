@@ -21,7 +21,7 @@ export default async function EngineerEntryPage() {
   const role = (session?.user?.role as string | undefined) ?? null;
 
   if (!session || !role) {
-    redirect("/accounts/login?from=/engineer");
+    redirect("/enterprise/login?from=/engineer");
   }
 
   if (!ENGINEER_ROLES.includes(role)) {
