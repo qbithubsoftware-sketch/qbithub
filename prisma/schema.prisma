@@ -1843,6 +1843,7 @@ model DevicePassport {
   firmwareInfo    FirmwareInformation?
   firmwareHistory FirmwareHistory[]
   diagnosticSessions DiagnosticSession[]
+  testSessions    DeviceTestSession[]
 
   @@index([productId])
   @@index([serialNumber])
@@ -2231,4 +2232,117 @@ model HealthScore {
 
   @@index([sessionId])
   @@index([overallGrade])
+}
+
+// =====================================================
+// Dr. QBIT Test Center — Version 2
+// =====================================================
+//
+// Professional testing center where installation engineers verify
+// that every connected device is working correctly before completing the job.
+//
+// SAFETY: The Test Center NEVER modifies customer data. It only validates
+// hardware functionality. No auto firmware updates. No auto driver installs.
+//
+// Reuses existing: DevicePassport, QbitProduct, DiagnosticSession (optional)
+
+/// One test session — a full validation suite run on a device passport.
+model DeviceTestSession {
+  id              String   @id @default(cuid())
+  sessionToken    String   @unique
+  passportId      String
+  passport        DevicePassport @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  // Engineer context
+  engineerId      String?
+  engineerName    String?
+  workOrderId     String?
+  // Test metadata
+  deviceType      String                          // "thermal_printer" | "barcode_scanner" | etc.
+  deviceName      String?
+  model           String?
+  // Overall results
+  totalTests      Int      @default(0)
+  passedCount     Int      @default(0)
+  failedCount     Int      @default(0)
+  warningCount    Int      @default(0)
+  skippedCount    Int      @default(0)
+  notSupportedCount Int    @default(0)
+  overallScore    Int      @default(0)            // 0-100
+  overallStatus   String   @default("pending")    // "pending" | "passed" | "failed" | "partial"
+  // Timing
+  startedAt       DateTime @default(now())
+  completedAt     DateTime?
+  scanDurationMs  Int?
+  // Report
+  reportId        String?                         // TestReport.id (generated after completion)
+  // Metadata
+  createdAt       DateTime @default(now())
+
+  testResults     TestResult[]
+  report          TestReport?
+
+  @@index([passportId])
+  @@index([engineerId])
+  @@index([overallStatus])
+  @@index([startedAt])
+}
+
+/// Individual test result — one per test type executed.
+model TestResult {
+  id              String   @id @default(cuid())
+  sessionId       String
+  session         DeviceTestSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  // Test identification
+  testType        String                          // "test_print" | "alignment_test" | "paper_feed_test" | etc.
+  testCategory    String                          // "printer" | "scanner" | "cash_drawer" | "display" | "usb" | "network" | "communication"
+  testName        String                          // human-readable name
+  // Result
+  status          String   @default("pending")    // "passed" | "warning" | "failed" | "not_supported" | "skipped" | "pending"
+  duration        Int?                            // milliseconds
+  message         String?                         // result message
+  details         String?                         // JSON: detailed test output
+  // Recommendations (if test failed/warning)
+  possibleCause   String?
+  kbArticleUrl    String?
+  recommendedAction String?
+  // Timestamps
+  startedAt       DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime @default(now())
+
+  @@index([sessionId])
+  @@index([testCategory])
+  @@index([status])
+  @@index([testType])
+}
+
+/// Generated PDF test report — metadata only (PDF generated client-side via print).
+model TestReport {
+  id              String   @id @default(cuid())
+  reportNumber    String   @unique
+  sessionId       String   @unique
+  session         DeviceTestSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  // Report content (denormalized for quick access)
+  customerName    String?
+  companyName     String?
+  engineerName    String?
+  deviceName      String?
+  model           String?
+  serialNumber    String?
+  // Summary
+  overallScore    Int
+  overallStatus   String
+  passedCount     Int
+  failedCount     Int
+  warningCount    Int
+  totalTests      Int
+  // Report metadata
+  generatedAt     DateTime @default(now())
+  generatedById   String?
+  generatedByName String?
+  // Storage
+  pdfStoragePath  String?                         // if server-side PDF generation is added later
+
+  @@index([sessionId])
+  @@index([generatedAt])
 }

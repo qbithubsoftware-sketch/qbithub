@@ -55,6 +55,8 @@ export type ScreenId =
   | "dr-qbit-firmware"
   // Dr. QBIT AI Diagnostics Engine — Version 2
   | "dr-qbit-diagnostics"
+  // Dr. QBIT Test Center — Version 2
+  | "dr-qbit-test-center"
   // Notification Automation Engine — Version 2
   | "notification-center"
   | "notification-template-manager"
