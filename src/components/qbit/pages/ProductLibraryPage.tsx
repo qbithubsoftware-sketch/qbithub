@@ -21,6 +21,7 @@ import {
 
 interface CategoryCardData {
   name: string;
+  slug: string;
   count: string;
   icon: string;
   iconColor: string;
@@ -58,6 +59,7 @@ interface InventoryProduct {
 const CATEGORIES: CategoryCardData[] = [
   {
     name: "Windows POS",
+    slug: "windows-pos",
     count: "12 Products",
     icon: "desktop_windows",
     iconColor: "text-qbit-primary",
@@ -66,6 +68,7 @@ const CATEGORIES: CategoryCardData[] = [
   },
   {
     name: "Android POS",
+    slug: "android-pos",
     count: "8 Products",
     icon: "phone_android",
     iconColor: "text-qbit-secondary",
@@ -74,6 +77,7 @@ const CATEGORIES: CategoryCardData[] = [
   },
   {
     name: "Thermal Printers",
+    slug: "thermal-printer",
     count: "15 Products",
     icon: "print",
     iconColor: "text-qbit-tertiary",
@@ -82,6 +86,7 @@ const CATEGORIES: CategoryCardData[] = [
   },
   {
     name: "Barcode Scanners",
+    slug: "barcode-scanner",
     count: "6 Products",
     icon: "barcode_scanner",
     iconColor: "text-qbit-primary",
@@ -90,6 +95,7 @@ const CATEGORIES: CategoryCardData[] = [
   },
   {
     name: "Accessories",
+    slug: "accessories",
     count: "24 Products",
     icon: "cable",
     iconColor: "text-qbit-secondary",
@@ -189,6 +195,7 @@ export function ProductLibraryPage() {
   const [searchValue, setSearchValue] = useState("");
   const [heroSearch, setHeroSearch] = useState("");
   const [copied, setCopied] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   const handleCopy = useCallback(() => {
     if (typeof navigator !== "undefined" && navigator.clipboard) {
@@ -266,28 +273,33 @@ export function ProductLibraryPage() {
           </div>
 
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-5 md:gap-6">
-            {CATEGORIES.map((cat) => (
-              <GlassCard
-                key={cat.name}
-                hover
-                className="group flex cursor-pointer flex-col items-center rounded-2xl border-qbit-outline-variant/50 p-6 text-center"
-              >
-                <div
-                  className={`mb-4 flex h-16 w-16 items-center justify-center rounded-2xl transition-colors ${cat.iconBg} ${cat.iconHoverBg}`}
+            {CATEGORIES.map((cat) => {
+              const isActive = activeCategory === cat.slug;
+              return (
+                <button
+                  key={cat.slug}
+                  type="button"
+                  onClick={() => setActiveCategory(isActive ? null : cat.slug)}
+                  className={`group flex cursor-pointer flex-col items-center rounded-2xl border p-6 text-center transition-all ${isActive ? "border-qbit-primary bg-qbit-primary/5 ring-2 ring-qbit-primary/20" : "border-qbit-outline-variant/50 hover:border-qbit-primary/30"}`}
                 >
-                  <Icon
-                    name={cat.icon}
-                    className={`text-[32px] ${cat.iconColor}`}
-                  />
-                </div>
-                <span className="text-sm font-semibold text-qbit-on-surface">
-                  {cat.name}
-                </span>
-                <span className="mt-1 text-xs uppercase tracking-wider text-qbit-outline">
-                  {cat.count}
-                </span>
-              </GlassCard>
-            ))}
+                  <div
+                    className={`mb-4 flex h-16 w-16 items-center justify-center rounded-2xl transition-colors ${cat.iconBg} ${cat.iconHoverBg}`}
+                  >
+                    <Icon
+                      name={cat.icon}
+                      className={`text-[32px] ${cat.iconColor}`}
+                      filled={isActive}
+                    />
+                  </div>
+                  <span className={`text-sm font-semibold ${isActive ? "text-qbit-primary" : "text-qbit-on-surface"}`}>
+                    {cat.name}
+                  </span>
+                  <span className="mt-1 text-xs uppercase tracking-wider text-qbit-outline">
+                    {cat.count}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </section>
 
@@ -405,7 +417,28 @@ export function ProductLibraryPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {INVENTORY.map((product) => (
+            {INVENTORY.filter((p) => {
+              if (!activeCategory) return true;
+              const slug = p.categoryBadge.toLowerCase().replace(/\s+/g, "-");
+              return slug === activeCategory || slug === activeCategory.replace(/-/g, " ");
+            }).length === 0 ? (
+              <div className="col-span-full rounded-xl border border-dashed border-qbit-outline-variant px-6 py-12 text-center">
+                <Icon name="inventory_2" className="mx-auto text-[40px] text-qbit-on-surface-variant/40" />
+                <p className="mt-3 text-sm font-medium text-qbit-on-surface">No products available in this category.</p>
+                <button
+                  type="button"
+                  onClick={() => setActiveCategory(null)}
+                  className="mt-3 text-sm font-semibold text-qbit-primary hover:underline"
+                >
+                  View all products
+                </button>
+              </div>
+            ) : (
+              INVENTORY.filter((p) => {
+                if (!activeCategory) return true;
+                const slug = p.categoryBadge.toLowerCase().replace(/\s+/g, "-");
+                return slug === activeCategory || slug === activeCategory.replace(/-/g, " ");
+              }).map((product) => (
               <article
                 key={product.name}
                 className="group flex flex-col overflow-hidden rounded-2xl border border-qbit-outline-variant bg-qbit-surface-container-lowest shadow-sm transition-all duration-300 hover:shadow-2xl"
@@ -492,8 +525,26 @@ export function ProductLibraryPage() {
                   </div>
                 </div>
               </article>
-            ))}
+              ))
+            )}
           </div>
+
+          {/* Active category indicator + clear button */}
+          {activeCategory && (
+            <div className="mt-6 flex items-center gap-3">
+              <span className="text-sm text-qbit-on-surface-variant">
+                Filtered by: <span className="font-semibold text-qbit-primary capitalize">{activeCategory.replace(/-/g, " ")}</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setActiveCategory(null)}
+                className="inline-flex items-center gap-1 rounded-full border border-qbit-outline-variant px-3 py-1 text-xs font-medium text-qbit-on-surface-variant hover:bg-qbit-surface-container-low"
+              >
+                <Icon name="close" className="text-[14px]" />
+                Clear filter
+              </button>
+            </div>
+          )}
         </section>
       </div>
 
