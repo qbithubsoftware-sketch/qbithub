@@ -92,12 +92,15 @@ export function ProductManagementPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [showInactive, setShowInactive] = useState(false);
 
   // Dialog state
   const [showCreateEdit, setShowCreateEdit] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
+  const [hardDeleteTarget, setHardDeleteTarget] = useState<Product | null>(null);
   const [saving, setSaving] = useState(false);
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -113,6 +116,7 @@ export function ProductManagementPage() {
     try {
       const params = new URLSearchParams();
       if (search.trim()) params.set("search", search.trim());
+      if (showInactive) params.set("includeInactive", "true");
       const res = await fetch(`/api/admin/products?${params}`, { cache: "no-store" });
       if (!res.ok) throw new Error("Failed");
       const data = await res.json();
@@ -122,7 +126,7 @@ export function ProductManagementPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, toast]);
+  }, [search, showInactive, toast]);
 
   useEffect(() => {
     void fetchProducts();
@@ -200,36 +204,102 @@ export function ProductManagementPage() {
     }
   };
 
-  // --- Delete handler ---
+  // --- Soft Delete handler (default — deactivates, reversible) ---
   const handleDeleteProduct = async () => {
     if (!deleteTarget) return;
     try {
       const res = await fetch(`/api/admin/products/${deleteTarget.id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Delete failed");
-      toast({ title: "Product deleted", description: deleteTarget.name });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error ?? "Delete failed");
+      }
+      toast({ title: "Product deleted", description: `${deleteTarget.name} moved to inactive list` });
       setDeleteTarget(null);
       void fetchProducts();
-    } catch {
-      toast({ title: "Delete failed", variant: "destructive" });
+    } catch (e) {
+      toast({ title: "Delete failed", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" });
     }
   };
 
-  // --- Bulk Delete ---
+  // --- Permanent Delete handler (irreversible — removes from DB) ---
+  const handleHardDeleteProduct = async () => {
+    if (!hardDeleteTarget) return;
+    try {
+      const res = await fetch(`/api/admin/products/${hardDeleteTarget.id}?hard=true`, { method: "DELETE" });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error ?? "Permanent delete failed");
+      }
+      toast({ title: "Product permanently deleted", description: hardDeleteTarget.name, variant: "destructive" });
+      setHardDeleteTarget(null);
+      void fetchProducts();
+    } catch (e) {
+      toast({ title: "Permanent delete failed", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" });
+    }
+  };
+
+  // --- Restore handler (reactivates a soft-deleted product) ---
+  const handleRestoreProduct = async (product: Product) => {
+    try {
+      const res = await fetch(`/api/admin/products/${product.id}/restore`, { method: "POST" });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error ?? "Restore failed");
+      }
+      toast({ title: "Product restored", description: `${product.name} is now active` });
+      void fetchProducts();
+    } catch (e) {
+      toast({ title: "Restore failed", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" });
+    }
+  };
+
+  // --- Bulk Delete (soft by default, hard when showInactive is on) ---
   const handleBulkDelete = async () => {
     if (selected.size === 0) return;
+    setBulkBusy(true);
     try {
-      const res = await fetch("/api/admin/products/bulk-delete", {
+      const hard = showInactive ? "?hard=true" : "";
+      const res = await fetch(`/api/admin/products/bulk-delete${hard}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids: Array.from(selected) }),
       });
-      if (!res.ok) throw new Error("Bulk delete failed");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error ?? "Bulk delete failed");
+      }
       const data = await res.json();
-      toast({ title: "Bulk delete complete", description: `${data.deactivated} products deactivated` });
+      const count = data.deleted ?? data.deactivated ?? 0;
+      const action = showInactive ? "permanently deleted" : "deactivated";
+      toast({ title: `Bulk ${action}`, description: `${count} products ${action}` });
       setSelected(new Set());
       void fetchProducts();
-    } catch {
-      toast({ title: "Bulk delete failed", variant: "destructive" });
+    } catch (e) {
+      toast({ title: "Bulk delete failed", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" });
+    } finally {
+      setBulkBusy(false);
+    }
+  };
+
+  // --- Bulk Restore (only relevant when showInactive is on) ---
+  const handleBulkRestore = async () => {
+    if (selected.size === 0) return;
+    setBulkBusy(true);
+    try {
+      const res = await fetch("/api/admin/products/bulk-restore", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: Array.from(selected) }),
+      });
+      if (!res.ok) throw new Error("Bulk restore failed");
+      const data = await res.json();
+      toast({ title: "Bulk restore complete", description: `${data.reactivated} products reactivated` });
+      setSelected(new Set());
+      void fetchProducts();
+    } catch (e) {
+      toast({ title: "Bulk restore failed", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" });
+    } finally {
+      setBulkBusy(false);
     }
   };
 
@@ -295,11 +365,28 @@ export function ProductManagementPage() {
               placeholder="Search by name, model, brand…"
               className="flex-1 border-0 bg-transparent px-2 py-2 text-sm focus:outline-none"
             />
+            <button
+              type="button"
+              onClick={() => setShowInactive((v) => !v)}
+              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                showInactive
+                  ? "bg-qbit-warning/15 text-qbit-warning"
+                  : "bg-qbit-surface-container-high text-qbit-on-surface-variant hover:text-qbit-on-surface"
+              }`}
+            >
+              <Icon name={showInactive ? "visibility" : "visibility_off"} className="text-[16px]" />
+              {showInactive ? "Showing Inactive" : "Show Inactive"}
+            </button>
             {selected.size > 0 && (
               <>
-                <QbitButton variant="danger" size="sm" icon="delete" onClick={handleBulkDelete}>
-                  Bulk Delete ({selected.size})
+                <QbitButton variant="danger" size="sm" icon="delete" disabled={bulkBusy} onClick={handleBulkDelete}>
+                  {showInactive ? `Permanently Delete (${selected.size})` : `Bulk Delete (${selected.size})`}
                 </QbitButton>
+                {showInactive && (
+                  <QbitButton variant="outline" size="sm" icon="restore" disabled={bulkBusy} onClick={handleBulkRestore}>
+                    Restore ({selected.size})
+                  </QbitButton>
+                )}
                 <button onClick={() => setSelected(new Set())} className="text-xs text-qbit-on-surface-variant hover:text-qbit-error">
                   Clear
                 </button>
@@ -372,22 +459,45 @@ export function ProductManagementPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          <button
-                            type="button"
-                            aria-label={`Edit ${product.name}`}
-                            onClick={() => handleEditProduct(product)}
-                            className="flex h-8 w-8 items-center justify-center rounded-lg text-qbit-on-surface-variant transition-colors hover:bg-qbit-surface-container-high"
-                          >
-                            <Icon name="edit" className="text-[20px]" />
-                          </button>
-                          <button
-                            type="button"
-                            aria-label={`Delete ${product.name}`}
-                            onClick={() => setDeleteTarget(product)}
-                            className="flex h-8 w-8 items-center justify-center rounded-lg text-qbit-error transition-colors hover:bg-qbit-error/10"
-                          >
-                            <Icon name="delete" className="text-[20px]" />
-                          </button>
+                          {showInactive && !product.isActive ? (
+                            <>
+                              <button
+                                type="button"
+                                aria-label={`Restore ${product.name}`}
+                                onClick={() => handleRestoreProduct(product)}
+                                className="flex h-8 w-8 items-center justify-center rounded-lg text-qbit-success transition-colors hover:bg-qbit-success/10"
+                              >
+                                <Icon name="restore" className="text-[20px]" />
+                              </button>
+                              <button
+                                type="button"
+                                aria-label={`Permanently delete ${product.name}`}
+                                onClick={() => setHardDeleteTarget(product)}
+                                className="flex h-8 w-8 items-center justify-center rounded-lg text-qbit-error transition-colors hover:bg-qbit-error/10"
+                              >
+                                <Icon name="delete_forever" className="text-[20px]" />
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                type="button"
+                                aria-label={`Edit ${product.name}`}
+                                onClick={() => handleEditProduct(product)}
+                                className="flex h-8 w-8 items-center justify-center rounded-lg text-qbit-on-surface-variant transition-colors hover:bg-qbit-surface-container-high"
+                              >
+                                <Icon name="edit" className="text-[20px]" />
+                              </button>
+                              <button
+                                type="button"
+                                aria-label={`Delete ${product.name}`}
+                                onClick={() => setDeleteTarget(product)}
+                                className="flex h-8 w-8 items-center justify-center rounded-lg text-qbit-error transition-colors hover:bg-qbit-error/10"
+                              >
+                                <Icon name="delete" className="text-[20px]" />
+                              </button>
+                            </>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -461,18 +571,39 @@ export function ProductManagementPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Delete Confirmation Dialog (Soft Delete — default) */}
       <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Delete Product</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete "{deleteTarget?.name}"? This will deactivate the product (soft delete). It can be reactivated later.
+              Are you sure you want to delete “{deleteTarget?.name}”? It will be moved to the inactive list and can be restored later from the “Show Inactive” view.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <QbitButton variant="ghost" onClick={() => setDeleteTarget(null)}>Cancel</QbitButton>
             <QbitButton variant="danger" icon="delete" onClick={handleDeleteProduct}>Delete</QbitButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Permanent Delete Confirmation Dialog (Irreversible) */}
+      <Dialog open={!!hardDeleteTarget} onOpenChange={(open) => !open && setHardDeleteTarget(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-qbit-error">Permanent Delete</DialogTitle>
+            <DialogDescription>
+              <span className="block">
+                Are you sure you want to <strong>permanently delete</strong> “{hardDeleteTarget?.name}”?
+              </span>
+              <span className="mt-2 block text-qbit-error">
+                This action is irreversible. The product and all its hardware signatures will be removed from the database.
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <QbitButton variant="ghost" onClick={() => setHardDeleteTarget(null)}>Cancel</QbitButton>
+            <QbitButton variant="danger" icon="delete_forever" onClick={handleHardDeleteProduct}>Permanently Delete</QbitButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

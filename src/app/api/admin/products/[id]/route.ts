@@ -76,12 +76,28 @@ export async function DELETE(req: NextRequest, { params }: Params) {
 
   try {
     const { id } = await params;
+    const url = new URL(req.url);
+    const hardDelete = url.searchParams.get("hard") === "true";
+
     const existing = await db.qbitProduct.findUnique({ where: { id } });
     if (!existing) return NextResponse.json({ error: "Product not found" }, { status: 404 });
 
-    // Soft delete: set isActive=false
+    if (hardDelete) {
+      // Permanent delete — first nullify nullable foreign-key references that
+      // don't have onDelete: Cascade, then delete the product (HardwareSignature
+      // has onDelete: Cascade and will be auto-removed).
+      await db.$transaction([
+        db.unknownDevice.updateMany({ where: { mappedProductId: id }, data: { mappedProductId: null, mappedAt: null, mappedBy: null, mappedByName: null } }),
+        db.devicePassport.updateMany({ where: { productId: id }, data: { productId: null } }),
+        db.firmwareCompatibility.updateMany({ where: { productId: id }, data: { productId: null } }),
+        db.qbitProduct.delete({ where: { id } }),
+      ]);
+      return NextResponse.json({ id, deleted: true, permanent: true, message: "Product permanently deleted" });
+    }
+
+    // Default: soft delete (deactivate). Reversible via /restore endpoint.
     await db.qbitProduct.update({ where: { id }, data: { isActive: false } });
-    return NextResponse.json({ id, deleted: true, message: "Product deactivated (soft delete)" });
+    return NextResponse.json({ id, deleted: true, permanent: false, message: "Product deactivated (soft delete)" });
   } catch (error) {
     console.error("[API ERROR] DELETE /api/admin/products/[id]:", error);
     return NextResponse.json({ error: "Internal server error", message: error instanceof Error ? error.message : "Unknown error" }, { status: 500 });

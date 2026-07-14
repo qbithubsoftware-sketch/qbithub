@@ -46,3 +46,36 @@ Stage Summary:
 - GitHub-to-Vercel auto-deploy is NOT yet active — user must install Vercel GitHub App from https://github.com/apps/vercel and grant access to the `qbithubsoftware-sketch/qbithub` repository. Once installed, every push to `main` will auto-deploy to Vercel.
 - Local CLI deploy path works as a fallback for future deploys (requires token).
 - Vercel token is used transiently per-call; not persisted in any config file.
+
+---
+Task ID: fix-product-delete-bug
+Agent: main
+Task: Fix product delete bug — products were showing as deleted but still appearing in the list.
+
+Work Log:
+- Diagnosed root cause: DELETE /api/admin/products/[id] was doing soft-delete (isActive=false), but GET /api/admin/products was NOT filtering by isActive=true. So deleted products kept showing in the list, giving the appearance that delete wasn't working.
+- Updated GET /api/admin/products to filter isActive=true by default, with ?includeInactive=true query param to opt into seeing inactive products.
+- Updated DELETE /api/admin/products/[id] to support ?hard=true query param for permanent deletion. Hard delete uses a transaction to nullify nullable foreign-key references (UnknownDevice.mappedProductId, DevicePassport.productId, FirmwareCompatibility.productId) before deleting the product (HardwareSignature cascades via onDelete: Cascade).
+- Updated bulk-delete endpoint similarly: ?hard=true for permanent bulk delete.
+- Added new POST /api/admin/products/[id]/restore endpoint to reactivate soft-deleted products.
+- Added new POST /api/admin/products/bulk-restore endpoint for bulk reactivation.
+- Updated ProductManagementPage.tsx frontend:
+  * Added "Show Inactive" toggle next to search bar — when ON, shows soft-deleted products with Restore + Permanent Delete (delete_forever icon) buttons.
+  * When toggle is OFF (default), only active products appear, so deleted products genuinely disappear from view.
+  * Bulk Delete button dynamically labels "Bulk Delete (soft)" or "Permanently Delete" based on view.
+  * Added "Restore" bulk action button when in Show Inactive mode.
+  * Split delete confirmation into two dialogs: soft-delete (default, reversible) and permanent delete (irreversible, with red warning).
+  * Accurate toast messages: "moved to inactive list" for soft delete, "permanently deleted" for hard delete.
+- Verified TypeScript (tsc --noEmit) and Next.js build both succeed with zero errors.
+
+Stage Summary:
+- Root cause: GET endpoint wasn't filtering inactive products. Fix: filter isActive=true by default.
+- New capabilities: soft-delete (default, reversible), hard-delete (?hard=true, irreversible), restore (single + bulk).
+- Files modified:
+  * src/app/api/admin/products/route.ts (GET — added includeInactive param)
+  * src/app/api/admin/products/[id]/route.ts (DELETE — added ?hard=true)
+  * src/app/api/admin/products/bulk-delete/route.ts (added ?hard=true)
+  * src/app/api/admin/products/[id]/restore/route.ts (NEW)
+  * src/app/api/admin/products/bulk-restore/route.ts (NEW)
+  * src/components/qbit/pages/ProductManagementPage.tsx (Show Inactive toggle, Restore, Permanent Delete, accurate UX)
+- Build status: ✓ Compiled successfully, no TS errors.

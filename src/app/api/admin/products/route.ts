@@ -16,8 +16,12 @@ export async function GET(req: NextRequest) {
     const url = new URL(req.url);
     const search = url.searchParams.get("search") ?? "";
     const limit = Math.min(parseInt(url.searchParams.get("limit") ?? "100", 10), 500);
+    // Default: hide soft-deleted (inactive) products.
+    // Pass ?includeInactive=true to see all products including deactivated ones.
+    const includeInactive = url.searchParams.get("includeInactive") === "true";
 
     const where: Record<string, unknown> = {};
+    if (!includeInactive) where.isActive = true;
     if (search) {
       where.OR = [
         { name: { contains: search, mode: "insensitive" } },
