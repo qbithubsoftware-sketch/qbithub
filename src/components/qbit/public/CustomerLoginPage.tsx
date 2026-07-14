@@ -68,9 +68,35 @@ export function CustomerLoginPage() {
     setLoginState("loading");
     setErrorMessage("");
 
-    // The NextAuth credentials provider accepts a generic "email" field that
-    // can be either an email address or a mobile number — the provider callback
-    // detects which and looks up the user accordingly.
+    // ===== STEP 1: Verify mobile number against the Purchase Database =====
+    // This denies login for mobile numbers not associated with any registered
+    // QBIT product purchase — BEFORE we even check the password.
+    try {
+      const verifyRes = await fetch("/api/auth/verify-customer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mobileNumber: mobile }),
+      });
+      const verifyData = await verifyRes.json();
+
+      if (!verifyData.verified) {
+        setLoginState("error");
+        // Show the specific reason message from the verification service.
+        setErrorMessage(
+          verifyData.message ??
+            "This mobile number is not associated with any registered QBIT product. Please contact your dealer or QBIT Support.",
+        );
+        return;
+      }
+    } catch {
+      setLoginState("error");
+      setErrorMessage("Could not verify your mobile number. Please try again.");
+      return;
+    }
+
+    // ===== STEP 2: Sign in with NextAuth (password check) =====
+    // The NextAuth authorize callback ALSO runs the Purchase DB verification
+    // (defense in depth) — so even if someone bypasses step 1, login still fails.
     const result = await signIn("credentials", {
       email: mobile, // provider treats 10-digit number as mobile
       password,
@@ -79,7 +105,9 @@ export function CustomerLoginPage() {
 
     if (result?.error) {
       setLoginState("error");
-      setErrorMessage("Invalid mobile number or password. Please try again.");
+      setErrorMessage(
+        "Invalid mobile number or password. If you are a registered customer, please verify your password or use OTP login.",
+      );
       return;
     }
 
