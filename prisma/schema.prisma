@@ -9,10 +9,11 @@ generator client {
 }
 
 datasource db {
-  // Local dev uses SQLite (file:./db/custom.db). Production (Vercel) overrides
-  // DATABASE_URL with a real Postgres connection string and the same schema
-  // works without changes (both providers support every type used below).
-  provider = "sqlite"
+  // Production uses PostgreSQL (Neon). Local dev can override with
+  // DATABASE_URL=postgresql://... in .env, or use the SQLite file URL —
+  // both providers support every type used below, but Prisma generates
+  // different client types per provider, so we MUST match production.
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
