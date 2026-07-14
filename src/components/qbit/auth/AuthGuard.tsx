@@ -135,6 +135,8 @@ function ForbiddenScreen({
 /** Inline role → home screen mapping (mirrors rbac/roles.ts to avoid circular imports). */
 function roleHomeScreen(role: Role): import("@/lib/navigation/store").ScreenId {
   switch (role) {
+    case "super_administrator":
+      return "home";
     case "administrator":
       return "home";
     case "installation_engineer":

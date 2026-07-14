@@ -8,8 +8,9 @@
 
 import type { ScreenId } from "@/lib/navigation/store";
 
-/** The seven roles recognised by QBIT Hub. */
+/** The eight roles recognised by QBIT Hub V3. */
 export type Role =
+  | "super_administrator"
   | "administrator"
   | "installation_engineer"
   | "support_engineer"
@@ -20,6 +21,7 @@ export type Role =
 
 /** Human-readable label for each role, used in profile menus and audit logs. */
 export const ROLE_LABELS: Record<Role, string> = {
+  super_administrator: "Super Administrator",
   administrator: "Administrator",
   installation_engineer: "Installation Engineer",
   support_engineer: "Support Engineer",
@@ -31,6 +33,7 @@ export const ROLE_LABELS: Record<Role, string> = {
 
 /** Short description shown on the role picker / login helper. */
 export const ROLE_DESCRIPTIONS: Record<Role, string> = {
+  super_administrator: "Enterprise control center — full system access including product ingestion, user management, and audit logs.",
   administrator: "Full access to every module, user, and system setting.",
   installation_engineer:
     "Installation workflows, drivers, products, knowledge base, and support.",
@@ -44,6 +47,7 @@ export const ROLE_DESCRIPTIONS: Record<Role, string> = {
 
 /** Material Symbol icon used to represent each role in the UI. */
 export const ROLE_ICONS: Record<Role, string> = {
+  super_administrator: "verified_user",
   administrator: "admin_panel_settings",
   installation_engineer: "engineering",
   support_engineer: "support_agent",
@@ -52,6 +56,32 @@ export const ROLE_ICONS: Record<Role, string> = {
   viewer: "visibility",
   public_customer: "public",
 };
+
+/**
+ * V3 Portal Routing — maps each role to its dedicated portal URL.
+ *
+ * After login, users are auto-redirected to their role's portal.
+ * No user may manually access another role's portal — server-side
+ * guards enforce this on every portal route.
+ */
+export function portalRouteForRole(role: Role): string {
+  switch (role) {
+    case "super_administrator":
+      return "/super-admin";
+    case "administrator":
+      return "/admin";
+    case "installation_engineer":
+      return "/engineer";
+    case "support_engineer":
+      return "/support-portal";
+    case "sales_executive":
+    case "dealer":
+    case "viewer":
+      return "/portal";
+    case "public_customer":
+      return "/customer";
+  }
+}
 
 /**
  * Screen-level permission matrix.
@@ -64,12 +94,12 @@ export const SCREEN_PERMISSIONS: Record<ScreenId, Role[]> = {
   login: [],
   "product-overview": [],
 
-  // Admin-only
-  home: ["administrator"],
-  "admin-dashboard": ["administrator"],
-  "user-role-management": ["administrator"],
-  "product-management": ["administrator"],
-  "system-settings": ["administrator"],
+  // Admin-only (+ super_administrator)
+  home: ["super_administrator", "administrator"],
+  "admin-dashboard": ["super_administrator", "administrator"],
+  "user-role-management": ["super_administrator", "administrator"],
+  "product-management": ["super_administrator", "administrator"],
+  "system-settings": ["super_administrator", "administrator"],
 
   // Installation engineer + admin
   "engineer-dashboard": ["administrator", "installation_engineer"],
@@ -173,16 +203,16 @@ export const SCREEN_PERMISSIONS: Record<ScreenId, Role[]> = {
   "dr-qbit-test-center": ["administrator", "installation_engineer"],
 
   // Enterprise Fleet Manager — admin only (full fleet visibility)
-  "fleet-manager": ["administrator"],
+  "fleet-manager": ["super_administrator", "administrator"],
 
   // Enterprise Analytics — admin only (full business intelligence)
-  "analytics": ["administrator"],
+  "analytics": ["super_administrator", "administrator"],
 
   // Notification Automation Engine — admin-only management screens.
-  "notification-center": ["administrator", "installation_engineer", "support_engineer"],
-  "notification-template-manager": ["administrator"],
-  "notification-history": ["administrator"],
-  "notification-reminders": ["administrator"],
+  "notification-center": ["super_administrator", "administrator", "installation_engineer", "support_engineer"],
+  "notification-template-manager": ["super_administrator", "administrator"],
+  "notification-history": ["super_administrator", "administrator"],
+  "notification-reminders": ["super_administrator", "administrator"],
 };
 
 /**
@@ -209,6 +239,8 @@ export function canAccessScreen(role: Role | undefined | null, screen: ScreenId)
  */
 export function homeScreenForRole(role: Role): ScreenId {
   switch (role) {
+    case "super_administrator":
+      return "home";
     case "administrator":
       return "home";
     case "installation_engineer":

@@ -31,7 +31,7 @@ import { signIn, getSession } from "next-auth/react";
 import { Icon } from "@/components/qbit/primitives/Icon";
 import { QbitButton } from "@/components/qbit/primitives/QbitButton";
 import { useRouter } from "next/navigation";
-import { homeScreenForRole, type Role } from "@/lib/rbac/roles";
+import { homeScreenForRole, portalRouteForRole, type Role } from "@/lib/rbac/roles";
 import { useNavigation } from "@/lib/navigation/store";
 
 type LoginState = "idle" | "loading" | "error";
@@ -115,16 +115,27 @@ export function CustomerLoginPage() {
     const role = session?.user?.role as Role | undefined;
 
     if (typeof window !== "undefined") {
-      if (role === "public_customer") {
-        // Customer → /account dashboard
-        window.location.href = "/account";
-      } else if (role) {
-        // Staff (admin/engineer/support) → /portal Zustand app
-        navigate(homeScreenForRole(role));
-        window.location.href = "/portal";
+      if (role) {
+        // V3: redirect every role to its dedicated portal URL.
+        // portalRouteForRole() returns:
+        //   public_customer → /customer
+        //   installation_engineer → /engineer
+        //   support_engineer → /support-portal
+        //   administrator → /admin
+        //   super_administrator → /super-admin
+        //   sales_executive/dealer/viewer → /portal
+        const targetRoute = portalRouteForRole(role);
+        // For staff roles that go to /portal, set the Zustand screen first
+        // so they land on the right dashboard.
+        if (targetRoute === "/portal" || targetRoute === "/admin" ||
+            targetRoute === "/engineer" || targetRoute === "/super-admin" ||
+            targetRoute === "/support-portal") {
+          navigate(homeScreenForRole(role));
+        }
+        window.location.href = targetRoute;
       } else {
-        // No role — fallback to account
-        window.location.href = "/account";
+        // No role — fallback to customer dashboard
+        window.location.href = "/customer";
       }
     }
   }

@@ -58,12 +58,31 @@ export async function requireStaff() {
   if (!session) return null;
   const role = session.user.role as Role;
   if (
+    role !== "super_administrator" &&
     role !== "administrator" &&
     role !== "installation_engineer" &&
     role !== "support_engineer"
   ) {
     return null;
   }
+  return session;
+}
+
+/** Super Administrator only. */
+export async function requireSuperAdmin() {
+  const session = await requireAuth();
+  if (!session) return null;
+  const role = session.user.role as Role;
+  if (role !== "super_administrator") return null;
+  return session;
+}
+
+/** Super Administrator or Administrator. */
+export async function requireSuperAdminOrAdmin() {
+  const session = await requireAuth();
+  if (!session) return null;
+  const role = session.user.role as Role;
+  if (role !== "super_administrator" && role !== "administrator") return null;
   return session;
 }
 

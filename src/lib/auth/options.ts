@@ -32,6 +32,7 @@ import {
   verifyCustomerByMobile,
   CustomerVerificationReason,
 } from "@/lib/auth/purchase-database";
+import { recordAuditLog } from "@/lib/audit/audit-log";
 
 /** Augment the NextAuth types with our custom role field. */
 declare module "next-auth" {
@@ -184,6 +185,39 @@ export const authOptions: NextAuthOptions = {
         session.user.role = token.role;
       }
       return session;
+    },
+  },
+  events: {
+    // Record login audit log
+    async signIn(message) {
+      const { user, account } = message as { user?: { id?: string; name?: string | null; email?: string | null; role?: string }; account?: { provider?: string } };
+      if (account?.provider === "credentials" && user) {
+        await recordAuditLog(
+          { user: { id: user.id ?? "", name: user.name ?? null, email: user.email ?? null, role: user.role as never, image: null } } as never,
+          {
+            action: "LOGIN",
+            entityType: "user",
+            entityId: user.id ?? null,
+            entityName: user.name ?? user.email ?? null,
+            description: `User signed in via ${account.provider}`,
+          },
+        ).catch(() => {});
+      }
+    },
+    // Record logout audit log
+    async signOut(message) {
+      const token = (message as { token?: { id?: string; role?: string } }).token;
+      if (token?.id) {
+        await recordAuditLog(
+          { user: { id: token.id, name: null, email: null, role: token.role as never, image: null } } as never,
+          {
+            action: "LOGOUT",
+            entityType: "user",
+            entityId: token.id,
+            description: "User signed out",
+          },
+        ).catch(() => {});
+      }
     },
   },
 };

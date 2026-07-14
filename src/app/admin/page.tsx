@@ -1,9 +1,12 @@
 /**
- * /admin — entry route for administrator portal.
+ * /admin — Administrator Portal entry route.
  *
- * SECURITY: Checks auth + role. If unauthenticated → redirect to /accounts/login.
- * If authenticated but wrong role (customer/engineer/dealer/viewer/sales) → render 403.
- * If administrator → redirect to /portal (admin dashboard).
+ * SECURITY: Server-side role guard. Only `administrator` role can access.
+ *   - Unauthenticated → redirect to /accounts/login
+ *   - Authenticated but wrong role (including super_administrator) → 403
+ *   - Authenticated administrator → redirect to /portal (admin dashboard)
+ *
+ * Super Administrators have their own portal at /super-admin.
  */
 
 import { redirect } from "next/navigation";
@@ -23,7 +26,6 @@ export default async function AdminEntryPage() {
   }
 
   if (role !== "administrator") {
-    // Authenticated but wrong role — show 403 Forbidden.
     return (
       <PublicLayout>
         <ForbiddenNotice
@@ -35,6 +37,5 @@ export default async function AdminEntryPage() {
     );
   }
 
-  // Authenticated administrator → mount the Zustand app shell at admin home.
   redirect("/portal");
 }
