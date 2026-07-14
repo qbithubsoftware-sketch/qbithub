@@ -99,8 +99,8 @@ export async function matchDevice(raw: RawDetectedDevice): Promise<MatchResult> 
   if (raw.manufacturer && raw.model) {
     const product = await db.qbitProduct.findFirst({
       where: {
-        manufacturer: { contains: raw.manufacturer, mode: "insensitive" },
-        model: { contains: raw.model, mode: "insensitive" },
+        manufacturer: { contains: raw.manufacturer },
+        model: { contains: raw.model },
         isActive: true,
       },
     });
@@ -121,7 +121,7 @@ export async function matchDevice(raw: RawDetectedDevice): Promise<MatchResult> 
   if (raw.model) {
     const product = await db.qbitProduct.findFirst({
       where: {
-        model: { contains: raw.model, mode: "insensitive" },
+        model: { contains: raw.model },
         isActive: true,
       },
     });
@@ -172,8 +172,8 @@ export async function suggestClosestProducts(
     const products = await db.qbitProduct.findMany({
       where: {
         OR: [
-          { model: { contains: raw.model, mode: "insensitive" } },
-          { name: { contains: raw.model, mode: "insensitive" } },
+          { model: { contains: raw.model } },
+          { name: { contains: raw.model } },
         ],
         isActive: true,
       },
@@ -195,7 +195,7 @@ export async function suggestClosestProducts(
   if (raw.manufacturer && suggestions.length < limit) {
     const products = await db.qbitProduct.findMany({
       where: {
-        manufacturer: { contains: raw.manufacturer, mode: "insensitive" },
+        manufacturer: { contains: raw.manufacturer },
         isActive: true,
       },
       take: limit - suggestions.length,

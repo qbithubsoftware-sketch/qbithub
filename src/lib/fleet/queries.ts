@@ -19,17 +19,17 @@ export function buildWhereClause(filters: FleetFilters): Record<string, unknown>
   if (filters.deviceType) {
     where.product = { deviceType: filters.deviceType };
   }
-  if (filters.brand) where.brand = { contains: filters.brand, mode: "insensitive" };
-  if (filters.model) where.model = { contains: filters.model, mode: "insensitive" };
+  if (filters.brand) where.brand = { contains: filters.brand };
+  if (filters.model) where.model = { contains: filters.model };
   if (filters.engineerId) where.assignedEngineerId = filters.engineerId;
   if (filters.connectionType) where.connectionType = filters.connectionType;
   if (filters.search) {
     where.OR = [
-      { serialNumber: { contains: filters.search, mode: "insensitive" } },
-      { deviceName: { contains: filters.search, mode: "insensitive" } },
-      { model: { contains: filters.search, mode: "insensitive" } },
-      { hardwareId: { contains: filters.search, mode: "insensitive" } },
-      { passportNumber: { contains: filters.search, mode: "insensitive" } },
+      { serialNumber: { contains: filters.search } },
+      { deviceName: { contains: filters.search } },
+      { model: { contains: filters.search } },
+      { hardwareId: { contains: filters.search } },
+      { passportNumber: { contains: filters.search } },
     ];
   }
 

@@ -30,21 +30,21 @@ export async function GET(req: NextRequest) {
 
   if (q) {
     where.OR = [
-      { serialNumber: { contains: q, mode: "insensitive" } },
-      { model: { contains: q, mode: "insensitive" } },
-      { hardwareId: { contains: q, mode: "insensitive" } },
-      { vendorId: { contains: q, mode: "insensitive" } },
-      { productIdCode: { contains: q, mode: "insensitive" } },
-      { deviceName: { contains: q, mode: "insensitive" } },
-      { passportNumber: { contains: q, mode: "insensitive" } },
+      { serialNumber: { contains: q } },
+      { model: { contains: q } },
+      { hardwareId: { contains: q } },
+      { vendorId: { contains: q } },
+      { productIdCode: { contains: q } },
+      { deviceName: { contains: q } },
+      { passportNumber: { contains: q } },
     ];
   }
 
-  if (serialNumber) where.serialNumber = { contains: serialNumber, mode: "insensitive" };
-  if (model) where.model = { contains: model, mode: "insensitive" };
-  if (hardwareId) where.hardwareId = { contains: hardwareId, mode: "insensitive" };
-  if (vendorId) where.vendorId = { contains: vendorId.toUpperCase(), mode: "insensitive" };
-  if (productIdCode) where.productIdCode = { contains: productIdCode.toUpperCase(), mode: "insensitive" };
+  if (serialNumber) where.serialNumber = { contains: serialNumber };
+  if (model) where.model = { contains: model };
+  if (hardwareId) where.hardwareId = { contains: hardwareId };
+  if (vendorId) where.vendorId = { contains: vendorId.toUpperCase() };
+  if (productIdCode) where.productIdCode = { contains: productIdCode.toUpperCase() };
 
   const passports = await db.devicePassport.findMany({
     where,

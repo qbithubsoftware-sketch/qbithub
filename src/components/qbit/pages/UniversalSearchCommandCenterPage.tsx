@@ -28,6 +28,8 @@ interface ResultItem {
   rightBadge?: string;
   /** Optional in-app navigation target when the item is activated. */
   screen?: ScreenId;
+  /** Optional external URL (e.g. /products/[slug]) for deep-link navigation. */
+  href?: string;
 }
 
 interface ResultGroup {
@@ -100,7 +102,7 @@ const RESULT_GROUPS: readonly ResultGroup[] = [
         description: "Industrial Processing Unit",
         icon: "memory",
         iconTone: "gradient",
-        screen: "product-details-t800",
+        href: "/products/t800",
       },
     ],
   },
@@ -149,6 +151,12 @@ export function UniversalSearchCommandCenterPage() {
   const [selectedIndex, setSelectedIndex] = useState<number>(
     DEFAULT_SELECTED_INDEX,
   );
+  // Live product results from /api/public/search — supplements the static
+  // RESULT_GROUPS with real DB matches as the user types.
+  const [liveProducts, setLiveProducts] = useState<Array<{
+    id: string; name: string; slug: string; brand: string; model: string;
+    category: string | null; description: string | null;
+  }>>([]);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const itemRefs = useRef<Array<HTMLButtonElement | null>>([]);
@@ -156,6 +164,24 @@ export function UniversalSearchCommandCenterPage() {
   const isNoResults = isNoResultsQuery(query);
 
   const filterChips = useMemo(() => FILTER_CHIPS, []);
+
+  /* ----- Live product search (debounced 200ms) ----- */
+  useEffect(() => {
+    if (!query.trim()) {
+      setLiveProducts([]);
+      return;
+    }
+    const t = window.setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/public/search?q=${encodeURIComponent(query.trim())}&limit=8`, { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          setLiveProducts(data.items ?? []);
+        }
+      } catch { /* ignore */ }
+    }, 200);
+    return () => window.clearTimeout(t);
+  }, [query]);
 
   /* ----- Modal open / close ----- */
   const openModal = useCallback(() => {
@@ -167,6 +193,7 @@ export function UniversalSearchCommandCenterPage() {
     setQuery("");
     setSelectedIndex(DEFAULT_SELECTED_INDEX);
     setActiveFilter("All");
+    setLiveProducts([]);
   }, []);
 
   /* ----- Auto-focus the search input when the modal opens ----- */
@@ -195,6 +222,13 @@ export function UniversalSearchCommandCenterPage() {
         title: item.title,
         description: item.description,
       });
+      if (item.href) {
+        closeModal();
+        if (typeof window !== "undefined") {
+          window.location.href = item.href;
+        }
+        return;
+      }
       if (item.screen) {
         closeModal();
         navigate(item.screen);
@@ -494,6 +528,52 @@ export function UniversalSearchCommandCenterPage() {
                     </div>
                   </div>
                 ))}
+
+                {/* Live product results from /api/public/search */}
+                {query.trim() && liveProducts.length > 0 && (
+                  <div>
+                    <h3 className="px-4 py-1 text-xs font-bold uppercase tracking-wider text-qbit-secondary">
+                      Matching Products
+                    </h3>
+                    <div className="space-y-1">
+                      {liveProducts.map((p) => (
+                        <a
+                          key={p.id}
+                          href={`/products/${p.slug}`}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (typeof window !== "undefined") {
+                              closeModal();
+                              window.location.href = `/products/${p.slug}`;
+                            }
+                          }}
+                          className="flex w-full items-center gap-4 rounded-xl border-l-4 border-transparent px-4 py-2.5 text-left transition-colors hover:bg-qbit-surface-container-low"
+                        >
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-qbit-secondary/10 text-qbit-secondary">
+                            <Icon name="inventory_2" className="text-[24px]" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-bold text-qbit-on-surface">
+                              {p.name}
+                            </p>
+                            <p className="truncate text-xs text-qbit-on-surface-variant opacity-70">
+                              {p.brand} · {p.model}
+                              {p.category ? ` · ${p.category.replace(/-/g, " ")}` : ""}
+                            </p>
+                          </div>
+                          <Icon name="arrow_forward" className="text-[16px] text-qbit-on-surface-variant" />
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* "No live matches" hint when typed query returns no products but isn't a "no results" trigger */}
+                {query.trim() && liveProducts.length === 0 && !isNoResults && (
+                  <div className="rounded-xl border border-dashed border-qbit-outline-variant px-4 py-3 text-center text-xs text-qbit-on-surface-variant">
+                    No products match &ldquo;{query.trim()}&rdquo;. Try a different keyword.
+                  </div>
+                )}
               </div>
             )}
 

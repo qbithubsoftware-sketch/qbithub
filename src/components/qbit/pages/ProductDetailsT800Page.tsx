@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { AppShell } from "@/components/qbit/shells/AppShell";
 import { Icon } from "@/components/qbit/primitives/Icon";
 import { SurfaceCard } from "@/components/qbit/primitives/GlassCard";
@@ -106,30 +107,38 @@ const RELATED_PRODUCTS: ReadonlyArray<{
   category: string;
   icon: string;
   gradient: string;
+  /** Slug for routing to /products/[slug]. If absent, the card links to /products. */
+  productSlug?: string;
+  /** Category slug for routing to /products?category=<slug>. Used when productSlug is absent. */
+  categorySlug?: string;
 }> = [
   {
-    name: "QBIT Duo X-200",
-    category: "Dual-Screen Terminal",
+    name: "HUB-X Pro",
+    category: "Windows POS",
     icon: "desktop_windows",
     gradient: "from-qbit-primary to-qbit-secondary",
+    productSlug: "hub-x-pro",
   },
   {
-    name: "QBIT Go M-50",
-    category: "Mobile POS",
+    name: "QBIT Android POS Lite",
+    category: "Android POS",
     icon: "phone_android",
     gradient: "from-emerald-500 to-teal-600",
+    productSlug: "android-pos-lite",
   },
   {
-    name: "QBIT Print P-80",
-    category: "Peripherals",
-    icon: "print",
+    name: "ScanMaster Elite",
+    category: "Barcode Scanner",
+    icon: "barcode_scanner",
     gradient: "from-amber-500 to-orange-600",
+    productSlug: "scanmaster-elite",
   },
   {
-    name: "QBIT Tab Rugged 10",
-    category: "Industrial Tablet",
-    icon: "tablet_mac",
+    name: "QBIT Kiosk Pro 27",
+    category: "Kiosk",
+    icon: "storefront",
     gradient: "from-slate-600 to-slate-800",
+    productSlug: "kiosk-pro-27",
   },
 ];
 
@@ -531,37 +540,41 @@ export function ProductDetailsT800Page() {
             </div>
           </div>
           <div className="hide-scrollbar flex gap-6 overflow-x-auto pb-4">
-            {RELATED_PRODUCTS.map((product) => (
-              <div
-                key={product.name}
-                className="group min-w-[300px] overflow-hidden rounded-2xl border border-qbit-outline-variant bg-white transition-all hover:shadow-lg"
-              >
-                <div
-                  className={`flex h-48 items-center justify-center bg-gradient-to-br ${product.gradient}`}
+            {RELATED_PRODUCTS.map((product) => {
+              const href = product.productSlug
+                ? `/products/${product.productSlug}`
+                : product.categorySlug
+                  ? `/products?category=${product.categorySlug}`
+                  : "/products";
+              return (
+                <Link
+                  key={product.name}
+                  href={href}
+                  className="group min-w-[300px] overflow-hidden rounded-2xl border border-qbit-outline-variant bg-white transition-all hover:shadow-lg"
                 >
-                  <Icon
-                    name={product.icon}
-                    className="text-[80px] text-white/90 transition-transform group-hover:scale-110"
-                    filled
-                  />
-                </div>
-                <div className="p-4">
-                  <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-qbit-outline">
-                    {product.category}
-                  </p>
-                  <h5 className="mb-4 text-sm font-bold text-qbit-on-surface">
-                    {product.name}
-                  </h5>
-                  <button
-                    type="button"
-                    onClick={() => navigate("product-library")}
-                    className="w-full rounded-lg border border-qbit-primary py-2 text-xs font-semibold text-qbit-primary transition-colors hover:bg-qbit-primary/5"
+                  <div
+                    className={`flex h-48 items-center justify-center bg-gradient-to-br ${product.gradient}`}
                   >
-                    View Details
-                  </button>
-                </div>
-              </div>
-            ))}
+                    <Icon
+                      name={product.icon}
+                      className="text-[80px] text-white/90 transition-transform group-hover:scale-110"
+                      filled
+                    />
+                  </div>
+                  <div className="p-4">
+                    <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-qbit-outline">
+                      {product.category}
+                    </p>
+                    <h5 className="mb-4 text-sm font-bold text-qbit-on-surface">
+                      {product.name}
+                    </h5>
+                    <span className="block w-full rounded-lg border border-qbit-primary py-2 text-center text-xs font-semibold text-qbit-primary transition-colors group-hover:bg-qbit-primary/5">
+                      View Details
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </section>
       </div>

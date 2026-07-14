@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/qbit/shells/AppShell";
 import { Icon } from "@/components/qbit/primitives/Icon";
 import { GlassCard } from "@/components/qbit/primitives/GlassCard";
@@ -36,6 +38,9 @@ interface TrendingProduct {
   subtitle: string;
   icon: string;
   gradient: string;
+  /** Optional slug for routing to /products/[slug]. If absent, the card stays non-navigable. */
+  productSlug?: string;
+  /** Legacy screen id — used as fallback if productSlug is not set. */
   navigateTo?: ScreenId;
 }
 
@@ -49,6 +54,9 @@ interface InventoryProduct {
   chips: { label: string; icon: string }[];
   icon: string;
   gradient: string;
+  /** Optional slug for routing to /products/[slug]. If absent, the card stays non-navigable. */
+  productSlug?: string;
+  /** Legacy screen id — used as fallback if productSlug is not set. */
   navigateTo?: ScreenId;
 }
 
@@ -94,10 +102,37 @@ const CATEGORIES: CategoryCardData[] = [
     iconHoverBg: "group-hover:bg-qbit-primary/20",
   },
   {
-    name: "Accessories",
-    slug: "accessories",
-    count: "24 Products",
-    icon: "cable",
+    name: "Cash Drawers",
+    slug: "cash-drawer",
+    count: "4 Products",
+    icon: "point_of_sale",
+    iconColor: "text-qbit-secondary",
+    iconBg: "bg-qbit-secondary/10",
+    iconHoverBg: "group-hover:bg-qbit-secondary/20",
+  },
+  {
+    name: "Label Printers",
+    slug: "label-printer",
+    count: "7 Products",
+    icon: "label",
+    iconColor: "text-qbit-tertiary",
+    iconBg: "bg-qbit-on-tertiary-fixed-variant/10",
+    iconHoverBg: "group-hover:bg-qbit-on-tertiary-fixed-variant/20",
+  },
+  {
+    name: "Kiosks",
+    slug: "kiosk",
+    count: "3 Products",
+    icon: "storefront",
+    iconColor: "text-qbit-primary",
+    iconBg: "bg-qbit-primary/10",
+    iconHoverBg: "group-hover:bg-qbit-primary/20",
+  },
+  {
+    name: "Customer Displays",
+    slug: "customer-display",
+    count: "5 Products",
+    icon: "monitor",
     iconColor: "text-qbit-secondary",
     iconBg: "bg-qbit-secondary/10",
     iconHoverBg: "group-hover:bg-qbit-secondary/20",
@@ -109,8 +144,9 @@ const TRENDING: TrendingProduct[] = [
     name: "HUB-X Pro",
     badgeLabel: "Top Resource",
     badgeColor: "text-qbit-primary",
-    subtitle: "Thermal Printer \u2022 v2.4 Driver",
+    subtitle: "Thermal Printer • v2.4 Driver",
     icon: "print",
+    productSlug: "hub-x-pro",
     gradient:
       "from-qbit-surface-container-high via-qbit-surface-container to-qbit-surface-container-low",
   },
@@ -118,8 +154,9 @@ const TRENDING: TrendingProduct[] = [
     name: "ScanMaster Elite",
     badgeLabel: "Newly Released",
     badgeColor: "text-qbit-secondary",
-    subtitle: "Wireless Scanner \u2022 User Manual",
+    subtitle: "Wireless Scanner • User Manual",
     icon: "barcode_scanner",
+    productSlug: "scanmaster-elite",
     gradient:
       "from-qbit-secondary-container/30 via-qbit-surface-container-high to-qbit-surface-container-low",
   },
@@ -127,8 +164,9 @@ const TRENDING: TrendingProduct[] = [
     name: "QBIT T-800",
     badgeLabel: "Most Downloaded",
     badgeColor: "text-qbit-tertiary",
-    subtitle: "Windows POS \u2022 Setup Guide",
+    subtitle: "Windows POS • Setup Guide",
     icon: "desktop_windows",
+    productSlug: "t800",
     navigateTo: "product-details-t800",
     gradient:
       "from-qbit-primary-container/25 via-qbit-surface-container-high to-qbit-surface-container-low",
@@ -138,7 +176,7 @@ const TRENDING: TrendingProduct[] = [
 const INVENTORY: InventoryProduct[] = [
   {
     name: "QBIT T-800",
-    categoryBadge: "WINDOWS POS",
+    categoryBadge: "THERMAL PRINTER",
     badgeClass: "bg-qbit-primary text-qbit-on-primary",
     model: "MODEL: T-800",
     osIcons: ["desktop_windows", "phone_android", "terminal"],
@@ -147,14 +185,15 @@ const INVENTORY: InventoryProduct[] = [
       { label: "Driver", icon: "download" },
       { label: "Video", icon: "videocam" },
     ],
-    icon: "desktop_windows",
+    icon: "print",
+    productSlug: "t800",
+    navigateTo: "product-details-t800",
     gradient:
       "from-qbit-primary-container/30 via-qbit-surface-container-high to-qbit-surface-container-low",
-    navigateTo: "product-details-t800",
   },
   {
     name: "HUB-X Pro",
-    categoryBadge: "PRINTER",
+    categoryBadge: "WINDOWS POS",
     badgeClass: "bg-qbit-secondary text-qbit-on-secondary",
     model: "MODEL: HUB-X PRO",
     osIcons: ["desktop_windows", "phone_android", "terminal"],
@@ -162,13 +201,14 @@ const INVENTORY: InventoryProduct[] = [
       { label: "Manual", icon: "description" },
       { label: "Driver", icon: "download" },
     ],
-    icon: "print",
+    icon: "desktop_windows",
+    productSlug: "hub-x-pro",
     gradient:
       "from-qbit-secondary-container/25 via-qbit-surface-container-high to-qbit-surface-container-low",
   },
   {
     name: "ScanMaster Elite",
-    categoryBadge: "SCANNER",
+    categoryBadge: "BARCODE SCANNER",
     badgeClass:
       "bg-qbit-tertiary-container text-qbit-on-tertiary-container",
     model: "MODEL: SM-E1",
@@ -178,6 +218,7 @@ const INVENTORY: InventoryProduct[] = [
       { label: "Video", icon: "videocam" },
     ],
     icon: "barcode_scanner",
+    productSlug: "scanmaster-elite",
     gradient:
       "from-qbit-tertiary-container/30 via-qbit-surface-container-high to-qbit-surface-container-low",
   },
@@ -191,6 +232,7 @@ const SHARE_URL = "https://hub.qbit.com/assets/T-800";
 
 export function ProductLibraryPage() {
   const navigate = useNavigation((s) => s.navigate);
+  const router = useRouter();
   const [shareOpen, setShareOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [heroSearch, setHeroSearch] = useState("");
@@ -204,6 +246,29 @@ export function ProductLibraryPage() {
     setCopied(true);
     window.setTimeout(() => setCopied(false), 2000);
   }, []);
+
+  /** Navigate to a product detail page — prefer real Next.js route /products/[slug],
+   *  fall back to legacy Zustand screen navigation. */
+  const goToProduct = useCallback(
+    (product: { productSlug?: string; navigateTo?: ScreenId }) => {
+      if (product.productSlug) {
+        router.push(`/products/${product.productSlug}`);
+        return;
+      }
+      if (product.navigateTo) {
+        navigate(product.navigateTo);
+      }
+    },
+    [router, navigate],
+  );
+
+  /** Navigate to /products?category=<slug> — preserves deep-linkability + back button. */
+  const goToCategory = useCallback(
+    (slug: string) => {
+      router.push(`/products?category=${slug}`);
+    },
+    [router],
+  );
 
   return (
     <AppShell
@@ -279,7 +344,7 @@ export function ProductLibraryPage() {
                 <button
                   key={cat.slug}
                   type="button"
-                  onClick={() => setActiveCategory(isActive ? null : cat.slug)}
+                  onClick={() => goToCategory(cat.slug)}
                   className={`group flex cursor-pointer flex-col items-center rounded-2xl border p-6 text-center transition-all ${isActive ? "border-qbit-primary bg-qbit-primary/5 ring-2 ring-qbit-primary/20" : "border-qbit-outline-variant/50 hover:border-qbit-primary/30"}`}
                 >
                   <div
@@ -335,11 +400,22 @@ export function ProductLibraryPage() {
           </div>
 
           <div className="custom-scrollbar -mx-4 flex gap-4 overflow-x-auto px-4 pb-3 md:mx-0 md:px-0">
-            {TRENDING.map((product) => (
-              <article
-                key={product.name}
-                className="group flex w-[280px] shrink-0 flex-col overflow-hidden rounded-2xl border border-qbit-outline-variant bg-qbit-surface-container-lowest shadow-sm transition-shadow hover:shadow-md sm:w-[320px]"
-              >
+            {TRENDING.map((product) => {
+              const isNavigable = !!(product.productSlug || product.navigateTo);
+              return (
+                <article
+                  key={product.name}
+                  onClick={() => isNavigable && goToProduct(product)}
+                  role={isNavigable ? "button" : undefined}
+                  tabIndex={isNavigable ? 0 : -1}
+                  onKeyDown={(e) => {
+                    if (isNavigable && (e.key === "Enter" || e.key === " ")) {
+                      e.preventDefault();
+                      goToProduct(product);
+                    }
+                  }}
+                  className={`group flex w-[280px] shrink-0 flex-col overflow-hidden rounded-2xl border border-qbit-outline-variant bg-qbit-surface-container-lowest shadow-sm transition-shadow hover:shadow-md sm:w-[320px] ${isNavigable ? "cursor-pointer" : ""}`}
+                >
                 {/* Gradient cover with Material icon */}
                 <div
                   className={`relative flex h-40 items-center justify-center bg-gradient-to-br ${product.gradient}`}
@@ -370,18 +446,19 @@ export function ProductLibraryPage() {
                     variant="primary"
                     fullWidth
                     className="mt-auto"
-                    onClick={
-                      product.navigateTo
-                        ? () => navigate(product.navigateTo as ScreenId)
-                        : undefined
-                    }
+                    onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                      // Stop the click from bubbling to the article's onClick (which would also navigate).
+                      e.stopPropagation();
+                      if (isNavigable) goToProduct(product);
+                    }}
                   >
                     View Details
                     <Icon name="arrow_forward" className="text-[16px]" />
                   </QbitButton>
                 </div>
-              </article>
-            ))}
+                </article>
+              );
+            })}
           </div>
         </section>
 
@@ -438,11 +515,22 @@ export function ProductLibraryPage() {
                 if (!activeCategory) return true;
                 const slug = p.categoryBadge.toLowerCase().replace(/\s+/g, "-");
                 return slug === activeCategory || slug === activeCategory.replace(/-/g, " ");
-              }).map((product) => (
-              <article
-                key={product.name}
-                className="group flex flex-col overflow-hidden rounded-2xl border border-qbit-outline-variant bg-qbit-surface-container-lowest shadow-sm transition-all duration-300 hover:shadow-2xl"
-              >
+              }).map((product) => {
+              const isNavigable = !!(product.productSlug || product.navigateTo);
+              return (
+                <article
+                  key={product.name}
+                  onClick={() => isNavigable && goToProduct(product)}
+                  role={isNavigable ? "button" : undefined}
+                  tabIndex={isNavigable ? 0 : -1}
+                  onKeyDown={(e) => {
+                    if (isNavigable && (e.key === "Enter" || e.key === " ")) {
+                      e.preventDefault();
+                      goToProduct(product);
+                    }
+                  }}
+                  className={`group flex flex-col overflow-hidden rounded-2xl border border-qbit-outline-variant bg-qbit-surface-container-lowest shadow-sm transition-all duration-300 hover:shadow-2xl ${isNavigable ? "cursor-pointer" : ""}`}
+                >
                 {/* Cover */}
                 <div
                   className={`relative flex h-64 items-center justify-center overflow-hidden bg-gradient-to-br p-8 ${product.gradient}`}
@@ -497,11 +585,10 @@ export function ProductLibraryPage() {
                   <div className="mt-auto grid grid-cols-2 gap-3 border-t border-qbit-outline-variant/50 pt-4">
                     <QbitButton
                       variant="primary"
-                      onClick={
-                        product.navigateTo
-                          ? () => navigate(product.navigateTo as ScreenId)
-                          : undefined
-                      }
+                      onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                        e.stopPropagation();
+                        if (isNavigable) goToProduct(product);
+                      }}
                     >
                       View Details
                     </QbitButton>
@@ -509,7 +596,7 @@ export function ProductLibraryPage() {
                       <button
                         type="button"
                         title="Share"
-                        onClick={() => setShareOpen(true)}
+                        onClick={(e) => { e.stopPropagation(); setShareOpen(true); }}
                         className="flex flex-1 items-center justify-center rounded-xl border border-qbit-outline-variant text-qbit-on-surface-variant transition-colors hover:bg-qbit-surface-container-low"
                       >
                         <Icon name="share" className="text-[20px]" />
@@ -517,6 +604,7 @@ export function ProductLibraryPage() {
                       <button
                         type="button"
                         title="Favorite"
+                        onClick={(e) => e.stopPropagation()}
                         className="flex flex-1 items-center justify-center rounded-xl border border-qbit-outline-variant text-qbit-on-surface-variant transition-colors hover:bg-qbit-surface-container-low"
                       >
                         <Icon name="favorite" className="text-[20px]" />
@@ -525,7 +613,8 @@ export function ProductLibraryPage() {
                   </div>
                 </div>
               </article>
-              ))
+              );
+              })
             )}
           </div>
 

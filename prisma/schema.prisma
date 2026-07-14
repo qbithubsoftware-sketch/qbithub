@@ -9,7 +9,10 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  // Local dev uses SQLite (file:./db/custom.db). Production (Vercel) overrides
+  // DATABASE_URL with a real Postgres connection string and the same schema
+  // works without changes (both providers support every type used below).
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -23,10 +26,10 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  downloadHistory    DownloadHistory[]
-  favoriteDownloads  FavoriteDownload[]
-  articleBookmarks   ArticleBookmark[]
-  assignedWorkOrders WorkOrder[] @relation("AssignedEngineer")
+  downloadHistory     DownloadHistory[]
+  favoriteDownloads   FavoriteDownload[]
+  articleBookmarks    ArticleBookmark[]
+  assignedWorkOrders  WorkOrder[]          @relation("AssignedEngineer")
   installationRatings InstallationRating[]
 }
 
@@ -49,7 +52,7 @@ model OperatingSystem {
   id        String   @id @default(cuid())
   name      String   @unique // "Windows 11", "Ubuntu 22.04", "Android 13.0"
   slug      String   @unique // "win11", "ubuntu-2204", "android-13"
-  icon      String?  // Material Symbol name, e.g. "desktop_windows"
+  icon      String? // Material Symbol name, e.g. "desktop_windows"
   sortIndex Int      @default(0)
   createdAt DateTime @default(now())
 
@@ -61,7 +64,7 @@ model DownloadCategory {
   id        String   @id @default(cuid())
   name      String   @unique // "Driver", "Firmware", "SDK", "Utility", "Manual"
   slug      String   @unique // "driver", "firmware", "sdk", "utility", "manual"
-  icon      String?  // Material Symbol name
+  icon      String? // Material Symbol name
   sortIndex Int      @default(0)
   createdAt DateTime @default(now())
 
@@ -71,31 +74,31 @@ model DownloadCategory {
 /// Master record for a downloadable file.  Only metadata + a secure storage
 /// path are stored here — the binary itself lives in cloud storage.
 model Download {
-  id            String   @id @default(cuid())
-  productId     String?  // reference to the product this download belongs to
-  name          String   // "Universal Thermal Printer Driver"
-  version       String   // "v2.4.1"
-  categoryId    String
-  category      DownloadCategory @relation(fields: [categoryId], references: [id])
-  releaseDate   DateTime
-  fileSize      Int      // bytes
-  storagePath   String   // secure cloud-storage key (never exposed to client)
-  checksum      String?  // SHA-256 hash for integrity verification
-  visibility    String   @default("public") // "public" | "internal" | "restricted"
-  featured      Boolean  @default(false)
-  latest        Boolean  @default(false)
-  downloadCount Int      @default(0)
-  description   String?
+  id                  String           @id @default(cuid())
+  productId           String? // reference to the product this download belongs to
+  name                String // "Universal Thermal Printer Driver"
+  version             String // "v2.4.1"
+  categoryId          String
+  category            DownloadCategory @relation(fields: [categoryId], references: [id])
+  releaseDate         DateTime
+  fileSize            Int // bytes
+  storagePath         String // secure cloud-storage key (never exposed to client)
+  checksum            String? // SHA-256 hash for integrity verification
+  visibility          String           @default("public") // "public" | "internal" | "restricted"
+  featured            Boolean          @default(false)
+  latest              Boolean          @default(false)
+  downloadCount       Int              @default(0)
+  description         String?
   installInstructions String?
-  knownIssues   String?
-  supportedProducts String? // JSON string array of product names/models
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  knownIssues         String?
+  supportedProducts   String? // JSON string array of product names/models
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
 
   operatingSystems DownloadOS[]
-  releaseNotes    ReleaseNote[]
-  downloadHistory DownloadHistory[]
-  favorites       FavoriteDownload[]
+  releaseNotes     ReleaseNote[]
+  downloadHistory  DownloadHistory[]
+  favorites        FavoriteDownload[]
   firmwareReleases FirmwareRelease[]
 
   @@index([categoryId])
@@ -107,9 +110,9 @@ model Download {
 /// Many-to-many join between Download and OperatingSystem.
 model DownloadOS {
   downloadId String
-  osId      String
-  download  Download @relation(fields: [downloadId], references: [id], onDelete: Cascade)
-  os        OperatingSystem @relation(fields: [osId], references: [id], onDelete: Cascade)
+  osId       String
+  download   Download        @relation(fields: [downloadId], references: [id], onDelete: Cascade)
+  os         OperatingSystem @relation(fields: [osId], references: [id], onDelete: Cascade)
 
   @@id([downloadId, osId])
   @@index([osId])
@@ -117,16 +120,16 @@ model DownloadOS {
 
 /// Versioned release notes for a download (changelog, bug fixes, security updates).
 model ReleaseNote {
-  id          String   @id @default(cuid())
-  downloadId  String
-  download    Download @relation(fields: [downloadId], references: [id], onDelete: Cascade)
-  version     String   // "v2.4.1"
-  releaseDate DateTime
-  changes     String   // JSON string array of change descriptions
-  bugFixes    String?  // JSON string array
+  id              String   @id @default(cuid())
+  downloadId      String
+  download        Download @relation(fields: [downloadId], references: [id], onDelete: Cascade)
+  version         String // "v2.4.1"
+  releaseDate     DateTime
+  changes         String // JSON string array of change descriptions
+  bugFixes        String? // JSON string array
   securityUpdates String? // JSON string array
-  isCurrent   Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  isCurrent       Boolean  @default(false)
+  createdAt       DateTime @default(now())
 
   @@index([downloadId])
   @@index([isCurrent])
@@ -134,14 +137,14 @@ model ReleaseNote {
 
 /// Tracks every download event for analytics + user history.
 model DownloadHistory {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  downloadId  String
-  download    Download @relation(fields: [downloadId], references: [id], onDelete: Cascade)
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  downloadId   String
+  download     Download @relation(fields: [downloadId], references: [id], onDelete: Cascade)
   downloadedAt DateTime @default(now())
-  ipAddress   String?
-  userAgent   String?
+  ipAddress    String?
+  userAgent    String?
 
   @@index([userId])
   @@index([downloadId])
@@ -175,14 +178,14 @@ model Driver {
 
 /// Individual version of a driver (v2.4.0, v2.4.1, …) linked to a Download record.
 model DriverVersion {
-  id        String   @id @default(cuid())
-  driverId  String
-  driver    Driver   @relation(fields: [driverId], references: [id], onDelete: Cascade)
-  version   String
-  downloadId String? // optional link to the Download record
+  id          String   @id @default(cuid())
+  driverId    String
+  driver      Driver   @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  version     String
+  downloadId  String? // optional link to the Download record
   releaseDate DateTime
-  isCurrent  Boolean  @default(false)
-  createdAt  DateTime @default(now())
+  isCurrent   Boolean  @default(false)
+  createdAt   DateTime @default(now())
 
   @@index([driverId])
   @@index([isCurrent])
@@ -197,7 +200,7 @@ model Firmware {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  releases    FirmwareRelease[]
+  releases FirmwareRelease[]
 }
 
 /// SDK master record.
@@ -240,11 +243,11 @@ model InstallationGuide {
   title           String
   slug            String   @unique
   productId       String?
-  product         String   // "QBIT T-800", "HUB-X Pro", etc.
-  category        String   // "Windows POS", "Thermal Printer", etc.
-  estimatedTime   Int      // minutes
-  difficulty      String   // "Beginner" | "Intermediate" | "Expert"
-  version         String   // "v4.2.1"
+  product         String // "QBIT T-800", "HUB-X Pro", etc.
+  category        String // "Windows POS", "Thermal Printer", etc.
+  estimatedTime   Int // minutes
+  difficulty      String // "Beginner" | "Intermediate" | "Expert"
+  version         String // "v4.2.1"
   description     String?
   featured        Boolean  @default(false)
   latest          Boolean  @default(false)
@@ -253,33 +256,33 @@ model InstallationGuide {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  steps           InstallationStep[]
-  tools           RequiredTool[]
-  safetyRules     SafetyInstruction[]
-  checklists      InstallationChecklist[]
-  faqs            InstallationFAQ[]
-  wiringDiagrams  WiringDiagram[]
-  configGuides    ConfigurationGuide[]
+  steps            InstallationStep[]
+  tools            RequiredTool[]
+  safetyRules      SafetyInstruction[]
+  checklists       InstallationChecklist[]
+  faqs             InstallationFAQ[]
+  wiringDiagrams   WiringDiagram[]
+  configGuides     ConfigurationGuide[]
   relatedDownloads ProductInstallationGuide[]
 }
 
 /// A single step in an installation guide.
 model InstallationStep {
-  id              String   @id @default(cuid())
-  guideId         String
-  guide           InstallationGuide @relation(fields: [guideId], references: [id], onDelete: Cascade)
-  stepNumber      Int
-  title           String
-  description     String
-  imageUrl        String?  // cloud-storage path (secure)
-  estimatedTime   Int      // minutes
-  warning         String?  // optional safety warning
-  tip             String?  // optional pro tip
-  requiredToolId  String?  // link to RequiredTool
+  id                String            @id @default(cuid())
+  guideId           String
+  guide             InstallationGuide @relation(fields: [guideId], references: [id], onDelete: Cascade)
+  stepNumber        Int
+  title             String
+  description       String
+  imageUrl          String? // cloud-storage path (secure)
+  estimatedTime     Int // minutes
+  warning           String? // optional safety warning
+  tip               String? // optional pro tip
+  requiredToolId    String? // link to RequiredTool
   relatedDownloadId String? // link to Download (driver/firmware/SDK)
-  relatedManualId String?  // link to Manual
-  relatedVideoUrl String?  // YouTube URL
-  createdAt       DateTime @default(now())
+  relatedManualId   String? // link to Manual
+  relatedVideoUrl   String? // YouTube URL
+  createdAt         DateTime          @default(now())
 
   @@index([guideId])
   @@index([stepNumber])
@@ -287,68 +290,68 @@ model InstallationStep {
 
 /// A tool required for an installation (USB cable, screwdriver, etc.).
 model RequiredTool {
-  id          String   @id @default(cuid())
+  id          String            @id @default(cuid())
   guideId     String
   guide       InstallationGuide @relation(fields: [guideId], references: [id], onDelete: Cascade)
-  name        String   // "USB Cable"
-  icon        String   // Material Symbol name
+  name        String // "USB Cable"
+  icon        String // Material Symbol name
   description String?
-  included    Boolean  @default(false) // true = in-box, false = bring your own
-  createdAt   DateTime @default(now())
+  included    Boolean           @default(false) // true = in-box, false = bring your own
+  createdAt   DateTime          @default(now())
 
   @@index([guideId])
 }
 
 /// Safety instruction for an installation guide.
 model SafetyInstruction {
-  id          String   @id @default(cuid())
-  guideId     String
-  guide       InstallationGuide @relation(fields: [guideId], references: [id], onDelete: Cascade)
-  text        String
-  severity    String   @default("warning") // "info" | "warning" | "danger"
-  createdAt   DateTime @default(now())
+  id        String            @id @default(cuid())
+  guideId   String
+  guide     InstallationGuide @relation(fields: [guideId], references: [id], onDelete: Cascade)
+  text      String
+  severity  String            @default("warning") // "info" | "warning" | "danger"
+  createdAt DateTime          @default(now())
 
   @@index([guideId])
 }
 
 /// Configuration guide (OS provisioning, network setup, etc.).
 model ConfigurationGuide {
-  id          String   @id @default(cuid())
+  id          String            @id @default(cuid())
   guideId     String
   guide       InstallationGuide @relation(fields: [guideId], references: [id], onDelete: Cascade)
   title       String
   description String
-  configType  String   // "network" | "os" | "peripheral" | "security"
-  createdAt   DateTime @default(now())
+  configType  String // "network" | "os" | "peripheral" | "security"
+  createdAt   DateTime          @default(now())
 
   @@index([guideId])
 }
 
 /// Wiring diagram image for an installation guide.
 model WiringDiagram {
-  id          String   @id @default(cuid())
-  guideId     String
-  guide       InstallationGuide @relation(fields: [guideId], references: [id], onDelete: Cascade)
-  title       String
-  description String?
-  imageUrl    String   // secure cloud-storage path
+  id           String            @id @default(cuid())
+  guideId      String
+  guide        InstallationGuide @relation(fields: [guideId], references: [id], onDelete: Cascade)
+  title        String
+  description  String?
+  imageUrl     String // secure cloud-storage path
   thumbnailUrl String? // smaller version for the grid
-  resolution  String?  // "4096x2160"
-  createdAt   DateTime @default(now())
+  resolution   String? // "4096x2160"
+  createdAt    DateTime          @default(now())
 
   @@index([guideId])
 }
 
 /// Installation checklist item (power, driver, firmware, tests, etc.).
 model InstallationChecklist {
-  id          String   @id @default(cuid())
+  id          String            @id @default(cuid())
   guideId     String
   guide       InstallationGuide @relation(fields: [guideId], references: [id], onDelete: Cascade)
-  group       String   // "Power" | "Software" | "Hardware Tests" | "Final Verification"
-  label       String   // "Power Connected"
+  group       String // "Power" | "Software" | "Hardware Tests" | "Final Verification"
+  label       String // "Power Connected"
   description String?
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
+  sortOrder   Int               @default(0)
+  createdAt   DateTime          @default(now())
 
   @@index([guideId])
   @@index([group])
@@ -356,28 +359,29 @@ model InstallationChecklist {
 
 /// Many-to-many between InstallationGuide and Download (related drivers/firmware/SDKs).
 model ProductInstallationGuide {
-  id          String   @id @default(cuid())
-  guideId     String
-  guide       InstallationGuide @relation(fields: [guideId], references: [id], onDelete: Cascade)
-  downloadId  String?  // optional link to Download
-  relationType String  // "driver" | "firmware" | "manual" | "sdk" | "utility"
-  createdAt   DateTime @default(now())
+  id           String            @id @default(cuid())
+  guideId      String
+  guide        InstallationGuide @relation(fields: [guideId], references: [id], onDelete: Cascade)
+  downloadId   String? // optional link to Download
+  relationType String // "driver" | "firmware" | "manual" | "sdk" | "utility"
+  createdAt    DateTime          @default(now())
 
   @@index([guideId])
 }
 
 /// FAQ entry for an installation guide.
 model InstallationFAQ {
-  id          String   @id @default(cuid())
-  guideId     String
-  guide       InstallationGuide @relation(fields: [guideId], references: [id], onDelete: Cascade)
-  question    String
-  answer      String
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
+  id        String            @id @default(cuid())
+  guideId   String
+  guide     InstallationGuide @relation(fields: [guideId], references: [id], onDelete: Cascade)
+  question  String
+  answer    String
+  sortOrder Int               @default(0)
+  createdAt DateTime          @default(now())
 
   @@index([guideId])
 }
+
 // =====================================================
 // Knowledge Base & Troubleshooting models
 // =====================================================
@@ -387,46 +391,46 @@ model KnowledgeCategory {
   id          String   @id @default(cuid())
   name        String   @unique
   slug        String   @unique
-  icon        String?  // Material Symbol name
+  icon        String? // Material Symbol name
   description String?
-  color       String?  // tailwind gradient class, e.g. "from-qbit-primary to-qbit-secondary"
+  color       String? // tailwind gradient class, e.g. "from-qbit-primary to-qbit-secondary"
   sortIndex   Int      @default(0)
   createdAt   DateTime @default(now())
 
-  articles    KnowledgeArticle[]
+  articles KnowledgeArticle[]
 }
 
 /// Knowledge article master record.
 model KnowledgeArticle {
-  id              String   @id @default(cuid())
-  title           String
-  slug            String   @unique
-  excerpt         String
-  content         String   // rich-text JSON (sections, paragraphs, callouts, code blocks)
-  categoryId      String
-  category        KnowledgeCategory @relation(fields: [categoryId], references: [id])
-  author          String
-  authorAvatar    String?
-  readingTime     Int      // minutes
-  difficulty      String   // "Beginner" | "Intermediate" | "Expert"
-  featured        Boolean  @default(false)
-  popular         Boolean  @default(false)
-  latest          Boolean  @default(false)
-  viewCount       Int      @default(0)
-  helpfulCount    Int      @default(0)
-  notHelpfulCount Int      @default(0)
-  relatedProductIds String? // JSON string array of product ids
+  id                 String            @id @default(cuid())
+  title              String
+  slug               String            @unique
+  excerpt            String
+  content            String // rich-text JSON (sections, paragraphs, callouts, code blocks)
+  categoryId         String
+  category           KnowledgeCategory @relation(fields: [categoryId], references: [id])
+  author             String
+  authorAvatar       String?
+  readingTime        Int // minutes
+  difficulty         String // "Beginner" | "Intermediate" | "Expert"
+  featured           Boolean           @default(false)
+  popular            Boolean           @default(false)
+  latest             Boolean           @default(false)
+  viewCount          Int               @default(0)
+  helpfulCount       Int               @default(0)
+  notHelpfulCount    Int               @default(0)
+  relatedProductIds  String? // JSON string array of product ids
   relatedDownloadIds String? // JSON string array of download ids
-  relatedGuideIds String? // JSON string array of installation guide ids
-  relatedVideoUrls String? // JSON string array of YouTube URLs
-  relatedFaqIds   String? // JSON string array of FAQ ids
-  publishedAt     DateTime
-  updatedAt       DateTime @updatedAt
-  createdAt       DateTime @default(now())
+  relatedGuideIds    String? // JSON string array of installation guide ids
+  relatedVideoUrls   String? // JSON string array of YouTube URLs
+  relatedFaqIds      String? // JSON string array of FAQ ids
+  publishedAt        DateTime
+  updatedAt          DateTime          @updatedAt
+  createdAt          DateTime          @default(now())
 
-  sections        ArticleSection[]
-  bookmarks       ArticleBookmark[]
-  feedback        ArticleFeedback[]
+  sections  ArticleSection[]
+  bookmarks ArticleBookmark[]
+  feedback  ArticleFeedback[]
 
   @@index([categoryId])
   @@index([featured])
@@ -436,65 +440,65 @@ model KnowledgeArticle {
 
 /// A titled section within a knowledge article.
 model ArticleSection {
-  id          String   @id @default(cuid())
-  articleId   String
-  article     KnowledgeArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
-  title       String
-  content     String   // rich-text content
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
+  id        String           @id @default(cuid())
+  articleId String
+  article   KnowledgeArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  title     String
+  content   String // rich-text content
+  sortOrder Int              @default(0)
+  createdAt DateTime         @default(now())
 
   @@index([articleId])
 }
 
 /// Frequently asked question.
 model FAQ {
-  id              String   @id @default(cuid())
-  question        String
-  answer          String
-  categoryId      String?
-  relatedFaqIds   String?  // JSON string array
-  sortOrder       Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id            String   @id @default(cuid())
+  question      String
+  answer        String
+  categoryId    String?
+  relatedFaqIds String? // JSON string array
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@index([categoryId])
 }
 
 /// Troubleshooting issue master record.
 model TroubleshootingIssue {
-  id              String   @id @default(cuid())
-  title           String
-  slug            String   @unique
-  productId       String?
-  symptoms        String   // JSON string array of symptom descriptions
-  causes          String   // JSON string array of possible causes
-  resolution      String   // summary of the resolution
+  id                 String   @id @default(cuid())
+  title              String
+  slug               String   @unique
+  productId          String?
+  symptoms           String // JSON string array of symptom descriptions
+  causes             String // JSON string array of possible causes
+  resolution         String // summary of the resolution
   relatedDownloadIds String? // JSON string array
-  relatedManualIds String? // JSON string array
-  relatedGuideIds String? // JSON string array
-  relatedVideoUrls String? // JSON string array
-  difficulty      String   // "Beginner" | "Intermediate" | "Expert"
-  viewCount       Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  relatedManualIds   String? // JSON string array
+  relatedGuideIds    String? // JSON string array
+  relatedVideoUrls   String? // JSON string array
+  difficulty         String // "Beginner" | "Intermediate" | "Expert"
+  viewCount          Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
-  steps           TroubleshootingStep[]
+  steps TroubleshootingStep[]
 
   @@index([productId])
 }
 
 /// A single step in a troubleshooting resolution.
 model TroubleshootingStep {
-  id              String   @id @default(cuid())
-  issueId         String
-  issue           TroubleshootingIssue @relation(fields: [issueId], references: [id], onDelete: Cascade)
-  stepNumber      Int
-  title           String
-  description     String
-  warning         String?
-  tip             String?
-  createdAt       DateTime @default(now())
+  id          String               @id @default(cuid())
+  issueId     String
+  issue       TroubleshootingIssue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  stepNumber  Int
+  title       String
+  description String
+  warning     String?
+  tip         String?
+  createdAt   DateTime             @default(now())
 
   @@index([issueId])
   @@index([stepNumber])
@@ -502,15 +506,15 @@ model TroubleshootingStep {
 
 /// Common error code lookup (e.g. E001, ERR_PRINTER_01).
 model CommonError {
-  id              String   @id @default(cuid())
-  code            String   @unique // "E001", "ERR_PRINTER_01"
-  meaning         String
-  possibleCause   String
-  resolution      String
-  productId       String?
-  productName     String?
-  severity        String   @default("warning") // "info" | "warning" | "error"
-  createdAt       DateTime @default(now())
+  id            String   @id @default(cuid())
+  code          String   @unique // "E001", "ERR_PRINTER_01"
+  meaning       String
+  possibleCause String
+  resolution    String
+  productId     String?
+  productName   String?
+  severity      String   @default("warning") // "info" | "warning" | "error"
+  createdAt     DateTime @default(now())
 
   @@index([productId])
   @@index([severity])
@@ -523,7 +527,7 @@ model Solution {
   description String
   issueId     String?
   errorId     String?
-  steps       String?  // JSON string array of resolution steps
+  steps       String? // JSON string array of resolution steps
   createdAt   DateTime @default(now())
 
   @@index([issueId])
@@ -532,16 +536,16 @@ model Solution {
 
 /// Related-asset link (flexible — can point to a download, manual, guide, or video).
 model RelatedAsset {
-  id          String   @id @default(cuid())
-  assetType   String   // "download" | "manual" | "guide" | "video" | "product"
-  assetId     String?
-  assetUrl    String?
-  label       String
-  icon        String?
-  issueId     String?
-  errorId     String?
-  articleId   String?
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  assetType String // "download" | "manual" | "guide" | "video" | "product"
+  assetId   String?
+  assetUrl  String?
+  label     String
+  icon      String?
+  issueId   String?
+  errorId   String?
+  articleId String?
+  createdAt DateTime @default(now())
 
   @@index([issueId])
   @@index([errorId])
@@ -550,13 +554,13 @@ model RelatedAsset {
 
 /// User-bookmarked article (or FAQ or troubleshooting page).
 model ArticleBookmark {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  articleId   String
-  article     KnowledgeArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
-  bookmarkType String  @default("article") // "article" | "faq" | "troubleshooting"
-  createdAt   DateTime @default(now())
+  id           String           @id @default(cuid())
+  userId       String
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  articleId    String
+  article      KnowledgeArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  bookmarkType String           @default("article") // "article" | "faq" | "troubleshooting"
+  createdAt    DateTime         @default(now())
 
   @@unique([userId, articleId])
   @@index([userId])
@@ -564,14 +568,14 @@ model ArticleBookmark {
 
 /// Feedback on a knowledge article.
 model ArticleFeedback {
-  id          String   @id @default(cuid())
-  userId      String?
-  articleId   String
-  article     KnowledgeArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
-  rating      String   // "helpful" | "not_helpful"
-  comment     String?
-  feedbackType String  @default("rating") // "rating" | "suggestion" | "report"
-  createdAt   DateTime @default(now())
+  id           String           @id @default(cuid())
+  userId       String?
+  articleId    String
+  article      KnowledgeArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  rating       String // "helpful" | "not_helpful"
+  comment      String?
+  feedbackType String           @default("rating") // "rating" | "suggestion" | "report"
+  createdAt    DateTime         @default(now())
 
   @@index([articleId])
 }
@@ -584,15 +588,15 @@ model ArticleFeedback {
 model AuditLog {
   id          String   @id @default(cuid())
   userId      String?
-  userName    String?  // denormalised for quick display
-  action      String   // "login" | "logout" | "create" | "edit" | "delete" | "download" | "upload" | "role_change" | "settings_change" | "product_update"
-  entity      String   // "user" | "product" | "driver" | "article" | "guide" | "setting" | etc.
+  userName    String? // denormalised for quick display
+  action      String // "login" | "logout" | "create" | "edit" | "delete" | "download" | "upload" | "role_change" | "settings_change" | "product_update"
+  entity      String // "user" | "product" | "driver" | "article" | "guide" | "setting" | etc.
   entityId    String?
-  entityName  String?  // human-readable name of the affected entity
+  entityName  String? // human-readable name of the affected entity
   description String?
   ipAddress   String?
   userAgent   String?
-  metadata    String?  // JSON string of additional context
+  metadata    String? // JSON string of additional context
   createdAt   DateTime @default(now())
 
   @@index([userId])
@@ -605,28 +609,28 @@ model AuditLog {
 model SystemSetting {
   id          String   @id @default(cuid())
   key         String   @unique // "company_name" | "brand_logo_url" | "support_email" | etc.
-  value       String   // JSON-encoded value
+  value       String // JSON-encoded value
   category    String   @default("general") // "company" | "branding" | "application" | "security" | "backup"
   description String?
   updatedAt   DateTime @updatedAt
-  updatedBy   String?  // user id of the admin who last changed it
+  updatedBy   String? // user id of the admin who last changed it
 }
 
 /// Announcement / maintenance notice / system message.
 model Announcement {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   title       String
   body        String
-  type        String   @default("info") // "info" | "maintenance" | "driver_update" | "firmware_release" | "system_message"
-  severity    String   @default("info") // "info" | "warning" | "critical"
-  visibility  String   @default("public") // "public" | "internal" | "hidden"
-  targetRoles String?  // JSON string array of role ids; null = all roles
+  type        String    @default("info") // "info" | "maintenance" | "driver_update" | "firmware_release" | "system_message"
+  severity    String    @default("info") // "info" | "warning" | "critical"
+  visibility  String    @default("public") // "public" | "internal" | "hidden"
+  targetRoles String? // JSON string array of role ids; null = all roles
   startsAt    DateTime?
   endsAt      DateTime?
-  active      Boolean  @default(true)
+  active      Boolean   @default(true)
   createdBy   String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@index([type])
   @@index([visibility])
@@ -635,12 +639,12 @@ model Announcement {
 
 /// Aggregated system metric (for dashboard widgets + analytics).
 model SystemMetric {
-  id          String   @id @default(cuid())
-  metric      String   // "total_products" | "total_drivers" | "downloads_today" | "active_users" | etc.
-  value       Int
-  unit        String?  // "count" | "bytes" | "percent"
-  category    String   // "inventory" | "usage" | "health"
-  recordedAt  DateTime @default(now())
+  id         String   @id @default(cuid())
+  metric     String // "total_products" | "total_drivers" | "downloads_today" | "active_users" | etc.
+  value      Int
+  unit       String? // "count" | "bytes" | "percent"
+  category   String // "inventory" | "usage" | "health"
+  recordedAt DateTime @default(now())
 
   @@index([metric])
   @@index([category])
@@ -649,18 +653,18 @@ model SystemMetric {
 
 /// Activity feed entry (lighter than AuditLog — for dashboard timelines).
 model ActivityFeed {
-  id          String   @id @default(cuid())
-  userId      String?
-  userName    String?
-  action      String   // "uploaded" | "updated" | "deleted" | "downloaded" | "invited" | "completed"
-  entity      String
-  entityName  String?
-  icon        String?  // Material Symbol name
-  dotColor    String   @default("primary") // "primary" | "secondary" | "error" | "neutral"
-  attachment  String?  // JSON { icon, label }
-  invitees    String?  // JSON string array of initials
-  dim         Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  userId     String?
+  userName   String?
+  action     String // "uploaded" | "updated" | "deleted" | "downloaded" | "invited" | "completed"
+  entity     String
+  entityName String?
+  icon       String? // Material Symbol name
+  dotColor   String   @default("primary") // "primary" | "secondary" | "error" | "neutral"
+  attachment String? // JSON { icon, label }
+  invitees   String? // JSON string array of initials
+  dim        Boolean  @default(false)
+  createdAt  DateTime @default(now())
 
   @@index([userId])
   @@index([createdAt])
@@ -668,16 +672,16 @@ model ActivityFeed {
 
 /// Asset category (for unified asset manager — extends DownloadCategory).
 model AssetCategory {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  slug        String   @unique
-  icon        String?
-  parentId    String?  // self-reference for nested categories
-  parent      AssetCategory? @relation("AssetCategoryHierarchy", fields: [parentId], references: [id])
-  children    AssetCategory[] @relation("AssetCategoryHierarchy")
-  sortOrder   Int      @default(0)
-  visible     Boolean  @default(true)
-  createdAt   DateTime @default(now())
+  id        String          @id @default(cuid())
+  name      String          @unique
+  slug      String          @unique
+  icon      String?
+  parentId  String? // self-reference for nested categories
+  parent    AssetCategory?  @relation("AssetCategoryHierarchy", fields: [parentId], references: [id])
+  children  AssetCategory[] @relation("AssetCategoryHierarchy")
+  sortOrder Int             @default(0)
+  visible   Boolean         @default(true)
+  createdAt DateTime        @default(now())
 
   @@index([parentId])
   @@index([sortOrder])
@@ -685,23 +689,23 @@ model AssetCategory {
 
 /// Permission definition (view, create, edit, delete, upload, download, publish, approve, manage_users, manage_settings).
 model Permission {
-  id          String   @id @default(cuid())
-  key         String   @unique // "view" | "create" | "edit" | "delete" | "upload" | "download" | "publish" | "approve" | "manage_users" | "manage_settings"
-  label       String   // "View" | "Create" | etc.
+  id          String  @id @default(cuid())
+  key         String  @unique // "view" | "create" | "edit" | "delete" | "upload" | "download" | "publish" | "approve" | "manage_users" | "manage_settings"
+  label       String // "View" | "Create" | etc.
   description String?
-  category    String   @default("general") // "general" | "admin"
-  sortOrder   Int      @default(0)
+  category    String  @default("general") // "general" | "admin"
+  sortOrder   Int     @default(0)
 
   rolePermissions RolePermission[]
 }
 
 /// Many-to-many between Role (string on User) and Permission.
 model RolePermission {
-  id           String   @id @default(cuid())
-  role         String   // "administrator" | "support_engineer" | etc.
+  id           String     @id @default(cuid())
+  role         String // "administrator" | "support_engineer" | etc.
   permissionId String
   permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
-  createdAt    DateTime @default(now())
+  createdAt    DateTime   @default(now())
 
   @@unique([role, permissionId])
   @@index([role])
@@ -709,31 +713,31 @@ model RolePermission {
 
 /// Per-user UI preferences (theme, density, notification toggles).
 model UserPreference {
-  id              String   @id @default(cuid())
-  userId          String   @unique
-  theme           String   @default("system") // "light" | "dark" | "system"
-  density         String   @default("comfortable") // "comfortable" | "compact"
-  emailNotifications Boolean @default(true)
-  pushNotifications Boolean @default(true)
-  sidebarCollapsed Boolean @default(false)
-  dashboardLayout String?  // JSON for custom widget arrangement
-  updatedAt       DateTime @updatedAt
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  theme              String   @default("system") // "light" | "dark" | "system"
+  density            String   @default("comfortable") // "comfortable" | "compact"
+  emailNotifications Boolean  @default(true)
+  pushNotifications  Boolean  @default(true)
+  sidebarCollapsed   Boolean  @default(false)
+  dashboardLayout    String? // JSON for custom widget arrangement
+  updatedAt          DateTime @updatedAt
 
   @@index([userId])
 }
 
 /// Admin notification (in-app banner / toast for administrators).
 model AdminNotification {
-  id          String   @id @default(cuid())
-  title       String
-  message     String
-  type        String   @default("info") // "info" | "warning" | "error" | "success"
-  category    String   @default("system") // "system" | "security" | "storage" | "user"
-  actionUrl   String?
-  actionLabel String?
-  read        Boolean  @default(false)
+  id           String   @id @default(cuid())
+  title        String
+  message      String
+  type         String   @default("info") // "info" | "warning" | "error" | "success"
+  category     String   @default("system") // "system" | "security" | "storage" | "user"
+  actionUrl    String?
+  actionLabel  String?
+  read         Boolean  @default(false)
   targetUserId String? // null = all admins
-  createdAt   DateTime @default(now())
+  createdAt    DateTime @default(now())
 
   @@index([read])
   @@index([category])
@@ -753,12 +757,12 @@ model CustomerInquiry {
   company     String?
   subject     String
   message     String
-  productId   String?  // optional product reference
+  productId   String? // optional product reference
   productName String?
   status      String   @default("new") // "new" | "in_progress" | "resolved" | "closed"
   priority    String   @default("normal") // "low" | "normal" | "high" | "urgent"
-  assignedTo  String?  // admin user id
-  response    String?  // admin response
+  assignedTo  String? // admin user id
+  response    String? // admin response
   ipAddress   String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -770,12 +774,12 @@ model CustomerInquiry {
 
 /// Tracks page visits for public analytics (no PII — just counts).
 model PublicPageVisit {
-  id          String   @id @default(cuid())
-  page        String   // "product-overview" | "product-library" | "product-details" | etc.
-  pageId      String?  // e.g. product id or article id
-  referrer    String?  // where the visitor came from
-  country     String?  // geo-IP country code
-  visitedAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  page      String // "product-overview" | "product-library" | "product-details" | etc.
+  pageId    String? // e.g. product id or article id
+  referrer  String? // where the visitor came from
+  country   String? // geo-IP country code
+  visitedAt DateTime @default(now())
 
   @@index([page])
   @@index([visitedAt])
@@ -783,10 +787,11 @@ model PublicPageVisit {
 
 /// Tracks product views for analytics (most-viewed products).
 model PublicProductView {
-  id          String   @id @default(cuid())
-  productId   String
+  id          String       @id @default(cuid())
+  productId   String?
+  product     QbitProduct? @relation(fields: [productId], references: [id], onDelete: SetNull)
   productName String?
-  viewedAt    DateTime @default(now())
+  viewedAt    DateTime     @default(now())
   referrer    String?
 
   @@index([productId])
@@ -795,25 +800,25 @@ model PublicProductView {
 
 /// Newsletter subscription.
 model CustomerNewsletter {
-  id          String   @id @default(cuid())
-  email       String   @unique
-  name        String?
-  subscribedAt DateTime @default(now())
-  active      Boolean  @default(true)
-  unsubscribeToken String @unique
+  id               String   @id @default(cuid())
+  email            String   @unique
+  name             String?
+  subscribedAt     DateTime @default(now())
+  active           Boolean  @default(true)
+  unsubscribeToken String   @unique
 
   @@index([active])
 }
 
 /// Public contact message (quick contact form, lighter than inquiry).
 model PublicContactMessage {
-  id          String   @id @default(cuid())
-  name        String
-  email       String
-  message     String
-  category    String   @default("general") // "general" | "sales" | "support" | "partnership"
-  createdAt   DateTime @default(now())
-  handled     Boolean  @default(false)
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  message   String
+  category  String   @default("general") // "general" | "sales" | "support" | "partnership"
+  createdAt DateTime @default(now())
+  handled   Boolean  @default(false)
 
   @@index([handled])
   @@index([category])
@@ -825,14 +830,14 @@ model PublicContactMessage {
 
 /// AI conversation session.
 model AIConversation {
-  id          String   @id @default(cuid())
-  userId      String?
-  title       String   @default("New Conversation")
-  pinned      Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  userId    String?
+  title     String   @default("New Conversation")
+  pinned    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  messages    AIMessage[]
+  messages AIMessage[]
 
   @@index([userId])
   @@index([pinned])
@@ -840,19 +845,19 @@ model AIConversation {
 
 /// A single message in an AI conversation.
 model AIMessage {
-  id              String   @id @default(cuid())
-  conversationId  String
-  conversation    AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  role            String   // "user" | "assistant" | "system"
-  content         String
-  model           String?  // AI model used (e.g. "glm-4")
-  provider        String?  // "zai" | "openai" | "gemini" | "claude" | "local"
-  tokensUsed      Int      @default(0)
-  responseTimeMs  Int?     // latency in milliseconds
-  createdAt       DateTime @default(now())
+  id             String         @id @default(cuid())
+  conversationId String
+  conversation   AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           String // "user" | "assistant" | "system"
+  content        String
+  model          String? // AI model used (e.g. "glm-4")
+  provider       String? // "zai" | "openai" | "gemini" | "claude" | "local"
+  tokensUsed     Int            @default(0)
+  responseTimeMs Int? // latency in milliseconds
+  createdAt      DateTime       @default(now())
 
-  sourceRefs      SourceReference[]
-  feedback        AIFeedback[]
+  sourceRefs SourceReference[]
+  feedback   AIFeedback[]
 
   @@index([conversationId])
   @@index([role])
@@ -872,13 +877,13 @@ model SearchHistory {
 
 /// Suggested question shown in the chat UI.
 model SuggestedQuestion {
-  id          String   @id @default(cuid())
-  question    String
-  category    String   // "installation" | "drivers" | "troubleshooting" | "firmware" | "general"
-  icon        String?
-  sortOrder   Int      @default(0)
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  question  String
+  category  String // "installation" | "drivers" | "troubleshooting" | "firmware" | "general"
+  icon      String?
+  sortOrder Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
 
   @@index([active])
   @@index([category])
@@ -886,13 +891,13 @@ model SuggestedQuestion {
 
 /// User feedback on an AI message.
 model AIFeedback {
-  id          String   @id @default(cuid())
-  messageId   String
-  message     AIMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  userId      String?
-  rating      String   // "helpful" | "not_helpful"
-  comment     String?
-  createdAt   DateTime @default(now())
+  id        String    @id @default(cuid())
+  messageId String
+  message   AIMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId    String?
+  rating    String // "helpful" | "not_helpful"
+  comment   String?
+  createdAt DateTime  @default(now())
 
   @@index([messageId])
   @@index([rating])
@@ -900,16 +905,16 @@ model AIFeedback {
 
 /// Source reference — documents/sources used by the AI to generate a response.
 model SourceReference {
-  id          String   @id @default(cuid())
-  messageId   String
-  message     AIMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  sourceType  String   // "product" | "driver" | "manual" | "article" | "guide" | "faq" | "troubleshooting" | "video"
-  sourceId    String?
-  title       String
-  url         String?
-  excerpt     String?  // relevant snippet
-  relevance   Float    @default(0) // 0-1 relevance score
-  createdAt   DateTime @default(now())
+  id         String    @id @default(cuid())
+  messageId  String
+  message    AIMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  sourceType String // "product" | "driver" | "manual" | "article" | "guide" | "faq" | "troubleshooting" | "video"
+  sourceId   String?
+  title      String
+  url        String?
+  excerpt    String? // relevant snippet
+  relevance  Float     @default(0) // 0-1 relevance score
+  createdAt  DateTime  @default(now())
 
   @@index([messageId])
   @@index([sourceType])
@@ -921,21 +926,21 @@ model SourceReference {
 
 /// Bulk import job (products, assets, categories, etc.)
 model ImportJob {
-  id          String   @id @default(cuid())
-  type        String   // "product" | "driver" | "manual" | "category" | "youtube" | "image" | "document"
-  fileName    String
-  fileSize    Int
-  status      String   @default("pending") // "pending" | "previewing" | "importing" | "completed" | "failed" | "rolled_back"
-  totalRows   Int      @default(0)
-  successCount Int     @default(0)
-  errorCount  Int      @default(0)
-  errors      String?  // JSON array of error messages
-  startedBy   String?  // admin user id
-  startedAt   DateTime?
-  completedAt DateTime?
-  createdAt   DateTime @default(now())
+  id           String    @id @default(cuid())
+  type         String // "product" | "driver" | "manual" | "category" | "youtube" | "image" | "document"
+  fileName     String
+  fileSize     Int
+  status       String    @default("pending") // "pending" | "previewing" | "importing" | "completed" | "failed" | "rolled_back"
+  totalRows    Int       @default(0)
+  successCount Int       @default(0)
+  errorCount   Int       @default(0)
+  errors       String? // JSON array of error messages
+  startedBy    String? // admin user id
+  startedAt    DateTime?
+  completedAt  DateTime?
+  createdAt    DateTime  @default(now())
 
-  logs        ImportLog[]
+  logs ImportLog[]
 
   @@index([type])
   @@index([status])
@@ -944,14 +949,14 @@ model ImportJob {
 
 /// Individual row-level log for an import job.
 model ImportLog {
-  id          String   @id @default(cuid())
-  jobId       String
-  job         ImportJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  rowNumber   Int
-  status      String   // "success" | "error" | "skipped"
-  message     String?
-  data        String?  // JSON of the row data
-  createdAt   DateTime @default(now())
+  id        String    @id @default(cuid())
+  jobId     String
+  job       ImportJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  rowNumber Int
+  status    String // "success" | "error" | "skipped"
+  message   String?
+  data      String? // JSON of the row data
+  createdAt DateTime  @default(now())
 
   @@index([jobId])
   @@index([status])
@@ -959,15 +964,15 @@ model ImportLog {
 
 /// Content versioning — tracks revisions for products, drivers, manuals, guides, articles.
 model ContentVersion {
-  id          String   @id @default(cuid())
-  entityType  String   // "product" | "driver" | "manual" | "guide" | "article" | "faq"
-  entityId    String
-  version     Int      // incrementing version number
-  content     String   // JSON snapshot of the entity at this version
-  changedBy   String?  // admin user id
+  id            String   @id @default(cuid())
+  entityType    String // "product" | "driver" | "manual" | "guide" | "article" | "faq"
+  entityId      String
+  version       Int // incrementing version number
+  content       String // JSON snapshot of the entity at this version
+  changedBy     String? // admin user id
   changedByName String?
   changeSummary String? // optional description of changes
-  createdAt   DateTime @default(now())
+  createdAt     DateTime @default(now())
 
   @@index([entityType, entityId])
   @@index([version])
@@ -976,23 +981,23 @@ model ContentVersion {
 
 /// Central media library file.
 model MediaFile {
-  id          String   @id @default(cuid())
-  fileName    String
-  originalName String
-  mimeType    String
-  fileSize    Int
-  storagePath String   // secure cloud-storage key
+  id            String   @id @default(cuid())
+  fileName      String
+  originalName  String
+  mimeType      String
+  fileSize      Int
+  storagePath   String // secure cloud-storage key
   thumbnailPath String? // generated thumbnail path
-  webpPath    String?  // generated WebP version path
-  width       Int?
-  height      Int?
-  altText     String?
-  folder      String   @default("general") // "products" | "documents" | "icons" | "banners" | "general"
-  tags        String?  // JSON string array
-  usageCount  Int      @default(0) // how many entities reference this file
-  uploadedBy  String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  webpPath      String? // generated WebP version path
+  width         Int?
+  height        Int?
+  altText       String?
+  folder        String   @default("general") // "products" | "documents" | "icons" | "banners" | "general"
+  tags          String? // JSON string array
+  usageCount    Int      @default(0) // how many entities reference this file
+  uploadedBy    String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@index([folder])
   @@index([mimeType])
@@ -1001,19 +1006,19 @@ model MediaFile {
 
 /// SEO configuration per entity (product, article, guide).
 model SEOConfiguration {
-  id          String   @id @default(cuid())
-  entityType  String   // "product" | "article" | "guide" | "page"
-  entityId    String
-  slug        String   @unique // SEO-friendly URL slug
-  title       String?
-  description String?
-  keywords    String?  // JSON string array
-  ogImage     String?
-  canonicalUrl String?
-  jsonLd      String?  // custom JSON-LD structured data override
-  autoGenerated Boolean @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  entityType    String // "product" | "article" | "guide" | "page"
+  entityId      String
+  slug          String   @unique // SEO-friendly URL slug
+  title         String?
+  description   String?
+  keywords      String? // JSON string array
+  ogImage       String?
+  canonicalUrl  String?
+  jsonLd        String? // custom JSON-LD structured data override
+  autoGenerated Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@index([entityType, entityId])
   @@index([slug])
@@ -1021,14 +1026,14 @@ model SEOConfiguration {
 
 /// QR code mapping — links QR codes to products, drivers, manuals, share pages.
 model QRMapping {
-  id          String   @id @default(cuid())
-  entityType  String   // "product" | "driver" | "manual" | "share"
-  entityId    String
-  qrType      String   // "product_page" | "driver_download" | "manual_view" | "share_link"
-  targetUrl   String   // the URL the QR code opens
-  qrImageUrl  String?  // generated QR code image URL
-  downloadCount Int    @default(0)
-  createdAt   DateTime @default(now())
+  id            String   @id @default(cuid())
+  entityType    String // "product" | "driver" | "manual" | "share"
+  entityId      String
+  qrType        String // "product_page" | "driver_download" | "manual_view" | "share_link"
+  targetUrl     String // the URL the QR code opens
+  qrImageUrl    String? // generated QR code image URL
+  downloadCount Int      @default(0)
+  createdAt     DateTime @default(now())
 
   @@index([entityType, entityId])
   @@index([qrType])
@@ -1036,12 +1041,12 @@ model QRMapping {
 
 /// Slug history — tracks URL changes to support redirects.
 model SlugHistory {
-  id          String   @id @default(cuid())
-  entityType  String   // "product" | "article" | "guide"
-  entityId    String
-  oldSlug     String
-  newSlug     String
-  changedAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  entityType String // "product" | "article" | "guide"
+  entityId   String
+  oldSlug    String
+  newSlug    String
+  changedAt  DateTime @default(now())
 
   @@index([entityType, entityId])
   @@index([oldSlug])
@@ -1058,46 +1063,46 @@ model SlugHistory {
 /// A customer site that owns one or more installed devices.
 /// Reused across multiple work orders.
 model FSMCustomer {
-  id            String   @id @default(cuid())
-  name          String                       // contact person name
-  companyName   String?
-  phone         String
-  email         String?
-  addressLine   String
-  city          String?
-  state         String?
-  postalCode    String?
-  country       String   @default("India")
-  geoLat        Float?
-  geoLng        Float?
-  notes         String?                      // public service notes ONLY — never sales notes
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id          String   @id @default(cuid())
+  name        String // contact person name
+  companyName String?
+  phone       String
+  email       String?
+  addressLine String
+  city        String?
+  state       String?
+  postalCode  String?
+  country     String   @default("India")
+  geoLat      Float?
+  geoLng      Float?
+  notes       String? // public service notes ONLY — never sales notes
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  workOrders    WorkOrder[]
-  assets        FSMCustomerAsset[]
-  branches      Branch[]
+  workOrders WorkOrder[]
+  assets     FSMCustomerAsset[]
+  branches   Branch[]
 }
 
 /// A device owned by a customer (reuses Product module for catalog link).
 /// Stores only service-relevant data — no purchase/sales info.
 model FSMCustomerAsset {
-  id             String   @id @default(cuid())
-  customerId     String
-  customer       FSMCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  productName    String                       // "QBIT T-800 Thermal Printer"
-  model          String                        // "T-800"
-  serialNumber   String   @unique
-  qrCode         String?                       // QR payload (URL or code)
-  purchaseDate   DateTime?                     // for warranty calc only — no price
-  warrantyStatus String   @default("active")   // "active" | "expired" | "void"
-  warrantyExpiry DateTime?
+  id              String      @id @default(cuid())
+  customerId      String
+  customer        FSMCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  productName     String // "QBIT T-800 Thermal Printer"
+  model           String // "T-800"
+  serialNumber    String      @unique
+  qrCode          String? // QR payload (URL or code)
+  purchaseDate    DateTime? // for warranty calc only — no price
+  warrantyStatus  String      @default("active") // "active" | "expired" | "void"
+  warrantyExpiry  DateTime?
   firmwareVersion String?
-  driverVersion  String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  driverVersion   String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 
-  workOrders     WorkOrder[]
+  workOrders WorkOrder[]
 
   @@index([customerId])
   @@index([model])
@@ -1105,44 +1110,44 @@ model FSMCustomerAsset {
 
 /// The master work order — covers all service types.
 model WorkOrder {
-  id              String   @id @default(cuid())
-  jobNumber       String   @unique            // "WO-94281" — human-readable
-  publicTrackingCode String @unique           // for /track page (no auth)
-  type            String                       // see WorkOrderType union
-  status          String   @default("pending") // see WorkOrderStatus union
-  priority        String   @default("normal")  // "low" | "normal" | "high" | "urgent"
-  customerId      String
-  customer        FSMCustomer @relation(fields: [customerId], references: [id])
-  assetId         String?
-  asset           FSMCustomerAsset? @relation(fields: [assetId], references: [id])
-  assignedEngineerId String?                   // User.id of installation_engineer
-  assignedEngineer User? @relation("AssignedEngineer", fields: [assignedEngineerId], references: [id])
-  scheduledDate   DateTime
-  scheduledTime   String?                      // "10:30"
-  estimatedMinutes Int      @default(60)
-  startedAt       DateTime?
-  arrivedAt       DateTime?
-  completedAt     DateTime?
-  cancelledAt     DateTime?
-  rescheduledFrom DateTime?
-  rescheduledTo   DateTime?
-  description     String?
+  id                 String            @id @default(cuid())
+  jobNumber          String            @unique // "WO-94281" — human-readable
+  publicTrackingCode String            @unique // for /track page (no auth)
+  type               String // see WorkOrderType union
+  status             String            @default("pending") // see WorkOrderStatus union
+  priority           String            @default("normal") // "low" | "normal" | "high" | "urgent"
+  customerId         String
+  customer           FSMCustomer       @relation(fields: [customerId], references: [id])
+  assetId            String?
+  asset              FSMCustomerAsset? @relation(fields: [assetId], references: [id])
+  assignedEngineerId String? // User.id of installation_engineer
+  assignedEngineer   User?             @relation("AssignedEngineer", fields: [assignedEngineerId], references: [id])
+  scheduledDate      DateTime
+  scheduledTime      String? // "10:30"
+  estimatedMinutes   Int               @default(60)
+  startedAt          DateTime?
+  arrivedAt          DateTime?
+  completedAt        DateTime?
+  cancelledAt        DateTime?
+  rescheduledFrom    DateTime?
+  rescheduledTo      DateTime?
+  description        String?
   // Deliberately NO price/cost/margin/commission/invoice fields.
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
 
-  timeline        JobTimeline[]
-  photos          WorkOrderPhoto[]
-  signatures      CustomerSignature[]
-  notes           EngineerNote[]
-  report          CompletionReport?
-  notifications   NotificationLog[]
+  timeline           JobTimeline[]
+  photos             WorkOrderPhoto[]
+  signatures         CustomerSignature[]
+  notes              EngineerNote[]
+  report             CompletionReport?
+  notifications      NotificationLog[]
   inAppNotifications Notification[]
-  reminders       Reminder[]
-  emailQueue      EmailQueue[]
-  whatsappQueue   WhatsAppQueue[]
-  trackingTokens  TrackingToken[]
-  feedback        CustomerFeedback?
+  reminders          Reminder[]
+  emailQueue         EmailQueue[]
+  whatsappQueue      WhatsAppQueue[]
+  trackingTokens     TrackingToken[]
+  feedback           CustomerFeedback?
 
   @@index([status])
   @@index([assignedEngineerId])
@@ -1154,16 +1159,16 @@ model WorkOrder {
 
 /// One row per status change — full audit trail of the job lifecycle.
 model JobTimeline {
-  id              String   @id @default(cuid())
-  workOrderId     String
-  workOrder       WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
-  status          String                       // the new status that was set
-  label           String                       // human label, e.g. "Engineer Arrived"
-  description     String?
-  actorId         String?                      // User.id (null for system-generated events)
-  actorName       String?
-  metadata        String?                      // JSON string for extra context
-  occurredAt      DateTime @default(now())
+  id          String    @id @default(cuid())
+  workOrderId String
+  workOrder   WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  status      String // the new status that was set
+  label       String // human label, e.g. "Engineer Arrived"
+  description String?
+  actorId     String? // User.id (null for system-generated events)
+  actorName   String?
+  metadata    String? // JSON string for extra context
+  occurredAt  DateTime  @default(now())
 
   @@index([workOrderId])
   @@index([occurredAt])
@@ -1171,20 +1176,20 @@ model JobTimeline {
 
 /// Photos captured before/during/after installation.
 model WorkOrderPhoto {
-  id              String   @id @default(cuid())
-  workOrderId     String
-  workOrder       WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
-  category        String                       // "before" | "setup" | "cables" | "after" | "issue"
-  caption         String?
-  storagePath     String                       // /uploads/fsm/wo-94281/before-1.jpg
-  thumbnailPath   String?
-  mimeType        String   @default("image/jpeg")
-  fileSize        Int      @default(0)
-  geoLat          Float?
-  geoLng          Float?
-  uploadedById    String?
-  capturedAt      DateTime @default(now())
-  createdAt       DateTime @default(now())
+  id            String    @id @default(cuid())
+  workOrderId   String
+  workOrder     WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  category      String // "before" | "setup" | "cables" | "after" | "issue"
+  caption       String?
+  storagePath   String // /uploads/fsm/wo-94281/before-1.jpg
+  thumbnailPath String?
+  mimeType      String    @default("image/jpeg")
+  fileSize      Int       @default(0)
+  geoLat        Float?
+  geoLng        Float?
+  uploadedById  String?
+  capturedAt    DateTime  @default(now())
+  createdAt     DateTime  @default(now())
 
   @@index([workOrderId])
   @@index([category])
@@ -1192,44 +1197,44 @@ model WorkOrderPhoto {
 
 /// Customer digital signature at completion.
 model CustomerSignature {
-  id              String   @id @default(cuid())
-  workOrderId     String
-  workOrder       WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
-  storagePath     String                       // PNG file path
-  signerName      String
-  signedAt        DateTime @default(now())
-  ipAddress       String?
-  userAgent       String?
+  id          String    @id @default(cuid())
+  workOrderId String
+  workOrder   WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  storagePath String // PNG file path
+  signerName  String
+  signedAt    DateTime  @default(now())
+  ipAddress   String?
+  userAgent   String?
 
   @@index([workOrderId])
 }
 
 /// Private notes added by the engineer during the job (never shown to customer).
 model EngineerNote {
-  id              String   @id @default(cuid())
-  workOrderId     String
-  workOrder       WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
-  authorId        String
-  authorName      String?
-  body            String
-  isInternal      Boolean  @default(true)     // always true — never expose to customer
-  createdAt       DateTime @default(now())
+  id          String    @id @default(cuid())
+  workOrderId String
+  workOrder   WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  authorId    String
+  authorName  String?
+  body        String
+  isInternal  Boolean   @default(true) // always true — never expose to customer
+  createdAt   DateTime  @default(now())
 
   @@index([workOrderId])
 }
 
 /// Auto-generated completion report (one per work order, created on completion).
 model CompletionReport {
-  id              String   @id @default(cuid())
-  workOrderId     String   @unique
+  id              String    @id @default(cuid())
+  workOrderId     String    @unique
   workOrder       WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
-  reportNumber    String   @unique            // "RPT-2026-94281"
+  reportNumber    String    @unique // "RPT-2026-94281"
   summary         String
-  testsPerformed  String                       // JSON array of { name, result, notes }
-  partsReplaced   String?                      // JSON array
+  testsPerformed  String // JSON array of { name, result, notes }
+  partsReplaced   String? // JSON array
   recommendations String?
-  pdfStoragePath  String?                      // generated PDF file
-  generatedAt     DateTime @default(now())
+  pdfStoragePath  String? // generated PDF file
+  generatedAt     DateTime  @default(now())
   generatedById   String?
 
   @@index([workOrderId])
@@ -1237,24 +1242,24 @@ model CompletionReport {
 
 /// Outbound notification log — email/WhatsApp sent to customer.
 model NotificationLog {
-  id              String   @id @default(cuid())
-  workOrderId     String
-  workOrder       WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
-  channel         String                       // "email" | "whatsapp" | "sms" | "in_app"
-  templateCode    String   @default("legacy")  // template code (e.g. "customer.job_assigned.whatsapp")
-  templateId      String?                      // optional FK to NotificationTemplate
-  templateRef     NotificationTemplate? @relation(fields: [templateId], references: [id])
-  recipient       String                       // email or phone
-  recipientRole   String   @default("customer") // "admin" | "engineer" | "customer"
-  subject         String?
-  body            String
-  status          String   @default("sent")   // "queued" | "sent" | "failed" | "read"
-  attempts        Int      @default(0)
-  sentAt          DateTime @default(now())
-  deliveredAt     DateTime?
-  readAt          DateTime?
-  error           String?
-  providerName    String?
+  id                String                @id @default(cuid())
+  workOrderId       String
+  workOrder         WorkOrder             @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  channel           String // "email" | "whatsapp" | "sms" | "in_app"
+  templateCode      String                @default("legacy") // template code (e.g. "customer.job_assigned.whatsapp")
+  templateId        String? // optional FK to NotificationTemplate
+  templateRef       NotificationTemplate? @relation(fields: [templateId], references: [id])
+  recipient         String // email or phone
+  recipientRole     String                @default("customer") // "admin" | "engineer" | "customer"
+  subject           String?
+  body              String
+  status            String                @default("sent") // "queued" | "sent" | "failed" | "read"
+  attempts          Int                   @default(0)
+  sentAt            DateTime              @default(now())
+  deliveredAt       DateTime?
+  readAt            DateTime?
+  error             String?
+  providerName      String?
   providerMessageId String?
 
   @@index([workOrderId])
@@ -1282,23 +1287,23 @@ model NotificationLog {
 /// Reusable notification template — one per (event × channel).
 /// Variables use {{VarName}} syntax, substituted by the template engine.
 model NotificationTemplate {
-  id              String   @id @default(cuid())
-  code            String   @unique               // "customer.job_assigned.whatsapp"
-  name            String                          // "Customer: Job Assigned (WhatsApp)"
-  event           String                          // "job_assigned" | "engineer_accepted" | ...
-  recipientType   String                          // "admin" | "engineer" | "customer"
-  channel         String                          // "email" | "whatsapp" | "sms" | "in_app"
-  subject         String?                         // email only
-  body            String                          // template body with {{Var}} placeholders
-  htmlBody        String?                         // email only — HTML version
-  isActive        Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id            String   @id @default(cuid())
+  code          String   @unique // "customer.job_assigned.whatsapp"
+  name          String // "Customer: Job Assigned (WhatsApp)"
+  event         String // "job_assigned" | "engineer_accepted" | ...
+  recipientType String // "admin" | "engineer" | "customer"
+  channel       String // "email" | "whatsapp" | "sms" | "in_app"
+  subject       String? // email only
+  body          String // template body with {{Var}} placeholders
+  htmlBody      String? // email only — HTML version
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  notifications   Notification[]                  // in-app notifications spawned from this template
-  emailQueue      EmailQueue[]
-  whatsappQueue   WhatsAppQueue[]
-  logs            NotificationLog[]
+  notifications Notification[] // in-app notifications spawned from this template
+  emailQueue    EmailQueue[]
+  whatsappQueue WhatsAppQueue[]
+  logs          NotificationLog[]
 
   @@index([event])
   @@index([channel])
@@ -1309,25 +1314,25 @@ model NotificationTemplate {
 /// In-app notification — surfaced in the admin/engineer Notification Center.
 /// Stored separately from NotificationLog (which is for outbound messages).
 model Notification {
-  id              String   @id @default(cuid())
-  recipientId     String                          // User.id (admin or engineer)
-  recipientType   String                          // "admin" | "engineer"
-  title           String
-  message         String
-  category        String   @default("system")    // "system" | "job" | "reminder" | "alert"
-  priority        String   @default("normal")    // "low" | "normal" | "high" | "urgent"
-  actionUrl       String?                         // deep link into the app
-  actionLabel     String?
-  readAt          DateTime?
-  archivedAt      DateTime?
+  id            String                @id @default(cuid())
+  recipientId   String // User.id (admin or engineer)
+  recipientType String // "admin" | "engineer"
+  title         String
+  message       String
+  category      String                @default("system") // "system" | "job" | "reminder" | "alert"
+  priority      String                @default("normal") // "low" | "normal" | "high" | "urgent"
+  actionUrl     String? // deep link into the app
+  actionLabel   String?
+  readAt        DateTime?
+  archivedAt    DateTime?
   // Link to template + work order for traceability
-  templateId      String?
-  template        NotificationTemplate? @relation(fields: [templateId], references: [id])
-  workOrderId     String?
-  workOrder       WorkOrder? @relation(fields: [workOrderId], references: [id])
+  templateId    String?
+  template      NotificationTemplate? @relation(fields: [templateId], references: [id])
+  workOrderId   String?
+  workOrder     WorkOrder?            @relation(fields: [workOrderId], references: [id])
   // Metadata for filtering / dedup
-  metadata        String?                         // JSON string
-  createdAt       DateTime @default(now())
+  metadata      String? // JSON string
+  createdAt     DateTime              @default(now())
 
   @@index([recipientId, readAt])
   @@index([recipientType])
@@ -1339,31 +1344,31 @@ model Notification {
 /// Email queue — provider-independent outbound email queue.
 /// Workers (or cron) process this queue and call the configured EmailProvider.
 model EmailQueue {
-  id              String   @id @default(cuid())
-  toAddress       String
-  fromAddress     String   @default("noreply@qbithub.com")
-  replyTo         String?
-  subject         String
-  textBody        String
-  htmlBody        String?
+  id                String                @id @default(cuid())
+  toAddress         String
+  fromAddress       String                @default("noreply@qbithub.com")
+  replyTo           String?
+  subject           String
+  textBody          String
+  htmlBody          String?
   // Status lifecycle: queued → sent | failed | retried
-  status          String   @default("queued")    // "queued" | "sent" | "failed" | "retried"
-  attempts        Int      @default(0)
-  maxAttempts     Int      @default(3)
-  nextRetryAt     DateTime?
-  sentAt          DateTime?
-  lastError       String?
+  status            String                @default("queued") // "queued" | "sent" | "failed" | "retried"
+  attempts          Int                   @default(0)
+  maxAttempts       Int                   @default(3)
+  nextRetryAt       DateTime?
+  sentAt            DateTime?
+  lastError         String?
   // Linkage
-  templateId      String?
-  template        NotificationTemplate? @relation(fields: [templateId], references: [id])
-  workOrderId     String?
-  workOrder       WorkOrder? @relation(fields: [workOrderId], references: [id])
-  recipientUserId String?
+  templateId        String?
+  template          NotificationTemplate? @relation(fields: [templateId], references: [id])
+  workOrderId       String?
+  workOrder         WorkOrder?            @relation(fields: [workOrderId], references: [id])
+  recipientUserId   String?
   // Provider tracking
-  providerName    String?                         // "sendgrid" | "ses" | "console"
+  providerName      String? // "sendgrid" | "ses" | "console"
   providerMessageId String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
 
   @@index([status, nextRetryAt])
   @@index([workOrderId])
@@ -1374,28 +1379,28 @@ model EmailQueue {
 /// WhatsApp queue — provider-independent outbound WhatsApp queue.
 /// Workers process this queue and call the configured WhatsAppProvider.
 model WhatsAppQueue {
-  id              String   @id @default(cuid())
-  toPhone         String                          // E.164 format: +919876543210
-  templateName    String?                         // WhatsApp Business template name (for approved templates)
-  body            String                          // message body (variables already substituted)
+  id                String                @id @default(cuid())
+  toPhone           String // E.164 format: +919876543210
+  templateName      String? // WhatsApp Business template name (for approved templates)
+  body              String // message body (variables already substituted)
   // Status lifecycle: queued → sent | failed | retried
-  status          String   @default("queued")    // "queued" | "sent" | "failed" | "retried"
-  attempts        Int      @default(0)
-  maxAttempts     Int      @default(3)
-  nextRetryAt     DateTime?
-  sentAt          DateTime?
-  lastError       String?
+  status            String                @default("queued") // "queued" | "sent" | "failed" | "retried"
+  attempts          Int                   @default(0)
+  maxAttempts       Int                   @default(3)
+  nextRetryAt       DateTime?
+  sentAt            DateTime?
+  lastError         String?
   // Linkage
-  templateId      String?
-  template        NotificationTemplate? @relation(fields: [templateId], references: [id])
-  workOrderId     String?
-  workOrder       WorkOrder? @relation(fields: [workOrderId], references: [id])
-  recipientUserId String?
+  templateId        String?
+  template          NotificationTemplate? @relation(fields: [templateId], references: [id])
+  workOrderId       String?
+  workOrder         WorkOrder?            @relation(fields: [workOrderId], references: [id])
+  recipientUserId   String?
   // Provider tracking
-  providerName    String?                         // "twilio" | "gupshup" | "console"
+  providerName      String? // "twilio" | "gupshup" | "console"
   providerMessageId String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
 
   @@index([status, nextRetryAt])
   @@index([workOrderId])
@@ -1406,23 +1411,23 @@ model WhatsAppQueue {
 /// Scheduled reminder for a work order.
 /// Cron job scans for due reminders and dispatches notifications.
 model Reminder {
-  id              String   @id @default(cuid())
-  workOrderId     String
-  workOrder       WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
-  recipientType   String                          // "engineer" | "customer"
-  recipientId     String?                         // User.id (engineer) — null for customer (uses work order phone)
-  recipientContact String                         // phone or email
-  offsetMinutes   Int                             // negative offset from scheduledDate: -1440 (1d), -120 (2h), -30 (30min)
-  offsetLabel     String                          // "1 Day Before" | "2 Hours Before" | "30 Minutes Before"
-  channels        String                          // JSON array: ["in_app", "whatsapp", "email"]
+  id                 String    @id @default(cuid())
+  workOrderId        String
+  workOrder          WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  recipientType      String // "engineer" | "customer"
+  recipientId        String? // User.id (engineer) — null for customer (uses work order phone)
+  recipientContact   String // phone or email
+  offsetMinutes      Int // negative offset from scheduledDate: -1440 (1d), -120 (2h), -30 (30min)
+  offsetLabel        String // "1 Day Before" | "2 Hours Before" | "30 Minutes Before"
+  channels           String // JSON array: ["in_app", "whatsapp", "email"]
   // Status lifecycle
-  status          String   @default("scheduled")  // "scheduled" | "sent" | "skipped" | "cancelled"
-  dueAt           DateTime                        // computed: scheduledDate + offsetMinutes
-  sentAt          DateTime?
+  status             String    @default("scheduled") // "scheduled" | "sent" | "skipped" | "cancelled"
+  dueAt              DateTime // computed: scheduledDate + offsetMinutes
+  sentAt             DateTime?
   // Linkage
-  notificationLogIds String?                      // JSON array of NotificationLog IDs created
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  notificationLogIds String? // JSON array of NotificationLog IDs created
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   @@index([status, dueAt])
   @@index([workOrderId])
@@ -1453,24 +1458,24 @@ model Reminder {
 /// Secure tracking token — one per work order (1:N if rotated).
 /// Customers access /track/<token> to view their job status without login.
 model TrackingToken {
-  id              String   @id @default(cuid())
-  token           String   @unique               // 32-char URL-safe random
-  workOrderId     String
-  workOrder       WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  id                  String    @id @default(cuid())
+  token               String    @unique // 32-char URL-safe random
+  workOrderId         String
+  workOrder           WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
   // Audit fields
-  viewCount       Int      @default(0)
-  lastViewedAt    DateTime?
-  lastViewedIp    String?
+  viewCount           Int       @default(0)
+  lastViewedAt        DateTime?
+  lastViewedIp        String?
   lastViewedUserAgent String?
   // Lifecycle
-  isActive        Boolean  @default(true)
-  expiresAt       DateTime?                       // null = never expires
-  revokedAt       DateTime?
-  revokedReason   String?
+  isActive            Boolean   @default(true)
+  expiresAt           DateTime? // null = never expires
+  revokedAt           DateTime?
+  revokedReason       String?
   // Source — how the customer received this token
-  source          String   @default("email")     // "email" | "whatsapp" | "sms" | "qr_code" | "manual"
-  createdAt       DateTime @default(now())
-  createdBy       String?                         // User.id of admin who created, or "system"
+  source              String    @default("email") // "email" | "whatsapp" | "sms" | "qr_code" | "manual"
+  createdAt           DateTime  @default(now())
+  createdBy           String? // User.id of admin who created, or "system"
 
   @@index([workOrderId])
   @@index([isActive])
@@ -1480,27 +1485,27 @@ model TrackingToken {
 /// Customer feedback submitted after job completion.
 /// One feedback per work order (enforced by unique constraint).
 model CustomerFeedback {
-  id              String   @id @default(cuid())
-  workOrderId     String   @unique
-  workOrder       WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  id                    String    @id @default(cuid())
+  workOrderId           String    @unique
+  workOrder             WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
   // Link to tracking token used to submit (for audit)
-  trackingTokenId String?
+  trackingTokenId       String?
   // Rating (1-5 stars)
-  overallRating   Int                             // 1-5
+  overallRating         Int // 1-5
   // Optional category breakdowns (nullable — only set if customer rates them)
-  punctualityRating Int?
+  punctualityRating     Int?
   professionalismRating Int?
-  qualityRating Int?
-  communicationRating Int?
+  qualityRating         Int?
+  communicationRating   Int?
   // Free-form feedback
-  comment         String?                         // optional, max 2000 chars
-  recommendImprovement String?                    // optional, max 1000 chars
-  wouldRecommend  Boolean?                        // "Would you recommend QBIT to others?"
+  comment               String? // optional, max 2000 chars
+  recommendImprovement  String? // optional, max 1000 chars
+  wouldRecommend        Boolean? // "Would you recommend QBIT to others?"
   // Submitter metadata
-  customerName    String?
-  submittedAt     DateTime @default(now())
-  ipAddress       String?
-  userAgent       String?
+  customerName          String?
+  submittedAt           DateTime  @default(now())
+  ipAddress             String?
+  userAgent             String?
 
   @@index([workOrderId])
   @@index([overallRating])
@@ -1510,25 +1515,25 @@ model CustomerFeedback {
 /// Per-engineer rating aggregate — derived from CustomerFeedback but
 /// stored separately for fast dashboard queries.
 model InstallationRating {
-  id              String   @id @default(cuid())
-  engineerId      String   @unique
-  engineer        User     @relation(fields: [engineerId], references: [id], onDelete: Cascade)
+  id                 String    @id @default(cuid())
+  engineerId         String    @unique
+  engineer           User      @relation(fields: [engineerId], references: [id], onDelete: Cascade)
   // Aggregate stats
-  totalRatings    Int      @default(0)
-  averageRating   Float    @default(0)
-  fiveStarCount   Int      @default(0)
-  fourStarCount   Int      @default(0)
-  threeStarCount  Int      @default(0)
-  twoStarCount    Int      @default(0)
-  oneStarCount    Int      @default(0)
+  totalRatings       Int       @default(0)
+  averageRating      Float     @default(0)
+  fiveStarCount      Int       @default(0)
+  fourStarCount      Int       @default(0)
+  threeStarCount     Int       @default(0)
+  twoStarCount       Int       @default(0)
+  oneStarCount       Int       @default(0)
   // Category averages (nullable until first rating)
-  avgPunctuality  Float?
+  avgPunctuality     Float?
   avgProfessionalism Float?
-  avgQuality      Float?
-  avgCommunication Float?
+  avgQuality         Float?
+  avgCommunication   Float?
   // Last updated
-  lastRatingAt    DateTime?
-  updatedAt       DateTime @updatedAt
+  lastRatingAt       DateTime?
+  updatedAt          DateTime  @updatedAt
 
   @@index([engineerId])
   @@index([averageRating])
@@ -1545,18 +1550,18 @@ model InstallationRating {
 /// Engineer GPS location ping — written by the mobile app periodically
 /// and on status transitions (e.g. when engineer clicks "On The Way").
 model EngineerLocation {
-  id              String   @id @default(cuid())
-  engineerId      String                          // User.id
-  workOrderId     String?                         // optional link to active job
-  geoLat          Float
-  geoLng          Float
-  accuracy        Float?                          // meters
-  heading         Float?                          // degrees (0-360)
-  speed           Float?                          // m/s
-  batteryLevel    Float?                          // 0-1
-  isOnline        Boolean  @default(true)
-  capturedAt      DateTime @default(now())
-  createdAt       DateTime @default(now())
+  id           String   @id @default(cuid())
+  engineerId   String // User.id
+  workOrderId  String? // optional link to active job
+  geoLat       Float
+  geoLng       Float
+  accuracy     Float? // meters
+  heading      Float? // degrees (0-360)
+  speed        Float? // m/s
+  batteryLevel Float? // 0-1
+  isOnline     Boolean  @default(true)
+  capturedAt   DateTime @default(now())
+  createdAt    DateTime @default(now())
 
   @@index([engineerId, capturedAt])
   @@index([workOrderId])
@@ -1567,26 +1572,26 @@ model EngineerLocation {
 /// The mobile app writes to this table when it can't reach the server,
 /// then a background sync (or next-online trigger) replays the mutation.
 model OfflineSyncQueue {
-  id              String   @id @default(cuid())
-  engineerId      String                          // User.id
+  id             String    @id @default(cuid())
+  engineerId     String // User.id
   // Mutation details
-  method          String                          // "PATCH" | "POST"
-  url             String                          // "/api/fsm/work-orders/wo_94281"
-  body            String                          // JSON string
+  method         String // "PATCH" | "POST"
+  url            String // "/api/fsm/work-orders/wo_94281"
+  body           String // JSON string
   // Sync state
-  status          String   @default("pending")   // "pending" | "syncing" | "synced" | "failed"
-  attempts        Int      @default(0)
-  maxAttempts     Int      @default(5)
-  lastAttemptAt   DateTime?
-  syncedAt        DateTime?
+  status         String    @default("pending") // "pending" | "syncing" | "synced" | "failed"
+  attempts       Int       @default(0)
+  maxAttempts    Int       @default(5)
+  lastAttemptAt  DateTime?
+  syncedAt       DateTime?
   // Result (filled after sync)
-  responseStatus  Int?
-  responseBody    String?
-  error           String?
+  responseStatus Int?
+  responseBody   String?
+  error          String?
   // Client metadata
-  clientQueueId   String?                         // ID generated on client (IndexedDB)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  clientQueueId  String? // ID generated on client (IndexedDB)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   @@index([engineerId, status])
   @@index([status, createdAt])
@@ -1609,49 +1614,208 @@ model OfflineSyncQueue {
 /// detected devices. Created lazily: when an admin maps an unknown device,
 /// the target product is created here (or linked if it already exists).
 model QbitProduct {
-  id              String   @id @default(cuid())
-  name            String                          // "QBIT T-800 Thermal Printer"
-  brand           String   @default("QBIT")       // "QBIT" | "Epson" | "Zebra" | etc.
-  manufacturer    String?                         // "QBIT Technologies"
-  model           String   @unique                // "T-800"
-  deviceType      String                          // "thermal_printer" | "barcode_scanner" | etc.
-  description     String?
-  // Resource links (reuse existing modules)
-  driverDownloadUrl   String?
-  manualUrl           String?
-  installationGuideUrl String?
-  knowledgeBaseUrl    String?
-  isActive        Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id                     String    @id @default(cuid())
+  name                   String // "QBIT T-800 Thermal Printer"
+  brand                  String    @default("QBIT") // "QBIT" | "Epson" | "Zebra" | etc.
+  manufacturer           String? // "QBIT Technologies"
+  model                  String    @unique // "T-800"
+  /// URL-friendly slug used for /products/[slug] deep links (e.g. "t800", "hub-x-pro").
+  /// Auto-generated from model on create if not supplied. Unique.
+  slug                   String    @unique
+  deviceType             String // "thermal_printer" | "barcode_scanner" | etc.
+  /// SKU / part number for global search.
+  sku                    String?
+  /// Pattern matching serial numbers (regex or glob) — used by global search.
+  serialPattern          String?
+  description            String? // short description (one-liner)
+  longDescription        String? // long-form marketing description (markdown/JSON)
+  /// Hero/gallery images. Always non-empty after admin upload — the first
+  /// image is used as the cover on product cards. Each entry is a URL.
+  imageUrl               String? // primary cover image
+  galleryImages          String? // JSON array of {url, alt} objects
+  /// Category slug for Browse Categories filtering (kebab-case: "windows-pos", "thermal-printer", ...).
+  category               String?
+  /// Featured/trending flag for the Trending Hardware carousel.
+  isFeatured             Boolean   @default(false)
+  isTrending             Boolean   @default(false)
+  badgeLabel             String? // "Most Downloaded" | "Newly Released" | etc.
+  startingPrice          String? // display string e.g. "₹45,000"
+  /// Tech specs as JSON: [{ property, value }]. Rendered in detail page table.
+  specifications         String?
+  /// Features as JSON: [{ icon, title, description }].
+  features               String?
+  /// Supported operating systems as JSON: [{ icon, label }] (e.g. windows/android/linux).
+  operatingSystems       String?
+  /// YouTube/Drive video URLs as JSON: [{ title, url, type }] (type: "youtube" | "drive" | "external").
+  videos                 String?
+  /// Resource links (reuse existing modules)
+  driverDownloadUrl      String?
+  manualUrl              String?
+  installationGuideUrl   String?
+  knowledgeBaseUrl       String?
+  brochureUrl            String?
+  datasheetUrl           String?
+  warrantyUrl            String?
+  sdkUrl                 String?
+  utilityUrl             String?
+  /// Auto-generated QR code URL pointing to the public product detail page.
+  qrCodeUrl              String?
+  /// SEO fields.
+  seoTitle               String?
+  seoDescription         String?
+  seoKeywords            String? // comma-separated
+  /// Comma-separated tags for filtering and search.
+  tags                   String?
+  /// Comma-separated list of compatible device names (free text).
+  compatibleDevices      String?
+  /// Lifecycle status: "active" | "deprecated" | "coming_soon" | "discontinued".
+  status                 String    @default("active")
+  /// Aggregated counters (denormalized for fast reads).
+  viewCount              Int       @default(0)
+  downloadCount          Int       @default(0)
+  /// Dr. QBIT / AI Diagnostics flags.
+  aiDiagnosticsSupported Boolean   @default(true)
+  drQbitSupported        Boolean   @default(true)
+  /// Latest driver / firmware version strings (denormalized for fast display).
+  latestDriverVersion    String?
+  latestFirmwareVersion  String?
+  lastUpdated            DateTime?
+  isActive               Boolean   @default(true)
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
 
   hardwareSignatures HardwareSignature[]
   detectedDevices    DetectedDevice[]
   unknownDeviceMaps  UnknownDevice[]
   devicePassports    DevicePassport[]
   firmwareCompat     FirmwareCompatibility[]
+  /// Self-relation: products related to this one (e.g. accessories, variants).
+  /// Stored as a join table to support ordering + bidirectional reads.
+  relatedProducts    ProductRelation[]       @relation("ProductRelationsFrom")
+  relatedTo          ProductRelation[]       @relation("ProductRelationsTo")
+  /// Per-product OS compatibility (structured form, optional — supplement to operatingSystems JSON).
+  productOS          ProductOS[]
+  /// Media files (gallery images, brochures, datasheets, warranty PDFs, etc.).
+  mediaFiles         ProductMedia[]
+  /// Structured specs (supplement to specifications JSON).
+  specEntries        ProductSpecification[]
+  /// Structured features (supplement to features JSON).
+  featureEntries     ProductFeature[]
+  /// Public view log.
+  views              PublicProductView[]
+
+  @@index([slug])
+  @@index([category])
+  @@index([deviceType])
+  @@index([isFeatured])
+  @@index([isTrending])
+  @@index([status])
+  @@index([isActive])
+}
+
+/// Bidirectional product-to-product relation for "Related Products" section.
+model ProductRelation {
+  id        String      @id @default(cuid())
+  productId String // source product
+  product   QbitProduct @relation("ProductRelationsFrom", fields: [productId], references: [id], onDelete: Cascade)
+  relatedId String // target product
+  related   QbitProduct @relation("ProductRelationsTo", fields: [relatedId], references: [id], onDelete: Cascade)
+  sortIndex Int         @default(0)
+  createdAt DateTime    @default(now())
+
+  @@unique([productId, relatedId])
+  @@index([productId])
+  @@index([relatedId])
+}
+
+/// Structured per-product OS compatibility (many-to-many; supersedes
+/// the JSON `operatingSystems` field for admin-managed rows).
+model ProductOS {
+  id         String      @id @default(cuid())
+  productId  String
+  product    QbitProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  osName     String // "Windows 11", "Android 13", "Linux"
+  osIcon     String? // Material Symbols icon name
+  minVersion String? // optional minimum version constraint
+  sortIndex  Int         @default(0)
+
+  @@index([productId])
+}
+
+/// Media file attached to a product (image, brochure, datasheet, warranty,
+/// SDK, utility, video poster, etc.). Replaces the need for many separate
+/// tables and lets the admin reuse one Media Manager UI.
+model ProductMedia {
+  id           String      @id @default(cuid())
+  productId    String
+  product      QbitProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  /// Type of media: "image" | "brochure" | "datasheet" | "warranty" |
+  /// "sdk" | "utility" | "video" | "manual" | "firmware" | "driver" | "other".
+  type         String
+  title        String
+  url          String // public URL or storagePath
+  thumbnailUrl String?
+  mimeType     String?
+  fileSize     Int?
+  /// For videos: provider + external ID (e.g. YouTube video ID).
+  provider     String? // "youtube" | "drive" | "vimeo" | "internal"
+  externalId   String? // video ID for embedding
+  /// For images: alt text + sort order in the gallery.
+  altText      String?
+  sortIndex    Int         @default(0)
+  isPrimary    Boolean     @default(false) // for gallery cover selection
+  createdAt    DateTime    @default(now())
+
+  @@index([productId, type])
+  @@index([productId, sortIndex])
+}
+
+/// Structured per-product specification rows (admin-managed).
+model ProductSpecification {
+  id        String      @id @default(cuid())
+  productId String
+  product   QbitProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  property  String // "Processor (CPU)"
+  value     String // "Intel Core i5-1135G7"
+  group     String? // optional grouping (e.g. "Compute", "Display")
+  sortIndex Int         @default(0)
+
+  @@index([productId])
+}
+
+/// Structured per-product feature rows (admin-managed).
+model ProductFeature {
+  id          String      @id @default(cuid())
+  productId   String
+  product     QbitProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  icon        String // Material Symbols icon name
+  title       String
+  description String
+  sortIndex   Int         @default(0)
+
+  @@index([productId])
 }
 
 /// Hardware signature — the matching fingerprint for a known product.
 /// One product can have multiple signatures (e.g. different USB PIDs for
 /// different regional variants).
 model HardwareSignature {
-  id              String   @id @default(cuid())
-  productId       String
-  product         QbitProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  id             String      @id @default(cuid())
+  productId      String
+  product        QbitProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
   // Primary matching keys
-  vendorId        String?                         // USB VID (e.g. "0x04B8" for Epson)
-  productIdCode   String?                         // USB PID (e.g. "0x0202")
-  hardwareId      String?                         // composite hardware ID
-  manufacturer    String?                         // for matching non-USB devices
-  model           String?                         // for matching by model name
+  vendorId       String? // USB VID (e.g. "0x04B8" for Epson)
+  productIdCode  String? // USB PID (e.g. "0x0202")
+  hardwareId     String? // composite hardware ID
+  manufacturer   String? // for matching non-USB devices
+  model          String? // for matching by model name
   // Network signature (for LAN/WiFi devices)
-  macPrefix       String?                         // first 3 octets of MAC (OUI)
-  openPorts       String?                         // JSON array of ports, e.g. [9100, 515]
+  macPrefix      String? // first 3 octets of MAC (OUI)
+  openPorts      String? // JSON array of ports, e.g. [9100, 515]
   // Metadata
-  connectionType  String?                         // "usb" | "com" | "lan" | "wifi"
-  notes           String?
-  createdAt       DateTime @default(now())
+  connectionType String? // "usb" | "com" | "lan" | "wifi"
+  notes          String?
+  createdAt      DateTime    @default(now())
 
   @@index([productId])
   @@index([vendorId, productIdCode])
@@ -1661,29 +1825,29 @@ model HardwareSignature {
 /// A scan session — one run of the Desktop Agent scanner.
 /// Records who/when/how-many devices were found.
 model ScanSession {
-  id              String   @id @default(cuid())
-  sessionToken    String   @unique                // random token for this scan
-  engineerId      String?                         // User.id (null for admin-only scans)
-  engineerName    String?
-  customerId      String?                         // FSMCustomer.id (optional)
-  customerName    String?
-  workOrderId     String?                         // WorkOrder.id (optional)
+  id             String    @id @default(cuid())
+  sessionToken   String    @unique // random token for this scan
+  engineerId     String? // User.id (null for admin-only scans)
+  engineerName   String?
+  customerId     String? // FSMCustomer.id (optional)
+  customerName   String?
+  workOrderId    String? // WorkOrder.id (optional)
   // Scan metadata
-  agentVersion    String?                         // Desktop Agent version
-  osInfo          String?                         // "Windows 11 x64"
-  hostname        String?                         // machine that ran the scan
-  scanDurationMs  Int?                            // total scan time
-  deviceCount     Int      @default(0)
+  agentVersion   String? // Desktop Agent version
+  osInfo         String? // "Windows 11 x64"
+  hostname       String? // machine that ran the scan
+  scanDurationMs Int? // total scan time
+  deviceCount    Int       @default(0)
   // Connection type counts
-  usbCount        Int      @default(0)
-  comCount        Int      @default(0)
-  lanCount        Int      @default(0)
-  wifiCount       Int      @default(0)
-  bluetoothCount  Int      @default(0)
+  usbCount       Int       @default(0)
+  comCount       Int       @default(0)
+  lanCount       Int       @default(0)
+  wifiCount      Int       @default(0)
+  bluetoothCount Int       @default(0)
   // Status
-  status          String   @default("completed")  // "running" | "completed" | "failed"
-  startedAt       DateTime @default(now())
-  completedAt     DateTime?
+  status         String    @default("completed") // "running" | "completed" | "failed"
+  startedAt      DateTime  @default(now())
+  completedAt    DateTime?
 
   detectedDevices DetectedDevice[]
   unknownDevices  UnknownDevice[]
@@ -1698,45 +1862,45 @@ model ScanSession {
 /// (matchedProductId set) or unmatched (null — see UnknownDevice for separate
 /// unknown-device tracking).
 model DetectedDevice {
-  id              String   @id @default(cuid())
-  scanSessionId   String
-  scanSession     ScanSession @relation(fields: [scanSessionId], references: [id], onDelete: Cascade)
+  id               String       @id @default(cuid())
+  scanSessionId    String
+  scanSession      ScanSession  @relation(fields: [scanSessionId], references: [id], onDelete: Cascade)
   // Connection
-  connectionType  String                          // "usb" | "com" | "lan" | "wifi" | "bluetooth"
-  port            String?                         // "COM3", "USB001", "192.168.1.50:9100"
+  connectionType   String // "usb" | "com" | "lan" | "wifi" | "bluetooth"
+  port             String? // "COM3", "USB001", "192.168.1.50:9100"
   // Identification
-  deviceName      String?                         // "QBIT T-800 Thermal Printer"
-  manufacturer    String?                         // "QBIT Technologies"
-  brand           String?                         // "QBIT"
-  model           String?                         // "T-800"
-  hardwareId      String?                         // composite ID
-  vendorId        String?                         // USB VID
-  productIdCode   String?                         // USB PID
-  serialNumber    String?                         // if available
-  usbVersion      String?                         // "2.0" | "3.0"
-  osInfo          String?                         // device's OS (for POS terminals)
-  architecture    String?                         // "x64" | "arm64"
+  deviceName       String? // "QBIT T-800 Thermal Printer"
+  manufacturer     String? // "QBIT Technologies"
+  brand            String? // "QBIT"
+  model            String? // "T-800"
+  hardwareId       String? // composite ID
+  vendorId         String? // USB VID
+  productIdCode    String? // USB PID
+  serialNumber     String? // if available
+  usbVersion       String? // "2.0" | "3.0"
+  osInfo           String? // device's OS (for POS terminals)
+  architecture     String? // "x64" | "arm64"
   // Network-specific
-  ipAddress       String?
-  macAddress      String?
-  hostname        String?
-  openPorts       String?                         // JSON array
-  signalQuality   Int?                            // 0-100 (WiFi)
+  ipAddress        String?
+  macAddress       String?
+  hostname         String?
+  openPorts        String? // JSON array
+  signalQuality    Int? // 0-100 (WiFi)
   // Status
-  status          String   @default("ready")     // "ready" | "offline" | "unknown" | "unsupported"
+  status           String       @default("ready") // "ready" | "offline" | "unknown" | "unsupported"
   // Matching
   matchedProductId String?
   matchedProduct   QbitProduct? @relation(fields: [matchedProductId], references: [id])
-  matchConfidence  Float?                         // 0-1
-  matchMethod      String?                        // "vid_pid" | "mac_prefix" | "model" | "manual"
+  matchConfidence  Float? // 0-1
+  matchMethod      String? // "vid_pid" | "mac_prefix" | "model" | "manual"
   // Timestamps
-  firstDetectedAt DateTime @default(now())
-  lastSeenAt      DateTime @default(now())
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  firstDetectedAt  DateTime     @default(now())
+  lastSeenAt       DateTime     @default(now())
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 
   // Device Passport (one-to-one — created when device is matched to a product)
-  passport        DevicePassport?
+  passport DevicePassport?
 
   @@index([scanSessionId])
   @@index([connectionType])
@@ -1750,14 +1914,14 @@ model DetectedDevice {
 /// QbitProduct. Admins can map these to existing products via DeviceMapping.
 /// Once mapped, a HardwareSignature is created so future scans auto-match.
 model UnknownDevice {
-  id              String   @id @default(cuid())
+  id              String       @id @default(cuid())
   scanSessionId   String
-  scanSession     ScanSession @relation(fields: [scanSessionId], references: [id], onDelete: Cascade)
+  scanSession     ScanSession  @relation(fields: [scanSessionId], references: [id], onDelete: Cascade)
   // Raw identification data
-  hardwareId      String?                         // composite ID (best effort)
-  vendorId        String?                         // USB VID
-  productIdCode   String?                         // USB PID
-  deviceName      String?                         // whatever the OS reported
+  hardwareId      String? // composite ID (best effort)
+  vendorId        String? // USB VID
+  productIdCode   String? // USB PID
+  deviceName      String? // whatever the OS reported
   manufacturer    String?
   model           String?
   connectionType  String?
@@ -1765,14 +1929,14 @@ model UnknownDevice {
   macAddress      String?
   ipAddress       String?
   // Mapping state
-  mappedProductId String?                         // QbitProduct.id once admin maps it
+  mappedProductId String? // QbitProduct.id once admin maps it
   mappedProduct   QbitProduct? @relation(fields: [mappedProductId], references: [id])
   mappedAt        DateTime?
-  mappedBy        String?                         // User.id of admin
+  mappedBy        String? // User.id of admin
   mappedByName    String?
   // Metadata
-  firstSeenAt     DateTime @default(now())
-  createdAt       DateTime @default(now())
+  firstSeenAt     DateTime     @default(now())
+  createdAt       DateTime     @default(now())
 
   @@index([scanSessionId])
   @@index([vendorId, productIdCode])
@@ -1800,56 +1964,56 @@ model UnknownDevice {
 /// Created automatically when a DetectedDevice is matched to a QbitProduct.
 /// One passport per unique hardware identity (serial number or VID+PID+port).
 model DevicePassport {
-  id              String   @id @default(cuid())
-  passportNumber  String   @unique                // "PASS-2026-00001"
+  id                   String          @id @default(cuid())
+  passportNumber       String          @unique // "PASS-2026-00001"
   // Link to detected device + product
-  detectedDeviceId String? @unique
-  detectedDevice   DetectedDevice? @relation(fields: [detectedDeviceId], references: [id])
-  productId       String?
-  product         QbitProduct? @relation(fields: [productId], references: [id])
+  detectedDeviceId     String?         @unique
+  detectedDevice       DetectedDevice? @relation(fields: [detectedDeviceId], references: [id])
+  productId            String?
+  product              QbitProduct?    @relation(fields: [productId], references: [id])
   // Hardware identity (denormalized for search + display)
-  hardwareId      String?
-  vendorId        String?
-  productIdCode   String?
-  serialNumber    String?
-  deviceName      String?
-  manufacturer    String?
-  brand           String?
-  model           String?
-  connectionType  String?
-  port            String?
-  usbVersion      String?
-  osInfo          String?
-  architecture    String?
-  macAddress      String?
-  ipAddress       String?
+  hardwareId           String?
+  vendorId             String?
+  productIdCode        String?
+  serialNumber         String?
+  deviceName           String?
+  manufacturer         String?
+  brand                String?
+  model                String?
+  connectionType       String?
+  port                 String?
+  usbVersion           String?
+  osInfo               String?
+  architecture         String?
+  macAddress           String?
+  ipAddress            String?
   // Device status (computed from driver intelligence + scan data)
-  deviceStatus    String   @default("ready")     // "ready" | "driver_missing" | "driver_outdated" | "unsupported" | "unknown"
+  deviceStatus         String          @default("ready") // "ready" | "driver_missing" | "driver_outdated" | "unsupported" | "unknown"
   // Customer link (optional — set when device is associated with a customer asset)
-  customerAssetId String?
+  customerAssetId      String?
   // Branch link (optional — for fleet grouping by physical location)
-  branchId        String?
-  branch          Branch? @relation(fields: [branchId], references: [id])
+  branchId             String?
+  branch               Branch?         @relation(fields: [branchId], references: [id])
   // Engineer assigned to this device (optional)
-  assignedEngineerId String?
+  assignedEngineerId   String?
   // Timeline (denormalized for fast display)
-  firstDetectedAt DateTime @default(now())
-  lastScannedAt   DateTime?
-  lastDriverUpdateAt DateTime?
+  firstDetectedAt      DateTime        @default(now())
+  lastScannedAt        DateTime?
+  lastDriverUpdateAt   DateTime?
   lastFirmwareUpdateAt DateTime?
-  lastInstallationAt DateTime?
-  lastServiceAt   DateTime?
+  lastInstallationAt   DateTime?
+  lastServiceAt        DateTime?
   // Metadata
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
 
-  driverInfo      DriverInformation?
-  warranty        DeviceWarranty?
-  driverHistory   DriverHistory[]
-  firmwareInfo    FirmwareInformation?
-  firmwareHistory FirmwareHistory[]
+  driverInfo         DriverInformation?
+  warranty           DeviceWarranty?
+  driverHistory      DriverHistory[]
+  firmwareInfo       FirmwareInformation?
+  firmwareHistory    FirmwareHistory[]
   diagnosticSessions DiagnosticSession[]
-  testSessions    DeviceTestSession[]
+  testSessions       DeviceTestSession[]
 
   @@index([productId])
   @@index([serialNumber])
@@ -1864,28 +2028,28 @@ model DevicePassport {
 /// Driver intelligence — installed vs latest driver comparison.
 /// One row per passport (updated when driver info changes).
 model DriverInformation {
-  id              String   @id @default(cuid())
-  passportId      String   @unique
-  passport        DevicePassport @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  id                       String         @id @default(cuid())
+  passportId               String         @unique
+  passport                 DevicePassport @relation(fields: [passportId], references: [id], onDelete: Cascade)
   // Installed driver (from Desktop Agent scan)
-  installedDriverName    String?
-  installedDriverVersion String?
-  installedDriverProvider String?
-  installedDriverDate    DateTime?
+  installedDriverName      String?
+  installedDriverVersion   String?
+  installedDriverProvider  String?
+  installedDriverDate      DateTime?
   // Latest available (from QBIT Driver Library — DriverVersion table)
-  latestDriverVersion    String?
-  latestDriverReleaseDate DateTime?
-  latestDriverDownloadUrl String?
-  latestDriverFileSize   Int?                    // bytes
+  latestDriverVersion      String?
+  latestDriverReleaseDate  DateTime?
+  latestDriverDownloadUrl  String?
+  latestDriverFileSize     Int? // bytes
   latestDriverReleaseNotes String?
   // Comparison result
-  driverStatus    String   @default("unknown")  // "installed" | "update_available" | "missing" | "unsupported"
+  driverStatus             String         @default("unknown") // "installed" | "update_available" | "missing" | "unsupported"
   // OS compatibility
-  supportedOses   String?                         // JSON array: ["Windows 11", "Windows 10", "Ubuntu 22.04"]
+  supportedOses            String? // JSON array: ["Windows 11", "Windows 10", "Ubuntu 22.04"]
   // Metadata
-  lastCheckedAt   DateTime @default(now())
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  lastCheckedAt            DateTime       @default(now())
+  createdAt                DateTime       @default(now())
+  updatedAt                DateTime       @updatedAt
 
   @@index([passportId])
   @@index([driverStatus])
@@ -1893,23 +2057,23 @@ model DriverInformation {
 
 /// Device warranty — linked to customer asset purchase date.
 model DeviceWarranty {
-  id              String   @id @default(cuid())
-  passportId      String   @unique
-  passport        DevicePassport @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  id                    String         @id @default(cuid())
+  passportId            String         @unique
+  passport              DevicePassport @relation(fields: [passportId], references: [id], onDelete: Cascade)
   // Warranty data
-  purchaseDate    DateTime?
-  warrantyStartDate DateTime?
-  warrantyExpiryDate DateTime?
-  warrantyStatus  String   @default("unknown")  // "active" | "expired" | "void" | "unknown"
-  warrantyDaysRemaining Int?                      // computed: days until expiry (negative = expired)
+  purchaseDate          DateTime?
+  warrantyStartDate     DateTime?
+  warrantyExpiryDate    DateTime?
+  warrantyStatus        String         @default("unknown") // "active" | "expired" | "void" | "unknown"
+  warrantyDaysRemaining Int? // computed: days until expiry (negative = expired)
   // Extended warranty
-  extendedWarranty Boolean  @default(false)
-  extendedExpiryDate DateTime?
+  extendedWarranty      Boolean        @default(false)
+  extendedExpiryDate    DateTime?
   // Provider
-  warrantyProvider String?
+  warrantyProvider      String?
   // Metadata
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
 
   @@index([passportId])
   @@index([warrantyStatus])
@@ -1918,21 +2082,21 @@ model DeviceWarranty {
 /// Driver history — audit trail of driver changes on this device.
 /// One row per driver event (install, update, rollback, uninstall).
 model DriverHistory {
-  id              String   @id @default(cuid())
+  id              String         @id @default(cuid())
   passportId      String
   passport        DevicePassport @relation(fields: [passportId], references: [id], onDelete: Cascade)
   // Event data
-  eventType       String                          // "install" | "update" | "rollback" | "uninstall" | "scan"
+  eventType       String // "install" | "update" | "rollback" | "uninstall" | "scan"
   oldVersion      String?
   newVersion      String?
   driverName      String?
   driverProvider  String?
   // Actor
-  performedBy     String?                         // User.id or "system" or "desktop-agent"
+  performedBy     String? // User.id or "system" or "desktop-agent"
   performedByName String?
   // Notes
   notes           String?
-  occurredAt      DateTime @default(now())
+  occurredAt      DateTime       @default(now())
 
   @@index([passportId])
   @@index([occurredAt])
@@ -1962,36 +2126,36 @@ model DriverHistory {
 /// Links to the existing Firmware master record + Download for file storage.
 /// Never duplicates firmware file storage — reuses Download.storagePath.
 model FirmwareRelease {
-  id              String   @id @default(cuid())
-  firmwareId      String                          // links to existing Firmware master
-  firmware        Firmware @relation(fields: [firmwareId], references: [id], onDelete: Cascade)
+  id                   String    @id @default(cuid())
+  firmwareId           String // links to existing Firmware master
+  firmware             Firmware  @relation(fields: [firmwareId], references: [id], onDelete: Cascade)
   // Version info
-  version         String                          // "4.0.2"
-  buildNumber     String?                         // "build-4021"
-  releaseDate     DateTime
+  version              String // "4.0.2"
+  buildNumber          String? // "build-4021"
+  releaseDate          DateTime
   // File (reuses existing Download — no duplicate storage)
-  downloadId      String?                         // links to Download record
-  download        Download? @relation(fields: [downloadId], references: [id])
-  fileSize        Int?                            // bytes (from Download)
-  checksum        String?                         // SHA-256 hash for integrity
+  downloadId           String? // links to Download record
+  download             Download? @relation(fields: [downloadId], references: [id])
+  fileSize             Int? // bytes (from Download)
+  checksum             String? // SHA-256 hash for integrity
   // Release metadata
-  releaseNotes    String?                         // changelog text
-  releaseNotesHtml String?                        // HTML formatted notes
-  isCritical      Boolean  @default(false)        // security/critical update
-  isLatest        Boolean  @default(false)        // current latest version
-  isStable        Boolean  @default(true)         // stable vs beta
+  releaseNotes         String? // changelog text
+  releaseNotesHtml     String? // HTML formatted notes
+  isCritical           Boolean   @default(false) // security/critical update
+  isLatest             Boolean   @default(false) // current latest version
+  isStable             Boolean   @default(true) // stable vs beta
   // Compatibility
-  supportedModels String?                         // JSON array: ["T-800", "T-800 Pro"]
-  supportedHardwareIds String?                    // JSON array of hardware ID patterns
-  minOsVersion    String?                         // minimum OS required
+  supportedModels      String? // JSON array: ["T-800", "T-800 Pro"]
+  supportedHardwareIds String? // JSON array of hardware ID patterns
+  minOsVersion         String? // minimum OS required
   // Metadata
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
   // Relations
-  compatibility   FirmwareCompatibility[]
-  history         FirmwareHistory[]
-  information     FirmwareInformation[]
+  compatibility FirmwareCompatibility[]
+  history       FirmwareHistory[]
+  information   FirmwareInformation[]
 
   @@index([firmwareId])
   @@index([version])
@@ -2002,20 +2166,20 @@ model FirmwareRelease {
 /// Firmware compatibility matrix — which device models + hardware IDs
 /// are compatible with which firmware release.
 model FirmwareCompatibility {
-  id              String   @id @default(cuid())
+  id                String          @id @default(cuid())
   firmwareReleaseId String
   firmwareRelease   FirmwareRelease @relation(fields: [firmwareReleaseId], references: [id], onDelete: Cascade)
   // Compatibility criteria
-  productId       String?                         // QbitProduct.id (optional — for product-specific compat)
-  product         QbitProduct? @relation(fields: [productId], references: [id])
-  deviceModel     String                          // "T-800", "BS-550", "HUB-X-Pro"
-  hardwareIdPattern String?                       // regex or glob pattern for hardware ID
-  vendorId        String?                         // USB VID constraint
-  productIdCode   String?                         // USB PID constraint
+  productId         String? // QbitProduct.id (optional — for product-specific compat)
+  product           QbitProduct?    @relation(fields: [productId], references: [id])
+  deviceModel       String // "T-800", "BS-550", "HUB-X-Pro"
+  hardwareIdPattern String? // regex or glob pattern for hardware ID
+  vendorId          String? // USB VID constraint
+  productIdCode     String? // USB PID constraint
   // Compatibility status
-  isCompatible    Boolean  @default(true)
-  notes           String?                         // e.g. "Requires driver v2.4+"
-  createdAt       DateTime @default(now())
+  isCompatible      Boolean         @default(true)
+  notes             String? // e.g. "Requires driver v2.4+"
+  createdAt         DateTime        @default(now())
 
   @@index([firmwareReleaseId])
   @@index([productId])
@@ -2027,34 +2191,34 @@ model FirmwareCompatibility {
 /// One row per passport (updated when firmware info changes).
 /// Follows the same pattern as DriverInformation.
 model FirmwareInformation {
-  id              String   @id @default(cuid())
-  passportId      String   @unique
-  passport        DevicePassport @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  id                      String           @id @default(cuid())
+  passportId              String           @unique
+  passport                DevicePassport   @relation(fields: [passportId], references: [id], onDelete: Cascade)
   // Installed firmware (from Desktop Agent scan — never invented)
-  installedVersion    String?                     // "4.0.2" or null if not available
-  installedBuildNumber String?
-  installedFirmwareDate DateTime?
+  installedVersion        String? // "4.0.2" or null if not available
+  installedBuildNumber    String?
+  installedFirmwareDate   DateTime?
   installedFirmwareVendor String?
-  installedCompatibility String?                  // "Compatible" | "Unknown" | "Incompatible"
+  installedCompatibility  String? // "Compatible" | "Unknown" | "Incompatible"
   // Latest available (from FirmwareRelease)
-  latestReleaseId String?
-  latestRelease   FirmwareRelease? @relation(fields: [latestReleaseId], references: [id])
-  latestVersion   String?
-  latestReleaseDate DateTime?
-  latestDownloadUrl String?
-  latestFileSize  Int?
-  latestChecksum  String?
-  latestReleaseNotes String?
+  latestReleaseId         String?
+  latestRelease           FirmwareRelease? @relation(fields: [latestReleaseId], references: [id])
+  latestVersion           String?
+  latestReleaseDate       DateTime?
+  latestDownloadUrl       String?
+  latestFileSize          Int?
+  latestChecksum          String?
+  latestReleaseNotes      String?
   // Comparison result
-  firmwareStatus  String   @default("unknown")  // "healthy" | "update_available" | "unsupported" | "unknown"
+  firmwareStatus          String           @default("unknown") // "healthy" | "update_available" | "unsupported" | "unknown"
   // Safety check
-  compatibilityChecked Boolean @default(false)
-  isCompatible    Boolean  @default(true)        // false = update blocked
-  compatibilityReason String?                    // why blocked (if applicable)
+  compatibilityChecked    Boolean          @default(false)
+  isCompatible            Boolean          @default(true) // false = update blocked
+  compatibilityReason     String? // why blocked (if applicable)
   // Metadata
-  lastCheckedAt   DateTime @default(now())
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  lastCheckedAt           DateTime         @default(now())
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
 
   @@index([passportId])
   @@index([firmwareStatus])
@@ -2064,23 +2228,23 @@ model FirmwareInformation {
 /// Firmware history — audit trail of firmware changes on a device.
 /// One row per firmware event (install, update, rollback, scan).
 model FirmwareHistory {
-  id              String   @id @default(cuid())
-  passportId      String
-  passport        DevicePassport @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  id                String           @id @default(cuid())
+  passportId        String
+  passport          DevicePassport   @relation(fields: [passportId], references: [id], onDelete: Cascade)
   // Event data
-  eventType       String                          // "install" | "update" | "rollback" | "scan" | "block"
-  oldVersion      String?
-  newVersion      String?
+  eventType         String // "install" | "update" | "rollback" | "scan" | "block"
+  oldVersion        String?
+  newVersion        String?
   firmwareReleaseId String?
   firmwareRelease   FirmwareRelease? @relation(fields: [firmwareReleaseId], references: [id])
   // Actor
-  performedBy     String?                         // User.id or "system" or "desktop-agent"
-  performedByName String?
+  performedBy       String? // User.id or "system" or "desktop-agent"
+  performedByName   String?
   // Update method
-  updateMethod    String?                         // "usb" | "lan" | "wifi" | "manual"
+  updateMethod      String? // "usb" | "lan" | "wifi" | "manual"
   // Notes
-  notes           String?
-  occurredAt      DateTime @default(now())
+  notes             String?
+  occurredAt        DateTime         @default(now())
 
   @@index([passportId])
   @@index([occurredAt])
@@ -2109,39 +2273,39 @@ model FirmwareHistory {
 /// One diagnostic run — analyzes a device passport and produces findings +
 /// recommendations + health score.
 model DiagnosticSession {
-  id              String   @id @default(cuid())
-  sessionToken    String   @unique
-  passportId      String
-  passport        DevicePassport @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  id                   String         @id @default(cuid())
+  sessionToken         String         @unique
+  passportId           String
+  passport             DevicePassport @relation(fields: [passportId], references: [id], onDelete: Cascade)
   // Engineer who ran the diagnostics
-  engineerId      String?
-  engineerName    String?
+  engineerId           String?
+  engineerName         String?
   // Scan context
-  agentVersion    String?
-  osInfo          String?
-  hostname        String?
-  scanDurationMs  Int?
+  agentVersion         String?
+  osInfo               String?
+  hostname             String?
+  scanDurationMs       Int?
   // Overall health score (0-100)
-  overallScore    Int      @default(0)
-  healthGrade     String   @default("unknown")  // "excellent" | "good" | "attention" | "critical" | "unknown"
+  overallScore         Int            @default(0)
+  healthGrade          String         @default("unknown") // "excellent" | "good" | "attention" | "critical" | "unknown"
   // Category scores (0-100 each)
-  driverScore     Int      @default(0)
-  firmwareScore   Int      @default(0)
-  connectionScore Int      @default(0)
-  deviceStatusScore Int    @default(0)
-  compatibilityScore Int   @default(0)
-  knowledgeScore  Int      @default(0)
+  driverScore          Int            @default(0)
+  firmwareScore        Int            @default(0)
+  connectionScore      Int            @default(0)
+  deviceStatusScore    Int            @default(0)
+  compatibilityScore   Int            @default(0)
+  knowledgeScore       Int            @default(0)
   // Summary
-  findingsCount   Int      @default(0)
-  confirmedCount  Int      @default(0)
-  possibleCount   Int      @default(0)
-  recommendationsCount Int @default(0)
+  findingsCount        Int            @default(0)
+  confirmedCount       Int            @default(0)
+  possibleCount        Int            @default(0)
+  recommendationsCount Int            @default(0)
   // Status
-  status          String   @default("completed")  // "running" | "completed" | "failed"
-  startedAt       DateTime @default(now())
-  completedAt     DateTime?
+  status               String         @default("completed") // "running" | "completed" | "failed"
+  startedAt            DateTime       @default(now())
+  completedAt          DateTime?
   // Metadata
-  createdAt       DateTime @default(now())
+  createdAt            DateTime       @default(now())
 
   findings        DiagnosticFinding[]
   recommendations DiagnosticRecommendation[]
@@ -2157,25 +2321,25 @@ model DiagnosticSession {
 /// A confirmed or possible finding during diagnostics.
 /// NEVER invented — only based on detected device state + documented rules.
 model DiagnosticFinding {
-  id              String   @id @default(cuid())
-  sessionId       String
-  session         DiagnosticSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  id                String            @id @default(cuid())
+  sessionId         String
+  session           DiagnosticSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   // Category + severity
-  category        String                          // "driver" | "firmware" | "connection" | "device_status" | "compatibility" | "windows"
-  severity        String   @default("info")      // "info" | "warning" | "error" | "critical"
+  category          String // "driver" | "firmware" | "connection" | "device_status" | "compatibility" | "windows"
+  severity          String            @default("info") // "info" | "warning" | "error" | "critical"
   // Finding details
-  title           String
-  description     String
+  title             String
+  description       String
   // Certainty level — NEVER guesses
-  certainty       String   @default("confirmed") // "confirmed" | "possible" | "unable_to_confirm"
+  certainty         String            @default("confirmed") // "confirmed" | "possible" | "unable_to_confirm"
   // Evidence (what was detected that led to this finding)
-  evidence        String?                         // JSON array of evidence strings
+  evidence          String? // JSON array of evidence strings
   // KB link (optional — links to existing KnowledgeArticle)
-  kbArticleId     String?
+  kbArticleId       String?
   // Recommended action
   recommendedAction String?
   // Metadata
-  createdAt       DateTime @default(now())
+  createdAt         DateTime          @default(now())
 
   recommendations DiagnosticRecommendation[]
 
@@ -2188,23 +2352,23 @@ model DiagnosticFinding {
 /// A recommended action — links a finding to specific resources
 /// (driver download, firmware download, manual, video, KB article, etc.)
 model DiagnosticRecommendation {
-  id              String   @id @default(cuid())
-  sessionId       String
-  session         DiagnosticSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  findingId       String?
-  finding         DiagnosticFinding? @relation(fields: [findingId], references: [id], onDelete: Cascade)
+  id             String             @id @default(cuid())
+  sessionId      String
+  session        DiagnosticSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  findingId      String?
+  finding        DiagnosticFinding? @relation(fields: [findingId], references: [id], onDelete: Cascade)
   // Recommendation details
-  title           String
-  description     String?
+  title          String
+  description    String?
   // Action type
-  actionType      String                          // "download_driver" | "download_firmware" | "open_manual" | "watch_video" | "open_troubleshooting" | "run_test_print" | "restart_spooler" | "verify_connection" | "power_cycle" | "load_paper" | "contact_support"
+  actionType     String // "download_driver" | "download_firmware" | "open_manual" | "watch_video" | "open_troubleshooting" | "run_test_print" | "restart_spooler" | "verify_connection" | "power_cycle" | "load_paper" | "contact_support"
   // Resource link (optional — URL or screen to navigate to)
-  resourceUrl     String?
-  resourceScreen  String?
+  resourceUrl    String?
+  resourceScreen String?
   // Priority
-  priority        String   @default("normal")    // "low" | "normal" | "high" | "urgent"
+  priority       String             @default("normal") // "low" | "normal" | "high" | "urgent"
   // Metadata
-  createdAt       DateTime @default(now())
+  createdAt      DateTime           @default(now())
 
   @@index([sessionId])
   @@index([findingId])
@@ -2215,28 +2379,28 @@ model DiagnosticRecommendation {
 /// Health score breakdown — stored separately for fast dashboard queries.
 /// One row per diagnostic session.
 model HealthScore {
-  id              String   @id @default(cuid())
-  sessionId       String   @unique
-  session         DiagnosticSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  id                 String            @id @default(cuid())
+  sessionId          String            @unique
+  session            DiagnosticSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   // Overall
-  overallScore    Int
-  overallGrade    String                          // "excellent" | "good" | "attention" | "critical"
+  overallScore       Int
+  overallGrade       String // "excellent" | "good" | "attention" | "critical"
   // Per-category breakdown (0-100)
-  driverScore     Int
-  driverGrade     String
-  firmwareScore   Int
-  firmwareGrade   String
-  connectionScore Int
-  connectionGrade String
-  deviceStatusScore Int
-  deviceStatusGrade String
+  driverScore        Int
+  driverGrade        String
+  firmwareScore      Int
+  firmwareGrade      String
+  connectionScore    Int
+  connectionGrade    String
+  deviceStatusScore  Int
+  deviceStatusGrade  String
   compatibilityScore Int
   compatibilityGrade String
-  knowledgeScore  Int
-  knowledgeGrade  String
+  knowledgeScore     Int
+  knowledgeGrade     String
   // Score calculation metadata
-  scoringRules    String?                         // JSON: which rules were applied
-  createdAt       DateTime @default(now())
+  scoringRules       String? // JSON: which rules were applied
+  createdAt          DateTime          @default(now())
 
   @@index([sessionId])
   @@index([overallGrade])
@@ -2256,38 +2420,38 @@ model HealthScore {
 
 /// One test session — a full validation suite run on a device passport.
 model DeviceTestSession {
-  id              String   @id @default(cuid())
-  sessionToken    String   @unique
-  passportId      String
-  passport        DevicePassport @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  id                String         @id @default(cuid())
+  sessionToken      String         @unique
+  passportId        String
+  passport          DevicePassport @relation(fields: [passportId], references: [id], onDelete: Cascade)
   // Engineer context
-  engineerId      String?
-  engineerName    String?
-  workOrderId     String?
+  engineerId        String?
+  engineerName      String?
+  workOrderId       String?
   // Test metadata
-  deviceType      String                          // "thermal_printer" | "barcode_scanner" | etc.
-  deviceName      String?
-  model           String?
+  deviceType        String // "thermal_printer" | "barcode_scanner" | etc.
+  deviceName        String?
+  model             String?
   // Overall results
-  totalTests      Int      @default(0)
-  passedCount     Int      @default(0)
-  failedCount     Int      @default(0)
-  warningCount    Int      @default(0)
-  skippedCount    Int      @default(0)
-  notSupportedCount Int    @default(0)
-  overallScore    Int      @default(0)            // 0-100
-  overallStatus   String   @default("pending")    // "pending" | "passed" | "failed" | "partial"
+  totalTests        Int            @default(0)
+  passedCount       Int            @default(0)
+  failedCount       Int            @default(0)
+  warningCount      Int            @default(0)
+  skippedCount      Int            @default(0)
+  notSupportedCount Int            @default(0)
+  overallScore      Int            @default(0) // 0-100
+  overallStatus     String         @default("pending") // "pending" | "passed" | "failed" | "partial"
   // Timing
-  startedAt       DateTime @default(now())
-  completedAt     DateTime?
-  scanDurationMs  Int?
+  startedAt         DateTime       @default(now())
+  completedAt       DateTime?
+  scanDurationMs    Int?
   // Report
-  reportId        String?                         // TestReport.id (generated after completion)
+  reportId          String? // TestReport.id (generated after completion)
   // Metadata
-  createdAt       DateTime @default(now())
+  createdAt         DateTime       @default(now())
 
-  testResults     TestResult[]
-  report          TestReport?
+  testResults TestResult[]
+  report      TestReport?
 
   @@index([passportId])
   @@index([engineerId])
@@ -2297,26 +2461,26 @@ model DeviceTestSession {
 
 /// Individual test result — one per test type executed.
 model TestResult {
-  id              String   @id @default(cuid())
-  sessionId       String
-  session         DeviceTestSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  id                String            @id @default(cuid())
+  sessionId         String
+  session           DeviceTestSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   // Test identification
-  testType        String                          // "test_print" | "alignment_test" | "paper_feed_test" | etc.
-  testCategory    String                          // "printer" | "scanner" | "cash_drawer" | "display" | "usb" | "network" | "communication"
-  testName        String                          // human-readable name
+  testType          String // "test_print" | "alignment_test" | "paper_feed_test" | etc.
+  testCategory      String // "printer" | "scanner" | "cash_drawer" | "display" | "usb" | "network" | "communication"
+  testName          String // human-readable name
   // Result
-  status          String   @default("pending")    // "passed" | "warning" | "failed" | "not_supported" | "skipped" | "pending"
-  duration        Int?                            // milliseconds
-  message         String?                         // result message
-  details         String?                         // JSON: detailed test output
+  status            String            @default("pending") // "passed" | "warning" | "failed" | "not_supported" | "skipped" | "pending"
+  duration          Int? // milliseconds
+  message           String? // result message
+  details           String? // JSON: detailed test output
   // Recommendations (if test failed/warning)
-  possibleCause   String?
-  kbArticleUrl    String?
+  possibleCause     String?
+  kbArticleUrl      String?
   recommendedAction String?
   // Timestamps
-  startedAt       DateTime?
-  completedAt     DateTime?
-  createdAt       DateTime @default(now())
+  startedAt         DateTime?
+  completedAt       DateTime?
+  createdAt         DateTime          @default(now())
 
   @@index([sessionId])
   @@index([testCategory])
@@ -2326,9 +2490,9 @@ model TestResult {
 
 /// Generated PDF test report — metadata only (PDF generated client-side via print).
 model TestReport {
-  id              String   @id @default(cuid())
-  reportNumber    String   @unique
-  sessionId       String   @unique
+  id              String            @id @default(cuid())
+  reportNumber    String            @unique
+  sessionId       String            @unique
   session         DeviceTestSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   // Report content (denormalized for quick access)
   customerName    String?
@@ -2345,11 +2509,11 @@ model TestReport {
   warningCount    Int
   totalTests      Int
   // Report metadata
-  generatedAt     DateTime @default(now())
+  generatedAt     DateTime          @default(now())
   generatedById   String?
   generatedByName String?
   // Storage
-  pdfStoragePath  String?                         // if server-side PDF generation is added later
+  pdfStoragePath  String? // if server-side PDF generation is added later
 
   @@index([sessionId])
   @@index([generatedAt])
@@ -2375,27 +2539,27 @@ model TestReport {
 /// One customer can have multiple branches (stores, warehouses, offices).
 /// Architecture prepared for future map view (geoLat + geoLng stored).
 model Branch {
-  id              String   @id @default(cuid())
-  customerId      String
-  customer        FSMCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  name            String                          // "Brigade Road Store"
-  code            String?                         // "BLR-001"
-  addressLine     String
-  city            String?
-  state           String?
-  postalCode      String?
-  country         String   @default("India")
+  id            String      @id @default(cuid())
+  customerId    String
+  customer      FSMCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  name          String // "Brigade Road Store"
+  code          String? // "BLR-001"
+  addressLine   String
+  city          String?
+  state         String?
+  postalCode    String?
+  country       String      @default("India")
   // Geo coordinates (for future map view — NOT live GPS)
-  geoLat          Float?
-  geoLng          Float?
+  geoLat        Float?
+  geoLng        Float?
   // Contact
-  contactPerson   String?
-  contactPhone    String?
-  contactEmail    String?
+  contactPerson String?
+  contactPhone  String?
+  contactEmail  String?
   // Metadata
-  isActive        Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 
   // Relations
   devicePassports DevicePassport[]
@@ -2409,24 +2573,24 @@ model Branch {
 /// Generated fleet report — metadata for each report generation.
 /// The actual report data is assembled at query time from DevicePassport.
 model FleetReport {
-  id              String   @id @default(cuid())
-  reportNumber    String   @unique
-  reportType      String                          // "customer_asset" | "branch_health" | "fleet_health" | "warranty" | "device_inventory" | "engineer_activity"
+  id               String   @id @default(cuid())
+  reportNumber     String   @unique
+  reportType       String // "customer_asset" | "branch_health" | "fleet_health" | "warranty" | "device_inventory" | "engineer_activity"
   // Filters used (for audit/reproducibility)
-  filters         String?                         // JSON: { customerId, branchId, status, deviceType, ... }
+  filters          String? // JSON: { customerId, branchId, status, deviceType, ... }
   // Summary data (denormalized for quick display)
-  totalDevices    Int      @default(0)
-  healthyDevices  Int      @default(0)
-  offlineDevices  Int      @default(0)
-  attentionDevices Int     @default(0)
-  warrantyExpiring Int     @default(0)
+  totalDevices     Int      @default(0)
+  healthyDevices   Int      @default(0)
+  offlineDevices   Int      @default(0)
+  attentionDevices Int      @default(0)
+  warrantyExpiring Int      @default(0)
   // Generated by
-  generatedById   String?
-  generatedByName String?
+  generatedById    String?
+  generatedByName  String?
   // Export format
-  exportFormat    String   @default("pdf")       // "pdf" | "excel" | "csv"
+  exportFormat     String   @default("pdf") // "pdf" | "excel" | "csv"
   // Timestamps
-  generatedAt     DateTime @default(now())
+  generatedAt      DateTime @default(now())
 
   @@index([reportType])
   @@index([generatedAt])
@@ -2452,15 +2616,15 @@ model FleetReport {
 /// Analytics snapshot — a point-in-time capture of key fleet metrics.
 /// Generated periodically (cron) or on-demand for trend analysis.
 model AnalyticsSnapshot {
-  id              String   @id @default(cuid())
-  snapshotDate    DateTime @default(now())
-  snapshotType    String                          // "executive" | "device" | "engineer" | "service" | "customer" | "warranty" | "drqbit" | "download" | "branch"
+  id           String   @id @default(cuid())
+  snapshotDate DateTime @default(now())
+  snapshotType String // "executive" | "device" | "engineer" | "service" | "customer" | "warranty" | "drqbit" | "download" | "branch"
   // Snapshot data (JSON blob with all metrics for this type)
-  data            String                          // JSON string with all aggregated metrics
+  data         String // JSON string with all aggregated metrics
   // Metadata
-  generatedAt     DateTime @default(now())
-  generatedBy     String?                         // "system" (cron) or User.id
-  createdAt       DateTime @default(now())
+  generatedAt  DateTime @default(now())
+  generatedBy  String? // "system" (cron) or User.id
+  createdAt    DateTime @default(now())
 
   @@index([snapshotType, snapshotDate])
   @@index([snapshotDate])
@@ -2469,18 +2633,18 @@ model AnalyticsSnapshot {
 /// Business metric — individual KPI for executive dashboard.
 /// One row per metric per snapshot period.
 model BusinessMetric {
-  id              String   @id @default(cuid())
-  metricKey       String                          // "total_customers" | "total_devices" | "installations_completed" | etc.
-  metricLabel     String                          // human-readable label
-  metricValue     Float                           // numeric value
-  metricUnit      String?                         // "count" | "percentage" | "hours" | "days"
-  metricCategory  String                          // "executive" | "device" | "engineer" | "service" | "customer" | "warranty"
+  id             String   @id @default(cuid())
+  metricKey      String // "total_customers" | "total_devices" | "installations_completed" | etc.
+  metricLabel    String // human-readable label
+  metricValue    Float // numeric value
+  metricUnit     String? // "count" | "percentage" | "hours" | "days"
+  metricCategory String // "executive" | "device" | "engineer" | "service" | "customer" | "warranty"
   // Optional: trend (current vs previous period)
-  previousValue   Float?
-  trendPercent    Float?                          // (current - previous) / previous * 100
+  previousValue  Float?
+  trendPercent   Float? // (current - previous) / previous * 100
   // Snapshot reference
-  snapshotDate    DateTime @default(now())
-  createdAt       DateTime @default(now())
+  snapshotDate   DateTime @default(now())
+  createdAt      DateTime @default(now())
 
   @@index([metricKey])
   @@index([metricCategory])
@@ -2490,26 +2654,26 @@ model BusinessMetric {
 /// Engineer metric — per-engineer performance metrics.
 /// One row per engineer per snapshot period.
 model EngineerMetric {
-  id              String   @id @default(cuid())
-  engineerId      String
-  engineerName    String
+  id                     String   @id @default(cuid())
+  engineerId             String
+  engineerName           String
   // Job metrics
-  jobsAssigned    Int      @default(0)
-  jobsCompleted   Int      @default(0)
-  jobsPending     Int      @default(0)
+  jobsAssigned           Int      @default(0)
+  jobsCompleted          Int      @default(0)
+  jobsPending            Int      @default(0)
   averageCompletionHours Float?
   // Rating metrics
-  averageRating   Float?
-  totalRatings    Int      @default(0)
+  averageRating          Float?
+  totalRatings           Int      @default(0)
   // Response metrics
-  averageResponseHours Float?
+  averageResponseHours   Float?
   averageResolutionHours Float?
   // Compliance metrics
-  photoCompliance Float?                          // 0-100 percentage
-  reportSubmissionRate Float?                     // 0-100 percentage
+  photoCompliance        Float? // 0-100 percentage
+  reportSubmissionRate   Float? // 0-100 percentage
   // Snapshot
-  snapshotDate    DateTime @default(now())
-  createdAt       DateTime @default(now())
+  snapshotDate           DateTime @default(now())
+  createdAt              DateTime @default(now())
 
   @@index([engineerId])
   @@index([snapshotDate])
@@ -2518,28 +2682,28 @@ model EngineerMetric {
 /// Device metric — per-device health/activity metrics.
 /// One row per device per snapshot period.
 model DeviceMetric {
-  id              String   @id @default(cuid())
-  passportId      String
-  passportNumber  String
-  deviceName      String?
-  deviceType      String?
-  model           String?
+  id                 String    @id @default(cuid())
+  passportId         String
+  passportNumber     String
+  deviceName         String?
+  deviceType         String?
+  model              String?
   // Activity metrics
-  totalScans      Int      @default(0)
-  totalTests      Int      @default(0)
-  totalDiagnostics Int     @default(0)
-  totalServiceVisits Int   @default(0)
+  totalScans         Int       @default(0)
+  totalTests         Int       @default(0)
+  totalDiagnostics   Int       @default(0)
+  totalServiceVisits Int       @default(0)
   // Health metrics
-  healthScore     Int?
-  driverStatus    String?
-  firmwareStatus  String?
-  warrantyStatus  String?
+  healthScore        Int?
+  driverStatus       String?
+  firmwareStatus     String?
+  warrantyStatus     String?
   // Failure tracking
-  failureCount    Int      @default(0)
-  lastFailureDate DateTime?
+  failureCount       Int       @default(0)
+  lastFailureDate    DateTime?
   // Snapshot
-  snapshotDate    DateTime @default(now())
-  createdAt       DateTime @default(now())
+  snapshotDate       DateTime  @default(now())
+  createdAt          DateTime  @default(now())
 
   @@index([passportId])
   @@index([deviceType])

@@ -1,0 +1,628 @@
+     1→     1→"use client";
+     2→     2→
+     3→     3→import { useCallback, useState } from "react";
+     4→     4→import { AppShell } from "@/components/qbit/shells/AppShell";
+     5→     5→import { Icon } from "@/components/qbit/primitives/Icon";
+     6→     6→import { GlassCard } from "@/components/qbit/primitives/GlassCard";
+     7→     7→import { QbitButton } from "@/components/qbit/primitives/QbitButton";
+     8→     8→import { useNavigation, type ScreenId } from "@/lib/navigation/store";
+     9→     9→import { ENGINEER_NAV, ENGINEER_FOOTER } from "@/lib/navigation/nav-config";
+    10→    10→import {
+    11→    11→  Dialog,
+    12→    12→  DialogContent,
+    13→    13→  DialogHeader,
+    14→    14→  DialogTitle,
+    15→    15→  DialogDescription,
+    16→    16→} from "@/components/ui/dialog";
+    17→    17→
+    18→    18→/* ------------------------------------------------------------------ */
+    19→    19→/* Types                                                              */
+    20→    20→/* ------------------------------------------------------------------ */
+    21→    21→
+    22→    22→interface CategoryCardData {
+    23→    23→  name: string;
+    24→    24→  slug: string;
+    25→    25→  count: string;
+    26→    26→  icon: string;
+    27→    27→  iconColor: string;
+    28→    28→  iconBg: string;
+    29→    29→  iconHoverBg: string;
+    30→    30→}
+    31→    31→
+    32→    32→interface TrendingProduct {
+    33→    33→  name: string;
+    34→    34→  badgeLabel: string;
+    35→    35→  badgeColor: string;
+    36→    36→  subtitle: string;
+    37→    37→  icon: string;
+    38→    38→  gradient: string;
+    39→    39→  navigateTo?: ScreenId;
+    40→    40→}
+    41→    41→
+    42→    42→interface InventoryProduct {
+    43→    43→  name: string;
+    44→    44→  categoryBadge: string;
+    45→    45→  /** Solid pill background class — e.g. bg-qbit-primary text-qbit-on-primary */
+    46→    46→  badgeClass: string;
+    47→    47→  model: string;
+    48→    48→  osIcons: string[];
+    49→    49→  chips: { label: string; icon: string }[];
+    50→    50→  icon: string;
+    51→    51→  gradient: string;
+    52→    52→  navigateTo?: ScreenId;
+    53→    53→}
+    54→    54→
+    55→    55→/* ------------------------------------------------------------------ */
+    56→    56→/* Static data                                                        */
+    57→    57→/* ------------------------------------------------------------------ */
+    58→    58→
+    59→    59→const CATEGORIES: CategoryCardData[] = [
+    60→    60→  {
+    61→    61→    name: "Windows POS",
+    62→    62→    slug: "windows-pos",
+    63→    63→    count: "12 Products",
+    64→    64→    icon: "desktop_windows",
+    65→    65→    iconColor: "text-qbit-primary",
+    66→    66→    iconBg: "bg-qbit-primary-container/10",
+    67→    67→    iconHoverBg: "group-hover:bg-qbit-primary-container/20",
+    68→    68→  },
+    69→    69→  {
+    70→    70→    name: "Android POS",
+    71→    71→    slug: "android-pos",
+    72→    72→    count: "8 Products",
+    73→    73→    icon: "phone_android",
+    74→    74→    iconColor: "text-qbit-secondary",
+    75→    75→    iconBg: "bg-qbit-secondary-container/10",
+    76→    76→    iconHoverBg: "group-hover:bg-qbit-secondary-container/20",
+    77→    77→  },
+    78→    78→  {
+    79→    79→    name: "Thermal Printers",
+    80→    80→    slug: "thermal-printer",
+    81→    81→    count: "15 Products",
+    82→    82→    icon: "print",
+    83→    83→    iconColor: "text-qbit-tertiary",
+    84→    84→    iconBg: "bg-qbit-on-tertiary-fixed-variant/10",
+    85→    85→    iconHoverBg: "group-hover:bg-qbit-on-tertiary-fixed-variant/20",
+    86→    86→  },
+    87→    87→  {
+    88→    88→    name: "Barcode Scanners",
+    89→    89→    slug: "barcode-scanner",
+    90→    90→    count: "6 Products",
+    91→    91→    icon: "barcode_scanner",
+    92→    92→    iconColor: "text-qbit-primary",
+    93→    93→    iconBg: "bg-qbit-primary/10",
+    94→    94→    iconHoverBg: "group-hover:bg-qbit-primary/20",
+    95→    95→  },
+    96→    96→  {
+    97→    97→    name: "Accessories",
+    98→    98→    slug: "accessories",
+    99→    99→    count: "24 Products",
+   100→   100→    icon: "cable",
+   101→   101→    iconColor: "text-qbit-secondary",
+   102→   102→    iconBg: "bg-qbit-secondary/10",
+   103→   103→    iconHoverBg: "group-hover:bg-qbit-secondary/20",
+   104→   104→  },
+   105→   105→];
+   106→   106→
+   107→   107→const TRENDING: TrendingProduct[] = [
+   108→   108→  {
+   109→   109→    name: "HUB-X Pro",
+   110→   110→    badgeLabel: "Top Resource",
+   111→   111→    badgeColor: "text-qbit-primary",
+   112→   112→    subtitle: "Thermal Printer \u2022 v2.4 Driver",
+   113→   113→    icon: "print",
+   114→   114→    gradient:
+   115→   115→      "from-qbit-surface-container-high via-qbit-surface-container to-qbit-surface-container-low",
+   116→   116→  },
+   117→   117→  {
+   118→   118→    name: "ScanMaster Elite",
+   119→   119→    badgeLabel: "Newly Released",
+   120→   120→    badgeColor: "text-qbit-secondary",
+   121→   121→    subtitle: "Wireless Scanner \u2022 User Manual",
+   122→   122→    icon: "barcode_scanner",
+   123→   123→    gradient:
+   124→   124→      "from-qbit-secondary-container/30 via-qbit-surface-container-high to-qbit-surface-container-low",
+   125→   125→  },
+   126→   126→  {
+   127→   127→    name: "QBIT T-800",
+   128→   128→    badgeLabel: "Most Downloaded",
+   129→   129→    badgeColor: "text-qbit-tertiary",
+   130→   130→    subtitle: "Windows POS \u2022 Setup Guide",
+   131→   131→    icon: "desktop_windows",
+   132→   132→    navigateTo: "product-details-t800",
+   133→   133→    gradient:
+   134→   134→      "from-qbit-primary-container/25 via-qbit-surface-container-high to-qbit-surface-container-low",
+   135→   135→  },
+   136→   136→];
+   137→   137→
+   138→   138→const INVENTORY: InventoryProduct[] = [
+   139→   139→  {
+   140→   140→    name: "QBIT T-800",
+   141→   141→    categoryBadge: "WINDOWS POS",
+   142→   142→    badgeClass: "bg-qbit-primary text-qbit-on-primary",
+   143→   143→    model: "MODEL: T-800",
+   144→   144→    osIcons: ["desktop_windows", "phone_android", "terminal"],
+   145→   145→    chips: [
+   146→   146→      { label: "Manual", icon: "description" },
+   147→   147→      { label: "Driver", icon: "download" },
+   148→   148→      { label: "Video", icon: "videocam" },
+   149→   149→    ],
+   150→   150→    icon: "desktop_windows",
+   151→   151→    gradient:
+   152→   152→      "from-qbit-primary-container/30 via-qbit-surface-container-high to-qbit-surface-container-low",
+   153→   153→    navigateTo: "product-details-t800",
+   154→   154→  },
+   155→   155→  {
+   156→   156→    name: "HUB-X Pro",
+   157→   157→    categoryBadge: "PRINTER",
+   158→   158→    badgeClass: "bg-qbit-secondary text-qbit-on-secondary",
+   159→   159→    model: "MODEL: HUB-X PRO",
+   160→   160→    osIcons: ["desktop_windows", "phone_android", "terminal"],
+   161→   161→    chips: [
+   162→   162→      { label: "Manual", icon: "description" },
+   163→   163→      { label: "Driver", icon: "download" },
+   164→   164→    ],
+   165→   165→    icon: "print",
+   166→   166→    gradient:
+   167→   167→      "from-qbit-secondary-container/25 via-qbit-surface-container-high to-qbit-surface-container-low",
+   168→   168→  },
+   169→   169→  {
+   170→   170→    name: "ScanMaster Elite",
+   171→   171→    categoryBadge: "SCANNER",
+   172→   172→    badgeClass:
+   173→   173→      "bg-qbit-tertiary-container text-qbit-on-tertiary-container",
+   174→   174→    model: "MODEL: SM-E1",
+   175→   175→    osIcons: ["desktop_windows", "phone_android"],
+   176→   176→    chips: [
+   177→   177→      { label: "Manual", icon: "description" },
+   178→   178→      { label: "Video", icon: "videocam" },
+   179→   179→    ],
+   180→   180→    icon: "barcode_scanner",
+   181→   181→    gradient:
+   182→   182→      "from-qbit-tertiary-container/30 via-qbit-surface-container-high to-qbit-surface-container-low",
+   183→   183→  },
+   184→   184→];
+   185→   185→
+   186→   186→const SHARE_URL = "https://hub.qbit.com/assets/T-800";
+   187→   187→
+   188→   188→/* ------------------------------------------------------------------ */
+   189→   189→/* Page                                                               */
+   190→   190→/* ------------------------------------------------------------------ */
+   191→   191→
+   192→   192→export function ProductLibraryPage() {
+   193→   193→  const navigate = useNavigation((s) => s.navigate);
+   194→   194→  const [shareOpen, setShareOpen] = useState(false);
+   195→   195→  const [searchValue, setSearchValue] = useState("");
+   196→   196→  const [heroSearch, setHeroSearch] = useState("");
+   197→   197→  const [copied, setCopied] = useState(false);
+   198→   198→  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+   199→   199→
+   200→   200→  const handleCopy = useCallback(() => {
+   201→   201→    if (typeof navigator !== "undefined" && navigator.clipboard) {
+   202→   202→      void navigator.clipboard.writeText(SHARE_URL);
+   203→   203→    }
+   204→   204→    setCopied(true);
+   205→   205→    window.setTimeout(() => setCopied(false), 2000);
+   206→   206→  }, []);
+   207→   207→
+   208→   208→  return (
+   209→   209→    <AppShell
+   210→   210→      variant="engineer"
+   211→   211→      brand={{ title: "QBIT Hub", tagline: "Enterprise SaaS", icon: "dataset" }}
+   212→   212→      navItems={ENGINEER_NAV}
+   213→   213→      footerItems={ENGINEER_FOOTER}
+   214→   214→      activeScreen="product-library"
+   215→   215→      user={{ name: "Alex Chen", role: "Installation Engineer", initials: "AC" }}
+   216→   216→      topBar={{
+   217→   217→        searchPlaceholder: "Search product technical library...",
+   218→   218→        searchValue,
+   219→   219→        onSearchChange: setSearchValue,
+   220→   220→        user: { name: "Alex Chen", role: "Installation Engineer", initials: "AC" },
+   221→   221→      }}
+   222→   222→    >
+   223→   223→      <div className="space-y-10 md:space-y-12">
+   224→   224→        {/* ---------------------------------------------------------- */}
+   225→   225→        {/* Hero                                                       */}
+   226→   226→        {/* ---------------------------------------------------------- */}
+   227→   227→        <section className="relative overflow-hidden rounded-3xl border border-qbit-outline-variant/50 bg-gradient-to-b from-qbit-surface-container-low to-qbit-surface px-6 py-12 text-center md:px-12 md:py-16">
+   228→   228→          <div className="mx-auto max-w-4xl space-y-4">
+   229→   229→            <h2 className="text-3xl font-bold tracking-tight text-qbit-on-surface md:text-4xl">
+   230→   230→              Product Library
+   231→   231→            </h2>
+   232→   232→            <p className="mx-auto max-w-2xl text-base text-qbit-on-surface-variant md:text-lg">
+   233→   233→              Browse all QBIT hardware with specifications, images, videos,
+   234→   234→              manuals and drivers. The definitive technical repository for
+   235→   235→              enterprise-grade hardware solutions.
+   236→   236→            </p>
+   237→   237→
+   238→   238→            {/* Search input */}
+   239→   239→            <div className="mx-auto max-w-xl pt-6">
+   240→   240→              <div className="group relative">
+   241→   241→                <input
+   242→   242→                  type="text"
+   243→   243→                  value={heroSearch}
+   244→   244→                  onChange={(e) => setHeroSearch(e.target.value)}
+   245→   245→                  placeholder="Enter model number (e.g. T-800)..."
+   246→   246→                  className="w-full rounded-2xl border border-qbit-outline-variant bg-qbit-surface-container-lowest py-4 pl-12 pr-24 text-sm text-qbit-on-surface shadow-lg transition-all placeholder:text-qbit-on-surface-variant/70 focus:border-qbit-primary focus:ring-2 focus:ring-qbit-primary/40 group-hover:shadow-xl md:text-base"
+   247→   247→                />
+   248→   248→                <Icon
+   249→   249→                  name="search"
+   250→   250→                  className="absolute left-4 top-1/2 -translate-y-1/2 text-[24px] font-bold text-qbit-primary"
+   251→   251→                />
+   252→   252→                <div className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg border border-qbit-outline-variant bg-qbit-surface-container px-3 py-1 text-xs font-semibold text-qbit-on-surface-variant">
+   253→   253→                  {"\u2318"} K
+   254→   254→                </div>
+   255→   255→              </div>
+   256→   256→            </div>
+   257→   257→          </div>
+   258→   258→        </section>
+   259→   259→
+   260→   260→        {/* ---------------------------------------------------------- */}
+   261→   261→        {/* Categories                                                 */}
+   262→   262→        {/* ---------------------------------------------------------- */}
+   263→   263→        <section>
+   264→   264→          <div className="mb-6 flex items-end justify-between">
+   265→   265→            <div>
+   266→   266→              <h3 className="text-xl font-semibold tracking-tight text-qbit-on-surface md:text-2xl">
+   267→   267→                Browse Categories
+   268→   268→              </h3>
+   269→   269→              <p className="mt-1 text-sm text-qbit-on-surface-variant">
+   270→   270→                Jump straight to a hardware family.
+   271→   271→              </p>
+   272→   272→            </div>
+   273→   273→          </div>
+   274→   274→
+   275→   275→          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-5 md:gap-6">
+   276→   276→            {CATEGORIES.map((cat) => {
+   277→   277→              const isActive = activeCategory === cat.slug;
+   278→   278→              return (
+   279→   279→                <button
+   280→   280→                  key={cat.slug}
+   281→   281→                  type="button"
+   282→   282→                  onClick={() => setActiveCategory(isActive ? null : cat.slug)}
+   283→   283→                  className={`group flex cursor-pointer flex-col items-center rounded-2xl border p-6 text-center transition-all ${isActive ? "border-qbit-primary bg-qbit-primary/5 ring-2 ring-qbit-primary/20" : "border-qbit-outline-variant/50 hover:border-qbit-primary/30"}`}
+   284→   284→                >
+   285→   285→                  <div
+   286→   286→                    className={`mb-4 flex h-16 w-16 items-center justify-center rounded-2xl transition-colors ${cat.iconBg} ${cat.iconHoverBg}`}
+   287→   287→                  >
+   288→   288→                    <Icon
+   289→   289→                      name={cat.icon}
+   290→   290→                      className={`text-[32px] ${cat.iconColor}`}
+   291→   291→                      filled={isActive}
+   292→   292→                    />
+   293→   293→                  </div>
+   294→   294→                  <span className={`text-sm font-semibold ${isActive ? "text-qbit-primary" : "text-qbit-on-surface"}`}>
+   295→   295→                    {cat.name}
+   296→   296→                  </span>
+   297→   297→                  <span className="mt-1 text-xs uppercase tracking-wider text-qbit-outline">
+   298→   298→                    {cat.count}
+   299→   299→                  </span>
+   300→   300→                </button>
+   301→   301→              );
+   302→   302→            })}
+   303→   303→          </div>
+   304→   304→        </section>
+   305→   305→
+   306→   306→        {/* ---------------------------------------------------------- */}
+   307→   307→        {/* Trending Hardware                                          */}
+   308→   308→        {/* ---------------------------------------------------------- */}
+   309→   309→        <section>
+   310→   310→          <div className="mb-6 flex items-end justify-between gap-4">
+   311→   311→            <div>
+   312→   312→              <h3 className="text-xl font-semibold tracking-tight text-qbit-on-surface md:text-2xl">
+   313→   313→                Trending Hardware
+   314→   314→              </h3>
+   315→   315→              <p className="mt-1 text-sm text-qbit-on-surface-variant">
+   316→   316→                The most frequently accessed resources this week.
+   317→   317→              </p>
+   318→   318→            </div>
+   319→   319→            <div className="hidden gap-2 sm:flex">
+   320→   320→              <button
+   321→   321→                type="button"
+   322→   322→                aria-label="Previous trending hardware"
+   323→   323→                className="flex h-9 w-9 items-center justify-center rounded-full border border-qbit-outline-variant text-qbit-on-surface-variant transition-colors hover:bg-qbit-surface-container-high"
+   324→   324→              >
+   325→   325→                <Icon name="chevron_left" className="text-[20px]" />
+   326→   326→              </button>
+   327→   327→              <button
+   328→   328→                type="button"
+   329→   329→                aria-label="Next trending hardware"
+   330→   330→                className="flex h-9 w-9 items-center justify-center rounded-full border border-qbit-outline-variant text-qbit-on-surface-variant transition-colors hover:bg-qbit-surface-container-high"
+   331→   331→              >
+   332→   332→                <Icon name="chevron_right" className="text-[20px]" />
+   333→   333→              </button>
+   334→   334→            </div>
+   335→   335→          </div>
+   336→   336→
+   337→   337→          <div className="custom-scrollbar -mx-4 flex gap-4 overflow-x-auto px-4 pb-3 md:mx-0 md:px-0">
+   338→   338→            {TRENDING.map((product) => (
+   339→   339→              <article
+   340→   340→                key={product.name}
+   341→   341→                className="group flex w-[280px] shrink-0 flex-col overflow-hidden rounded-2xl border border-qbit-outline-variant bg-qbit-surface-container-lowest shadow-sm transition-shadow hover:shadow-md sm:w-[320px]"
+   342→   342→              >
+   343→   343→                {/* Gradient cover with Material icon */}
+   344→   344→                <div
+   345→   345→                  className={`relative flex h-40 items-center justify-center bg-gradient-to-br ${product.gradient}`}
+   346→   346→                >
+   347→   347→                  <Icon
+   348→   348→                    name={product.icon}
+   349→   349→                    className="text-[64px] text-qbit-primary transition-transform duration-500 group-hover:scale-110"
+   350→   350→                    filled
+   351→   351→                  />
+   352→   352→                  <span
+   353→   353→                    className={`absolute left-4 top-4 text-xs font-semibold uppercase tracking-wider ${product.badgeColor}`}
+   354→   354→                  >
+   355→   355→                    {product.badgeLabel}
+   356→   356→                  </span>
+   357→   357→                </div>
+   358→   358→
+   359→   359→                {/* Body */}
+   360→   360→                <div className="flex flex-1 flex-col gap-3 p-5">
+   361→   361→                  <div>
+   362→   362→                    <h4 className="text-lg font-bold text-qbit-on-surface">
+   363→   363→                      {product.name}
+   364→   364→                    </h4>
+   365→   365→                    <span className="text-xs text-qbit-on-surface-variant">
+   366→   366→                      {product.subtitle}
+   367→   367→                    </span>
+   368→   368→                  </div>
+   369→   369→                  <QbitButton
+   370→   370→                    variant="primary"
+   371→   371→                    fullWidth
+   372→   372→                    className="mt-auto"
+   373→   373→                    onClick={
+   374→   374→                      product.navigateTo
+   375→   375→                        ? () => navigate(product.navigateTo as ScreenId)
+   376→   376→                        : undefined
+   377→   377→                    }
+   378→   378→                  >
+   379→   379→                    View Details
+   380→   380→                    <Icon name="arrow_forward" className="text-[16px]" />
+   381→   381→                  </QbitButton>
+   382→   382→                </div>
+   383→   383→              </article>
+   384→   384→            ))}
+   385→   385→          </div>
+   386→   386→        </section>
+   387→   387→
+   388→   388→        {/* ---------------------------------------------------------- */}
+   389→   389→        {/* Full Hardware Inventory                                    */}
+   390→   390→        {/* ---------------------------------------------------------- */}
+   391→   391→        <section>
+   392→   392→          <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+   393→   393→            <div>
+   394→   394→              <h3 className="text-xl font-semibold tracking-tight text-qbit-on-surface md:text-2xl">
+   395→   395→                Full Hardware Inventory
+   396→   396→              </h3>
+   397→   397→              <p className="mt-1 text-sm text-qbit-on-surface-variant">
+   398→   398→                Complete catalog of QBIT enterprise hardware.
+   399→   399→              </p>
+   400→   400→            </div>
+   401→   401→            <div className="flex items-center gap-3">
+   402→   402→              <button
+   403→   403→                type="button"
+   404→   404→                className="flex items-center gap-2 rounded-lg border border-qbit-outline-variant px-4 py-2 text-sm font-medium text-qbit-on-surface transition-colors hover:bg-qbit-surface-container-low"
+   405→   405→              >
+   406→   406→                <Icon name="filter_list" className="text-[20px]" />
+   407→   407→                Filter
+   408→   408→              </button>
+   409→   409→              <button
+   410→   410→                type="button"
+   411→   411→                className="flex items-center gap-2 rounded-lg border border-qbit-outline-variant px-4 py-2 text-sm font-medium text-qbit-on-surface transition-colors hover:bg-qbit-surface-container-low"
+   412→   412→              >
+   413→   413→                <Icon name="sort" className="text-[20px]" />
+   414→   414→                Sort: Newest
+   415→   415→              </button>
+   416→   416→            </div>
+   417→   417→          </div>
+   418→   418→
+   419→   419→          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+   420→   420→            {INVENTORY.filter((p) => {
+   421→   421→              if (!activeCategory) return true;
+   422→   422→              const slug = p.categoryBadge.toLowerCase().replace(/\s+/g, "-");
+   423→   423→              return slug === activeCategory || slug === activeCategory.replace(/-/g, " ");
+   424→   424→            }).length === 0 ? (
+   425→   425→              <div className="col-span-full rounded-xl border border-dashed border-qbit-outline-variant px-6 py-12 text-center">
+   426→   426→                <Icon name="inventory_2" className="mx-auto text-[40px] text-qbit-on-surface-variant/40" />
+   427→   427→                <p className="mt-3 text-sm font-medium text-qbit-on-surface">No products available in this category.</p>
+   428→   428→                <button
+   429→   429→                  type="button"
+   430→   430→                  onClick={() => setActiveCategory(null)}
+   431→   431→                  className="mt-3 text-sm font-semibold text-qbit-primary hover:underline"
+   432→   432→                >
+   433→   433→                  View all products
+   434→   434→                </button>
+   435→   435→              </div>
+   436→   436→            ) : (
+   437→   437→              INVENTORY.filter((p) => {
+   438→   438→                if (!activeCategory) return true;
+   439→   439→                const slug = p.categoryBadge.toLowerCase().replace(/\s+/g, "-");
+   440→   440→                return slug === activeCategory || slug === activeCategory.replace(/-/g, " ");
+   441→   441→              }).map((product) => (
+   442→   442→              <article
+   443→   443→                key={product.name}
+   444→   444→                className="group flex flex-col overflow-hidden rounded-2xl border border-qbit-outline-variant bg-qbit-surface-container-lowest shadow-sm transition-all duration-300 hover:shadow-2xl"
+   445→   445→              >
+   446→   446→                {/* Cover */}
+   447→   447→                <div
+   448→   448→                  className={`relative flex h-64 items-center justify-center overflow-hidden bg-gradient-to-br p-8 ${product.gradient}`}
+   449→   449→                >
+   450→   450→                  <Icon
+   451→   451→                    name={product.icon}
+   452→   452→                    className="text-[96px] text-qbit-primary transition-transform duration-500 group-hover:scale-105"
+   453→   453→                    filled
+   454→   454→                  />
+   455→   455→                  <div className="absolute left-4 top-4 flex gap-2">
+   456→   456→                    <span
+   457→   457→                      className={`rounded-full px-3 py-1 text-xs font-bold ${product.badgeClass}`}
+   458→   458→                    >
+   459→   459→                      {product.categoryBadge}
+   460→   460→                    </span>
+   461→   461→                    <span className="rounded-full border border-qbit-outline-variant/30 bg-qbit-surface-container-lowest/80 px-3 py-1 text-xs text-qbit-on-surface-variant backdrop-blur">
+   462→   462→                      {product.model}
+   463→   463→                    </span>
+   464→   464→                  </div>
+   465→   465→                </div>
+   466→   466→
+   467→   467→                {/* Body */}
+   468→   468→                <div className="flex flex-1 flex-col gap-5 p-6">
+   469→   469→                  <div>
+   470→   470→                    <h4 className="mb-1 text-xl font-bold text-qbit-on-surface">
+   471→   471→                      {product.name}
+   472→   472→                    </h4>
+   473→   473→                    <div className="flex items-center gap-3 text-qbit-outline">
+   474→   474→                      {product.osIcons.map((icon) => (
+   475→   475→                        <Icon key={icon} name={icon} className="text-[18px]" />
+   476→   476→                      ))}
+   477→   477→                      <span className="ml-1 text-xs font-medium">
+   478→   478→                        OS Supported
+   479→   479→                      </span>
+   480→   480→                    </div>
+   481→   481→                  </div>
+   482→   482→
+   483→   483→                  {/* Chips */}
+   484→   484→                  <div className="flex flex-wrap gap-2">
+   485→   485→                    {product.chips.map((chip) => (
+   486→   486→                      <span
+   487→   487→                        key={chip.label}
+   488→   488→                        className="flex items-center gap-1 rounded-lg bg-qbit-surface-container-low px-3 py-1 text-xs text-qbit-on-surface-variant"
+   489→   489→                      >
+   490→   490→                        <Icon name={chip.icon} className="text-[14px]" />
+   491→   491→                        {chip.label}
+   492→   492→                      </span>
+   493→   493→                    ))}
+   494→   494→                  </div>
+   495→   495→
+   496→   496→                  {/* Actions */}
+   497→   497→                  <div className="mt-auto grid grid-cols-2 gap-3 border-t border-qbit-outline-variant/50 pt-4">
+   498→   498→                    <QbitButton
+   499→   499→                      variant="primary"
+   500→   500→                      onClick={
+   501→   501→                        product.navigateTo
+   502→   502→                          ? () => navigate(product.navigateTo as ScreenId)
+   503→   503→                          : undefined
+   504→   504→                      }
+   505→   505→                    >
+   506→   506→                      View Details
+   507→   507→                    </QbitButton>
+   508→   508→                    <div className="flex gap-2">
+   509→   509→                      <button
+   510→   510→                        type="button"
+   511→   511→                        title="Share"
+   512→   512→                        onClick={() => setShareOpen(true)}
+   513→   513→                        className="flex flex-1 items-center justify-center rounded-xl border border-qbit-outline-variant text-qbit-on-surface-variant transition-colors hover:bg-qbit-surface-container-low"
+   514→   514→                      >
+   515→   515→                        <Icon name="share" className="text-[20px]" />
+   516→   516→                      </button>
+   517→   517→                      <button
+   518→   518→                        type="button"
+   519→   519→                        title="Favorite"
+   520→   520→                        className="flex flex-1 items-center justify-center rounded-xl border border-qbit-outline-variant text-qbit-on-surface-variant transition-colors hover:bg-qbit-surface-container-low"
+   521→   521→                      >
+   522→   522→                        <Icon name="favorite" className="text-[20px]" />
+   523→   523→                      </button>
+   524→   524→                    </div>
+   525→   525→                  </div>
+   526→   526→                </div>
+   527→   527→              </article>
+   528→   528→              ))
+   529→   529→            )}
+   530→   530→          </div>
+   531→   531→
+   532→   532→          {/* Active category indicator + clear button */}
+   533→   533→          {activeCategory && (
+   534→   534→            <div className="mt-6 flex items-center gap-3">
+   535→   535→              <span className="text-sm text-qbit-on-surface-variant">
+   536→   536→                Filtered by: <span className="font-semibold text-qbit-primary capitalize">{activeCategory.replace(/-/g, " ")}</span>
+   537→   537→              </span>
+   538→   538→              <button
+   539→   539→                type="button"
+   540→   540→                onClick={() => setActiveCategory(null)}
+   541→   541→                className="inline-flex items-center gap-1 rounded-full border border-qbit-outline-variant px-3 py-1 text-xs font-medium text-qbit-on-surface-variant hover:bg-qbit-surface-container-low"
+   542→   542→              >
+   543→   543→                <Icon name="close" className="text-[14px]" />
+   544→   544→                Clear filter
+   545→   545→              </button>
+   546→   546→            </div>
+   547→   547→          )}
+   548→   548→        </section>
+   549→   549→      </div>
+   550→   550→
+   551→   551→      {/* ---------------------------------------------------------- */}
+   552→   552→      {/* Share Modal                                                */}
+   553→   553→      {/* ---------------------------------------------------------- */}
+   554→   554→      <Dialog open={shareOpen} onOpenChange={setShareOpen}>
+   555→   555→        <DialogContent className="glass-card max-w-md rounded-2xl border-qbit-outline-variant bg-qbit-surface-container-lowest p-6 shadow-2xl">
+   556→   556→          <DialogHeader className="mb-2 flex-row items-center justify-between space-y-0">
+   557→   557→            <DialogTitle className="text-xl font-semibold text-qbit-on-surface">
+   558→   558→              Share Hardware Profile
+   559→   559→            </DialogTitle>
+   560→   560→          </DialogHeader>
+   561→   561→          <DialogDescription className="sr-only">
+   562→   562→            Copy the asset link or share the hardware profile via WhatsApp, PDF,
+   563→   563→            or email.
+   564→   564→          </DialogDescription>
+   565→   565→
+   566→   566→          <div className="space-y-4">
+   567→   567→            {/* Copyable URL */}
+   568→   568→            <div className="rounded-xl border border-qbit-outline-variant bg-qbit-surface-container p-4">
+   569→   569→              <div className="mb-2 flex items-center justify-between">
+   570→   570→                <span className="text-xs uppercase tracking-wider text-qbit-on-surface-variant">
+   571→   571→                  Technical Asset Link
+   572→   572→                </span>
+   573→   573→                <Icon name="link" className="text-[16px] text-qbit-primary" />
+   574→   574→              </div>
+   575→   575→              <div className="flex gap-2">
+   576→   576→                <input
+   577→   577→                  type="text"
+   578→   578→                  readOnly
+   579→   579→                  value={SHARE_URL}
+   580→   580→                  className="flex-1 rounded-lg border border-qbit-outline-variant bg-qbit-surface px-4 py-2 text-sm text-qbit-on-surface-variant outline-none"
+   581→   581→                />
+   582→   582→                <button
+   583→   583→                  type="button"
+   584→   584→                  onClick={handleCopy}
+   585→   585→                  className="rounded-lg bg-qbit-primary px-4 py-2 text-sm font-semibold text-qbit-on-primary transition-colors hover:bg-qbit-primary-container"
+   586→   586→                >
+   587→   587→                  {copied ? "Copied!" : "Copy"}
+   588→   588→                </button>
+   589→   589→              </div>
+   590→   590→            </div>
+   591→   591→
+   592→   592→            {/* WhatsApp + PDF */}
+   593→   593→            <div className="grid grid-cols-2 gap-3">
+   594→   594→              <button
+   595→   595→                type="button"
+   596→   596→                className="group flex items-center justify-center gap-3 rounded-2xl border border-qbit-outline-variant p-5 text-qbit-on-surface-variant transition-colors hover:bg-qbit-surface-container-low"
+   597→   597→              >
+   598→   598→                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#25D366]/10 text-[#25D366] transition-transform group-hover:scale-110">
+   599→   599→                  <Icon name="chat" className="text-[20px]" />
+   600→   600→                </div>
+   601→   601→                <span className="text-sm font-medium">WhatsApp</span>
+   602→   602→              </button>
+   603→   603→              <button
+   604→   604→                type="button"
+   605→   605→                className="group flex items-center justify-center gap-3 rounded-2xl border border-qbit-outline-variant p-5 text-qbit-on-surface-variant transition-colors hover:bg-qbit-surface-container-low"
+   606→   606→              >
+   607→   607→                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-qbit-error/10 text-qbit-error transition-transform group-hover:scale-110">
+   608→   608→                  <Icon name="picture_as_pdf" className="text-[20px]" />
+   609→   609→                </div>
+   610→   610→                <span className="text-sm font-medium">Download PDF</span>
+   611→   611→              </button>
+   612→   612→            </div>
+   613→   613→
+   614→   614→            {/* Email */}
+   615→   615→            <button
+   616→   616→              type="button"
+   617→   617→              className="flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-qbit-outline-variant py-4 text-qbit-on-surface-variant transition-all hover:border-qbit-primary hover:bg-qbit-primary-container/5"
+   618→   618→            >
+   619→   619→              <Icon name="mail" className="text-[20px]" />
+   620→   620→              <span className="text-sm font-medium">Email Technical Specs</span>
+   621→   621→            </button>
+   622→   622→          </div>
+   623→   623→        </DialogContent>
+   624→   624→      </Dialog>
+   625→   625→    </AppShell>
+   626→   626→  );
+   627→   627→}
+   628→   628→

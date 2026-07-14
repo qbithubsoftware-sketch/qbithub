@@ -44,6 +44,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ProductEditDrawer } from "@/components/qbit/admin/ProductEditDrawer";
 
 interface Product {
   id: string;
@@ -51,12 +52,33 @@ interface Product {
   brand: string;
   manufacturer: string | null;
   model: string;
+  slug?: string;
+  category?: string | null;
   deviceType: string;
   description: string | null;
+  longDescription?: string | null;
+  imageUrl?: string | null;
+  startingPrice?: string | null;
+  badgeLabel?: string | null;
+  isFeatured?: boolean;
+  isTrending?: boolean;
+  status?: string;
+  tags?: string | null;
   driverDownloadUrl: string | null;
   manualUrl: string | null;
   installationGuideUrl: string | null;
   knowledgeBaseUrl: string | null;
+  brochureUrl?: string | null;
+  datasheetUrl?: string | null;
+  warrantyUrl?: string | null;
+  sdkUrl?: string | null;
+  utilityUrl?: string | null;
+  qrCodeUrl?: string | null;
+  viewCount?: number;
+  downloadCount?: number;
+  latestDriverVersion?: string | null;
+  latestFirmwareVersion?: string | null;
+  lastUpdated?: string | null;
   isActive: boolean;
   signatureCount: number;
   detectedCount: number;
@@ -66,16 +88,16 @@ interface Product {
 }
 
 const DEVICE_TYPES = [
-  { value: "thermal_printer", label: "Thermal Printer" },
-  { value: "barcode_scanner", label: "Barcode Scanner" },
-  { value: "windows_pos", label: "Windows POS" },
-  { value: "android_pos", label: "Android POS" },
-  { value: "cash_drawer", label: "Cash Drawer" },
-  { value: "customer_display", label: "Customer Display" },
-  { value: "label_printer", label: "Label Printer" },
-  { value: "kitchen_printer", label: "Kitchen Printer" },
-  { value: "kiosk", label: "Kiosk" },
-  { value: "weighing_scale", label: "Weighing Scale" },
+  { value: "thermal_printer", label: "Thermal Printer", slug: "thermal-printer" },
+  { value: "barcode_scanner", label: "Barcode Scanner", slug: "barcode-scanner" },
+  { value: "windows_pos", label: "Windows POS", slug: "windows-pos" },
+  { value: "android_pos", label: "Android POS", slug: "android-pos" },
+  { value: "cash_drawer", label: "Cash Drawer", slug: "cash-drawer" },
+  { value: "customer_display", label: "Customer Display", slug: "customer-display" },
+  { value: "label_printer", label: "Label Printer", slug: "label-printer" },
+  { value: "kitchen_printer", label: "Kitchen Printer", slug: "kitchen-printer" },
+  { value: "kiosk", label: "Kiosk", slug: "kiosk" },
+  { value: "weighing_scale", label: "Weighing Scale", slug: "weighing-scale" },
 ];
 
 const DEVICE_TYPE_ICONS: Record<string, string> = {
@@ -101,6 +123,7 @@ export function ProductManagementPage() {
   const [hardDeleteTarget, setHardDeleteTarget] = useState<Product | null>(null);
   const [saving, setSaving] = useState(false);
   const [bulkBusy, setBulkBusy] = useState(false);
+  const [drawerProductId, setDrawerProductId] = useState<string | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -160,8 +183,11 @@ export function ProductManagementPage() {
     }
     setSaving(true);
     try {
+      // For create: deviceType → category auto-mapping
+      const categoryForCreate = DEVICE_TYPES.find((t) => t.value === formData.deviceType)?.slug ?? "";
       const payload = {
         ...formData,
+        category: editingProduct?.category ?? categoryForCreate,
         manufacturer: formData.manufacturer || null,
         description: formData.description || null,
         driverDownloadUrl: formData.driverDownloadUrl || null,
@@ -482,12 +508,34 @@ export function ProductManagementPage() {
                             <>
                               <button
                                 type="button"
+                                aria-label={`Manage ${product.name}`}
+                                title="Manage full product details"
+                                onClick={() => setDrawerProductId(product.id)}
+                                className="flex h-8 w-8 items-center justify-center rounded-lg text-qbit-primary transition-colors hover:bg-qbit-primary/10"
+                              >
+                                <Icon name="tune" className="text-[20px]" />
+                              </button>
+                              <button
+                                type="button"
                                 aria-label={`Edit ${product.name}`}
+                                title="Quick edit (identity + URLs)"
                                 onClick={() => handleEditProduct(product)}
                                 className="flex h-8 w-8 items-center justify-center rounded-lg text-qbit-on-surface-variant transition-colors hover:bg-qbit-surface-container-high"
                               >
                                 <Icon name="edit" className="text-[20px]" />
                               </button>
+                              {product.slug && (
+                                <a
+                                  href={`/products/${product.slug}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  aria-label={`Open public page for ${product.name}`}
+                                  title="Open public product page"
+                                  className="flex h-8 w-8 items-center justify-center rounded-lg text-qbit-on-surface-variant transition-colors hover:bg-qbit-surface-container-high"
+                                >
+                                  <Icon name="open_in_new" className="text-[20px]" />
+                                </a>
+                              )}
                               <button
                                 type="button"
                                 aria-label={`Delete ${product.name}`}
@@ -607,6 +655,13 @@ export function ProductManagementPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Full-detail admin editor drawer (Manage button) */}
+      <ProductEditDrawer
+        productId={drawerProductId}
+        onClose={() => setDrawerProductId(null)}
+        onSaved={() => void fetchProducts()}
+      />
     </AppShell>
   );
 }

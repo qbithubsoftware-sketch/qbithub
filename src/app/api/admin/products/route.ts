@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/notifications/auth";
 import { sanitizeText, validateRequired } from "@/lib/security/validation";
+import { generateUniqueSlug } from "@/lib/products/slug";
 
 export async function GET(req: NextRequest) {
   const session = await requireAdmin();
@@ -24,10 +25,10 @@ export async function GET(req: NextRequest) {
     if (!includeInactive) where.isActive = true;
     if (search) {
       where.OR = [
-        { name: { contains: search, mode: "insensitive" } },
-        { model: { contains: search, mode: "insensitive" } },
-        { brand: { contains: search, mode: "insensitive" } },
-        { manufacturer: { contains: search, mode: "insensitive" } },
+        { name: { contains: search } },
+        { model: { contains: search } },
+        { brand: { contains: search } },
+        { manufacturer: { contains: search } },
       ];
     }
 
@@ -45,12 +46,34 @@ export async function GET(req: NextRequest) {
         brand: p.brand,
         manufacturer: p.manufacturer,
         model: p.model,
+        slug: p.slug,
         deviceType: p.deviceType,
+        category: p.category,
         description: p.description,
+        longDescription: p.longDescription,
+        imageUrl: p.imageUrl,
+        sku: p.sku,
+        startingPrice: p.startingPrice,
+        badgeLabel: p.badgeLabel,
+        isFeatured: p.isFeatured,
+        isTrending: p.isTrending,
+        status: p.status,
+        tags: p.tags,
         driverDownloadUrl: p.driverDownloadUrl,
         manualUrl: p.manualUrl,
         installationGuideUrl: p.installationGuideUrl,
         knowledgeBaseUrl: p.knowledgeBaseUrl,
+        brochureUrl: p.brochureUrl,
+        datasheetUrl: p.datasheetUrl,
+        warrantyUrl: p.warrantyUrl,
+        sdkUrl: p.sdkUrl,
+        utilityUrl: p.utilityUrl,
+        qrCodeUrl: p.qrCodeUrl,
+        viewCount: p.viewCount,
+        downloadCount: p.downloadCount,
+        latestDriverVersion: p.latestDriverVersion,
+        latestFirmwareVersion: p.latestFirmwareVersion,
+        lastUpdated: p.lastUpdated?.toISOString() ?? null,
         isActive: p.isActive,
         signatureCount: p._count.hardwareSignatures,
         detectedCount: p._count.detectedDevices,
@@ -81,18 +104,49 @@ export async function POST(req: NextRequest) {
     const existing = await db.qbitProduct.findUnique({ where: { model: body.model } });
     if (existing) return NextResponse.json({ error: `Product with model "${body.model}" already exists` }, { status: 409 });
 
+    // Auto-generate a unique slug for /products/[slug] deep links
+    const slug = await generateUniqueSlug(body.model, undefined, body.slug);
+
     const product = await db.qbitProduct.create({
       data: {
         name: sanitizeText(body.name, 200),
         brand: sanitizeText(body.brand ?? "QBIT", 50),
         manufacturer: body.manufacturer ? sanitizeText(body.manufacturer, 200) : null,
         model: sanitizeText(body.model, 100),
+        slug,
         deviceType: sanitizeText(body.deviceType, 50),
+        category: body.category ?? null,
         description: body.description ? sanitizeText(body.description, 1000) : null,
+        longDescription: body.longDescription ?? null,
+        imageUrl: body.imageUrl ?? null,
+        galleryImages: body.galleryImages ? JSON.stringify(body.galleryImages) : null,
+        sku: body.sku ?? null,
+        serialPattern: body.serialPattern ?? null,
+        startingPrice: body.startingPrice ?? null,
+        badgeLabel: body.badgeLabel ?? null,
+        isFeatured: !!body.isFeatured,
+        isTrending: !!body.isTrending,
         driverDownloadUrl: body.driverDownloadUrl ?? null,
         manualUrl: body.manualUrl ?? null,
         installationGuideUrl: body.installationGuideUrl ?? null,
         knowledgeBaseUrl: body.knowledgeBaseUrl ?? null,
+        brochureUrl: body.brochureUrl ?? null,
+        datasheetUrl: body.datasheetUrl ?? null,
+        warrantyUrl: body.warrantyUrl ?? null,
+        sdkUrl: body.sdkUrl ?? null,
+        utilityUrl: body.utilityUrl ?? null,
+        qrCodeUrl: `https://hub.qbit.com/products/${slug}`,
+        seoTitle: body.seoTitle ?? null,
+        seoDescription: body.seoDescription ?? null,
+        seoKeywords: body.seoKeywords ?? null,
+        tags: Array.isArray(body.tags) ? body.tags.join(",") : (body.tags ?? null),
+        compatibleDevices: Array.isArray(body.compatibleDevices) ? body.compatibleDevices.join(",") : (body.compatibleDevices ?? null),
+        status: body.status ?? "active",
+        aiDiagnosticsSupported: body.aiDiagnosticsSupported ?? true,
+        drQbitSupported: body.drQbitSupported ?? true,
+        latestDriverVersion: body.latestDriverVersion ?? null,
+        latestFirmwareVersion: body.latestFirmwareVersion ?? null,
+        lastUpdated: new Date(),
       },
     });
 

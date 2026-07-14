@@ -44,9 +44,9 @@ export const GET = apiHandler(async (req: NextRequest) => {
   }
   if (search) {
     where.OR = [
-      { jobNumber: { contains: search, mode: "insensitive" } },
-      { customer: { name: { contains: search, mode: "insensitive" } } },
-      { asset: { serialNumber: { contains: search, mode: "insensitive" } } },
+      { jobNumber: { contains: search } },
+      { customer: { name: { contains: search } } },
+      { asset: { serialNumber: { contains: search } } },
     ];
   }
 

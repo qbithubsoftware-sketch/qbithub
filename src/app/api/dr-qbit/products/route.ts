@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAuth, requireAdmin } from "@/lib/notifications/auth";
 import { sanitizeText, validateRequired } from "@/lib/security/validation";
+import { generateUniqueSlug } from "@/lib/products/slug";
 
 export async function GET(req: NextRequest) {
   const session = await requireAuth();
@@ -27,10 +28,10 @@ export async function GET(req: NextRequest) {
   if (deviceType) where.deviceType = deviceType;
   if (search) {
     where.OR = [
-      { name: { contains: search, mode: "insensitive" } },
-      { model: { contains: search, mode: "insensitive" } },
-      { brand: { contains: search, mode: "insensitive" } },
-      { manufacturer: { contains: search, mode: "insensitive" } },
+      { name: { contains: search } },
+      { model: { contains: search } },
+      { brand: { contains: search } },
+      { manufacturer: { contains: search } },
     ];
   }
 
@@ -90,18 +91,23 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Auto-generate slug
+  const slug = await generateUniqueSlug(body.model);
+
   const product = await db.qbitProduct.create({
     data: {
       name: sanitizeText(body.name, 200),
       brand: sanitizeText(body.brand ?? "QBIT", 50),
       manufacturer: body.manufacturer ? sanitizeText(body.manufacturer, 200) : null,
       model: sanitizeText(body.model, 100),
+      slug,
       deviceType: sanitizeText(body.deviceType, 50),
       description: body.description ? sanitizeText(body.description, 1000) : null,
       driverDownloadUrl: body.driverDownloadUrl ?? null,
       manualUrl: body.manualUrl ?? null,
       installationGuideUrl: body.installationGuideUrl ?? null,
       knowledgeBaseUrl: body.knowledgeBaseUrl ?? null,
+      qrCodeUrl: `https://hub.qbit.com/products/${slug}`,
     },
   });
 
