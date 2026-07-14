@@ -1,29 +1,42 @@
 /**
- * /dr-qbit — public Dr. QBIT landing page.
+ * /dr-qbit — public Dr. QBIT diagnostic page (V3).
  *
- * Two options:
- *   1. Auto Detect Hardware (WebUSB scanner — reuses existing WebUsbScanner component)
- *   2. Manual Model Search (search box → /products?search=…)
+ * STAYS INSIDE /dr-qbit for the entire workflow. NEVER redirects guests to
+ * /portal, /admin, or /dashboard.
  *
- * After detection/search, the user is routed to /products/[slug] which shows
- * all the resources (driver, firmware, manual, video, downloads). Warranty
- * info is only visible after login (handled by the product detail page).
+ * Three operating modes (auto-detected from session):
+ *   1. Guest    (no login)     — public product info + downloads + basic diagnostics
+ *   2. Customer (logged in)    — guest fields + own warranty + own history
+ *   3. Engineer (logged in)    — customer fields + deep diagnostics + service tools
+ *   4. Admin    (logged in)    — engineer fields + management tools
+ *
+ * Flow:
+ *   - User enters a model number OR clicks "Launch Scanner"
+ *   - Scanner panel opens inline (no redirect, no page refresh)
+ *   - Loading animation + scan progress
+ *   - Results appear inline: device image, product name, model, category,
+ *     OS, compatible driver, latest driver, firmware, manual, datasheet,
+ *     brochure, videos, KB, downloads, support contact, related products
+ *   - Guest users see lock icons on warranty/history/customer-details fields.
+ *     Clicking a locked field opens the LoginModal (NEVER redirects).
+ *
+ * SECURITY: Guest users never see customer name, mobile, purchase date,
+ * invoice, warranty, installation/service history, engineer name, AMC,
+ * registered device details, asset ID, QR activation, internal/admin notes.
  */
 
 import Link from "next/link";
 import { PublicLayout } from "@/components/qbit/public/PublicLayout";
-import { PublicDrQbitClient } from "@/components/qbit/public/PublicDrQbitClient";
+import { DrQbitWorkflow } from "@/components/qbit/public/DrQbitWorkflow";
 
 export const dynamic = "force-dynamic";
-
-const EXAMPLE_MODELS = ["T800", "BS550", "LD300", "CD200", "HUB-X Pro", "KDS-1500"];
 
 export default async function DrQbitPage() {
   return (
     <PublicLayout>
-      <div className="mx-auto max-w-5xl px-4 py-12 md:px-8">
+      <div className="mx-auto max-w-5xl px-4 py-8 md:px-8 md:py-12">
         {/* Header */}
-        <div className="mb-10 text-center">
+        <div className="mb-8 text-center">
           <div className="inline-flex items-center gap-2 rounded-full bg-qbit-secondary/10 px-3 py-1 text-xs font-semibold text-qbit-secondary mb-3">
             <span className="material-symbols-outlined text-[14px]">smart_toy</span>
             Dr. QBIT AI Diagnostics
@@ -33,13 +46,14 @@ export default async function DrQbitPage() {
           </h1>
           <p className="mt-3 text-base text-qbit-on-surface-variant">
             Auto-detect your connected hardware, or search by model number.
+            No login required for public downloads.
           </p>
         </div>
 
-        {/* Two options */}
-        <PublicDrQbitClient exampleModels={EXAMPLE_MODELS} />
+        {/* ===== Workflow (handles all 3 modes + scan + results) ===== */}
+        <DrQbitWorkflow />
 
-        {/* What happens next */}
+        {/* ===== What Dr. QBIT shows you ===== */}
         <div className="mt-12 rounded-2xl border border-qbit-outline-variant/50 bg-qbit-surface-container-low p-6">
           <h2 className="mb-4 text-base font-bold text-qbit-on-surface">What Dr. QBIT shows you</h2>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -61,7 +75,8 @@ export default async function DrQbitPage() {
           <p className="mt-4 text-xs text-qbit-on-surface-variant">
             <span className="font-semibold">Warranty information</span> is only visible after you{" "}
             <Link href="/accounts/login" className="text-qbit-primary hover:underline">sign in</Link>
-            {" "}— this protects device ownership privacy.
+            {" "}— this protects device ownership privacy. Guest users can still download all
+            public resources (drivers, firmware, manuals, videos, SDKs).
           </p>
         </div>
       </div>
@@ -72,6 +87,6 @@ export default async function DrQbitPage() {
 export async function generateMetadata() {
   return {
     title: "Dr. QBIT — QBIT Hub",
-    description: "Auto-detect your QBIT hardware and get instant access to drivers, firmware, manuals, and videos.",
+    description: "Auto-detect your QBIT hardware and get instant access to drivers, firmware, manuals, and videos. No login required for public downloads.",
   };
 }
