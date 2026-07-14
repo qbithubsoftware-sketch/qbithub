@@ -13,6 +13,7 @@
 
 import type { PurchaseDatabaseProvider } from "./PurchaseDatabaseProvider";
 import { PlaceholderPurchaseProvider } from "./PlaceholderProvider";
+import { DatabasePurchaseProvider } from "./DatabaseProvider";
 
 type ProviderFactory = () => PurchaseDatabaseProvider;
 
@@ -31,7 +32,7 @@ class ProviderRegistry {
   get(): PurchaseDatabaseProvider {
     if (this.cached) return this.cached;
 
-    const name = process.env.PURCHASE_DB_PROVIDER ?? "placeholder";
+    const name = process.env.PURCHASE_DB_PROVIDER ?? "database";
     const factory = this.factories.get(name);
     if (!factory) {
       // Unknown provider name — fall back to placeholder so the app never crashes.
@@ -49,15 +50,19 @@ class ProviderRegistry {
 
   /** Get the active provider's name (for logging / health checks). */
   getActiveProviderName(): string {
-    return process.env.PURCHASE_DB_PROVIDER ?? "placeholder";
+    return process.env.PURCHASE_DB_PROVIDER ?? "database";
   }
 }
 
 /** Singleton registry instance. */
 export const purchaseDbRegistry = new ProviderRegistry();
 
-// Always register the placeholder as the default.
+// Register providers:
+// - "placeholder" → throws NOT_IMPLEMENTED (for testing the failure path)
+// - "database"    → reads from Prisma DB (FSMCustomer + FSMCustomerAsset) — DEFAULT
+// - "erp" / "crm" → future integrations
 purchaseDbRegistry.register("placeholder", () => new PlaceholderPurchaseProvider());
+purchaseDbRegistry.register("database", () => new DatabasePurchaseProvider());
 
 // Future ERP/CRM providers will be registered here:
 // purchaseDbRegistry.register("erp", () => new ErpPurchaseProvider());
