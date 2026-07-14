@@ -59,6 +59,8 @@ export type ScreenId =
   | "dr-qbit-test-center"
   // Enterprise Fleet Manager — Version 2
   | "fleet-manager"
+  // Enterprise Analytics — Version 2
+  | "analytics"
   // Notification Automation Engine — Version 2
   | "notification-center"
   | "notification-template-manager"

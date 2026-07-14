@@ -2432,3 +2432,116 @@ model FleetReport {
   @@index([generatedAt])
   @@index([generatedById])
 }
+
+// =====================================================
+// Enterprise Analytics — Version 2
+// =====================================================
+//
+// Business intelligence platform that transforms operational data into
+// actionable insights. Uses historical data, completed work orders,
+// diagnostic sessions, and device information.
+//
+// NEVER fabricates predictions. Only uses real data from existing tables.
+//
+// Creates new:
+//   - AnalyticsSnapshot — periodic snapshot of key metrics
+//   - BusinessMetric — individual business KPI
+//   - EngineerMetric — per-engineer performance metrics
+//   - DeviceMetric — per-device health/activity metrics
+
+/// Analytics snapshot — a point-in-time capture of key fleet metrics.
+/// Generated periodically (cron) or on-demand for trend analysis.
+model AnalyticsSnapshot {
+  id              String   @id @default(cuid())
+  snapshotDate    DateTime @default(now())
+  snapshotType    String                          // "executive" | "device" | "engineer" | "service" | "customer" | "warranty" | "drqbit" | "download" | "branch"
+  // Snapshot data (JSON blob with all metrics for this type)
+  data            String                          // JSON string with all aggregated metrics
+  // Metadata
+  generatedAt     DateTime @default(now())
+  generatedBy     String?                         // "system" (cron) or User.id
+  createdAt       DateTime @default(now())
+
+  @@index([snapshotType, snapshotDate])
+  @@index([snapshotDate])
+}
+
+/// Business metric — individual KPI for executive dashboard.
+/// One row per metric per snapshot period.
+model BusinessMetric {
+  id              String   @id @default(cuid())
+  metricKey       String                          // "total_customers" | "total_devices" | "installations_completed" | etc.
+  metricLabel     String                          // human-readable label
+  metricValue     Float                           // numeric value
+  metricUnit      String?                         // "count" | "percentage" | "hours" | "days"
+  metricCategory  String                          // "executive" | "device" | "engineer" | "service" | "customer" | "warranty"
+  // Optional: trend (current vs previous period)
+  previousValue   Float?
+  trendPercent    Float?                          // (current - previous) / previous * 100
+  // Snapshot reference
+  snapshotDate    DateTime @default(now())
+  createdAt       DateTime @default(now())
+
+  @@index([metricKey])
+  @@index([metricCategory])
+  @@index([snapshotDate])
+}
+
+/// Engineer metric — per-engineer performance metrics.
+/// One row per engineer per snapshot period.
+model EngineerMetric {
+  id              String   @id @default(cuid())
+  engineerId      String
+  engineerName    String
+  // Job metrics
+  jobsAssigned    Int      @default(0)
+  jobsCompleted   Int      @default(0)
+  jobsPending     Int      @default(0)
+  averageCompletionHours Float?
+  // Rating metrics
+  averageRating   Float?
+  totalRatings    Int      @default(0)
+  // Response metrics
+  averageResponseHours Float?
+  averageResolutionHours Float?
+  // Compliance metrics
+  photoCompliance Float?                          // 0-100 percentage
+  reportSubmissionRate Float?                     // 0-100 percentage
+  // Snapshot
+  snapshotDate    DateTime @default(now())
+  createdAt       DateTime @default(now())
+
+  @@index([engineerId])
+  @@index([snapshotDate])
+}
+
+/// Device metric — per-device health/activity metrics.
+/// One row per device per snapshot period.
+model DeviceMetric {
+  id              String   @id @default(cuid())
+  passportId      String
+  passportNumber  String
+  deviceName      String?
+  deviceType      String?
+  model           String?
+  // Activity metrics
+  totalScans      Int      @default(0)
+  totalTests      Int      @default(0)
+  totalDiagnostics Int     @default(0)
+  totalServiceVisits Int   @default(0)
+  // Health metrics
+  healthScore     Int?
+  driverStatus    String?
+  firmwareStatus  String?
+  warrantyStatus  String?
+  // Failure tracking
+  failureCount    Int      @default(0)
+  lastFailureDate DateTime?
+  // Snapshot
+  snapshotDate    DateTime @default(now())
+  createdAt       DateTime @default(now())
+
+  @@index([passportId])
+  @@index([deviceType])
+  @@index([snapshotDate])
+}

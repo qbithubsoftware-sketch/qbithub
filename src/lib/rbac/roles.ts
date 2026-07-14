@@ -175,6 +175,9 @@ export const SCREEN_PERMISSIONS: Record<ScreenId, Role[]> = {
   // Enterprise Fleet Manager — admin only (full fleet visibility)
   "fleet-manager": ["administrator"],
 
+  // Enterprise Analytics — admin only (full business intelligence)
+  "analytics": ["administrator"],
+
   // Notification Automation Engine — admin-only management screens.
   "notification-center": ["administrator", "installation_engineer", "support_engineer"],
   "notification-template-manager": ["administrator"],
