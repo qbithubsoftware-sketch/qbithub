@@ -1,401 +1,381 @@
 "use client";
 
-import { useState } from "react";
+/**
+ * ProductManagementPage — Admin product CRUD with real API.
+ *
+ * Features:
+ *   - Fetch products from /api/admin/products
+ *   - Add Product button → opens create dialog
+ *   - Edit button → opens edit dialog
+ *   - Delete button → confirmation + soft delete
+ *   - Bulk Delete → bulk soft delete
+ *   - Export CSV → downloads CSV file
+ *   - Search + pagination
+ *
+ * RCA fixes: RCA-001, RCA-002, RCA-003, RCA-006, RCA-015, RCA-016
+ */
+
+import { useCallback, useEffect, useState } from "react";
 import { AppShell } from "@/components/qbit/shells/AppShell";
 import { Icon } from "@/components/qbit/primitives/Icon";
 import { KpiCard } from "@/components/qbit/primitives/KpiCard";
 import { QbitButton } from "@/components/qbit/primitives/QbitButton";
+import { StatusBadge, TagBadge } from "@/components/qbit/primitives/StatusBadge";
+import { SurfaceCard } from "@/components/qbit/primitives/GlassCard";
 import { ADMIN_NAV } from "@/lib/navigation/nav-config";
-import { BulkActionToolbar } from "@/components/qbit/admin/BulkActionToolbar";
-import { AssetManager } from "@/components/qbit/admin/AssetManager";
-import { ADMIN_ASSETS } from "@/lib/admin/placeholder-data";
-import { ImportWizard } from "@/components/qbit/cms/ImportWizard";
-import { ImportLog } from "@/components/qbit/cms/ImportLog";
-import { MediaManager } from "@/components/qbit/cms/MediaManager";
-import { VersionHistory } from "@/components/qbit/cms/VersionHistory";
-import { SEOEditor } from "@/components/qbit/cms/SEOEditor";
-import { QRManager } from "@/components/qbit/cms/QRManager";
-import { ExportPanel } from "@/components/qbit/cms/ExportPanel";
+import { useAuth } from "@/lib/auth/use-auth";
+import { useToast } from "@/hooks/use-toast";
 import {
   Table,
   TableBody,
+  TableCell,
   TableHead,
   TableHeader,
   TableRow,
-  TableCell,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { cn } from "@/lib/utils";
 
-/* ------------------------------------------------------------------ */
-/* Types                                                              */
-/* ------------------------------------------------------------------ */
-
-type CategoryVariant = "secondary-fixed" | "tertiary-fixed" | "neutral";
-type StatusVariant = "active" | "archived";
-
-interface ProductRow {
+interface Product {
   id: string;
   name: string;
-  subtitle: string;
+  brand: string;
+  manufacturer: string | null;
   model: string;
-  category: string;
-  categoryVariant: CategoryVariant;
-  status: StatusVariant;
-  lastUpdated: string;
-  imageGradient: string;
-  imageIcon: string;
+  deviceType: string;
+  description: string | null;
+  driverDownloadUrl: string | null;
+  manualUrl: string | null;
+  installationGuideUrl: string | null;
+  knowledgeBaseUrl: string | null;
+  isActive: boolean;
+  signatureCount: number;
+  detectedCount: number;
+  passportCount: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
-/* ------------------------------------------------------------------ */
-/* Static data — exact copy from product_management design HTML       */
-/* ------------------------------------------------------------------ */
-
-const PRODUCTS: ProductRow[] = [
-  {
-    id: "qbit-t800",
-    name: "QBIT T-800",
-    subtitle: "Flagship Enterprise POS",
-    model: "T800-ENT-2024",
-    category: "Windows POS",
-    categoryVariant: "secondary-fixed",
-    status: "active",
-    lastUpdated: "Oct 24, 2023",
-    imageGradient: "from-qbit-primary to-qbit-secondary",
-    imageIcon: "point_of_sale",
-  },
-  {
-    id: "scanpro-m10",
-    name: "ScanPro M-10",
-    subtitle: "Industrial Handheld",
-    model: "SPM-10-MOB",
-    category: "Android Device",
-    categoryVariant: "tertiary-fixed",
-    status: "active",
-    lastUpdated: "Nov 02, 2023",
-    imageGradient: "from-emerald-500 to-emerald-700",
-    imageIcon: "barcode_scanner",
-  },
-  {
-    id: "printx-g5",
-    name: "PrintX G-5",
-    subtitle: "Legacy Thermal Printer",
-    model: "PXG5-LEGACY",
-    category: "Accessories",
-    categoryVariant: "neutral",
-    status: "archived",
-    lastUpdated: "Aug 12, 2023",
-    imageGradient: "from-qbit-tertiary to-qbit-tertiary-container",
-    imageIcon: "print",
-  },
+const DEVICE_TYPES = [
+  { value: "thermal_printer", label: "Thermal Printer" },
+  { value: "barcode_scanner", label: "Barcode Scanner" },
+  { value: "windows_pos", label: "Windows POS" },
+  { value: "android_pos", label: "Android POS" },
+  { value: "cash_drawer", label: "Cash Drawer" },
+  { value: "customer_display", label: "Customer Display" },
+  { value: "label_printer", label: "Label Printer" },
+  { value: "kitchen_printer", label: "Kitchen Printer" },
+  { value: "kiosk", label: "Kiosk" },
+  { value: "weighing_scale", label: "Weighing Scale" },
 ];
 
-const CATEGORY_CLASS: Record<CategoryVariant, string> = {
-  "secondary-fixed": "bg-qbit-secondary-fixed text-qbit-on-secondary-fixed-variant",
-  "tertiary-fixed": "bg-qbit-tertiary-fixed text-qbit-on-tertiary-fixed-variant",
-  neutral: "bg-qbit-surface-container-highest text-qbit-outline",
+const DEVICE_TYPE_ICONS: Record<string, string> = {
+  thermal_printer: "print", barcode_scanner: "barcode_scanner", windows_pos: "desktop_windows",
+  android_pos: "phone_android", cash_drawer: "point_of_sale", customer_display: "monitor",
+  label_printer: "label", kitchen_printer: "restaurant", kiosk: "storefront", weighing_scale: "scale",
 };
-
-const STATUS_LABEL: Record<StatusVariant, string> = {
-  active: "Active",
-  archived: "Archived",
-};
-
-const STATUS_TEXT_BG: Record<StatusVariant, string> = {
-  active: "text-emerald-600 bg-emerald-600/10",
-  archived: "text-qbit-outline bg-qbit-outline/10",
-};
-
-const STATUS_DOT_BG: Record<StatusVariant, string> = {
-  active: "bg-emerald-600",
-  archived: "bg-qbit-outline",
-};
-
-const PAGE_TOKENS: ReadonlyArray<number | "ellipsis"> = [1, 2, 3, "ellipsis", 52];
-const LAST_PAGE = 52;
-
-/* ------------------------------------------------------------------ */
-/* Page                                                               */
-/* ------------------------------------------------------------------ */
 
 export function ProductManagementPage() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [currentPage, setCurrentPage] = useState<number>(1);
 
-  const allSelected = PRODUCTS.length > 0 && selected.size === PRODUCTS.length;
-  const someSelected = selected.size > 0 && !allSelected;
-  const selectedCount = selected.size;
+  // Dialog state
+  const [showCreateEdit, setShowCreateEdit] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  const toggleRow = (id: string) => {
+  // Form state
+  const [formData, setFormData] = useState({
+    name: "", brand: "QBIT", manufacturer: "", model: "", deviceType: "thermal_printer",
+    description: "", driverDownloadUrl: "", manualUrl: "", installationGuideUrl: "", knowledgeBaseUrl: "",
+  });
+
+  const userName = user?.name ?? "Admin";
+  const initials = userName.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+
+  const fetchProducts = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (search.trim()) params.set("search", search.trim());
+      const res = await fetch(`/api/admin/products?${params}`, { cache: "no-store" });
+      if (!res.ok) throw new Error("Failed");
+      const data = await res.json();
+      setProducts(data.items ?? []);
+    } catch {
+      toast({ title: "Failed to load products", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  }, [search, toast]);
+
+  useEffect(() => {
+    void fetchProducts();
+  }, [fetchProducts]);
+
+  // --- Create/Edit handlers ---
+  const handleAddProduct = () => {
+    setEditingProduct(null);
+    setFormData({
+      name: "", brand: "QBIT", manufacturer: "", model: "", deviceType: "thermal_printer",
+      description: "", driverDownloadUrl: "", manualUrl: "", installationGuideUrl: "", knowledgeBaseUrl: "",
+    });
+    setShowCreateEdit(true);
+  };
+
+  const handleEditProduct = (product: Product) => {
+    setEditingProduct(product);
+    setFormData({
+      name: product.name, brand: product.brand, manufacturer: product.manufacturer ?? "",
+      model: product.model, deviceType: product.deviceType, description: product.description ?? "",
+      driverDownloadUrl: product.driverDownloadUrl ?? "", manualUrl: product.manualUrl ?? "",
+      installationGuideUrl: product.installationGuideUrl ?? "", knowledgeBaseUrl: product.knowledgeBaseUrl ?? "",
+    });
+    setShowCreateEdit(true);
+  };
+
+  const handleSaveProduct = async () => {
+    if (!formData.name || !formData.model) {
+      toast({ title: "Name and Model are required", variant: "destructive" });
+      return;
+    }
+    setSaving(true);
+    try {
+      const payload = {
+        ...formData,
+        manufacturer: formData.manufacturer || null,
+        description: formData.description || null,
+        driverDownloadUrl: formData.driverDownloadUrl || null,
+        manualUrl: formData.manualUrl || null,
+        installationGuideUrl: formData.installationGuideUrl || null,
+        knowledgeBaseUrl: formData.knowledgeBaseUrl || null,
+      };
+
+      if (editingProduct) {
+        // Update
+        const res = await fetch(`/api/admin/products/${editingProduct.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error ?? "Update failed");
+        }
+        toast({ title: "Product updated", description: formData.name });
+      } else {
+        // Create
+        const res = await fetch("/api/admin/products", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error ?? "Create failed");
+        }
+        toast({ title: "Product created", description: formData.name });
+      }
+      setShowCreateEdit(false);
+      void fetchProducts();
+    } catch (e) {
+      toast({ title: "Save failed", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // --- Delete handler ---
+  const handleDeleteProduct = async () => {
+    if (!deleteTarget) return;
+    try {
+      const res = await fetch(`/api/admin/products/${deleteTarget.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Delete failed");
+      toast({ title: "Product deleted", description: deleteTarget.name });
+      setDeleteTarget(null);
+      void fetchProducts();
+    } catch {
+      toast({ title: "Delete failed", variant: "destructive" });
+    }
+  };
+
+  // --- Bulk Delete ---
+  const handleBulkDelete = async () => {
+    if (selected.size === 0) return;
+    try {
+      const res = await fetch("/api/admin/products/bulk-delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: Array.from(selected) }),
+      });
+      if (!res.ok) throw new Error("Bulk delete failed");
+      const data = await res.json();
+      toast({ title: "Bulk delete complete", description: `${data.deactivated} products deactivated` });
+      setSelected(new Set());
+      void fetchProducts();
+    } catch {
+      toast({ title: "Bulk delete failed", variant: "destructive" });
+    }
+  };
+
+  // --- Export CSV ---
+  const handleExportCSV = () => {
+    window.open("/api/admin/products/export", "_blank", "noopener,noreferrer");
+  };
+
+  // --- Selection ---
+  const toggleSelect = (id: string) => {
     setSelected((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };
 
-  const toggleAll = () => {
-    if (allSelected) {
-      setSelected(new Set());
-    } else {
-      setSelected(new Set(PRODUCTS.map((p) => p.id)));
-    }
+  const toggleSelectAll = () => {
+    if (selected.size === products.length) setSelected(new Set());
+    else setSelected(new Set(products.map((p) => p.id)));
   };
-
-  const clearSelection = () => setSelected(new Set());
 
   return (
     <AppShell
       variant="admin"
-      brand={{ title: "QBIT Hub", tagline: "Control Center", icon: "bolt" }}
+      brand={{ title: "QBIT Hub", tagline: "Product Management", icon: "inventory_2" }}
       navItems={ADMIN_NAV}
       activeScreen="product-management"
-      user={{ name: "Admin User", role: "Super Administrator", initials: "AU" }}
-      topBar={{
-        searchPlaceholder: "Search catalog, serials, or models...",
-        user: { name: "Admin User", role: "Super Administrator", initials: "AU" },
-      }}
+      user={{ name: userName, role: "Administrator", initials }}
+      cta={{ label: "Refresh", icon: "refresh", onClick: () => void fetchProducts() }}
+      topBar={{ searchPlaceholder: "Search products…", user: { name: userName, role: "Administrator", initials } }}
     >
-      <div className="flex flex-col gap-6">
-        {/* ------------------------------------------------------------ */}
-        {/* 1. Page Header with Primary Action                           */}
-        {/* ------------------------------------------------------------ */}
-        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="space-y-5">
+        {/* Header */}
+        <div className="flex items-center justify-between gap-3">
           <div>
-            <nav
-              aria-label="Breadcrumb"
-              className="mb-2 flex items-center text-xs text-qbit-on-surface-variant"
-            >
-              <span>Inventory</span>
-              <Icon name="chevron_right" className="mx-1 text-[14px]" />
-              <span className="font-bold text-qbit-primary">Products</span>
-            </nav>
-            <h2 className="text-2xl font-semibold tracking-tight text-qbit-on-surface">
-              Product Management
-            </h2>
+            <h2 className="text-2xl font-bold tracking-tight text-qbit-on-surface">Product Management</h2>
+            <p className="mt-1 text-sm text-qbit-on-surface-variant">Manage product catalog, models, and device types.</p>
           </div>
-          <QbitButton variant="primary" icon="add" size="lg">
+          <QbitButton variant="primary" icon="add" size="lg" onClick={handleAddProduct}>
             Add Product
           </QbitButton>
-        </header>
-
-        {/* ------------------------------------------------------------ */}
-        {/* 2. Stats Overview (4-col desktop / 2-col tablet)             */}
-        {/* ------------------------------------------------------------ */}
-        <section
-          aria-label="Catalog statistics"
-          className="grid grid-cols-2 gap-4 lg:grid-cols-4"
-        >
-          <KpiCard
-            label="Total SKU"
-            value="1,284"
-            icon="trending_up"
-            delta="+12% vs last month"
-            deltaVariant="up"
-          />
-          <KpiCard
-            label="Active Items"
-            value="1,042"
-            icon="check_circle"
-            delta="81% operation rate"
-            deltaVariant="neutral"
-            iconBg="bg-emerald-100 text-emerald-700"
-          />
-          <KpiCard
-            label="Archived"
-            value="242"
-            icon="archive"
-            delta="14 new this week"
-            deltaVariant="neutral"
-            iconBg="bg-amber-100 text-amber-700"
-          />
-          <KpiCard
-            label="System Health"
-            value="99.9%"
-            icon="health_and_safety"
-            delta="Synchronized"
-            deltaVariant="up"
-            iconBg="bg-qbit-primary/10 text-qbit-primary"
-          />
-        </section>
-
-        {/* ------------------------------------------------------------ */}
-        {/* 3. Bulk Actions Bar (slides in on selection)                 */}
-        {/* ------------------------------------------------------------ */}
-        <div
-          aria-hidden={selectedCount === 0}
-          className={cn(
-            "glass-card flex items-center justify-between gap-3 rounded-xl px-4 py-2.5 transition-all duration-300",
-            selectedCount > 0
-              ? "translate-y-0 opacity-100"
-              : "pointer-events-none -translate-y-2 opacity-0",
-          )}
-        >
-          <div className="flex items-center text-sm font-bold text-qbit-primary">
-            <span className="mr-2 rounded bg-qbit-primary px-1.5 py-0.5 text-xs text-qbit-on-primary">
-              {selectedCount}
-            </span>
-            <span>items selected</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <QbitButton
-              variant="outline"
-              size="sm"
-              icon="delete"
-              className="border-qbit-error text-qbit-error hover:bg-qbit-error-container/20"
-            >
-              Bulk Delete
-            </QbitButton>
-            <QbitButton
-              variant="surface"
-              size="sm"
-              icon="file_download"
-              className="bg-qbit-surface-container-high hover:bg-qbit-surface-variant"
-            >
-              Export CSV
-            </QbitButton>
-            <button
-              type="button"
-              onClick={clearSelection}
-              aria-label="Clear selection"
-              className="flex h-8 w-8 items-center justify-center rounded-full text-qbit-on-surface-variant transition-colors hover:bg-qbit-surface-container-high"
-            >
-              <Icon name="close" className="text-[18px]" />
-            </button>
-          </div>
         </div>
 
-        {/* ------------------------------------------------------------ */}
-        {/* 4. Products Table                                            */}
-        {/* ------------------------------------------------------------ */}
-        <div className="overflow-hidden rounded-xl border border-qbit-outline-variant bg-white shadow-sm">
-          <div className="relative w-full overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-b border-qbit-outline-variant bg-qbit-surface-container-low hover:bg-qbit-surface-container-low">
-                  <TableHead className="w-12 pl-4">
-                    <Checkbox
-                      checked={
-                        allSelected ? true : someSelected ? "indeterminate" : false
-                      }
-                      onCheckedChange={toggleAll}
-                      aria-label="Select all products"
-                      className="border-qbit-outline-variant data-[state=checked]:bg-qbit-primary data-[state=checked]:border-qbit-primary"
-                    />
-                  </TableHead>
-                  <TableHead className="w-16 px-2 py-4 text-xs font-semibold uppercase tracking-wider text-qbit-on-surface-variant">
-                    Image
-                  </TableHead>
-                  <TableHead className="px-2 py-4 text-xs font-semibold uppercase tracking-wider text-qbit-on-surface-variant">
-                    Product Name
-                  </TableHead>
-                  <TableHead className="px-2 py-4 text-xs font-semibold uppercase tracking-wider text-qbit-on-surface-variant">
-                    Model Number
-                  </TableHead>
-                  <TableHead className="px-2 py-4 text-xs font-semibold uppercase tracking-wider text-qbit-on-surface-variant">
-                    Category
-                  </TableHead>
-                  <TableHead className="px-2 py-4 text-xs font-semibold uppercase tracking-wider text-qbit-on-surface-variant">
-                    Status
-                  </TableHead>
-                  <TableHead className="px-2 py-4 text-xs font-semibold uppercase tracking-wider text-qbit-on-surface-variant">
-                    Last Updated
-                  </TableHead>
-                  <TableHead className="px-2 py-4 pr-4 text-right text-xs font-semibold uppercase tracking-wider text-qbit-on-surface-variant">
-                    Actions
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {PRODUCTS.map((product) => {
-                  const isSelected = selected.has(product.id);
-                  return (
-                    <TableRow
-                      key={product.id}
-                      data-state={isSelected ? "selected" : undefined}
-                      className={cn(
-                        "group h-[72px] border-b border-qbit-surface-container-low transition-colors hover:bg-qbit-surface-container-lowest",
-                        isSelected && "bg-qbit-surface-container-lowest",
-                      )}
-                    >
-                      <TableCell className="pl-4">
-                        <Checkbox
-                          checked={isSelected}
-                          onCheckedChange={() => toggleRow(product.id)}
-                          aria-label={`Select ${product.name}`}
-                          className="border-qbit-outline-variant data-[state=checked]:bg-qbit-primary data-[state=checked]:border-qbit-primary"
-                        />
+        {/* Stats */}
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <KpiCard label="Total Products" value={products.length.toString()} icon="inventory_2" iconBg="bg-qbit-primary/10 text-qbit-primary" />
+          <KpiCard label="Active" value={products.filter((p) => p.isActive).length.toString()} icon="check_circle" iconBg="bg-qbit-success/10 text-qbit-success" />
+          <KpiCard label="With Signatures" value={products.filter((p) => p.signatureCount > 0).length.toString()} icon="fingerprint" iconBg="bg-qbit-secondary/10 text-qbit-secondary" />
+          <KpiCard label="Detected Devices" value={products.reduce((sum, p) => sum + p.detectedCount, 0).toString()} icon="devices" iconBg="bg-qbit-tertiary/10 text-qbit-tertiary" />
+        </div>
+
+        {/* Search + Bulk Actions */}
+        <SurfaceCard className="p-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <Icon name="search" className="ml-2 text-[20px] text-qbit-on-surface-variant" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && fetchProducts()}
+              placeholder="Search by name, model, brand…"
+              className="flex-1 border-0 bg-transparent px-2 py-2 text-sm focus:outline-none"
+            />
+            {selected.size > 0 && (
+              <>
+                <QbitButton variant="danger" size="sm" icon="delete" onClick={handleBulkDelete}>
+                  Bulk Delete ({selected.size})
+                </QbitButton>
+                <button onClick={() => setSelected(new Set())} className="text-xs text-qbit-on-surface-variant hover:text-qbit-error">
+                  Clear
+                </button>
+              </>
+            )}
+            <QbitButton variant="outline" size="sm" icon="file_download" onClick={handleExportCSV}>
+              Export CSV
+            </QbitButton>
+          </div>
+        </SurfaceCard>
+
+        {/* Products Table */}
+        {loading ? (
+          <div className="rounded-xl border border-dashed border-qbit-outline-variant px-4 py-12 text-center">
+            <Icon name="progress_activity" className="mx-auto text-[28px] animate-spin text-qbit-primary" />
+          </div>
+        ) : products.length === 0 ? (
+          <SurfaceCard className="p-8 text-center">
+            <Icon name="inventory_2" className="mx-auto text-[40px] text-qbit-on-surface-variant/40" />
+            <p className="mt-2 text-sm text-qbit-on-surface-variant">No products found.</p>
+            <QbitButton variant="outline" size="sm" icon="add" className="mt-3" onClick={handleAddProduct}>
+              Add First Product
+            </QbitButton>
+          </SurfaceCard>
+        ) : (
+          <SurfaceCard className="overflow-hidden">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-10">
+                      <Checkbox checked={selected.size === products.length && products.length > 0} onCheckedChange={toggleSelectAll} />
+                    </TableHead>
+                    <TableHead>Product</TableHead>
+                    <TableHead>Model</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Signatures</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {products.map((product) => (
+                    <TableRow key={product.id} className={selected.has(product.id) ? "bg-qbit-primary/5" : ""}>
+                      <TableCell>
+                        <Checkbox checked={selected.has(product.id)} onCheckedChange={() => toggleSelect(product.id)} />
                       </TableCell>
-                      <TableCell className="px-2 py-3">
-                        <div
-                          className={cn(
-                            "flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br",
-                            product.imageGradient,
-                          )}
-                        >
-                          <Icon
-                            name={product.imageIcon}
-                            className="text-[22px] text-white"
-                            filled
-                          />
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-qbit-primary/10 text-qbit-primary">
+                            <Icon name={DEVICE_TYPE_ICONS[product.deviceType] ?? "inventory_2"} className="text-[16px]" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-qbit-on-surface">{product.name}</p>
+                            <p className="text-xs text-qbit-on-surface-variant">{product.brand}</p>
+                          </div>
                         </div>
                       </TableCell>
-                      <TableCell className="px-2 py-3">
-                        <div className="font-bold text-qbit-on-surface">
-                          {product.name}
-                        </div>
-                        <div className="text-xs text-qbit-on-surface-variant">
-                          {product.subtitle}
-                        </div>
+                      <TableCell className="font-mono text-sm">{product.model}</TableCell>
+                      <TableCell>
+                        <TagBadge variant="neutral">{product.deviceType.replace(/_/g, " ")}</TagBadge>
                       </TableCell>
-                      <TableCell className="px-2 py-3 font-mono text-sm text-qbit-on-surface-variant">
-                        {product.model}
+                      <TableCell>
+                        <span className="text-sm font-medium">{product.signatureCount}</span>
                       </TableCell>
-                      <TableCell className="px-2 py-3">
-                        <span
-                          className={cn(
-                            "rounded-full px-2 py-0.5 text-[11px] font-bold",
-                            CATEGORY_CLASS[product.categoryVariant],
-                          )}
-                        >
-                          {product.category}
-                        </span>
+                      <TableCell>
+                        <StatusBadge variant={product.isActive ? "success" : "neutral"} dot>
+                          {product.isActive ? "Active" : "Inactive"}
+                        </StatusBadge>
                       </TableCell>
-                      <TableCell className="px-2 py-3">
-                        <div
-                          className={cn(
-                            "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-bold uppercase tracking-widest",
-                            STATUS_TEXT_BG[product.status],
-                          )}
-                        >
-                          <span
-                            className={cn(
-                              "mr-1.5 h-1.5 w-1.5 rounded-full",
-                              STATUS_DOT_BG[product.status],
-                            )}
-                          />
-                          {STATUS_LABEL[product.status]}
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-2 py-3 text-sm text-qbit-on-surface-variant">
-                        {product.lastUpdated}
-                      </TableCell>
-                      <TableCell className="px-2 py-3 pr-4 text-right">
-                        <div className="flex justify-end gap-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
-                          <button
-                            type="button"
-                            aria-label={`View ${product.name}`}
-                            className="flex h-8 w-8 items-center justify-center rounded-lg text-qbit-primary transition-colors hover:bg-qbit-primary-container/10"
-                          >
-                            <Icon name="visibility" className="text-[20px]" />
-                          </button>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1">
                           <button
                             type="button"
                             aria-label={`Edit ${product.name}`}
+                            onClick={() => handleEditProduct(product)}
                             className="flex h-8 w-8 items-center justify-center rounded-lg text-qbit-on-surface-variant transition-colors hover:bg-qbit-surface-container-high"
                           >
                             <Icon name="edit" className="text-[20px]" />
@@ -403,124 +383,99 @@ export function ProductManagementPage() {
                           <button
                             type="button"
                             aria-label={`Delete ${product.name}`}
-                            className="flex h-8 w-8 items-center justify-center rounded-lg text-qbit-error transition-colors hover:bg-qbit-error-container/20"
+                            onClick={() => setDeleteTarget(product)}
+                            className="flex h-8 w-8 items-center justify-center rounded-lg text-qbit-error transition-colors hover:bg-qbit-error/10"
                           >
                             <Icon name="delete" className="text-[20px]" />
                           </button>
                         </div>
                       </TableCell>
                     </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </SurfaceCard>
+        )}
+      </div>
 
-          {/* ---------------------------------------------------------- */}
-          {/* 5. Pagination                                              */}
-          {/* ---------------------------------------------------------- */}
-          <div className="flex flex-col gap-3 border-t border-qbit-outline-variant bg-qbit-surface-container-low px-4 py-2.5 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-qbit-on-surface-variant">
-              Showing{" "}
-              <span className="font-bold text-qbit-on-surface">1 - 25</span> of{" "}
-              <span className="font-bold text-qbit-on-surface">1,284</span>
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setCurrentPage(1)}
-                disabled={currentPage === 1}
-                aria-label="First page"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-qbit-on-surface-variant transition-all hover:bg-qbit-surface-container-high disabled:opacity-30 disabled:pointer-events-none"
+      {/* Create/Edit Dialog */}
+      <Dialog open={showCreateEdit} onOpenChange={setShowCreateEdit}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{editingProduct ? "Edit Product" : "Add Product"}</DialogTitle>
+            <DialogDescription>
+              {editingProduct ? `Update ${editingProduct.name}` : "Create a new product in the catalog"}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid grid-cols-2 gap-4 py-4">
+            <div className="col-span-2">
+              <label className="mb-1 block text-sm font-medium">Product Name *</label>
+              <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="QBIT T-800 Thermal Printer" />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Brand</label>
+              <Input value={formData.brand} onChange={(e) => setFormData({ ...formData, brand: e.target.value })} placeholder="QBIT" />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Model *</label>
+              <Input value={formData.model} onChange={(e) => setFormData({ ...formData, model: e.target.value })} placeholder="T-800" />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Manufacturer</label>
+              <Input value={formData.manufacturer} onChange={(e) => setFormData({ ...formData, manufacturer: e.target.value })} placeholder="QBIT Technologies" />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Device Type</label>
+              <select
+                value={formData.deviceType}
+                onChange={(e) => setFormData({ ...formData, deviceType: e.target.value })}
+                className="w-full rounded-md border border-qbit-outline-variant bg-white px-3 py-2 text-sm"
               >
-                <Icon name="first_page" className="text-[20px]" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                aria-label="Previous page"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-qbit-on-surface-variant transition-all hover:bg-qbit-surface-container-high disabled:opacity-30 disabled:pointer-events-none"
-              >
-                <Icon name="chevron_left" className="text-[20px]" />
-              </button>
-              <div className="flex items-center gap-1">
-                {PAGE_TOKENS.map((token, idx) =>
-                  token === "ellipsis" ? (
-                    <span
-                      key={`ellipsis-${idx}`}
-                      className="flex h-8 items-center px-1 text-sm text-qbit-on-surface-variant"
-                      aria-hidden="true"
-                    >
-                      ...
-                    </span>
-                  ) : (
-                    <button
-                      key={`page-${token}`}
-                      type="button"
-                      onClick={() => setCurrentPage(token)}
-                      aria-label={`Page ${token}`}
-                      aria-current={currentPage === token ? "page" : undefined}
-                      className={cn(
-                        "flex h-8 w-8 items-center justify-center rounded-lg text-sm transition-all",
-                        currentPage === token
-                          ? "bg-qbit-primary font-bold text-qbit-on-primary shadow-sm"
-                          : "font-medium text-qbit-on-surface hover:bg-qbit-surface-container-high",
-                      )}
-                    >
-                      {token}
-                    </button>
-                  ),
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={() => setCurrentPage((p) => Math.min(LAST_PAGE, p + 1))}
-                disabled={currentPage === LAST_PAGE}
-                aria-label="Next page"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-qbit-on-surface-variant transition-all hover:bg-qbit-surface-container-high disabled:opacity-30 disabled:pointer-events-none"
-              >
-                <Icon name="chevron_right" className="text-[20px]" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setCurrentPage(LAST_PAGE)}
-                disabled={currentPage === LAST_PAGE}
-                aria-label="Last page"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-qbit-on-surface-variant transition-all hover:bg-qbit-surface-container-high disabled:opacity-30 disabled:pointer-events-none"
-              >
-                <Icon name="last_page" className="text-[20px]" />
-              </button>
+                {DEVICE_TYPES.map((t) => (
+                  <option key={t.value} value={t.value}>{t.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="col-span-2">
+              <label className="mb-1 block text-sm font-medium">Description</label>
+              <Textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} rows={2} placeholder="Product description…" />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Driver URL</label>
+              <Input value={formData.driverDownloadUrl} onChange={(e) => setFormData({ ...formData, driverDownloadUrl: e.target.value })} placeholder="https://…" />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Manual URL</label>
+              <Input value={formData.manualUrl} onChange={(e) => setFormData({ ...formData, manualUrl: e.target.value })} placeholder="https://…" />
             </div>
           </div>
-        </div>
 
-        {/* ------------------------------------------------------------ */}
-        {/* Extended: Unified Asset Manager                              */}
-        {/* ------------------------------------------------------------ */}
-        <AssetManager assets={ADMIN_ASSETS} />
+          <DialogFooter>
+            <QbitButton variant="ghost" onClick={() => setShowCreateEdit(false)}>Cancel</QbitButton>
+            <QbitButton variant="primary" icon={saving ? "progress_activity" : "check"} disabled={saving} onClick={handleSaveProduct}>
+              {saving ? "Saving…" : editingProduct ? "Update Product" : "Create Product"}
+            </QbitButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-        {/* ===== CMS: Import Wizard ===== */}
-        <ImportWizard />
-
-        {/* ===== CMS: Import History ===== */}
-        <ImportLog />
-
-        {/* ===== CMS: Media Library ===== */}
-        <MediaManager />
-
-        {/* ===== CMS: Version History ===== */}
-        <VersionHistory entityName="QBIT T-800" />
-
-        {/* ===== CMS: SEO Management ===== */}
-        <SEOEditor />
-
-        {/* ===== CMS: QR Code Manager ===== */}
-        <QRManager />
-
-        {/* ===== CMS: Bulk Export ===== */}
-        <ExportPanel />
-      </div>
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Product</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete "{deleteTarget?.name}"? This will deactivate the product (soft delete). It can be reactivated later.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <QbitButton variant="ghost" onClick={() => setDeleteTarget(null)}>Cancel</QbitButton>
+            <QbitButton variant="danger" icon="delete" onClick={handleDeleteProduct}>Delete</QbitButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }

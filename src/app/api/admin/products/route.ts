@@ -1,0 +1,100 @@
+/**
+ * GET  /api/admin/products — list all products (with pagination + search)
+ * POST /api/admin/products — create a new product
+ */
+
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { requireAdmin } from "@/lib/notifications/auth";
+import { sanitizeText, validateRequired } from "@/lib/security/validation";
+
+export async function GET(req: NextRequest) {
+  const session = await requireAdmin();
+  if (!session) return NextResponse.json({ error: "Administrator access required" }, { status: 403 });
+
+  try {
+    const url = new URL(req.url);
+    const search = url.searchParams.get("search") ?? "";
+    const limit = Math.min(parseInt(url.searchParams.get("limit") ?? "100", 10), 500);
+
+    const where: Record<string, unknown> = {};
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: "insensitive" } },
+        { model: { contains: search, mode: "insensitive" } },
+        { brand: { contains: search, mode: "insensitive" } },
+        { manufacturer: { contains: search, mode: "insensitive" } },
+      ];
+    }
+
+    const products = await db.qbitProduct.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      include: { _count: { select: { hardwareSignatures: true, detectedDevices: true, devicePassports: true } } },
+    });
+
+    return NextResponse.json({
+      items: products.map((p) => ({
+        id: p.id,
+        name: p.name,
+        brand: p.brand,
+        manufacturer: p.manufacturer,
+        model: p.model,
+        deviceType: p.deviceType,
+        description: p.description,
+        driverDownloadUrl: p.driverDownloadUrl,
+        manualUrl: p.manualUrl,
+        installationGuideUrl: p.installationGuideUrl,
+        knowledgeBaseUrl: p.knowledgeBaseUrl,
+        isActive: p.isActive,
+        signatureCount: p._count.hardwareSignatures,
+        detectedCount: p._count.detectedDevices,
+        passportCount: p._count.devicePassports,
+        createdAt: p.createdAt.toISOString(),
+        updatedAt: p.updatedAt.toISOString(),
+      })),
+      total: products.length,
+    });
+  } catch (error) {
+    console.error("[API ERROR] GET /api/admin/products:", error);
+    return NextResponse.json({ error: "Internal server error", message: error instanceof Error ? error.message : "Unknown error" }, { status: 500 });
+  }
+}
+
+export async function POST(req: NextRequest) {
+  const session = await requireAdmin();
+  if (!session) return NextResponse.json({ error: "Administrator access required" }, { status: 403 });
+
+  try {
+    const body = await req.json().catch(() => null);
+    if (!body) return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+
+    const missing = validateRequired(body, ["name", "model", "deviceType"]);
+    if (missing.length > 0) return NextResponse.json({ error: `Missing fields: ${missing.join(", ")}` }, { status: 400 });
+
+    // Check model uniqueness
+    const existing = await db.qbitProduct.findUnique({ where: { model: body.model } });
+    if (existing) return NextResponse.json({ error: `Product with model "${body.model}" already exists` }, { status: 409 });
+
+    const product = await db.qbitProduct.create({
+      data: {
+        name: sanitizeText(body.name, 200),
+        brand: sanitizeText(body.brand ?? "QBIT", 50),
+        manufacturer: body.manufacturer ? sanitizeText(body.manufacturer, 200) : null,
+        model: sanitizeText(body.model, 100),
+        deviceType: sanitizeText(body.deviceType, 50),
+        description: body.description ? sanitizeText(body.description, 1000) : null,
+        driverDownloadUrl: body.driverDownloadUrl ?? null,
+        manualUrl: body.manualUrl ?? null,
+        installationGuideUrl: body.installationGuideUrl ?? null,
+        knowledgeBaseUrl: body.knowledgeBaseUrl ?? null,
+      },
+    });
+
+    return NextResponse.json({ product }, { status: 201 });
+  } catch (error) {
+    console.error("[API ERROR] POST /api/admin/products:", error);
+    return NextResponse.json({ error: "Internal server error", message: error instanceof Error ? error.message : "Unknown error" }, { status: 500 });
+  }
+}
