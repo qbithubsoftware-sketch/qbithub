@@ -376,3 +376,63 @@ Stage Summary:
 - Approved Stitch UI design language fully preserved (qbit-primary palette, Material Symbols, surface-container backgrounds, 72px header, premium gradients).
 - Build: ✓ Compiled successfully (33.1s), 0 TS errors.
 - Production: LIVE at https://qbithub.vercel.app with all routes verified.
+
+---
+Task ID: security-hardening-v3
+Agent: main
+Task: V3 Security Hardening — separate Public/Customer/Engineer/Admin portals, fix all data leakage, enforce strict RBAC.
+
+Audit Phase:
+- Comprehensive security audit via Explore subagent identified 8 CRITICAL + 12 MODERATE issues.
+- Critical issues: 4 unauthenticated/under-authenticated API endpoints leaking engineer names, customer names, warranty data, fleet inventory, analytics dashboards, network reconnaissance data, internal SKU/serialPattern.
+- Root cause: existing auth.ts only had requireAuth() (any logged-in user), requireAdmin(), requireEngineerOrAdmin(). No requireCustomer() or requireStaff() — developers reached for requireAuth() when they needed narrower role gating.
+
+Fix Phase (all 20 issues resolved):
+
+M12 (root cause): Added requireCustomer(), requireStaff(), requireRoles() to /lib/notifications/auth.ts.
+
+C1: /api/dr-qbit/scan GET — was completely unauthenticated (leaked engineer/customer names, hostnames, session tokens). Now uses requireStaff().
+
+C2/C3/C4: Stripped internal sku + serialPattern from:
+  - /api/public/products/[slug]/route.ts response
+  - /api/public/products/route.ts select clause
+  - /app/products/[slug]/page.tsx shaped object (set to null)
+
+C5: /api/dr-qbit/passports/* (4 routes) — switched from requireAuth() to requireStaff(). Cross-customer warranty leak fixed.
+
+C6: /api/dr-qbit/devices — switched from requireAuth() to requireStaff(). Network/host inventory no longer exposed to customers.
+
+C7: /api/fleet/* (5 routes) — switched from requireAuth() to requireAdmin(). Enterprise fleet data now admin-only.
+
+C8: /api/analytics/* (10 routes) — switched from requireAuth() to requireAdmin(). Executive dashboards + warranty analytics now admin-only.
+
+M1: /api/dr-qbit/tests/* (4 routes) → requireEngineerOrAdmin()
+M2: /api/dr-qbit/diagnostics/* (3 routes) → requireStaff()
+M3: /api/dr-qbit/firmware/* (5 routes) → requireStaff() + stopped leaking storagePath (now returns /api/downloads/[id]/file URLs)
+M4: /api/dr-qbit/history → requireStaff()
+M5: /api/dr-qbit/web-scan + passports/generate → requireStaff()
+M6: /api/public/fsm-track — removed engineerName, serialNumber, warrantyStatus, warrantyExpiry from public response
+M7: /api/public/track/[token] — removed customerName, companyName, serialNumber, warrantyStatus, warrantyExpiry, engineerName, engineerPhotoUrl from token-protected response
+M8: /api/public/track/[token]/report — removed customerName, companyName, address, serialNumber, warranty, engineerName, signatureUrl, signerName
+M9: /api/public/articles — added publishedAt <= now filter
+M10: /account dashboard now denies staff (admin/engineer/support) and redirects to /portal
+M11: /engineer + /admin now return 403 Forbidden for wrong-role users (new ForbiddenNotice component)
+M12: requireCustomer() now used by /api/account/devices — only public_customer role can call it.
+
+New Components:
+- /components/qbit/public/ForbiddenNotice.tsx — V3 403 page (reuses Stitch design)
+
+Production Verification (https://qbithub.vercel.app):
+- ✓ sku + serialPattern absent from /api/public/products/t800 response
+- ✓ /api/dr-qbit/scan GET returns 401 (was 200 before)
+- ✓ /api/fleet/devices returns 401 (was 200 before)
+- ✓ /api/analytics/warranty returns 401 (was 200 before)
+- ✓ /api/dr-qbit/passports returns 401 (was 200 before)
+- ✓ /api/account/devices returns 401 (proper customer auth required)
+- ✓ /admin returns 307 (redirects unauthenticated to /accounts/login)
+- ✓ /engineer returns 307 (redirects unauthenticated to /accounts/login)
+- ✓ All 11 public routes still return 200 (no breakage)
+- ✓ /portal legacy Zustand app still works (200)
+
+Build: ✓ Compiled successfully (30.4s, 73 routes, 0 TS errors)
+Vercel: ✓ READY in 80s (deployment dpl_2La5Cts5Ri5kgk2KVgmTnKLHQYt3)
