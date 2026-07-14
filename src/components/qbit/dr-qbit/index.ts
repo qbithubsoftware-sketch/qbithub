@@ -3,6 +3,7 @@
  */
 
 export { ScanButton } from "./ScanButton";
+export { WebUsbScanner } from "./WebUsbScanner";
 export { DeviceCard } from "./DeviceCard";
 export { UnknownDeviceCard } from "./UnknownDeviceCard";
 export { DeviceMapper } from "./DeviceMapper";

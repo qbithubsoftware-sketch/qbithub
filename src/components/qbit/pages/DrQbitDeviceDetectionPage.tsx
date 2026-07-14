@@ -25,6 +25,7 @@ import { SurfaceCard } from "@/components/qbit/primitives/GlassCard";
 import { QbitButton } from "@/components/qbit/primitives/QbitButton";
 import {
   ScanButton,
+  WebUsbScanner,
   DeviceCard,
   UnknownDeviceCard,
   DeviceMapper,
@@ -203,7 +204,7 @@ export function DrQbitDeviceDetectionPage() {
                 </span>
               </div>
             </div>
-            <ScanButton onScanComplete={fetchDevices} />
+            <WebUsbScanner onScanComplete={() => void fetchDevices()} />
           </div>
         </SurfaceCard>
 
