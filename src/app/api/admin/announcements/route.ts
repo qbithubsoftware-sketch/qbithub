@@ -22,6 +22,8 @@ async function requireAdmin() {
 }
 
 export async function GET(req: NextRequest) {
+  try {
+
   const session = await requireAdmin();
   if (!session) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -37,9 +39,19 @@ export async function GET(req: NextRequest) {
   });
 
   return NextResponse.json({ announcements });
+
+  } catch (error) {
+    console.error("[API ERROR] GET src/app/api/admin/announcements/route.ts:", error);
+    return NextResponse.json(
+      { error: "Internal server error", message: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 },
+    );
+  }
 }
 
 export async function POST(req: NextRequest) {
+  try {
+
   const session = await requireAdmin();
   if (!session) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -79,4 +91,12 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json({ announcement }, { status: 201 });
+
+  } catch (error) {
+    console.error("[API ERROR] POST src/app/api/admin/announcements/route.ts:", error);
+    return NextResponse.json(
+      { error: "Internal server error", message: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 },
+    );
+  }
 }

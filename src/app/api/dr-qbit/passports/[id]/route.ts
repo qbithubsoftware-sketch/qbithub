@@ -12,6 +12,8 @@ interface Params {
 }
 
 export async function GET(req: NextRequest, { params }: Params) {
+  try {
+
   const session = await requireAuth();
   if (!session) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
@@ -33,4 +35,12 @@ export async function GET(req: NextRequest, { params }: Params) {
   }
 
   return NextResponse.json(mapPassportDTO(passport as never));
+
+  } catch (error) {
+    console.error("[API ERROR] GET src/app/api/dr-qbit/passports/[id]/route.ts:", error);
+    return NextResponse.json(
+      { error: "Internal server error", message: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 },
+    );
+  }
 }

@@ -79,8 +79,7 @@ export function YouTubeGallery({ videos }: { videos: PublicYouTubeVideo[] }) {
         {/* Open on YouTube link */}
         <a
           href={`https://www.youtube.com/watch?v=${featured?.youtubeId}`}
-          target="_blank"
-          rel="noopener noreferrer"
+          target="_blank" rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-qbit-primary hover:underline"
         >
           <Icon name="open_in_new" className="text-[14px]" />

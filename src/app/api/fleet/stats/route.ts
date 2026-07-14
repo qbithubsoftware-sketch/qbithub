@@ -8,6 +8,8 @@ import { getFleetStats } from "@/lib/fleet/queries";
 import type { FleetFilters } from "@/lib/fleet/types";
 
 export async function GET(req: NextRequest) {
+  try {
+
   const session = await requireAuth();
   if (!session) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
@@ -23,4 +25,12 @@ export async function GET(req: NextRequest) {
   const stats = await getFleetStats(filters);
 
   return NextResponse.json(stats);
+
+  } catch (error) {
+    console.error("[API ERROR] GET src/app/api/fleet/stats/route.ts:", error);
+    return NextResponse.json(
+      { error: "Internal server error", message: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 },
+    );
+  }
 }

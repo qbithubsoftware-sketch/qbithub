@@ -109,8 +109,7 @@ export function EngineerActions({
             href={`https://wa.me/${customerPhone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(
               `Hello, this is your QBIT engineer regarding job ${workOrderJobNumber ?? ""}.`,
             )}`}
-            target="_blank"
-            rel="noopener noreferrer"
+            target="_blank" rel="noopener noreferrer"
             className="inline-flex"
           >
             <QbitButton variant="ghost" size="sm" icon="chat">

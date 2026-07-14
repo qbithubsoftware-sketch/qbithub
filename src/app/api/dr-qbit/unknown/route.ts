@@ -13,6 +13,8 @@ import { suggestClosestProducts } from "@/lib/drqbit/device-matcher";
 import { sanitizeText } from "@/lib/security/validation";
 
 export async function GET(req: NextRequest) {
+  try {
+
   const session = await requireAdmin();
   if (!session) {
     return NextResponse.json({ error: "Administrator access required" }, { status: 403 });
@@ -56,4 +58,12 @@ export async function GET(req: NextRequest) {
     })),
     total: devices.length,
   });
+
+  } catch (error) {
+    console.error("[API ERROR] GET src/app/api/dr-qbit/unknown/route.ts:", error);
+    return NextResponse.json(
+      { error: "Internal server error", message: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 },
+    );
+  }
 }

@@ -79,8 +79,7 @@ export function TroubleshootingSection({
                 {entry.relatedVideoUrl && (
                   <a
                     href={entry.relatedVideoUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    target="_blank" rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 text-[11px] font-medium text-qbit-on-surface-variant bg-qbit-surface-container-high px-2 py-0.5 rounded-full hover:text-qbit-primary transition-colors"
                   >
                     <Icon name="play_circle" className="text-[12px]" />

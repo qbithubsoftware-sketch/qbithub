@@ -13,8 +13,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/notifications/auth";
 import type { DeviceConnection, DeviceStatus } from "@/lib/drqbit/types";
+import { safeJsonParse, safeJsonArray } from "@/lib/utils/safe-json";
 
 export async function GET(req: NextRequest) {
+  try {
+
   const session = await requireAuth();
   if (!session) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
@@ -63,7 +66,7 @@ export async function GET(req: NextRequest) {
       ipAddress: d.ipAddress,
       macAddress: d.macAddress,
       hostname: d.hostname,
-      openPorts: d.openPorts ? JSON.parse(d.openPorts) : null,
+      openPorts: d.openPorts ? safeJsonParse(d.openPorts, null) : null,
       signalQuality: d.signalQuality,
       status: d.status,
       matchedProductId: d.matchedProductId,
@@ -77,4 +80,12 @@ export async function GET(req: NextRequest) {
     })),
     total: devices.length,
   });
+
+  } catch (error) {
+    console.error("[API ERROR] GET src/app/api/dr-qbit/devices/route.ts:", error);
+    return NextResponse.json(
+      { error: "Internal server error", message: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 },
+    );
+  }
 }

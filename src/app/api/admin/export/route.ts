@@ -12,13 +12,25 @@ import { sanitizeText, validateRequired } from "@/lib/security/validation";
 import { badRequest, forbidden, internalError } from "@/lib/errors/handler";
 
 export async function GET() {
+  try {
+
   const session = await getServerSession(authOptions);
   if (!session?.user || session.user.role !== "administrator") return forbidden();
   // In production, return actual export jobs from DB
   return NextResponse.json({ exports: [], total: 0 });
+
+  } catch (error) {
+    console.error("[API ERROR] GET src/app/api/admin/export/route.ts:", error);
+    return NextResponse.json(
+      { error: "Internal server error", message: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 },
+    );
+  }
 }
 
 export async function POST(req: NextRequest) {
+  try {
+
   const session = await getServerSession(authOptions);
   if (!session?.user || session.user.role !== "administrator") return forbidden();
 
@@ -38,4 +50,12 @@ export async function POST(req: NextRequest) {
     format,
     status: "processing",
   }, { status: 202 });
+
+  } catch (error) {
+    console.error("[API ERROR] POST src/app/api/admin/export/route.ts:", error);
+    return NextResponse.json(
+      { error: "Internal server error", message: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 },
+    );
+  }
 }

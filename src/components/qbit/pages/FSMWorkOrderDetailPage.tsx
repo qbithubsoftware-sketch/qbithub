@@ -463,8 +463,7 @@ export function FSMWorkOrderDetailPage() {
                 <p className="text-sm text-qbit-on-surface">{wo.address}</p>
                 <a
                   href={googleMapsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  target="_blank" rel="noopener noreferrer"
                   className="mt-2 inline-flex items-center gap-1 text-xs text-qbit-primary hover:underline"
                 >
                   <Icon name="map" className="text-[14px]" />
@@ -487,8 +486,7 @@ export function FSMWorkOrderDetailPage() {
                   {wo.qrCode && (
                     <a
                       href={wo.qrCode}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      target="_blank" rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 text-qbit-primary hover:underline"
                     >
                       <Icon name="qr_code" className="text-[14px]" />

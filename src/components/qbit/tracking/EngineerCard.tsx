@@ -113,8 +113,7 @@ export function EngineerCard({
             href={`https://wa.me/${phone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(
               `Hello ${name}, I have a question about my QBIT installation.`,
             )}`}
-            target="_blank"
-            rel="noopener noreferrer"
+            target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-700"
           >
             <Icon name="chat" className="text-[16px]" />

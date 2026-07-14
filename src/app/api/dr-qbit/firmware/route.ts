@@ -12,6 +12,8 @@ import { requireAuth } from "@/lib/notifications/auth";
 import type { FirmwareInfoDTO, FirmwareStatus } from "@/lib/firmware/types";
 
 export async function GET(req: NextRequest) {
+  try {
+
   const session = await requireAuth();
   if (!session) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
@@ -38,6 +40,14 @@ export async function GET(req: NextRequest) {
     items: infos.map(mapFirmwareInfoDTO),
     total: infos.length,
   });
+
+  } catch (error) {
+    console.error("[API ERROR] GET src/app/api/dr-qbit/firmware/route.ts:", error);
+    return NextResponse.json(
+      { error: "Internal server error", message: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 },
+    );
+  }
 }
 
 export function mapFirmwareInfoDTO(i: {

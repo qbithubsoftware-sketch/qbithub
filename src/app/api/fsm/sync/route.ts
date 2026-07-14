@@ -21,6 +21,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireEngineerOrAdmin } from "@/lib/notifications/auth";
 import { sanitizeText } from "@/lib/security/validation";
+import { safeJsonParse, safeJsonArray } from "@/lib/utils/safe-json";
 
 export async function POST(req: NextRequest) {
   const session = await requireEngineerOrAdmin();
@@ -126,7 +127,7 @@ async function replayMutation(
   const urlMatch = url.match(/\/api\/fsm\/work-orders\/([^/]+)$/);
   if (urlMatch && method === "PATCH") {
     const workOrderId = urlMatch[1];
-    const parsed = JSON.parse(body) as { action: string; rescheduledTo?: string; reason?: string };
+    const parsed = safeJsonParse(body, { action: "" }) as { action: string; rescheduledTo?: string; reason?: string };
 
     const wo = await db.workOrder.findUnique({ where: { id: workOrderId } });
     if (!wo) {

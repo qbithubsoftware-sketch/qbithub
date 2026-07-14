@@ -11,8 +11,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/notifications/auth";
 import type { PassportDTO, PassportDeviceStatus } from "@/lib/passport/types";
+import { safeJsonParse, safeJsonArray } from "@/lib/utils/safe-json";
 
 export async function GET(req: NextRequest) {
+  try {
+
   const session = await requireAuth();
   if (!session) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
@@ -53,6 +56,14 @@ export async function GET(req: NextRequest) {
     items: passports.map(mapPassportDTO),
     total: passports.length,
   });
+
+  } catch (error) {
+    console.error("[API ERROR] GET src/app/api/dr-qbit/passports/route.ts:", error);
+    return NextResponse.json(
+      { error: "Internal server error", message: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 },
+    );
+  }
 }
 
 /** Maps a Prisma DevicePassport row (with includes) to the PassportDTO. */
@@ -168,7 +179,7 @@ function mapPassportDTO(p: typeof db.devicePassport extends never ? never : {
       latestDriverFileSize: p.driverInfo.latestDriverFileSize,
       latestDriverReleaseNotes: p.driverInfo.latestDriverReleaseNotes,
       driverStatus: p.driverInfo.driverStatus as never,
-      supportedOses: p.driverInfo.supportedOses ? JSON.parse(p.driverInfo.supportedOses) : null,
+      supportedOses: p.driverInfo.supportedOses ? safeJsonParse(p.driverInfo.supportedOses, []) : null,
       lastCheckedAt: p.driverInfo.lastCheckedAt.toISOString(),
     } : null,
     warranty: p.warranty ? {

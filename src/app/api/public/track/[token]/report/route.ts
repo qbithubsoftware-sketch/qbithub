@@ -13,12 +13,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { validateTrackingToken } from "@/lib/tracking/tokens";
+import { safeJsonParse, safeJsonArray } from "@/lib/utils/safe-json";
 
 interface Params {
   params: Promise<{ token: string }>;
 }
 
 export async function GET(req: NextRequest, { params }: Params) {
+  try {
+
   const { token } = await params;
   const tokenInfo = await validateTrackingToken(token);
   if (!tokenInfo) {
@@ -58,8 +61,8 @@ export async function GET(req: NextRequest, { params }: Params) {
     report: {
       reportNumber: wo.report.reportNumber,
       summary: wo.report.summary,
-      testsPerformed: JSON.parse(wo.report.testsPerformed),
-      partsReplaced: wo.report.partsReplaced ? JSON.parse(wo.report.partsReplaced) : null,
+      testsPerformed: safeJsonParse(wo.report.testsPerformed, []),
+      partsReplaced: wo.report.partsReplaced ? safeJsonParse(wo.report.partsReplaced, null) : null,
       recommendations: wo.report.recommendations,
       generatedAt: wo.report.generatedAt.toISOString(),
     },
@@ -84,4 +87,12 @@ export async function GET(req: NextRequest, { params }: Params) {
       signedAt: wo.signatures[0]?.signedAt.toISOString() ?? null,
     },
   });
+
+  } catch (error) {
+    console.error("[API ERROR] GET src/app/api/public/track/[token]/report/route.ts:", error);
+    return NextResponse.json(
+      { error: "Internal server error", message: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 },
+    );
+  }
 }

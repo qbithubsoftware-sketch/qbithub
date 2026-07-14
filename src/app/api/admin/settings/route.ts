@@ -22,6 +22,8 @@ async function requireAdmin() {
 }
 
 export async function GET() {
+  try {
+
   const session = await requireAdmin();
   if (!session) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -32,6 +34,14 @@ export async function GET() {
   });
 
   return NextResponse.json({ settings });
+
+  } catch (error) {
+    console.error("[API ERROR] GET src/app/api/admin/settings/route.ts:", error);
+    return NextResponse.json(
+      { error: "Internal server error", message: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 },
+    );
+  }
 }
 
 export async function PUT(req: NextRequest) {

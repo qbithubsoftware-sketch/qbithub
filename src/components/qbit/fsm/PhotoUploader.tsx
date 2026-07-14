@@ -144,8 +144,7 @@ export function PhotoUploader({
             <a
               key={p.id}
               href={p.storagePath}
-              target="_blank"
-              rel="noopener noreferrer"
+              target="_blank" rel="noopener noreferrer"
               className="group relative aspect-square overflow-hidden rounded-lg border border-qbit-outline-variant bg-qbit-surface-container-low"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}

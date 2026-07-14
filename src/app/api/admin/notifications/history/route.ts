@@ -16,6 +16,8 @@ import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/notifications/auth";
 
 export async function GET(req: NextRequest) {
+  try {
+
   const session = await requireAdmin();
   if (!session) {
     return NextResponse.json({ error: "Administrator access required" }, { status: 403 });
@@ -85,4 +87,12 @@ export async function GET(req: NextRequest) {
     })),
     stats,
   });
+
+  } catch (error) {
+    console.error("[API ERROR] GET src/app/api/admin/notifications/history/route.ts:", error);
+    return NextResponse.json(
+      { error: "Internal server error", message: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 },
+    );
+  }
 }

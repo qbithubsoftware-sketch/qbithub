@@ -5,12 +5,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, requireEngineer } from "@/lib/fsm/api-helpers";
 import { forbidden, notFound } from "@/lib/errors/handler";
+import { safeJsonParse, safeJsonArray } from "@/lib/utils/safe-json";
 
 interface Params {
   params: Promise<{ id: string }>;
 }
 
 export async function GET(req: NextRequest, { params }: Params) {
+  try {
+
   const session = await requireEngineer();
   if (!session) return forbidden("Engineer access required.");
 
@@ -46,4 +49,12 @@ export async function GET(req: NextRequest, { params }: Params) {
       providerName: n.providerName,
     })),
   });
+
+  } catch (error) {
+    console.error("[API ERROR] GET src/app/api/fsm/work-orders/[id]/notifications/route.ts:", error);
+    return NextResponse.json(
+      { error: "Internal server error", message: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 },
+    );
+  }
 }

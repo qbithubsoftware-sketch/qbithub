@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, requireFieldEngineer } from "@/lib/fsm/api-helpers";
 import { badRequest, forbidden, notFound } from "@/lib/errors/handler";
 import { sanitizeText, validateRequired } from "@/lib/security/validation";
+import { safeJsonParse, safeJsonArray } from "@/lib/utils/safe-json";
 
 interface Params {
   params: Promise<{ id: string }>;
@@ -87,8 +88,8 @@ export async function GET(req: NextRequest, { params }: Params) {
   return NextResponse.json({
     report: {
       ...report,
-      testsPerformed: JSON.parse(report.testsPerformed),
-      partsReplaced: report.partsReplaced ? JSON.parse(report.partsReplaced) : null,
+      testsPerformed: safeJsonParse(report.testsPerformed, []),
+      partsReplaced: report.partsReplaced ? safeJsonParse(report.partsReplaced, null) : null,
     },
   });
 }

@@ -12,6 +12,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
 export async function POST(req: NextRequest) {
+  try {
+
   const body = await req.json();
   const { name, email, phone, company, subject, message, productId, productName, category } = body;
 
@@ -55,4 +57,12 @@ export async function POST(req: NextRequest) {
     { id: inquiry.id, message: "Inquiry received — we'll respond within 1 business hour." },
     { status: 201 },
   );
+
+  } catch (error) {
+    console.error("[API ERROR] POST src/app/api/public/contact/route.ts:", error);
+    return NextResponse.json(
+      { error: "Internal server error", message: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 },
+    );
+  }
 }

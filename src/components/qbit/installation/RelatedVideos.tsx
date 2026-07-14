@@ -79,8 +79,7 @@ export function RelatedVideos({ videos }: { videos: RelatedVideo[] }) {
                 </div>
                 <a
                   href={`https://www.youtube.com/watch?v=${activeVideo.youtubeId}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-1.5 text-xs font-semibold text-qbit-primary hover:underline"
                 >
                   <Icon name="open_in_new" className="text-[14px]" />

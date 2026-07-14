@@ -506,8 +506,7 @@ export function CustomerTrackingPortalPage() {
                       {data.installationGuideUrl && (
                         <a
                           href={data.installationGuideUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                          target="_blank" rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 rounded-full border border-qbit-outline-variant bg-white px-3 py-1 text-xs font-medium text-qbit-primary hover:bg-qbit-primary hover:text-qbit-on-primary"
                         >
                           <Icon name="menu_book" className="text-[12px]" />
@@ -517,8 +516,7 @@ export function CustomerTrackingPortalPage() {
                       {data.manualUrl && (
                         <a
                           href={data.manualUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                          target="_blank" rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 rounded-full border border-qbit-outline-variant bg-white px-3 py-1 text-xs font-medium text-qbit-primary hover:bg-qbit-primary hover:text-qbit-on-primary"
                         >
                           <Icon name="description" className="text-[12px]" />
@@ -528,8 +526,7 @@ export function CustomerTrackingPortalPage() {
                       {data.driverDownloadUrl && (
                         <a
                           href={data.driverDownloadUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                          target="_blank" rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 rounded-full border border-qbit-outline-variant bg-white px-3 py-1 text-xs font-medium text-qbit-primary hover:bg-qbit-primary hover:text-qbit-on-primary"
                         >
                           <Icon name="settings_input_component" className="text-[12px]" />
@@ -539,8 +536,7 @@ export function CustomerTrackingPortalPage() {
                       {data.firmwareDownloadUrl && (
                         <a
                           href={data.firmwareDownloadUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                          target="_blank" rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 rounded-full border border-qbit-outline-variant bg-white px-3 py-1 text-xs font-medium text-qbit-primary hover:bg-qbit-primary hover:text-qbit-on-primary"
                         >
                           <Icon name="system_update" className="text-[12px]" />

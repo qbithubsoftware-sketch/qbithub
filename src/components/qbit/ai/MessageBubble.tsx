@@ -1,5 +1,6 @@
 "use client";
 
+import { sanitizeHtml } from "@/lib/utils/sanitize-html";
 import { cn } from "@/lib/utils";
 import { Icon } from "@/components/qbit/primitives/Icon";
 
@@ -163,13 +164,13 @@ function RenderMarkdown({ content, isUser }: { content: string; isUser: boolean 
 
     // List items
     if (line.startsWith("- ") || line.startsWith("* ")) {
-      elements.push(<div key={`li-${i}`} className="flex items-start gap-1.5 my-0.5"><span className="text-qbit-primary mt-0.5">•</span><span className="flex-1" dangerouslySetInnerHTML={{ __html: formatInline(line.slice(2)) }} /></div>);
+      elements.push(<div key={`li-${i}`} className="flex items-start gap-1.5 my-0.5"><span className="text-qbit-primary mt-0.5">•</span><span className="flex-1" dangerouslySetInnerHTML={{ __html: sanitizeHtml(formatInline(line.slice(2))) }} /></div>);
       continue;
     }
     if (/^\d+\.\s/.test(line)) {
       const match = line.match(/^(\d+)\.\s(.*)/);
       if (match) {
-        elements.push(<div key={`ol-${i}`} className="flex items-start gap-1.5 my-0.5"><span className="text-qbit-primary font-bold text-xs mt-0.5">{match[1]}.</span><span className="flex-1" dangerouslySetInnerHTML={{ __html: formatInline(match[2]) }} /></div>);
+        elements.push(<div key={`ol-${i}`} className="flex items-start gap-1.5 my-0.5"><span className="text-qbit-primary font-bold text-xs mt-0.5">{match[1]}.</span><span className="flex-1" dangerouslySetInnerHTML={{ __html: sanitizeHtml(formatInline(match[2])) }} /></div>);
         continue;
       }
     }
@@ -181,7 +182,7 @@ function RenderMarkdown({ content, isUser }: { content: string; isUser: boolean 
     }
 
     // Paragraph
-    elements.push(<p key={`p-${i}`} className="my-0.5 leading-relaxed" dangerouslySetInnerHTML={{ __html: formatInline(line) }} />);
+    elements.push(<p key={`p-${i}`} className="my-0.5 leading-relaxed" dangerouslySetInnerHTML={{ __html: sanitizeHtml(formatInline(line)) }} />);
   }
 
   // Flush remaining table
@@ -210,7 +211,7 @@ function RenderTable({ rows }: { rows: string[][] }) {
           {body.map((row, ri) => (
             <tr key={ri} className="border-b border-qbit-outline-variant/20">
               {row.map((cell, ci) => (
-                <td key={ci} className="px-2 py-1 text-qbit-on-surface-variant" dangerouslySetInnerHTML={{ __html: formatInline(cell) }} />
+                <td key={ci} className="px-2 py-1 text-qbit-on-surface-variant" dangerouslySetInnerHTML={{ __html: sanitizeHtml(formatInline(cell)) }} />
               ))}
             </tr>
           ))}

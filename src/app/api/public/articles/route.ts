@@ -9,6 +9,8 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
 export async function GET() {
+  try {
+
   // Only return articles from public categories.
   const articles = await db.knowledgeArticle.findMany({
     where: {
@@ -31,4 +33,12 @@ export async function GET() {
   });
 
   return NextResponse.json({ articles, total: articles.length, public: true });
+
+  } catch (error) {
+    console.error("[API ERROR] GET src/app/api/public/articles/route.ts:", error);
+    return NextResponse.json(
+      { error: "Internal server error", message: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 },
+    );
+  }
 }

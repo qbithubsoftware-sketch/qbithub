@@ -14,6 +14,8 @@ import { db } from "@/lib/db";
 import crypto from "crypto";
 
 export async function POST(req: NextRequest) {
+  try {
+
   const body = await req.json();
   const { email, name } = body;
 
@@ -62,4 +64,12 @@ export async function POST(req: NextRequest) {
     { id: subscription.id, message: "Successfully subscribed!" },
     { status: 201 },
   );
+
+  } catch (error) {
+    console.error("[API ERROR] POST src/app/api/public/newsletter/route.ts:", error);
+    return NextResponse.json(
+      { error: "Internal server error", message: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 },
+    );
+  }
 }

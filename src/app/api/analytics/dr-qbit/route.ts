@@ -7,6 +7,8 @@ import { requireAuth } from "@/lib/notifications/auth";
 import { getDrQbitAnalytics } from "@/lib/analytics/queries";
 
 export async function GET(req: NextRequest) {
+  try {
+
   const session = await requireAuth();
   if (!session) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
@@ -14,4 +16,12 @@ export async function GET(req: NextRequest) {
 
   const data = await getDrQbitAnalytics();
   return NextResponse.json(data);
+
+  } catch (error) {
+    console.error("[API ERROR] GET src/app/api/analytics/dr-qbit/route.ts:", error);
+    return NextResponse.json(
+      { error: "Internal server error", message: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 },
+    );
+  }
 }

@@ -86,8 +86,7 @@ export function DeviceTestCard({ result }: DeviceTestCardProps) {
           {isFailed && result.kbArticleUrl && (
             <a
               href={result.kbArticleUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+              target="_blank" rel="noopener noreferrer"
               className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-medium text-qbit-primary hover:underline"
             >
               <Icon name="library_books" className="text-[12px]" />

@@ -71,7 +71,7 @@ export function TourProvider({ children }: { children: ReactNode }) {
     setShowWelcome(false);
     setIsActive(true);
     setCurrentStep(0);
-    try { localStorage.removeItem(TOUR_PROGRESS_KEY); } catch {}
+    try { localStorage.removeItem(TOUR_PROGRESS_KEY); } catch (e) { console.error("[QA-FIX]", e); }
   }, []);
 
   const skipTour = useCallback(() => {
@@ -80,13 +80,13 @@ export function TourProvider({ children }: { children: ReactNode }) {
     try {
       localStorage.setItem(TOUR_STORAGE_KEY, "true");
       setHasCompleted(true);
-    } catch {}
+    } catch (e) { console.error("[QA-FIX]", e); }
   }, []);
 
   const nextStep = useCallback(() => {
     setCurrentStep((prev) => {
       const next = prev + 1;
-      try { localStorage.setItem(TOUR_PROGRESS_KEY, String(next)); } catch {}
+      try { localStorage.setItem(TOUR_PROGRESS_KEY, String(next)); } catch (e) { console.error("[QA-FIX]", e); }
       return next;
     });
   }, []);
@@ -102,7 +102,7 @@ export function TourProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(TOUR_STORAGE_KEY, "true");
       localStorage.removeItem(TOUR_PROGRESS_KEY);
       setHasCompleted(true);
-    } catch {}
+    } catch (e) { console.error("[QA-FIX]", e); }
   }, []);
 
   const dismissWelcome = useCallback(() => {
@@ -113,7 +113,7 @@ export function TourProvider({ children }: { children: ReactNode }) {
     try {
       localStorage.removeItem(TOUR_STORAGE_KEY);
       localStorage.removeItem(TOUR_PROGRESS_KEY);
-    } catch {}
+    } catch (e) { console.error("[QA-FIX]", e); }
     setHasCompleted(false);
     setCurrentStep(0);
     setIsActive(true);
