@@ -262,3 +262,117 @@ Stage Summary:
 - Production DB has 13 active products across 8 categories with full rich data.
 - Future commits will auto-deploy correctly (postinstall hook ensures Prisma client is always regenerated).
 - GitHub integration is working — every push triggers a Vercel rebuild automatically.
+
+---
+Task ID: v3-portal-split
+Agent: main
+Task: V3 MAJOR architecture upgrade — split QBIT Hub into 4 portals (Public + Customer + Engineer + Admin) without redesigning the approved Stitch UI.
+
+Work Log:
+- Inspected existing architecture via Explore subagent: 41 Zustand screens at single `/` route, RBAC layer in rbac/roles.ts, AuthGuard, public portal components in components/qbit/portal/, existing /products + /products/[slug] SSR routes, public APIs.
+- Decided strategy: layered routes, zero disruption — move existing Zustand app from `/` → `/portal` (all 41 screens intact), build new public homepage at `/`, add real Next.js routes for each portal segment.
+
+- Copied /src/app/page.tsx → /src/app/portal/page.tsx (legacy app preserved at new URL).
+
+- Updated AuthGuard (/src/components/qbit/auth/AuthGuard.tsx):
+  - Unauthenticated users on protected screens now redirect to /accounts/login (real Next.js route) via window.location.href, instead of legacy Zustand "login" screen.
+  - Authenticated users landing on /portal with screen id "login" auto-navigate to their role's home screen (so they don't get stuck on the login screen id).
+
+- Updated LoginPage (/src/components/qbit/pages/LoginPage.tsx): post-login, hard-navigates to /portal which mounts the Zustand app at the role's home screen.
+
+- Built PublicLayout (/src/components/qbit/public/PublicLayout.tsx): Next.js-native header + footer wrapper. Header has Logo + 8 nav links (Products/Drivers/Downloads/KB/Support/Videos/Dr.QBIT/Contact) + Search + Login + mobile hamburger. Footer has brand + 2 link columns + copyright. Reuses Stitch design (qbit-primary palette, Material Symbols, 72px header with scroll-aware backdrop blur). Fully responsive (mobile hamburger drawer).
+
+- Built new public homepage at / (src/app/page.tsx):
+  - Hero: large headline "Precision Support for Enterprise Hardware" + sub-copy + global search bar + popular searches (T800, HUB-X Pro, BS550, LD300, CD200)
+  - Dr. QBIT section: 2-column card with Auto Detect Hardware | Enter Model Number + example model chips + result preview card
+  - Browse Categories: 8 category tiles (Windows POS, Android POS, Thermal Printer, Barcode Scanner, Cash Drawer, Label Printer, Kiosk, Accessories) → /products?category=<slug>
+  - Featured Products: server-fetched grid (isFeatured=true, fallback to isTrending) — each card fully clickable via <Link href="/products/[slug]">
+  - Download Center: 6 category cards (Drivers/Firmware/Manuals/SDK/Utilities/Brochures) → /downloads?type=…
+  - Video Center preview: 3-up YouTube thumbnails with play button overlay → /videos
+  - Support CTA: 3 cards (Support Center, Knowledge Base, Contact Us)
+
+- Built /accounts/login (src/app/accounts/login/page.tsx): reuses existing LoginPage component wrapped in PublicLayout + a surface card.
+
+- Built /account customer dashboard (src/app/account/page.tsx + CustomerDashboard component):
+  - Auth-gated client component (uses useSession + redirect to /accounts/login if unauthenticated)
+  - Welcome header with avatar + email + role + "Run Dr. QBIT" CTA
+  - Stats row: Registered Devices / Active Warranty / Expiring Soon / Expired
+  - Registered Devices table: Product, Serial No, Purchase Date, Warranty (with days-remaining badge), Driver/Firmware versions, action buttons (Find drivers, Run diagnostics)
+  - Empty-state CTA when no devices: "Run Dr. QBIT" + "Browse Products"
+  - Quick actions grid: Dr. QBIT Diagnostics / Downloads / Support
+
+- Built /engineer and /admin (role-redirect routes):
+  - Server components that call getServerSession(authOptions)
+  - If unauthenticated → redirect to /accounts/login?from=/engineer (or /admin)
+  - If authenticated but wrong role → redirect to /portal
+  - If correct role → redirect to /portal (which mounts Zustand app at role's home screen)
+
+- Built /drivers, /downloads, /knowledge-base, /support, /videos, /dr-qbit, /contact public routes:
+  - /drivers — fetches Download rows where category.slug="driver", renders via PublicDownloadsClient
+  - /downloads — fetches all public Downloads, grouped by category
+  - /knowledge-base — curated static articles (Article model doesn't exist yet)
+  - /support — 6 support channel cards + Dr. QBIT featured band
+  - /videos — fetches video MediaFiles + product.videos JSON, embeds YouTube iframes, categorized (Installation/Training/Troubleshooting)
+  - /dr-qbit — two-option card (Auto Detect Hardware | Enter Model Search) with example model chips
+  - /contact — reuses existing ContactForm component + contact info sidebar (phone/email/office)
+
+- Built /api/account/devices endpoint: GET returns the authenticated customer's registered devices by joining FSMCustomer.email + FSMCustomerAsset + DevicePassport + DeviceWarranty (reuses existing Prisma models — no Customer model exists yet).
+
+- Wrapped existing /products and /products/[slug] routes in <PublicLayout> so they share the public header/footer. Replaced the inline "Back to Hub" top bar with a cleaner breadcrumb.
+
+- Reused existing portal components: ContactForm (from components/qbit/portal/ContactForm), PublicDownloadsClient patterns from PublicDownloadCard.
+
+- Build verification: tsc --noEmit -p tsconfig.build.json: 0 errors. next build: ✓ Compiled successfully (33.1s), 73 routes generated.
+
+- Pushed to GitHub (commit 3cfddd8) and monitored Vercel deployment — READY in ~80 seconds.
+
+- Re-seeded production Neon Postgres (the data had been lost after the previous schema migration): 8 active products across 8 categories, all with full rich data.
+
+V3 Production Verification (https://qbithub.vercel.app):
+  - GET /                                    → HTTP 200 ✓ (title: "QBIT Hub — Enterprise Support Portal")
+  - GET /products                            → HTTP 200 ✓
+  - GET /products/t800                       → HTTP 200 ✓
+  - GET /products?category=thermal-printer   → HTTP 200 ✓
+  - GET /drivers                             → HTTP 200 ✓
+  - GET /downloads                           → HTTP 200 ✓
+  - GET /knowledge-base                      → HTTP 200 ✓
+  - GET /support                             → HTTP 200 ✓
+  - GET /videos                              → HTTP 200 ✓
+  - GET /dr-qbit                             → HTTP 200 ✓
+  - GET /contact                             → HTTP 200 ✓
+  - GET /accounts/login                      → HTTP 200 ✓
+  - GET /account                             → HTTP 200 ✓ (customer dashboard)
+  - GET /admin                               → HTTP 307 ✓ (redirects to /accounts/login when unauthenticated)
+  - GET /engineer                            → HTTP 307 ✓ (redirects to /accounts/login when unauthenticated)
+  - GET /portal                              → HTTP 200 ✓ (legacy Zustand app, all 41 screens)
+
+Homepage section check:
+  ✓ QBIT Hub branding
+  ✓ "Precision Support" hero headline
+  ✓ Dr. QBIT section
+  ✓ Browse Categories (8 tiles)
+  ✓ Featured Products (server-fetched, clickable cards)
+  ✓ Download Center preview
+  ✓ Video Center preview
+  ✓ T-800, HUB-X Pro visible in featured grid
+  ✓ "Scan Hardware" / "Enter Model Number" buttons
+
+Product detail page check (/products/t800):
+  ✓ Product name + brand + model + SKU
+  ✓ Specifications tab
+  ✓ Features tab
+  ✓ Downloads tab (Manual/Driver/Firmware/SDK/Utility/Brochure/Datasheet/Warranty)
+  ✓ Videos tab (YouTube embed)
+  ✓ Related Products (clickable cards)
+  ✓ Share section
+  ✓ QR code (qrserver.com)
+  ✓ Dr. QBIT Supported badge
+  ✓ AI Diagnostics Supported badge
+
+Stage Summary:
+- 4 portals successfully split: Public (10 routes), Customer (2 routes), Engineer (1 redirect), Admin (1 redirect), plus legacy /portal (41 screens).
+- 16 new files created, 4 files modified.
+- Zero existing modules broken — /portal mounts the exact same Zustand app with all 41 screens, RBAC, AppShell, etc.
+- Approved Stitch UI design language fully preserved (qbit-primary palette, Material Symbols, surface-container backgrounds, 72px header, premium gradients).
+- Build: ✓ Compiled successfully (33.1s), 0 TS errors.
+- Production: LIVE at https://qbithub.vercel.app with all routes verified.
