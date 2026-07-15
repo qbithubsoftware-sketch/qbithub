@@ -24,7 +24,6 @@ export const ENGINEER_FOOTER: NavItem[] = [
 /** Admin portal sidebar items. */
 export const ADMIN_NAV: NavItem[] = [
   { label: "Dashboard", icon: "dashboard", screen: "home" },
-  { label: "Products", icon: "inventory_2", screen: "product-management" },
   { label: "Product Master", icon: "database", screen: "product-master", badge: "PIM" },
   { label: "AI Purchase Import", icon: "auto_awesome", screen: "ai-purchase-center", badge: "NEW" },
   { label: "Drivers", icon: "local_shipping", screen: "driver-download-center" },
@@ -50,7 +49,7 @@ export const INSTALCORE_NAV: NavItem[] = [
 export const FIELD_NAV: NavItem[] = [
   { label: "Dashboard", icon: "dashboard", screen: "field-engineer-workspace" },
   { label: "My Jobs", icon: "engineering", screen: "job-details-inst-550-a" },
-  { label: "Inventory", icon: "inventory_2", screen: "product-management" },
+  { label: "Inventory", icon: "inventory_2", screen: "product-master" },
   { label: "Documents", icon: "description", screen: "customer-handover-report" },
   { label: "Support", icon: "support_agent", screen: "ai-support-center" },
 ];

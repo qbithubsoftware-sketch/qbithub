@@ -35,7 +35,7 @@ const SCREENS: ScreenEntry[] = [
   // Admin
   { id: "admin-dashboard", label: "Admin Dashboard", group: "Admin", icon: "monitoring" },
   { id: "user-role-management", label: "User Role Management", group: "Admin", icon: "group" },
-  { id: "product-management", label: "Product Management", group: "Admin", icon: "inventory" },
+  { id: "product-master", label: "Product Master", group: "Admin", icon: "inventory" },
   { id: "system-settings", label: "System Settings", group: "Admin", icon: "settings" },
   // Search
   { id: "universal-search-command-center", label: "Universal Search (Desktop)", group: "Search", icon: "search" },

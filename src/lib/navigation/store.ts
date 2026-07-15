@@ -30,7 +30,6 @@ export type ScreenId =
   // Admin
   | "admin-dashboard"
   | "user-role-management"
-  | "product-management"
   | "product-master"
   | "system-settings"
   | "ai-purchase-center"

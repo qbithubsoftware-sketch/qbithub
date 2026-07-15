@@ -34,7 +34,7 @@ const COMMANDS: CommandEntry[] = [
   // Products
   { id: "prod-library", label: "Product Library", icon: "inventory_2", group: "Products", screen: "product-library", keywords: "browse catalog hardware" },
   { id: "prod-details", label: "Product Details: T-800", icon: "devices", group: "Products", screen: "product-details-t800", keywords: "t800 specifications" },
-  { id: "prod-mgmt", label: "Product Management", icon: "inventory", group: "Products", screen: "product-management", keywords: "manage admin" },
+  { id: "prod-mgmt", label: "Product Master", icon: "inventory", group: "Products", screen: "product-master", keywords: "manage admin" },
   { id: "prod-overview", label: "T-800 Marketing Page", icon: "campaign", group: "Products", screen: "product-overview", keywords: "public marketing" },
 
   // Downloads

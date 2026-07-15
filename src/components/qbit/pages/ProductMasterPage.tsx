@@ -345,6 +345,43 @@ export function ProductMasterPage() {
     window.open("/api/admin/products/export", "_blank", "noopener,noreferrer");
   };
 
+  // --- Bulk Restore (only relevant when filter = inactive) ---
+  const handleBulkRestore = async () => {
+    if (selected.size === 0) return;
+    setBulkBusy(true);
+    try {
+      const res = await fetch("/api/admin/products/bulk-restore", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: Array.from(selected) }),
+      });
+      if (!res.ok) throw new Error("Bulk restore failed");
+      const data = await res.json();
+      toast({ title: "Bulk restore complete", description: `${data.reactivated} products reactivated` });
+      setSelected(new Set());
+      void fetchProducts();
+    } catch (e) {
+      toast({ title: "Bulk restore failed", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" });
+    } finally {
+      setBulkBusy(false);
+    }
+  };
+
+  // --- Restore single product ---
+  const handleRestoreProduct = async (product: Product) => {
+    try {
+      const res = await fetch(`/api/admin/products/${product.id}/restore`, { method: "POST" });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error ?? "Restore failed");
+      }
+      toast({ title: "Product restored", description: `${product.name} is now active` });
+      void fetchProducts();
+    } catch (e) {
+      toast({ title: "Restore failed", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" });
+    }
+  };
+
   // --- Selection ---
   const toggleSelect = (id: string) => {
     setSelected((prev) => {
@@ -436,6 +473,11 @@ export function ProductMasterPage() {
                 <QbitButton variant="danger" size="sm" icon="delete" disabled={bulkBusy} onClick={handleBulkDelete}>
                   {showInactiveDerived ? `Permanently Delete (${selected.size})` : `Bulk Delete (${selected.size})`}
                 </QbitButton>
+                {showInactiveDerived && (
+                  <QbitButton variant="outline" size="sm" icon="restore" disabled={bulkBusy} onClick={handleBulkRestore}>
+                    Restore ({selected.size})
+                  </QbitButton>
+                )}
                 <button onClick={() => setSelected(new Set())} className="text-xs text-qbit-on-surface-variant hover:text-qbit-error">
                   Clear
                 </button>
@@ -523,11 +565,7 @@ export function ProductMasterPage() {
                               <button
                                 type="button"
                                 aria-label={`Restore ${product.name}`}
-                                onClick={() => {
-                                  fetch(`/api/admin/products/${product.id}/restore`, { method: "POST" })
-                                    .then(() => { toast({ title: "Restored" }); void fetchProducts(); })
-                                    .catch(() => toast({ title: "Restore failed", variant: "destructive" }));
-                                }}
+                                onClick={() => handleRestoreProduct(product)}
                                 className="flex h-8 w-8 items-center justify-center rounded-lg text-qbit-success transition-colors hover:bg-qbit-success/10"
                               >
                                 <Icon name="restore" className="text-[20px]" />

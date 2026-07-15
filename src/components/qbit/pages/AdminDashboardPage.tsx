@@ -236,7 +236,7 @@ export function AdminDashboardPage() {
               variant="primary"
               size="md"
               icon="add"
-              onClick={() => navigate("product-management")}
+              onClick={() => navigate("product-master")}
             >
               Add Product
             </QbitButton>
@@ -392,7 +392,7 @@ export function AdminDashboardPage() {
                 </h3>
                 <button
                   type="button"
-                  onClick={() => navigate("product-management")}
+                  onClick={() => navigate("product-master")}
                   className="text-sm font-semibold text-qbit-primary transition-colors hover:underline"
                 >
                   View all uploads
