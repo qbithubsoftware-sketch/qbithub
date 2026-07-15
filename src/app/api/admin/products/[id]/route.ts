@@ -61,12 +61,6 @@ export async function PUT(req: NextRequest, { params }: Params) {
     const existing = await db.qbitProduct.findUnique({ where: { id } });
     if (!existing) return NextResponse.json({ error: "Product not found" }, { status: 404 });
 
-    // Check model uniqueness if changing
-    if (body.model && body.model !== existing.model) {
-      const dup = await db.qbitProduct.findUnique({ where: { model: body.model } });
-      if (dup && dup.id !== id) return NextResponse.json({ error: `Model "${body.model}" already exists` }, { status: 409 });
-    }
-
     // If model changed, regenerate slug (unless body.slug is provided)
     let newSlug = existing.slug;
     if (body.model && body.model !== existing.model) {
@@ -93,6 +87,30 @@ export async function PUT(req: NextRequest, { params }: Params) {
     if (body.badgeLabel !== undefined) updateData.badgeLabel = body.badgeLabel ?? null;
     if (body.isFeatured !== undefined) updateData.isFeatured = !!body.isFeatured;
     if (body.isTrending !== undefined) updateData.isTrending = !!body.isTrending;
+    if (body.subCategory !== undefined) updateData.subCategory = body.subCategory ?? null;
+    if (body.productSeries !== undefined) updateData.productSeries = body.productSeries ?? null;
+    if (body.productType !== undefined) updateData.productType = body.productType ?? null;
+    if (body.highlights !== undefined) updateData.highlights = body.highlights ?? null;
+    if (body.installationInstructions !== undefined) updateData.installationInstructions = body.installationInstructions ?? null;
+    if (body.requiredSoftware !== undefined) updateData.requiredSoftware = body.requiredSoftware ?? null;
+    if (body.requiredDrivers !== undefined) updateData.requiredDrivers = body.requiredDrivers ?? null;
+    if (body.requiredAccessories !== undefined) updateData.requiredAccessories = body.requiredAccessories ?? null;
+    if (body.installationTime !== undefined) updateData.installationTime = body.installationTime ?? null;
+    if (body.difficultyLevel !== undefined) updateData.difficultyLevel = body.difficultyLevel ?? null;
+    if (body.canonicalUrl !== undefined) updateData.canonicalUrl = body.canonicalUrl ?? null;
+    if (body.openGraphImage !== undefined) updateData.openGraphImage = body.openGraphImage ?? null;
+    if (body.twitterCard !== undefined) updateData.twitterCard = body.twitterCard ?? null;
+    if (body.productSchema !== undefined) updateData.productSchema = body.productSchema ?? null;
+    if (body.frequentlyBoughtTogether !== undefined) updateData.frequentlyBoughtTogether = body.frequentlyBoughtTogether ?? null;
+    if (body.alternativeProducts !== undefined) updateData.alternativeProducts = body.alternativeProducts ?? null;
+    if (body.upgradedModel !== undefined) updateData.upgradedModel = body.upgradedModel ?? null;
+    if (body.previousModel !== undefined) updateData.previousModel = body.previousModel ?? null;
+    if (body.warrantyDuration !== undefined) updateData.warrantyDuration = body.warrantyDuration ?? null;
+    if (body.amcAvailable !== undefined) updateData.amcAvailable = !!body.amcAvailable;
+    if (body.isDraft !== undefined) updateData.isDraft = !!body.isDraft;
+    if (body.isPublished !== undefined) updateData.isPublished = !!body.isPublished;
+    if (body.isBestSeller !== undefined) updateData.isBestSeller = !!body.isBestSeller;
+    if (body.isNewArrival !== undefined) updateData.isNewArrival = !!body.isNewArrival;
     if (body.driverDownloadUrl !== undefined) updateData.driverDownloadUrl = body.driverDownloadUrl ?? null;
     if (body.manualUrl !== undefined) updateData.manualUrl = body.manualUrl ?? null;
     if (body.installationGuideUrl !== undefined) updateData.installationGuideUrl = body.installationGuideUrl ?? null;
@@ -105,7 +123,6 @@ export async function PUT(req: NextRequest, { params }: Params) {
     if (body.qrCodeUrl !== undefined) {
       updateData.qrCodeUrl = body.qrCodeUrl ?? null;
     } else if (newSlug !== existing.slug) {
-      // Auto-update QR code URL when slug changes
       updateData.qrCodeUrl = `https://hub.qbit.com/products/${newSlug}`;
     }
     if (body.seoTitle !== undefined) updateData.seoTitle = body.seoTitle ?? null;
@@ -124,20 +141,14 @@ export async function PUT(req: NextRequest, { params }: Params) {
     if (body.latestFirmwareVersion !== undefined) updateData.latestFirmwareVersion = body.latestFirmwareVersion ?? null;
     if (body.isActive !== undefined) updateData.isActive = !!body.isActive;
 
-    // Update parent first
-    await db.qbitProduct.update({ where: { id }, data: updateData });
-
-    // Then update structured child rows (delete-all + recreate pattern)
+    // Update structured child rows
     if (Array.isArray(body.specifications)) {
       await db.productSpecification.deleteMany({ where: { productId: id } });
       if (body.specifications.length > 0) {
         await db.productSpecification.createMany({
           data: body.specifications.map((s: { property: string; value: string; group?: string }, i: number) => ({
-            productId: id,
-            property: sanitizeText(s.property, 200),
-            value: sanitizeText(s.value, 500),
-            group: s.group ?? null,
-            sortIndex: i,
+            productId: id, property: sanitizeText(s.property, 200), value: sanitizeText(s.value, 500),
+            group: s.group ?? null, sortIndex: i,
           })),
         });
       }
@@ -147,11 +158,8 @@ export async function PUT(req: NextRequest, { params }: Params) {
       if (body.features.length > 0) {
         await db.productFeature.createMany({
           data: body.features.map((f: { icon: string; title: string; description: string }, i: number) => ({
-            productId: id,
-            icon: sanitizeText(f.icon, 100),
-            title: sanitizeText(f.title, 200),
-            description: sanitizeText(f.description, 1000),
-            sortIndex: i,
+            productId: id, icon: sanitizeText(f.icon, 100), title: sanitizeText(f.title, 200),
+            description: sanitizeText(f.description, 1000), sortIndex: i,
           })),
         });
       }
@@ -161,11 +169,8 @@ export async function PUT(req: NextRequest, { params }: Params) {
       if (body.operatingSystems.length > 0) {
         await db.productOS.createMany({
           data: body.operatingSystems.map((o: { osName: string; osIcon?: string; minVersion?: string }, i: number) => ({
-            productId: id,
-            osName: sanitizeText(o.osName, 100),
-            osIcon: o.osIcon ?? null,
-            minVersion: o.minVersion ?? null,
-            sortIndex: i,
+            productId: id, osName: sanitizeText(o.osName, 100), osIcon: o.osIcon ?? null,
+            minVersion: o.minVersion ?? null, sortIndex: i,
           })),
         });
       }
@@ -175,16 +180,9 @@ export async function PUT(req: NextRequest, { params }: Params) {
       if (body.mediaFiles.length > 0) {
         await db.productMedia.createMany({
           data: body.mediaFiles.map((m: { type: string; title: string; url: string; mimeType?: string; altText?: string; provider?: string; externalId?: string; isPrimary?: boolean }, i: number) => ({
-            productId: id,
-            type: sanitizeText(m.type, 50),
-            title: sanitizeText(m.title, 200),
-            url: m.url,
-            mimeType: m.mimeType ?? null,
-            altText: m.altText ?? null,
-            provider: m.provider ?? null,
-            externalId: m.externalId ?? null,
-            sortIndex: i,
-            isPrimary: !!m.isPrimary,
+            productId: id, type: sanitizeText(m.type, 50), title: sanitizeText(m.title, 200), url: m.url,
+            mimeType: m.mimeType ?? null, altText: m.altText ?? null, provider: m.provider ?? null,
+            externalId: m.externalId ?? null, sortIndex: i, isPrimary: !!m.isPrimary,
           })),
         });
       }
@@ -194,15 +192,13 @@ export async function PUT(req: NextRequest, { params }: Params) {
       if (body.relatedProductIds.length > 0) {
         await db.productRelation.createMany({
           data: body.relatedProductIds.map((rid: string, i: number) => ({
-            productId: id,
-            relatedId: rid,
-            sortIndex: i,
+            productId: id, relatedId: rid, sortIndex: i,
           })),
         });
       }
     }
 
-    const updated = await db.qbitProduct.findUnique({ where: { id } });
+    const updated = await db.qbitProduct.update({ where: { id }, data: updateData });
     return NextResponse.json({ product: updated });
   } catch (error) {
     console.error("[API ERROR] PUT /api/admin/products/[id]:", error);
@@ -223,10 +219,6 @@ export async function DELETE(req: NextRequest, { params }: Params) {
     if (!existing) return NextResponse.json({ error: "Product not found" }, { status: 404 });
 
     if (hardDelete) {
-      // Permanent delete — first nullify nullable foreign-key references that
-      // don't have onDelete: Cascade, then delete the product. HardwareSignature,
-      // ProductRelation, ProductOS, ProductMedia, ProductSpecification,
-      // ProductFeature all have onDelete: Cascade and will be auto-removed.
       await db.$transaction([
         db.unknownDevice.updateMany({ where: { mappedProductId: id }, data: { mappedProductId: null, mappedAt: null, mappedBy: null, mappedByName: null } }),
         db.devicePassport.updateMany({ where: { productId: id }, data: { productId: null } }),
@@ -237,7 +229,6 @@ export async function DELETE(req: NextRequest, { params }: Params) {
       return NextResponse.json({ id, deleted: true, permanent: true, message: "Product permanently deleted" });
     }
 
-    // Default: soft delete (deactivate). Reversible via /restore endpoint.
     await db.qbitProduct.update({ where: { id }, data: { isActive: false } });
     return NextResponse.json({ id, deleted: true, permanent: false, message: "Product deactivated (soft delete)" });
   } catch (error) {

@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
       }
 
       const product = asset.model
-        ? await db.qbitProduct.findUnique({
+        ? await db.qbitProduct.findFirst({
             where: { model: asset.model },
             select: {
               id: true, name: true, slug: true, model: true, brand: true,

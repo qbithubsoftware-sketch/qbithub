@@ -100,9 +100,6 @@ export async function POST(req: NextRequest) {
     const missing = validateRequired(body, ["name", "model", "deviceType"]);
     if (missing.length > 0) return NextResponse.json({ error: `Missing fields: ${missing.join(", ")}` }, { status: 400 });
 
-    // Check model uniqueness
-    const existing = await db.qbitProduct.findUnique({ where: { model: body.model } });
-    if (existing) return NextResponse.json({ error: `Product with model "${body.model}" already exists` }, { status: 409 });
 
     // Auto-generate a unique slug for /products/[slug] deep links
     const slug = await generateUniqueSlug(body.model, undefined, body.slug);

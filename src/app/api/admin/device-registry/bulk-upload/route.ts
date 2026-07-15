@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Match product
-        const product = await db.qbitProduct.findUnique({ where: { model: entry.modelNumber } });
+        const product = await db.qbitProduct.findFirst({ where: { model: entry.modelNumber } });
 
         // Generate purchase ID
         const purchaseCount = await db.purchaseRecord.count();

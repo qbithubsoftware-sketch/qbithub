@@ -99,7 +99,7 @@ export async function PUT(req: NextRequest, { params }: Params) {
     // Match product if model changed
     let productId = existing.productId;
     if (body.modelNumber && body.modelNumber !== existing.modelNumber) {
-      const product = await db.qbitProduct.findUnique({ where: { model: body.modelNumber } });
+      const product = await db.qbitProduct.findFirst({ where: { model: body.modelNumber } });
       if (product) productId = product.id;
     }
 

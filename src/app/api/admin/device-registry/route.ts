@@ -158,7 +158,7 @@ export async function POST(req: NextRequest) {
 
     // ===== Match product by model number =====
     const product = body.modelNumber
-      ? await db.qbitProduct.findUnique({ where: { model: body.modelNumber } })
+      ? await db.qbitProduct.findFirst({ where: { model: body.modelNumber } })
       : null;
 
     // ===== Generate purchase ID =====

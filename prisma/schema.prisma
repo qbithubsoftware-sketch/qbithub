@@ -1621,7 +1621,7 @@ model QbitProduct {
   name                   String // "QBIT T-800 Thermal Printer"
   brand                  String    @default("QBIT") // "QBIT" | "Epson" | "Zebra" | etc.
   manufacturer           String? // "QBIT Technologies"
-  model                  String    @unique // "T-800"
+  model                  String // "T-800" — NOT unique (multiple products may share model naming)
   /// URL-friendly slug used for /products/[slug] deep links (e.g. "t800", "hub-x-pro").
   /// Auto-generated from model on create if not supplied. Unique.
   slug                   String    @unique
@@ -1714,14 +1714,8 @@ model QbitProduct {
   upgradedModel            String? // product ID or model number
   previousModel            String? // product ID or model number
 
-  /// Section 13 — Pricing
-  purchasePrice    Float?
-  dealerPrice      Float?
-  distributorPrice Float?
-  mrp              Float?
-  sellingPrice     Float?
-  gstRate          Float? // GST percentage (e.g. 18 for 18%)
-  hsnCode          String?
+  /// Section 13 — Pricing REMOVED (not an eCommerce catalog)
+  /// Only warranty duration kept for product-level info.
   warrantyDuration String? // e.g. "12 months", "2 years"
   amcAvailable     Boolean @default(false)
 

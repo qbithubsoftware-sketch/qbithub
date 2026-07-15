@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Check model uniqueness
-  const existing = await db.qbitProduct.findUnique({ where: { model: body.model } });
+  const existing = await db.qbitProduct.findFirst({ where: { model: body.model } });
   if (existing) {
     return NextResponse.json(
       { error: `Product with model "${body.model}" already exists` },

@@ -31,6 +31,7 @@ import { SurfaceCard } from "@/components/qbit/primitives/GlassCard";
 import { ADMIN_NAV } from "@/lib/navigation/nav-config";
 import { useAuth } from "@/lib/auth/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigation } from "@/lib/navigation/store";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -109,6 +110,7 @@ const STATUS_OPTIONS = [
 export function ProductMasterPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigation((s) => s.navigate);
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -137,8 +139,8 @@ export function ProductMasterPage() {
     installationTime: "", difficultyLevel: "",
     canonicalUrl: "", openGraphImage: "", twitterCard: "",
     seoTitle: "", seoDescription: "", seoKeywords: "",
-    purchasePrice: "", dealerPrice: "", distributorPrice: "", mrp: "", sellingPrice: "",
-    gstRate: "", hsnCode: "", warrantyDuration: "",
+    
+    warrantyDuration: "",
     upgradedModel: "", previousModel: "",
     isFeatured: false, isTrending: false, isBestSeller: false, isNewArrival: false,
     isDraft: false, amcAvailable: false,
@@ -175,25 +177,8 @@ export function ProductMasterPage() {
 
   // --- Create/Edit handlers ---
   const handleAddProduct = () => {
-    setEditingProduct(null);
-    setFormData({
-      name: "", brand: "QBIT", manufacturer: "", model: "", deviceType: "thermal_printer",
-      description: "", longDescription: "", subCategory: "", productSeries: "", productType: "",
-      highlights: "",
-      driverDownloadUrl: "", manualUrl: "", installationGuideUrl: "", knowledgeBaseUrl: "",
-      brochureUrl: "", datasheetUrl: "", warrantyUrl: "", sdkUrl: "", utilityUrl: "",
-      installationInstructions: "", requiredSoftware: "", requiredDrivers: "", requiredAccessories: "",
-      installationTime: "", difficultyLevel: "",
-      canonicalUrl: "", openGraphImage: "", twitterCard: "",
-      seoTitle: "", seoDescription: "", seoKeywords: "",
-      purchasePrice: "", dealerPrice: "", distributorPrice: "", mrp: "", sellingPrice: "",
-      gstRate: "", hsnCode: "", warrantyDuration: "",
-      upgradedModel: "", previousModel: "",
-      isFeatured: false, isTrending: false, isBestSeller: false, isNewArrival: false,
-      isDraft: false, amcAvailable: false,
-      status: "active",
-    });
-    setShowCreateEdit(true);
+    // Navigate to the full-page product creation screen (not a popup)
+    navigate("product-master-create");
   };
 
   const handleEditProduct = (product: Product) => {
@@ -211,8 +196,8 @@ export function ProductMasterPage() {
       installationTime: "", difficultyLevel: "",
       canonicalUrl: "", openGraphImage: "", twitterCard: "",
       seoTitle: "", seoDescription: "", seoKeywords: "",
-      purchasePrice: "", dealerPrice: "", distributorPrice: "", mrp: "", sellingPrice: "",
-      gstRate: "", hsnCode: "", warrantyDuration: "",
+      
+      warrantyDuration: "",
       upgradedModel: "", previousModel: "",
       isFeatured: product.isFeatured ?? false, isTrending: product.isTrending ?? false,
       isBestSeller: product.isBestSeller ?? false, isNewArrival: product.isNewArrival ?? false,
@@ -233,12 +218,6 @@ export function ProductMasterPage() {
       const payload = {
         ...formData,
         category: editingProduct?.category ?? categoryForCreate,
-        purchasePrice: formData.purchasePrice ? parseFloat(formData.purchasePrice) : null,
-        dealerPrice: formData.dealerPrice ? parseFloat(formData.dealerPrice) : null,
-        distributorPrice: formData.distributorPrice ? parseFloat(formData.distributorPrice) : null,
-        mrp: formData.mrp ? parseFloat(formData.mrp) : null,
-        sellingPrice: formData.sellingPrice ? parseFloat(formData.sellingPrice) : null,
-        gstRate: formData.gstRate ? parseFloat(formData.gstRate) : null,
         manufacturer: formData.manufacturer || null,
         description: formData.description || null,
         longDescription: formData.longDescription || null,
@@ -796,33 +775,9 @@ export function ProductMasterPage() {
               <Input value={formData.seoKeywords} onChange={(e) => setFormData({ ...formData, seoKeywords: e.target.value })} />
             </div>
 
-            {/* Section 13 — Pricing */}
+            {/* Warranty Duration (pricing section removed — not eCommerce) */}
             <div className="col-span-2 mt-2 border-t border-qbit-outline-variant/50 pt-3">
-              <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-qbit-primary">Pricing</label>
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium">Purchase Price (₹)</label>
-              <Input type="number" value={formData.purchasePrice} onChange={(e) => setFormData({ ...formData, purchasePrice: e.target.value })} placeholder="15000" />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium">Dealer Price (₹)</label>
-              <Input type="number" value={formData.dealerPrice} onChange={(e) => setFormData({ ...formData, dealerPrice: e.target.value })} placeholder="17000" />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium">MRP (₹)</label>
-              <Input type="number" value={formData.mrp} onChange={(e) => setFormData({ ...formData, mrp: e.target.value })} placeholder="22000" />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium">Selling Price (₹)</label>
-              <Input type="number" value={formData.sellingPrice} onChange={(e) => setFormData({ ...formData, sellingPrice: e.target.value })} placeholder="18500" />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium">GST Rate (%)</label>
-              <Input type="number" value={formData.gstRate} onChange={(e) => setFormData({ ...formData, gstRate: e.target.value })} placeholder="18" />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium">HSN Code</label>
-              <Input value={formData.hsnCode} onChange={(e) => setFormData({ ...formData, hsnCode: e.target.value })} placeholder="84433200" />
+              <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-qbit-primary">Warranty</label>
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium">Warranty Duration</label>

@@ -113,7 +113,7 @@ export async function registerPurchase(
     }
 
     // ===== Step 3: Match product by model number (never duplicate) =====
-    const product = await db.qbitProduct.findUnique({
+    const product = await db.qbitProduct.findFirst({
       where: { model: data.modelNumber },
     });
 
