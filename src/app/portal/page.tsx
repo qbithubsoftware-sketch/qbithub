@@ -20,7 +20,7 @@ import { AdminDashboardPage } from "@/components/qbit/pages/AdminDashboardPage";
 import { UserRoleManagementPage } from "@/components/qbit/pages/UserRoleManagementPage";
 import { ProductMasterPage } from "@/components/qbit/pages/ProductMasterPage";
 import { ProductMasterCreatePage } from "@/components/qbit/pages/ProductMasterCreatePage";
-import { UploadMasterPage } from "@/components/qbit/pages/UploadMasterPage";
+import { UploadMasterContent } from "@/components/qbit/pages/UploadMasterContent";
 import { AIPurchaseImportCenterPage } from "@/components/qbit/pages/AIPurchaseImportCenterPage";
 import { SystemSettingsPage } from "@/components/qbit/pages/SystemSettingsPage";
 import { UniversalSearchCommandCenterPage } from "@/components/qbit/pages/UniversalSearchCommandCenterPage";
@@ -88,7 +88,17 @@ export default function Home() {
       case "product-master-create":
         return <ProductMasterCreatePage />;
       case "upload-master":
-        return <UploadMasterPage />;
+      case "upload-driver":
+      case "upload-manual":
+      case "upload-firmware":
+      case "upload-sdk":
+      case "upload-brochure":
+      case "upload-datasheet":
+      case "upload-warranty":
+      case "upload-video":
+      case "upload-guide":
+      case "upload-certificate":
+        return <UploadMasterContent />;
       case "ai-purchase-center":
         return <AIPurchaseImportCenterPage />;
       case "system-settings":
