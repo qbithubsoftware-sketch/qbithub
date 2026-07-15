@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { Icon } from "../primitives/Icon";
 import { useNavigation, type ScreenId } from "@/lib/navigation/store";
@@ -50,6 +50,8 @@ export interface SidebarProps {
   className?: string;
 }
 
+const STORAGE_KEY = "qbit-sidebar-expanded";
+
 export function Sidebar({
   variant,
   brand,
@@ -63,13 +65,36 @@ export function Sidebar({
   className,
 }: SidebarProps) {
   const navigate = useNavigation((s) => s.navigate);
+
+  // Load expanded state from localStorage on mount
   const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        setExpandedMenus(new Set(JSON.parse(stored)));
+      }
+    } catch {
+      // localStorage not available (SSR) — ignore
+    }
+  }, []);
+
+  // Save expanded state to localStorage whenever it changes
+  const persistExpanded = useCallback((expanded: Set<string>) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([...expanded]));
+    } catch {
+      // ignore
+    }
+  }, []);
 
   function toggleMenu(label: string) {
     setExpandedMenus((prev) => {
       const next = new Set(prev);
       if (next.has(label)) next.delete(label);
       else next.add(label);
+      persistExpanded(next);
       return next;
     });
   }
