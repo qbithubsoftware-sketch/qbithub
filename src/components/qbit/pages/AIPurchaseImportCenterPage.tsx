@@ -22,6 +22,7 @@ import { SurfaceCard } from "@/components/qbit/primitives/GlassCard";
 import { ADMIN_NAV } from "@/lib/navigation/nav-config";
 import { useAuth } from "@/lib/auth/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigation } from "@/lib/navigation/store";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 
@@ -134,6 +135,7 @@ const DEVICE_STATUS_OPTIONS = [
 export function AIPurchaseImportCenterPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigation((s) => s.navigate);
 
   const [activeTab, setActiveTab] = useState<"lookup" | "registry">("lookup");
   const [serialInput, setSerialInput] = useState("");
@@ -237,17 +239,8 @@ export function AIPurchaseImportCenterPage() {
   }, [activeTab, fetchRegistry]);
 
   function handleAddDevice() {
-    setEditingDeviceId(null);
-    setDeviceForm({
-      serialNumber: "", productName: "", modelNumber: "", brand: "",
-      customerName: "", companyName: "", mobileNumber: "", alternateMobile: "",
-      email: "", gstNumber: "", address: "", city: "", state: "", country: "India", pincode: "",
-      invoiceNumber: "", purchaseDate: "", dealerName: "", purchasePrice: "",
-      warrantyStartDate: "", warrantyEndDate: "", warrantyDuration: "",
-      installedBy: "", installationNotes: "", deviceStatus: "active",
-      amcStatus: "none", lastServiceDate: "", serviceNotes: "", notes: "",
-    });
-    setShowAddDevice(true);
+    // Navigate to the full-page device registration screen (not a popup)
+    navigate("device-register");
   }
 
   async function handleSaveDevice() {

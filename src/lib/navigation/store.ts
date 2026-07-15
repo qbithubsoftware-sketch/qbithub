@@ -45,6 +45,7 @@ export type ScreenId =
   | "upload-certificate"
   | "system-settings"
   | "ai-purchase-center"
+  | "device-register"
   // Search
   | "universal-search-command-center"
   | "universal-search-mobile"

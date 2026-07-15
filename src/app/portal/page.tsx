@@ -22,6 +22,7 @@ import { ProductMasterPage } from "@/components/qbit/pages/ProductMasterPage";
 import { ProductMasterCreatePage } from "@/components/qbit/pages/ProductMasterCreatePage";
 import { UploadMasterContent } from "@/components/qbit/pages/UploadMasterContent";
 import { AIPurchaseImportCenterPage } from "@/components/qbit/pages/AIPurchaseImportCenterPage";
+import { DeviceRegisterPage } from "@/components/qbit/pages/DeviceRegisterPage";
 import { SystemSettingsPage } from "@/components/qbit/pages/SystemSettingsPage";
 import { UniversalSearchCommandCenterPage } from "@/components/qbit/pages/UniversalSearchCommandCenterPage";
 import { UniversalSearchMobilePage } from "@/components/qbit/pages/UniversalSearchMobilePage";
@@ -101,6 +102,8 @@ export default function Home() {
         return <UploadMasterContent />;
       case "ai-purchase-center":
         return <AIPurchaseImportCenterPage />;
+      case "device-register":
+        return <DeviceRegisterPage />;
       case "system-settings":
         return <SystemSettingsPage />;
       case "universal-search-command-center":
