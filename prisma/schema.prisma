@@ -1687,6 +1687,63 @@ model QbitProduct {
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 
+  // ===== V3 PIM — Product Master fields =====
+  /// Section 1 — Basic Information
+  subCategory   String?
+  productSeries String?
+  productType   String?
+  highlights    String? // JSON array of highlight strings
+
+  /// Section 4 — Installation Resources
+  installationInstructions String? // rich text / markdown
+  requiredSoftware         String? // JSON array
+  requiredDrivers          String? // JSON array
+  requiredAccessories      String? // JSON array
+  installationTime         String? // e.g. "15 minutes"
+  difficultyLevel          String? // "Beginner" | "Intermediate" | "Expert"
+
+  /// Section 9 — SEO
+  canonicalUrl   String?
+  openGraphImage String?
+  twitterCard    String? // "summary" | "summary_large_image" | "product"
+  productSchema  String? // JSON-LD structured data
+
+  /// Section 12 — Related Products (structured)
+  frequentlyBoughtTogether String? // JSON array of product IDs
+  alternativeProducts      String? // JSON array of product IDs
+  upgradedModel            String? // product ID or model number
+  previousModel            String? // product ID or model number
+
+  /// Section 13 — Pricing
+  purchasePrice    Float?
+  dealerPrice      Float?
+  distributorPrice Float?
+  mrp              Float?
+  sellingPrice     Float?
+  gstRate          Float? // GST percentage (e.g. 18 for 18%)
+  hsnCode          String?
+  warrantyDuration String? // e.g. "12 months", "2 years"
+  amcAvailable     Boolean @default(false)
+
+  /// Section 14 — Product Status flags
+  isDraft      Boolean @default(false)
+  isPublished  Boolean @default(true)
+  isBestSeller Boolean @default(false)
+  isNewArrival Boolean @default(false)
+
+  /// Section 15 — Analytics (denormalized counters)
+  driverDownloadCount            Int @default(0)
+  manualDownloadCount            Int @default(0)
+  installationGuideDownloadCount Int @default(0)
+  qrScanCount                    Int @default(0)
+  barcodePrintCount              Int @default(0)
+  shareCount                     Int @default(0)
+
+  /// Section 16 — Activity Timeline
+  createdBy String?
+  updatedBy String?
+  version   Int     @default(1)
+
   hardwareSignatures HardwareSignature[]
   detectedDevices    DetectedDevice[]
   unknownDeviceMaps  UnknownDevice[]

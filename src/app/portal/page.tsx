@@ -19,6 +19,7 @@ import { JobCompletionHandoverPage } from "@/components/qbit/pages/JobCompletion
 import { AdminDashboardPage } from "@/components/qbit/pages/AdminDashboardPage";
 import { UserRoleManagementPage } from "@/components/qbit/pages/UserRoleManagementPage";
 import { ProductManagementPage } from "@/components/qbit/pages/ProductManagementPage";
+import { ProductMasterPage } from "@/components/qbit/pages/ProductMasterPage";
 import { AIPurchaseImportCenterPage } from "@/components/qbit/pages/AIPurchaseImportCenterPage";
 import { SystemSettingsPage } from "@/components/qbit/pages/SystemSettingsPage";
 import { UniversalSearchCommandCenterPage } from "@/components/qbit/pages/UniversalSearchCommandCenterPage";
@@ -83,6 +84,8 @@ export default function Home() {
         return <UserRoleManagementPage />;
       case "product-management":
         return <ProductManagementPage />;
+      case "product-master":
+        return <ProductMasterPage />;
       case "ai-purchase-center":
         return <AIPurchaseImportCenterPage />;
       case "system-settings":

@@ -31,6 +31,7 @@ export type ScreenId =
   | "admin-dashboard"
   | "user-role-management"
   | "product-management"
+  | "product-master"
   | "system-settings"
   | "ai-purchase-center"
   // Search

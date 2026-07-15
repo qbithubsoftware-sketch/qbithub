@@ -1,0 +1,543 @@
+     1→   400→   400→          </div>
+     2→   401→   401→        </section>
+     3→   402→   402→
+     4→   403→   403→        {/* ================================================================ */}
+     5→   404→   404→        {/* Main 8/4 grid                                                    */}
+     6→   405→   405→        {/* ================================================================ */}
+     7→   406→   406→        <div className="grid grid-cols-12 gap-6 lg:gap-8">
+     8→   407→   407→          {/* ---------- LEFT: col-span-8 ---------- */}
+     9→   408→   408→          <div className="col-span-12 space-y-8 lg:col-span-8">
+    10→   409→   409→            {/* AI Assistant Chat Interface */}
+    11→   410→   410→            <div className="overflow-hidden rounded-2xl border border-qbit-outline-variant bg-qbit-surface-container-lowest shadow-sm">
+    12→   411→   411→              {/* Header */}
+    13→   412→   412→              <div className="flex items-center justify-between border-b border-qbit-outline-variant bg-qbit-surface-container-high px-6 py-4">
+    14→   413→   413→                <div className="flex items-center gap-3">
+    15→   414→   414→                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-qbit-primary-container">
+    16→   415→   415→                    <Icon name="smart_toy" className="text-[22px] text-qbit-on-primary" filled />
+    17→   416→   416→                  </div>
+    18→   417→   417→                  <div>
+    19→   418→   418→                    <h3 className="text-lg font-semibold text-qbit-on-surface">
+    20→   419→   419→                      QBIT Technical Assistant
+    21→   420→   420→                    </h3>
+    22→   421→   421→                    <p className="flex items-center gap-1.5 text-[11px] font-semibold tracking-wide text-qbit-outline">
+    23→   422→   422→                      <span className="relative flex h-2 w-2">
+    24→   423→   423→                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75" />
+    25→   424→   424→                        <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+    26→   425→   425→                      </span>
+    27→   426→   426→                      <span>Online • Powered by CoreAI</span>
+    28→   427→   427→                    </p>
+    29→   428→   428→                  </div>
+    30→   429→   429→                </div>
+    31→   430→   430→                <button
+    32→   431→   431→                  type="button"
+    33→   432→   432→                  className="rounded-md p-1 text-qbit-on-surface-variant transition-colors hover:text-qbit-on-surface"
+    34→   433→   433→                  aria-label="More options"
+    35→   434→   434→                >
+    36→   435→   435→                  <Icon name="more_vert" className="text-[20px]" />
+    37→   436→   436→                </button>
+    38→   437→   437→              </div>
+    39→   438→   438→
+    40→   439→   439→              {/* Chat body */}
+    41→   440→   440→              <div
+    42→   441→   441→                ref={chatScrollRef}
+    43→   442→   442→                className="custom-scrollbar max-h-[520px] min-h-[400px] space-y-6 overflow-y-auto p-6"
+    44→   443→   443→              >
+    45→   444→   444→                {messages.map((msg) =>
+    46→   445→   445→                  msg.role === "assistant" ? (
+    47→   446→   446→                    <AssistantBubble
+    48→   447→   447→                      key={msg.id}
+    49→   448→   448→                      message={msg}
+    50→   449→   449→                      onCopy={handleCopyCode}
+    51→   450→   450→                      copied={copied}
+    52→   451→   451→                      onSuggestion={handleSuggestion}
+    53→   452→   452→                    />
+    54→   453→   453→                  ) : (
+    55→   454→   454→                    <UserBubble key={msg.id} message={msg} />
+    56→   455→   455→                  ),
+    57→   456→   456→                )}
+    58→   457→   457→
+    59→   458→   458→                {isTyping && <TypingBubble />}
+    60→   459→   459→              </div>
+    61→   460→   460→
+    62→   461→   461→              {/* Input */}
+    63→   462→   462→              <div className="border-t border-qbit-outline-variant bg-qbit-surface-container-lowest p-6">
+    64→   463→   463→                <div className="flex items-center gap-3">
+    65→   464→   464→                  <input
+    66→   465→   465→                    type="text"
+    67→   466→   466→                    value={input}
+    68→   467→   467→                    onChange={(e) => setInput(e.target.value)}
+    69→   468→   468→                    onKeyDown={(e) => {
+    70→   469→   469→                      if (e.key === "Enter") handleSend();
+    71→   470→   470→                    }}
+    72→   471→   471→                    placeholder="Type your technical question..."
+    73→   472→   472→                    className="flex-1 rounded-xl border border-qbit-outline-variant bg-qbit-surface-container-low px-4 py-3 text-sm text-qbit-on-surface outline-none transition-all placeholder:text-qbit-on-surface-variant/70 focus:border-qbit-primary focus:ring-2 focus:ring-qbit-primary/20"
+    74→   473→   473→                  />
+    75→   474→   474→                  <button
+    76→   475→   475→                    type="button"
+    77→   476→   476→                    onClick={handleSend}
+    78→   477→   477→                    disabled={!input.trim()}
+    79→   478→   478→                    className="flex h-12 w-12 items-center justify-center rounded-xl bg-qbit-primary text-qbit-on-primary transition-all hover:bg-qbit-primary-container active:scale-95 disabled:pointer-events-none disabled:opacity-50"
+    80→   479→   479→                    aria-label="Send message"
+    81→   480→   480→                  >
+    82→   481→   481→                    <Icon name="send" className="text-[20px]" />
+    83→   482→   482→                  </button>
+    84→   483→   483→                </div>
+    85→   484→   484→              </div>
+    86→   485→   485→            </div>
+    87→   486→   486→
+    88→   487→   487→            {/* Troubleshooting Center */}
+    89→   488→   488→            <section className="space-y-5">
+    90→   489→   489→              <div className="flex items-center justify-between">
+    91→   490→   490→                <h2 className="text-2xl font-semibold text-qbit-on-surface">Troubleshooting Center</h2>
+    92→   491→   491→                <button
+    93→   492→   492→                  type="button"
+    94→   493→   493→                  className="text-sm font-bold text-qbit-primary hover:underline"
+    95→   494→   494→                >
+    96→   495→   495→                  View All Diagnostics
+    97→   496→   496→                </button>
+    98→   497→   497→              </div>
+    99→   498→   498→              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+   100→   499→   499→                {TROUBLESHOOT_CARDS.map((card) => (
+   101→   500→   500→                  <div
+   102→   501→   501→                    key={card.id}
+   103→   502→   502→                    className={cn(
+   104→   503→   503→                      "group flex cursor-pointer items-start gap-4 rounded-2xl border p-6 transition-all",
+   105→   504→   504→                      card.surface,
+   106→   505→   505→                    )}
+   107→   506→   506→                  >
+   108→   507→   507→                    <div className={cn("rounded-xl p-2", card.iconWrap)}>
+   109→   508→   508→                      <Icon name={card.icon} className="text-[24px]" />
+   110→   509→   509→                    </div>
+   111→   510→   510→                    <div className="flex-1">
+   112→   511→   511→                      <div className="flex items-center justify-between gap-2">
+   113→   512→   512→                        <h4 className={cn("text-base font-bold", card.titleClass)}>{card.title}</h4>
+   114→   513→   513→                        <span
+   115→   514→   514→                          className={cn(
+   116→   515→   515→                            "text-[11px] font-bold uppercase tracking-wider",
+   117→   516→   516→                            card.badge.tone === "error" ? "text-qbit-error" : "text-qbit-outline",
+   118→   517→   517→                          )}
+   119→   518→   518→                        >
+   120→   519→   519→                          {card.badge.label}
+   121→   520→   520→                        </span>
+   122→   521→   521→                      </div>
+   123→   522→   522→                      <p className={cn("mt-1 text-sm", card.descriptionClass)}>
+   124→   523→   523→                        {card.description}
+   125→   524→   524→                      </p>
+   126→   525→   525→                      <button
+   127→   526→   526→                        type="button"
+   128→   527→   527→                        className={cn(
+   129→   528→   528→                          "mt-4 flex items-center gap-1 text-sm font-bold transition-all group-hover:gap-2",
+   130→   529→   529→                          card.ctaClass,
+   131→   530→   530→                        )}
+   132→   531→   531→                      >
+   133→   532→   532→                        {card.ctaLabel}
+   134→   533→   533→                        <Icon name="chevron_right" className="text-sm" />
+   135→   534→   534→                      </button>
+   136→   535→   535→                    </div>
+   137→   536→   536→                  </div>
+   138→   537→   537→                ))}
+   139→   538→   538→              </div>
+   140→   539→   539→            </section>
+   141→   540→   540→          </div>
+   142→   541→   541→
+   143→   542→   542→          {/* ---------- RIGHT: col-span-4 ---------- */}
+   144→   543→   543→          <div className="col-span-12 space-y-8 lg:col-span-4">
+   145→   544→   544→            {/* Quick Resources */}
+   146→   545→   545→            <section className="space-y-5">
+   147→   546→   546→              <h3 className="text-xl font-semibold text-qbit-on-surface">Quick Resources</h3>
+   148→   547→   547→              <div className="grid grid-cols-2 gap-3">
+   149→   548→   548→                {QUICK_RESOURCES.map((res) => (
+   150→   549→   549→                  <button
+   151→   550→   550→                    key={res.label}
+   152→   551→   551→                    type="button"
+   153→   552→   552→                    onClick={() => res.screen && navigate(res.screen, {})}
+   154→   553→   553→                    className="group flex flex-col items-center gap-2 rounded-xl border border-qbit-outline-variant bg-qbit-surface-container-lowest p-4 text-center transition-all hover:border-qbit-primary hover:shadow-sm active:scale-95"
+   155→   554→   554→                  >
+   156→   555→   555→                    <Icon name={res.icon} className="text-[26px] text-qbit-primary" filled />
+   157→   556→   556→                    <span className="text-sm font-medium text-qbit-on-surface transition-colors group-hover:text-qbit-primary">
+   158→   557→   557→                      {res.label}
+   159→   558→   558→                    </span>
+   160→   559→   559→                  </button>
+   161→   560→   560→                ))}
+   162→   561→   561→              </div>
+   163→   562→   562→            </section>
+   164→   563→   563→
+   165→   564→   564→            {/* Recent Tickets */}
+   166→   565→   565→            <section className="rounded-2xl border border-qbit-outline-variant bg-qbit-surface-container-lowest p-6 shadow-sm">
+   167→   566→   566→              <div className="mb-5 flex items-center justify-between">
+   168→   567→   567→                <h3 className="text-xl font-semibold text-qbit-on-surface">Recent Tickets</h3>
+   169→   568→   568→                <span className="rounded-full bg-qbit-primary/10 px-2.5 py-0.5 text-[11px] font-bold text-qbit-primary">
+   170→   569→   569→                  2 Open
+   171→   570→   570→                </span>
+   172→   571→   571→              </div>
+   173→   572→   572→              <div className="space-y-3">
+   174→   573→   573→                {TICKETS.map((ticket) => (
+   175→   574→   574→                  <div
+   176→   575→   575→                    key={ticket.id}
+   177→   576→   576→                    className="cursor-pointer rounded-xl border border-transparent p-4 transition-all hover:border-qbit-outline-variant hover:bg-qbit-surface-container-low"
+   178→   577→   577→                  >
+   179→   578→   578→                    <div className="mb-1.5 flex items-start justify-between">
+   180→   579→   579→                      <span
+   181→   580→   580→                        className={cn(
+   182→   581→   581→                          "flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide",
+   183→   582→   582→                          ticket.priority.variant === "error"
+   184→   583→   583→                            ? "text-qbit-error"
+   185→   584→   584→                            : "text-qbit-primary",
+   186→   585→   585→                        )}
+   187→   586→   586→                      >
+   188→   587→   587→                        <Icon
+   189→   588→   588→                          name={ticket.priorityIcon}
+   190→   589→   589→                          className="text-[14px]"
+   191→   590→   590→                          filled={ticket.priorityFilled}
+   192→   591→   591→                        />
+   193→   592→   592→                        {ticket.priority.label}
+   194→   593→   593→                      </span>
+   195→   594→   594→                      <span className="text-[11px] font-semibold text-qbit-outline">
+   196→   595→   595→                        #{ticket.id}
+   197→   596→   596→                      </span>
+   198→   597→   597→                    </div>
+   199→   598→   598→                    <h4 className="mb-2 text-base font-bold text-qbit-on-surface">
+   200→   599→   599→                      {ticket.title}
+   201→   600→   600→                    </h4>
+   202→   601→   601→                    <div className="flex items-center justify-between">
+   203→   602→   602→                      <div className="flex items-center gap-1.5">
+   204→   603→   603→                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-qbit-surface-dim text-[10px] font-bold text-qbit-on-surface-variant ring-1 ring-qbit-outline-variant/60">
+   205→   604→   604→                          {ticket.initials}
+   206→   605→   605→                        </div>
+   207→   606→   606→                        <span className="text-[11px] text-qbit-on-surface-variant">
+   208→   607→   607→                          {ticket.assignee}
+   209→   608→   608→                        </span>
+   210→   609→   609→                      </div>
+   211→   610→   610→                      <span
+   212→   611→   611→                        className={cn(
+   213→   612→   612→                          "rounded px-2 py-0.5 text-[11px] font-bold",
+   214→   613→   613→                          ticket.status.tone === "warning"
+   215→   614→   614→                            ? "bg-qbit-surface-container-highest text-qbit-on-surface-variant"
+   216→   615→   615→                            : "bg-emerald-100 text-emerald-700",
+   217→   616→   616→                        )}
+   218→   617→   617→                      >
+   219→   618→   618→                        {ticket.status.label}
+   220→   619→   619→                      </span>
+   221→   620→   620→                    </div>
+   222→   621→   621→                  </div>
+   223→   622→   622→                ))}
+   224→   623→   623→              </div>
+   225→   624→   624→            </section>
+   226→   625→   625→          </div>
+   227→   626→   626→        </div>
+   228→   627→   627→
+   229→   628→   628→        {/* ================================================================ */}
+   230→   629→   629→        {/* Knowledge Base                                                   */}
+   231→   630→   630→        {/* ================================================================ */}
+   232→   631→   631→        <section className="space-y-8">
+   233→   632→   632→          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+   234→   633→   633→            <div className="space-y-1">
+   235→   634→   634→              <h2 className="text-2xl font-semibold text-qbit-on-surface">Knowledge Base</h2>
+   236→   635→   635→              <p className="text-base text-qbit-on-surface-variant">
+   237→   636→   636→                Explore thousands of verified technical articles and community guides.
+   238→   637→   637→              </p>
+   239→   638→   638→            </div>
+   240→   639→   639→            <div className="flex items-center gap-3">
+   241→   640→   640→              <div className="relative">
+   242→   641→   641→                <Icon
+   243→   642→   642→                  name="filter_list"
+   244→   643→   643→                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-qbit-outline"
+   245→   644→   644→                />
+   246→   645→   645→                <select
+   247→   646→   646→                  value={kbFilter}
+   248→   647→   647→                  onChange={(e) =>
+   249→   648→   648→                    setKbFilter(e.target.value as (typeof KB_CATEGORIES)[number])
+   250→   649→   649→                  }
+   251→   650→   650→                  className="cursor-pointer appearance-none rounded-full border border-qbit-outline-variant bg-qbit-surface-container-lowest py-2 pl-11 pr-9 text-sm font-medium text-qbit-on-surface outline-none transition-all hover:border-qbit-primary focus:border-qbit-primary focus:ring-2 focus:ring-qbit-primary/20"
+   252→   651→   651→                >
+   253→   652→   652→                  {KB_CATEGORIES.map((cat) => (
+   254→   653→   653→                    <option key={cat} value={cat}>
+   255→   654→   654→                      {cat}
+   256→   655→   655→                    </option>
+   257→   656→   656→                  ))}
+   258→   657→   657→                </select>
+   259→   658→   658→                <Icon
+   260→   659→   659→                  name="expand_more"
+   261→   660→   660→                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[18px] text-qbit-outline"
+   262→   661→   661→                />
+   263→   662→   662→              </div>
+   264→   663→   663→            </div>
+   265→   664→   664→          </div>
+   266→   665→   665→
+   267→   666→   666→          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+   268→   667→   667→            {KB_ARTICLES.map((article) => (
+   269→   668→   668→              <article
+   270→   669→   669→                key={article.id}
+   271→   670→   670→                className="group flex h-full cursor-pointer flex-col justify-between rounded-2xl border border-qbit-outline-variant bg-qbit-surface-container-lowest p-6 transition-all hover:shadow-lg"
+   272→   671→   671→              >
+   273→   672→   672→                <div>
+   274→   673→   673→                  <div className="mb-4 flex items-start justify-between">
+   275→   674→   674→                    <span className="flex items-center gap-1.5 rounded bg-qbit-surface-container-high px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-qbit-on-surface-variant">
+   276→   675→   675→                      <Icon name={article.icon} className="text-[14px]" />
+   277→   676→   676→                      {article.category}
+   278→   677→   677→                    </span>
+   279→   678→   678→                    <button
+   280→   679→   679→                      type="button"
+   281→   680→   680→                      className="text-qbit-outline transition-colors hover:text-qbit-primary"
+   282→   681→   681→                      aria-label={article.bookmarked ? "Remove bookmark" : "Add bookmark"}
+   283→   682→   682→                    >
+   284→   683→   683→                      <Icon
+   285→   684→   684→                        name="bookmark"
+   286→   685→   685→                        className="text-[22px]"
+   287→   686→   686→                        filled={article.bookmarked}
+   288→   687→   687→                      />
+   289→   688→   688→                    </button>
+   290→   689→   689→                  </div>
+   291→   690→   690→                  <h4 className="mb-2 text-lg font-bold text-qbit-on-surface transition-colors group-hover:text-qbit-primary">
+   292→   691→   691→                    {article.title}
+   293→   692→   692→                  </h4>
+   294→   693→   693→                  <p className="line-clamp-2 text-sm text-qbit-on-surface-variant">
+   295→   694→   694→                    {article.excerpt}
+   296→   695→   695→                  </p>
+   297→   696→   696→                </div>
+   298→   697→   697→                <div className="mt-6 flex items-center gap-4 border-t border-qbit-outline-variant/30 pt-4 text-[11px] font-medium text-qbit-outline">
+   299→   698→   698→                  <span className="flex items-center gap-1">
+   300→   699→   699→                    <Icon name="schedule" className="text-[16px]" />
+   301→   700→   700→                    {article.readTime}
+   302→   701→   701→                  </span>
+   303→   702→   702→                  <span className="flex items-center gap-1">
+   304→   703→   703→                    <Icon name="visibility" className="text-[16px]" />
+   305→   704→   704→                    {article.views}
+   306→   705→   705→                  </span>
+   307→   706→   706→                </div>
+   308→   707→   707→              </article>
+   309→   708→   708→            ))}
+   310→   709→   709→          </div>
+   311→   710→   710→
+   312→   711→   711→          <div className="mt-8 flex justify-center">
+   313→   712→   712→            <QbitButton
+   314→   713→   713→              size="lg"
+   315→   714→   714→              iconRight="arrow_forward"
+   316→   715→   715→              onClick={() => navigate("ai-support-center")}
+   317→   716→   716→            >
+   318→   717→   717→              Explore All Articles
+   319→   718→   718→            </QbitButton>
+   320→   719→   719→          </div>
+   321→   720→   720→        </section>
+   322→   721→   721→
+   323→   722→   722→        {/* ================================================================ */}
+   324→   723→   723→        {/* Enterprise AI Assistant (RAG-powered)                            */}
+   325→   724→   724→        {/* ================================================================ */}
+   326→   725→   725→        <section className="space-y-6">
+   327→   726→   726→          <SectionHeader title="Enterprise AI Assistant" accentDot />
+   328→   727→   727→          <p className="text-sm text-qbit-on-surface-variant -mt-2">
+   329→   728→   728→            Ask questions about installation, drivers, troubleshooting, and more. The AI answers using only QBIT Hub data — never invents product information.
+   330→   729→   729→          </p>
+   331→   730→   730→          <AIChatWindow />
+   332→   731→   731→        </section>
+   333→   732→   732→
+   334→   733→   733→        {/* ================================================================ */}
+   335→   734→   734→        {/* Troubleshooting Center                                           */}
+   336→   735→   735→        {/* ================================================================ */}
+   337→   736→   736→        <TroubleshootingCenterSection />
+   338→   737→   737→
+   339→   738→   738→        {/* ================================================================ */}
+   340→   739→   739→        {/* Common Error Codes                                               */}
+   341→   740→   740→        {/* ================================================================ */}
+   342→   741→   741→        <CommonErrorCodesSection />
+   343→   742→   742→
+   344→   743→   743→        {/* ================================================================ */}
+   345→   744→   744→        {/* FAQ Section                                                      */}
+   346→   745→   745→        {/* ================================================================ */}
+   347→   746→   746→        <FAQSection />
+   348→   747→   747→
+   349→   748→   748→        {/* ================================================================ */}
+   350→   749→   749→        {/* Categories Grid                                                  */}
+   351→   750→   750→        {/* ================================================================ */}
+   352→   751→   751→        <CategoriesGridSection />
+   353→   752→   752→      </div>
+   354→   753→   753→    </AppShell>
+   355→   754→   754→  );
+   356→   755→   755→}
+   357→   756→   756→
+   358→   757→   757→/* ------------------------------------------------------------------ */
+   359→   758→   758→/* Subcomponents                                                       */
+   360→   759→   759→/* ------------------------------------------------------------------ */
+   361→   760→   760→
+   362→   761→   761→function AssistantAvatar() {
+   363→   762→   762→  return (
+   364→   763→   763→    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-qbit-primary-container">
+   365→   764→   764→      <Icon name="smart_toy" className="text-[18px] text-qbit-on-primary" filled />
+   366→   765→   765→    </div>
+   367→   766→   766→  );
+   368→   767→   767→}
+   369→   768→   768→
+   370→   769→   769→function AssistantBubble({
+   371→   770→   770→  message,
+   372→   771→   771→  onCopy,
+   373→   772→   772→  copied,
+   374→   773→   773→  onSuggestion,
+   375→   774→   774→}: {
+   376→   775→   775→  message: AssistantMessage;
+   377→   776→   776→  onCopy: () => void;
+   378→   777→   777→  copied: boolean;
+   379→   778→   778→  onSuggestion: (text: string) => void;
+   380→   779→   779→}) {
+   381→   780→   780→  const isDiagnostic = message.type === "diagnostic";
+   382→   781→   781→  const diagMessage = isDiagnostic ? (message as AssistantDiagnosticMessage) : null;
+   383→   782→   782→
+   384→   783→   783→  return (
+   385→   784→   784→    <div className="flex max-w-3xl gap-4">
+   386→   785→   785→      <AssistantAvatar />
+   387→   786→   786→      <div className="space-y-4">
+   388→   787→   787→        {!isDiagnostic ? (
+   389→   788→   788→          <div className="rounded-2xl rounded-tl-none border border-qbit-outline-variant/30 bg-qbit-surface-container-low p-4 text-base text-qbit-on-surface">
+   390→   789→   789→            {message.content}
+   391→   790→   790→          </div>
+   392→   791→   791→        ) : (
+   393→   792→   792→          <div className="space-y-4 rounded-2xl rounded-tl-none border border-qbit-outline-variant/30 bg-qbit-surface-container-low p-4 text-base text-qbit-on-surface shadow-sm">
+   394→   793→   793→            <p>
+   395→   794→   794→              To resolve the{" "}
+   396→   795→   795→              <strong className="font-semibold">{diagMessage!.title}</strong>, please follow these
+   397→   796→   796→              steps:
+   398→   797→   797→            </p>
+   399→   798→   798→            <ol className="list-inside list-decimal space-y-1 font-medium">
+   400→   799→   799→              {diagMessage!.steps.map((step) => (
+   401→   800→   800→                <li key={step}>{step}</li>
+   402→   801→   801→              ))}
+   403→   802→   802→            </ol>
+   404→   803→   803→            <div className="group relative rounded-lg bg-qbit-inverse-surface p-4 font-mono text-sm text-qbit-inverse-on-surface">
+   405→   804→   804→              <code id="qbit-diagnostic-code" className="block break-all">
+   406→   805→   805→                {diagMessage!.code}
+   407→   806→   806→              </code>
+   408→   807→   807→              <button
+   409→   808→   808→                type="button"
+   410→   809→   809→                onClick={onCopy}
+   411→   810→   810→                className="absolute right-3 top-3 flex items-center gap-1 rounded bg-white/10 px-1.5 py-1 text-xs text-qbit-inverse-on-surface opacity-0 backdrop-blur transition-opacity hover:bg-white/20 group-hover:opacity-100"
+   412→   811→   811→                aria-label="Copy command"
+   413→   812→   812→              >
+   414→   813→   813→                <Icon name={copied ? "check" : "content_copy"} className="text-[16px]" />
+   415→   814→   814→                {copied ? "Copied" : "Copy"}
+   416→   815→   815→              </button>
+   417→   816→   816→            </div>
+   418→   817→   817→            <p className="text-sm">{diagMessage!.closing}</p>
+   419→   818→   818→            <div className="flex flex-wrap items-center gap-4 pt-1">
+   420→   819→   819→              {diagMessage!.links.map((link) => (
+   421→   820→   820→                <button
+   422→   821→   821→                  key={link.label}
+   423→   822→   822→                  type="button"
+   424→   823→   823→                  className="flex items-center gap-1.5 text-sm font-bold text-qbit-primary hover:underline"
+   425→   824→   824→                >
+   426→   825→   825→                  <Icon name={link.icon} className="text-[18px]" />
+   427→   826→   826→                  {link.label}
+   428→   827→   827→                </button>
+   429→   828→   828→              ))}
+   430→   829→   829→            </div>
+   431→   830→   830→          </div>
+   432→   831→   831→        )}
+   433→   832→   832→
+   434→   833→   833→        {message.type === "greeting" && (
+   435→   834→   834→          <div className="flex flex-wrap gap-2">
+   436→   835→   835→            {SUGGESTION_CHIPS.map((chip) => (
+   437→   836→   836→              <button
+   438→   837→   837→                key={chip}
+   439→   838→   838→                type="button"
+   440→   839→   839→                onClick={() => onSuggestion(chip)}
+   441→   840→   840→                className="rounded-full border border-qbit-primary bg-qbit-surface-container-lowest px-4 py-1.5 text-sm font-medium text-qbit-primary transition-all hover:bg-qbit-primary hover:text-qbit-on-primary active:scale-95"
+   442→   841→   841→              >
+   443→   842→   842→                {chip}
+   444→   843→   843→              </button>
+   445→   844→   844→            ))}
+   446→   845→   845→          </div>
+   447→   846→   846→        )}
+   448→   847→   847→      </div>
+   449→   848→   848→    </div>
+   450→   849→   849→  );
+   451→   850→   850→}
+   452→   851→   851→
+   453→   852→   852→function UserBubble({ message }: { message: UserMessage }) {
+   454→   853→   853→  return (
+   455→   854→   854→    <div className="flex max-w-3xl flex-row-reverse gap-4">
+   456→   855→   855→      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-qbit-primary text-xs font-bold text-qbit-on-primary">
+   457→   856→   856→        AM
+   458→   857→   857→      </div>
+   459→   858→   858→      <div className="rounded-2xl rounded-tr-none bg-qbit-primary px-4 py-3 text-base text-qbit-on-primary shadow-sm">
+   460→   859→   859→        {message.content}
+   461→   860→   860→      </div>
+   462→   861→   861→    </div>
+   463→   862→   862→  );
+   464→   863→   863→}
+   465→   864→   864→
+   466→   865→   865→function TypingBubble() {
+   467→   866→   866→  return (
+   468→   867→   867→    <div className="flex max-w-3xl gap-4">
+   469→   868→   868→      <AssistantAvatar />
+   470→   869→   869→      <div className="rounded-2xl rounded-tl-none border border-qbit-outline-variant/30 bg-qbit-surface-container-low p-4 text-base text-qbit-on-surface-variant">
+   471→   870→   870→        <span className="flex items-center gap-1.5">
+   472→   871→   871→          <span className="h-2 w-2 animate-bounce rounded-full bg-qbit-outline [animation-delay:-0.3s]" />
+   473→   872→   872→          <span className="h-2 w-2 animate-bounce rounded-full bg-qbit-outline [animation-delay:-0.15s]" />
+   474→   873→   873→          <span className="h-2 w-2 animate-bounce rounded-full bg-qbit-outline" />
+   475→   874→   874→          <span className="ml-1 text-sm italic">typing...</span>
+   476→   875→   875→        </span>
+   477→   876→   876→      </div>
+   478→   877→   877→    </div>
+   479→   878→   878→  );
+   480→   879→   879→}
+   481→   880→   880→
+   482→   881→   881→/* ------------------------------------------------------------------ */
+   483→   882→   882→/* Knowledge Base & Troubleshooting Sections                           */
+   484→   883→   883→/* ------------------------------------------------------------------ */
+   485→   884→   884→
+   486→   885→   885→function TroubleshootingCenterSection() {
+   487→   886→   886→  return (
+   488→   887→   887→    <section className="space-y-6">
+   489→   888→   888→      <SectionHeader title="Troubleshooting Center" accentDot />
+   490→   889→   889→      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+   491→   890→   890→        {TROUBLESHOOTING_ISSUES.map((issue) => (
+   492→   891→   891→          <TroubleshootingCard key={issue.id} issue={issue} />
+   493→   892→   892→        ))}
+   494→   893→   893→      </div>
+   495→   894→   894→    </section>
+   496→   895→   895→  );
+   497→   896→   896→}
+   498→   897→   897→
+   499→   898→   898→function CommonErrorCodesSection() {
+   500→   899→   899→  return (
+   501→   900→   900→    <section className="space-y-6">
+   502→   901→   901→      <SectionHeader title="Common Error Codes" accentDot />
+   503→   902→   902→      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+   504→   903→   903→        {COMMON_ERRORS.map((error) => (
+   505→   904→   904→          <ErrorCodeCard key={error.id} error={error} />
+   506→   905→   905→        ))}
+   507→   906→   906→      </div>
+   508→   907→   907→    </section>
+   509→   908→   908→  );
+   510→   909→   909→}
+   511→   910→   910→
+   512→   911→   911→function FAQSection() {
+   513→   912→   912→  return <FAQAccordion faqs={FAQS} searchable />;
+   514→   913→   913→}
+   515→   914→   914→
+   516→   915→   915→function CategoriesGridSection() {
+   517→   916→   916→  const navigate = useNavigation((s) => s.navigate);
+   518→   917→   917→  return (
+   519→   918→   918→    <section className="space-y-6">
+   520→   919→   919→      <SectionHeader title="Browse by Category" accentDot />
+   521→   920→   920→      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+   522→   921→   921→        {KNOWLEDGE_CATEGORIES.map((cat) => (
+   523→   922→   922→          <button
+   524→   923→   923→            key={cat.id}
+   525→   924→   924→            onClick={() => navigate("installation-center")}
+   526→   925→   925→            className="group flex flex-col items-start gap-2 rounded-2xl border border-qbit-outline-variant bg-qbit-surface-container-lowest p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-md"
+   527→   926→   926→          >
+   528→   927→   927→            <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${cat.color} text-white`}>
+   529→   928→   928→              <Icon name={cat.icon} className="text-[20px]" filled />
+   530→   929→   929→            </div>
+   531→   930→   930→            <div className="flex-1 min-w-0">
+   532→   931→   931→              <p className="text-sm font-semibold text-qbit-on-surface truncate">{cat.name}</p>
+   533→   932→   932→              <p className="text-[10px] text-qbit-on-surface-variant">{cat.articleCount} articles</p>
+   534→   933→   933→            </div>
+   535→   934→   934→            <Icon name="arrow_forward" className="text-[16px] text-qbit-on-surface-variant group-hover:text-qbit-primary group-hover:translate-x-1 transition-all" />
+   536→   935→   935→          </button>
+   537→   936→   936→        ))}
+   538→   937→   937→      </div>
+   539→   938→   938→    </section>
+   540→   939→   939→  );
+   541→   940→   940→}
+   542→
+   543→[showing lines 400-940 of 941; use offset=941 with limit to continue reading]

@@ -1,0 +1,543 @@
+   400→   400→          </div>
+   401→   401→        </section>
+   402→   402→
+   403→   403→        {/* ================================================================ */}
+   404→   404→        {/* Main 8/4 grid                                                    */}
+   405→   405→        {/* ================================================================ */}
+   406→   406→        <div className="grid grid-cols-12 gap-6 lg:gap-8">
+   407→   407→          {/* ---------- LEFT: col-span-8 ---------- */}
+   408→   408→          <div className="col-span-12 space-y-8 lg:col-span-8">
+   409→   409→            {/* AI Assistant Chat Interface */}
+   410→   410→            <div className="overflow-hidden rounded-2xl border border-qbit-outline-variant bg-qbit-surface-container-lowest shadow-sm">
+   411→   411→              {/* Header */}
+   412→   412→              <div className="flex items-center justify-between border-b border-qbit-outline-variant bg-qbit-surface-container-high px-6 py-4">
+   413→   413→                <div className="flex items-center gap-3">
+   414→   414→                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-qbit-primary-container">
+   415→   415→                    <Icon name="smart_toy" className="text-[22px] text-qbit-on-primary" filled />
+   416→   416→                  </div>
+   417→   417→                  <div>
+   418→   418→                    <h3 className="text-lg font-semibold text-qbit-on-surface">
+   419→   419→                      QBIT Technical Assistant
+   420→   420→                    </h3>
+   421→   421→                    <p className="flex items-center gap-1.5 text-[11px] font-semibold tracking-wide text-qbit-outline">
+   422→   422→                      <span className="relative flex h-2 w-2">
+   423→   423→                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75" />
+   424→   424→                        <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+   425→   425→                      </span>
+   426→   426→                      <span>Online • Powered by CoreAI</span>
+   427→   427→                    </p>
+   428→   428→                  </div>
+   429→   429→                </div>
+   430→   430→                <button
+   431→   431→                  type="button"
+   432→   432→                  className="rounded-md p-1 text-qbit-on-surface-variant transition-colors hover:text-qbit-on-surface"
+   433→   433→                  aria-label="More options"
+   434→   434→                >
+   435→   435→                  <Icon name="more_vert" className="text-[20px]" />
+   436→   436→                </button>
+   437→   437→              </div>
+   438→   438→
+   439→   439→              {/* Chat body */}
+   440→   440→              <div
+   441→   441→                ref={chatScrollRef}
+   442→   442→                className="custom-scrollbar max-h-[520px] min-h-[400px] space-y-6 overflow-y-auto p-6"
+   443→   443→              >
+   444→   444→                {messages.map((msg) =>
+   445→   445→                  msg.role === "assistant" ? (
+   446→   446→                    <AssistantBubble
+   447→   447→                      key={msg.id}
+   448→   448→                      message={msg}
+   449→   449→                      onCopy={handleCopyCode}
+   450→   450→                      copied={copied}
+   451→   451→                      onSuggestion={handleSuggestion}
+   452→   452→                    />
+   453→   453→                  ) : (
+   454→   454→                    <UserBubble key={msg.id} message={msg} />
+   455→   455→                  ),
+   456→   456→                )}
+   457→   457→
+   458→   458→                {isTyping && <TypingBubble />}
+   459→   459→              </div>
+   460→   460→
+   461→   461→              {/* Input */}
+   462→   462→              <div className="border-t border-qbit-outline-variant bg-qbit-surface-container-lowest p-6">
+   463→   463→                <div className="flex items-center gap-3">
+   464→   464→                  <input
+   465→   465→                    type="text"
+   466→   466→                    value={input}
+   467→   467→                    onChange={(e) => setInput(e.target.value)}
+   468→   468→                    onKeyDown={(e) => {
+   469→   469→                      if (e.key === "Enter") handleSend();
+   470→   470→                    }}
+   471→   471→                    placeholder="Type your technical question..."
+   472→   472→                    className="flex-1 rounded-xl border border-qbit-outline-variant bg-qbit-surface-container-low px-4 py-3 text-sm text-qbit-on-surface outline-none transition-all placeholder:text-qbit-on-surface-variant/70 focus:border-qbit-primary focus:ring-2 focus:ring-qbit-primary/20"
+   473→   473→                  />
+   474→   474→                  <button
+   475→   475→                    type="button"
+   476→   476→                    onClick={handleSend}
+   477→   477→                    disabled={!input.trim()}
+   478→   478→                    className="flex h-12 w-12 items-center justify-center rounded-xl bg-qbit-primary text-qbit-on-primary transition-all hover:bg-qbit-primary-container active:scale-95 disabled:pointer-events-none disabled:opacity-50"
+   479→   479→                    aria-label="Send message"
+   480→   480→                  >
+   481→   481→                    <Icon name="send" className="text-[20px]" />
+   482→   482→                  </button>
+   483→   483→                </div>
+   484→   484→              </div>
+   485→   485→            </div>
+   486→   486→
+   487→   487→            {/* Troubleshooting Center */}
+   488→   488→            <section className="space-y-5">
+   489→   489→              <div className="flex items-center justify-between">
+   490→   490→                <h2 className="text-2xl font-semibold text-qbit-on-surface">Troubleshooting Center</h2>
+   491→   491→                <button
+   492→   492→                  type="button"
+   493→   493→                  className="text-sm font-bold text-qbit-primary hover:underline"
+   494→   494→                >
+   495→   495→                  View All Diagnostics
+   496→   496→                </button>
+   497→   497→              </div>
+   498→   498→              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+   499→   499→                {TROUBLESHOOT_CARDS.map((card) => (
+   500→   500→                  <div
+   501→   501→                    key={card.id}
+   502→   502→                    className={cn(
+   503→   503→                      "group flex cursor-pointer items-start gap-4 rounded-2xl border p-6 transition-all",
+   504→   504→                      card.surface,
+   505→   505→                    )}
+   506→   506→                  >
+   507→   507→                    <div className={cn("rounded-xl p-2", card.iconWrap)}>
+   508→   508→                      <Icon name={card.icon} className="text-[24px]" />
+   509→   509→                    </div>
+   510→   510→                    <div className="flex-1">
+   511→   511→                      <div className="flex items-center justify-between gap-2">
+   512→   512→                        <h4 className={cn("text-base font-bold", card.titleClass)}>{card.title}</h4>
+   513→   513→                        <span
+   514→   514→                          className={cn(
+   515→   515→                            "text-[11px] font-bold uppercase tracking-wider",
+   516→   516→                            card.badge.tone === "error" ? "text-qbit-error" : "text-qbit-outline",
+   517→   517→                          )}
+   518→   518→                        >
+   519→   519→                          {card.badge.label}
+   520→   520→                        </span>
+   521→   521→                      </div>
+   522→   522→                      <p className={cn("mt-1 text-sm", card.descriptionClass)}>
+   523→   523→                        {card.description}
+   524→   524→                      </p>
+   525→   525→                      <button
+   526→   526→                        type="button"
+   527→   527→                        className={cn(
+   528→   528→                          "mt-4 flex items-center gap-1 text-sm font-bold transition-all group-hover:gap-2",
+   529→   529→                          card.ctaClass,
+   530→   530→                        )}
+   531→   531→                      >
+   532→   532→                        {card.ctaLabel}
+   533→   533→                        <Icon name="chevron_right" className="text-sm" />
+   534→   534→                      </button>
+   535→   535→                    </div>
+   536→   536→                  </div>
+   537→   537→                ))}
+   538→   538→              </div>
+   539→   539→            </section>
+   540→   540→          </div>
+   541→   541→
+   542→   542→          {/* ---------- RIGHT: col-span-4 ---------- */}
+   543→   543→          <div className="col-span-12 space-y-8 lg:col-span-4">
+   544→   544→            {/* Quick Resources */}
+   545→   545→            <section className="space-y-5">
+   546→   546→              <h3 className="text-xl font-semibold text-qbit-on-surface">Quick Resources</h3>
+   547→   547→              <div className="grid grid-cols-2 gap-3">
+   548→   548→                {QUICK_RESOURCES.map((res) => (
+   549→   549→                  <button
+   550→   550→                    key={res.label}
+   551→   551→                    type="button"
+   552→   552→                    onClick={() => res.screen && navigate(res.screen, {})}
+   553→   553→                    className="group flex flex-col items-center gap-2 rounded-xl border border-qbit-outline-variant bg-qbit-surface-container-lowest p-4 text-center transition-all hover:border-qbit-primary hover:shadow-sm active:scale-95"
+   554→   554→                  >
+   555→   555→                    <Icon name={res.icon} className="text-[26px] text-qbit-primary" filled />
+   556→   556→                    <span className="text-sm font-medium text-qbit-on-surface transition-colors group-hover:text-qbit-primary">
+   557→   557→                      {res.label}
+   558→   558→                    </span>
+   559→   559→                  </button>
+   560→   560→                ))}
+   561→   561→              </div>
+   562→   562→            </section>
+   563→   563→
+   564→   564→            {/* Recent Tickets */}
+   565→   565→            <section className="rounded-2xl border border-qbit-outline-variant bg-qbit-surface-container-lowest p-6 shadow-sm">
+   566→   566→              <div className="mb-5 flex items-center justify-between">
+   567→   567→                <h3 className="text-xl font-semibold text-qbit-on-surface">Recent Tickets</h3>
+   568→   568→                <span className="rounded-full bg-qbit-primary/10 px-2.5 py-0.5 text-[11px] font-bold text-qbit-primary">
+   569→   569→                  2 Open
+   570→   570→                </span>
+   571→   571→              </div>
+   572→   572→              <div className="space-y-3">
+   573→   573→                {TICKETS.map((ticket) => (
+   574→   574→                  <div
+   575→   575→                    key={ticket.id}
+   576→   576→                    className="cursor-pointer rounded-xl border border-transparent p-4 transition-all hover:border-qbit-outline-variant hover:bg-qbit-surface-container-low"
+   577→   577→                  >
+   578→   578→                    <div className="mb-1.5 flex items-start justify-between">
+   579→   579→                      <span
+   580→   580→                        className={cn(
+   581→   581→                          "flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide",
+   582→   582→                          ticket.priority.variant === "error"
+   583→   583→                            ? "text-qbit-error"
+   584→   584→                            : "text-qbit-primary",
+   585→   585→                        )}
+   586→   586→                      >
+   587→   587→                        <Icon
+   588→   588→                          name={ticket.priorityIcon}
+   589→   589→                          className="text-[14px]"
+   590→   590→                          filled={ticket.priorityFilled}
+   591→   591→                        />
+   592→   592→                        {ticket.priority.label}
+   593→   593→                      </span>
+   594→   594→                      <span className="text-[11px] font-semibold text-qbit-outline">
+   595→   595→                        #{ticket.id}
+   596→   596→                      </span>
+   597→   597→                    </div>
+   598→   598→                    <h4 className="mb-2 text-base font-bold text-qbit-on-surface">
+   599→   599→                      {ticket.title}
+   600→   600→                    </h4>
+   601→   601→                    <div className="flex items-center justify-between">
+   602→   602→                      <div className="flex items-center gap-1.5">
+   603→   603→                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-qbit-surface-dim text-[10px] font-bold text-qbit-on-surface-variant ring-1 ring-qbit-outline-variant/60">
+   604→   604→                          {ticket.initials}
+   605→   605→                        </div>
+   606→   606→                        <span className="text-[11px] text-qbit-on-surface-variant">
+   607→   607→                          {ticket.assignee}
+   608→   608→                        </span>
+   609→   609→                      </div>
+   610→   610→                      <span
+   611→   611→                        className={cn(
+   612→   612→                          "rounded px-2 py-0.5 text-[11px] font-bold",
+   613→   613→                          ticket.status.tone === "warning"
+   614→   614→                            ? "bg-qbit-surface-container-highest text-qbit-on-surface-variant"
+   615→   615→                            : "bg-emerald-100 text-emerald-700",
+   616→   616→                        )}
+   617→   617→                      >
+   618→   618→                        {ticket.status.label}
+   619→   619→                      </span>
+   620→   620→                    </div>
+   621→   621→                  </div>
+   622→   622→                ))}
+   623→   623→              </div>
+   624→   624→            </section>
+   625→   625→          </div>
+   626→   626→        </div>
+   627→   627→
+   628→   628→        {/* ================================================================ */}
+   629→   629→        {/* Knowledge Base                                                   */}
+   630→   630→        {/* ================================================================ */}
+   631→   631→        <section className="space-y-8">
+   632→   632→          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+   633→   633→            <div className="space-y-1">
+   634→   634→              <h2 className="text-2xl font-semibold text-qbit-on-surface">Knowledge Base</h2>
+   635→   635→              <p className="text-base text-qbit-on-surface-variant">
+   636→   636→                Explore thousands of verified technical articles and community guides.
+   637→   637→              </p>
+   638→   638→            </div>
+   639→   639→            <div className="flex items-center gap-3">
+   640→   640→              <div className="relative">
+   641→   641→                <Icon
+   642→   642→                  name="filter_list"
+   643→   643→                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-qbit-outline"
+   644→   644→                />
+   645→   645→                <select
+   646→   646→                  value={kbFilter}
+   647→   647→                  onChange={(e) =>
+   648→   648→                    setKbFilter(e.target.value as (typeof KB_CATEGORIES)[number])
+   649→   649→                  }
+   650→   650→                  className="cursor-pointer appearance-none rounded-full border border-qbit-outline-variant bg-qbit-surface-container-lowest py-2 pl-11 pr-9 text-sm font-medium text-qbit-on-surface outline-none transition-all hover:border-qbit-primary focus:border-qbit-primary focus:ring-2 focus:ring-qbit-primary/20"
+   651→   651→                >
+   652→   652→                  {KB_CATEGORIES.map((cat) => (
+   653→   653→                    <option key={cat} value={cat}>
+   654→   654→                      {cat}
+   655→   655→                    </option>
+   656→   656→                  ))}
+   657→   657→                </select>
+   658→   658→                <Icon
+   659→   659→                  name="expand_more"
+   660→   660→                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[18px] text-qbit-outline"
+   661→   661→                />
+   662→   662→              </div>
+   663→   663→            </div>
+   664→   664→          </div>
+   665→   665→
+   666→   666→          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+   667→   667→            {KB_ARTICLES.map((article) => (
+   668→   668→              <article
+   669→   669→                key={article.id}
+   670→   670→                className="group flex h-full cursor-pointer flex-col justify-between rounded-2xl border border-qbit-outline-variant bg-qbit-surface-container-lowest p-6 transition-all hover:shadow-lg"
+   671→   671→              >
+   672→   672→                <div>
+   673→   673→                  <div className="mb-4 flex items-start justify-between">
+   674→   674→                    <span className="flex items-center gap-1.5 rounded bg-qbit-surface-container-high px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-qbit-on-surface-variant">
+   675→   675→                      <Icon name={article.icon} className="text-[14px]" />
+   676→   676→                      {article.category}
+   677→   677→                    </span>
+   678→   678→                    <button
+   679→   679→                      type="button"
+   680→   680→                      className="text-qbit-outline transition-colors hover:text-qbit-primary"
+   681→   681→                      aria-label={article.bookmarked ? "Remove bookmark" : "Add bookmark"}
+   682→   682→                    >
+   683→   683→                      <Icon
+   684→   684→                        name="bookmark"
+   685→   685→                        className="text-[22px]"
+   686→   686→                        filled={article.bookmarked}
+   687→   687→                      />
+   688→   688→                    </button>
+   689→   689→                  </div>
+   690→   690→                  <h4 className="mb-2 text-lg font-bold text-qbit-on-surface transition-colors group-hover:text-qbit-primary">
+   691→   691→                    {article.title}
+   692→   692→                  </h4>
+   693→   693→                  <p className="line-clamp-2 text-sm text-qbit-on-surface-variant">
+   694→   694→                    {article.excerpt}
+   695→   695→                  </p>
+   696→   696→                </div>
+   697→   697→                <div className="mt-6 flex items-center gap-4 border-t border-qbit-outline-variant/30 pt-4 text-[11px] font-medium text-qbit-outline">
+   698→   698→                  <span className="flex items-center gap-1">
+   699→   699→                    <Icon name="schedule" className="text-[16px]" />
+   700→   700→                    {article.readTime}
+   701→   701→                  </span>
+   702→   702→                  <span className="flex items-center gap-1">
+   703→   703→                    <Icon name="visibility" className="text-[16px]" />
+   704→   704→                    {article.views}
+   705→   705→                  </span>
+   706→   706→                </div>
+   707→   707→              </article>
+   708→   708→            ))}
+   709→   709→          </div>
+   710→   710→
+   711→   711→          <div className="mt-8 flex justify-center">
+   712→   712→            <QbitButton
+   713→   713→              size="lg"
+   714→   714→              iconRight="arrow_forward"
+   715→   715→              onClick={() => navigate("ai-support-center")}
+   716→   716→            >
+   717→   717→              Explore All Articles
+   718→   718→            </QbitButton>
+   719→   719→          </div>
+   720→   720→        </section>
+   721→   721→
+   722→   722→        {/* ================================================================ */}
+   723→   723→        {/* Enterprise AI Assistant (RAG-powered)                            */}
+   724→   724→        {/* ================================================================ */}
+   725→   725→        <section className="space-y-6">
+   726→   726→          <SectionHeader title="Enterprise AI Assistant" accentDot />
+   727→   727→          <p className="text-sm text-qbit-on-surface-variant -mt-2">
+   728→   728→            Ask questions about installation, drivers, troubleshooting, and more. The AI answers using only QBIT Hub data — never invents product information.
+   729→   729→          </p>
+   730→   730→          <AIChatWindow />
+   731→   731→        </section>
+   732→   732→
+   733→   733→        {/* ================================================================ */}
+   734→   734→        {/* Troubleshooting Center                                           */}
+   735→   735→        {/* ================================================================ */}
+   736→   736→        <TroubleshootingCenterSection />
+   737→   737→
+   738→   738→        {/* ================================================================ */}
+   739→   739→        {/* Common Error Codes                                               */}
+   740→   740→        {/* ================================================================ */}
+   741→   741→        <CommonErrorCodesSection />
+   742→   742→
+   743→   743→        {/* ================================================================ */}
+   744→   744→        {/* FAQ Section                                                      */}
+   745→   745→        {/* ================================================================ */}
+   746→   746→        <FAQSection />
+   747→   747→
+   748→   748→        {/* ================================================================ */}
+   749→   749→        {/* Categories Grid                                                  */}
+   750→   750→        {/* ================================================================ */}
+   751→   751→        <CategoriesGridSection />
+   752→   752→      </div>
+   753→   753→    </AppShell>
+   754→   754→  );
+   755→   755→}
+   756→   756→
+   757→   757→/* ------------------------------------------------------------------ */
+   758→   758→/* Subcomponents                                                       */
+   759→   759→/* ------------------------------------------------------------------ */
+   760→   760→
+   761→   761→function AssistantAvatar() {
+   762→   762→  return (
+   763→   763→    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-qbit-primary-container">
+   764→   764→      <Icon name="smart_toy" className="text-[18px] text-qbit-on-primary" filled />
+   765→   765→    </div>
+   766→   766→  );
+   767→   767→}
+   768→   768→
+   769→   769→function AssistantBubble({
+   770→   770→  message,
+   771→   771→  onCopy,
+   772→   772→  copied,
+   773→   773→  onSuggestion,
+   774→   774→}: {
+   775→   775→  message: AssistantMessage;
+   776→   776→  onCopy: () => void;
+   777→   777→  copied: boolean;
+   778→   778→  onSuggestion: (text: string) => void;
+   779→   779→}) {
+   780→   780→  const isDiagnostic = message.type === "diagnostic";
+   781→   781→  const diagMessage = isDiagnostic ? (message as AssistantDiagnosticMessage) : null;
+   782→   782→
+   783→   783→  return (
+   784→   784→    <div className="flex max-w-3xl gap-4">
+   785→   785→      <AssistantAvatar />
+   786→   786→      <div className="space-y-4">
+   787→   787→        {!isDiagnostic ? (
+   788→   788→          <div className="rounded-2xl rounded-tl-none border border-qbit-outline-variant/30 bg-qbit-surface-container-low p-4 text-base text-qbit-on-surface">
+   789→   789→            {message.content}
+   790→   790→          </div>
+   791→   791→        ) : (
+   792→   792→          <div className="space-y-4 rounded-2xl rounded-tl-none border border-qbit-outline-variant/30 bg-qbit-surface-container-low p-4 text-base text-qbit-on-surface shadow-sm">
+   793→   793→            <p>
+   794→   794→              To resolve the{" "}
+   795→   795→              <strong className="font-semibold">{diagMessage!.title}</strong>, please follow these
+   796→   796→              steps:
+   797→   797→            </p>
+   798→   798→            <ol className="list-inside list-decimal space-y-1 font-medium">
+   799→   799→              {diagMessage!.steps.map((step) => (
+   800→   800→                <li key={step}>{step}</li>
+   801→   801→              ))}
+   802→   802→            </ol>
+   803→   803→            <div className="group relative rounded-lg bg-qbit-inverse-surface p-4 font-mono text-sm text-qbit-inverse-on-surface">
+   804→   804→              <code id="qbit-diagnostic-code" className="block break-all">
+   805→   805→                {diagMessage!.code}
+   806→   806→              </code>
+   807→   807→              <button
+   808→   808→                type="button"
+   809→   809→                onClick={onCopy}
+   810→   810→                className="absolute right-3 top-3 flex items-center gap-1 rounded bg-white/10 px-1.5 py-1 text-xs text-qbit-inverse-on-surface opacity-0 backdrop-blur transition-opacity hover:bg-white/20 group-hover:opacity-100"
+   811→   811→                aria-label="Copy command"
+   812→   812→              >
+   813→   813→                <Icon name={copied ? "check" : "content_copy"} className="text-[16px]" />
+   814→   814→                {copied ? "Copied" : "Copy"}
+   815→   815→              </button>
+   816→   816→            </div>
+   817→   817→            <p className="text-sm">{diagMessage!.closing}</p>
+   818→   818→            <div className="flex flex-wrap items-center gap-4 pt-1">
+   819→   819→              {diagMessage!.links.map((link) => (
+   820→   820→                <button
+   821→   821→                  key={link.label}
+   822→   822→                  type="button"
+   823→   823→                  className="flex items-center gap-1.5 text-sm font-bold text-qbit-primary hover:underline"
+   824→   824→                >
+   825→   825→                  <Icon name={link.icon} className="text-[18px]" />
+   826→   826→                  {link.label}
+   827→   827→                </button>
+   828→   828→              ))}
+   829→   829→            </div>
+   830→   830→          </div>
+   831→   831→        )}
+   832→   832→
+   833→   833→        {message.type === "greeting" && (
+   834→   834→          <div className="flex flex-wrap gap-2">
+   835→   835→            {SUGGESTION_CHIPS.map((chip) => (
+   836→   836→              <button
+   837→   837→                key={chip}
+   838→   838→                type="button"
+   839→   839→                onClick={() => onSuggestion(chip)}
+   840→   840→                className="rounded-full border border-qbit-primary bg-qbit-surface-container-lowest px-4 py-1.5 text-sm font-medium text-qbit-primary transition-all hover:bg-qbit-primary hover:text-qbit-on-primary active:scale-95"
+   841→   841→              >
+   842→   842→                {chip}
+   843→   843→              </button>
+   844→   844→            ))}
+   845→   845→          </div>
+   846→   846→        )}
+   847→   847→      </div>
+   848→   848→    </div>
+   849→   849→  );
+   850→   850→}
+   851→   851→
+   852→   852→function UserBubble({ message }: { message: UserMessage }) {
+   853→   853→  return (
+   854→   854→    <div className="flex max-w-3xl flex-row-reverse gap-4">
+   855→   855→      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-qbit-primary text-xs font-bold text-qbit-on-primary">
+   856→   856→        AM
+   857→   857→      </div>
+   858→   858→      <div className="rounded-2xl rounded-tr-none bg-qbit-primary px-4 py-3 text-base text-qbit-on-primary shadow-sm">
+   859→   859→        {message.content}
+   860→   860→      </div>
+   861→   861→    </div>
+   862→   862→  );
+   863→   863→}
+   864→   864→
+   865→   865→function TypingBubble() {
+   866→   866→  return (
+   867→   867→    <div className="flex max-w-3xl gap-4">
+   868→   868→      <AssistantAvatar />
+   869→   869→      <div className="rounded-2xl rounded-tl-none border border-qbit-outline-variant/30 bg-qbit-surface-container-low p-4 text-base text-qbit-on-surface-variant">
+   870→   870→        <span className="flex items-center gap-1.5">
+   871→   871→          <span className="h-2 w-2 animate-bounce rounded-full bg-qbit-outline [animation-delay:-0.3s]" />
+   872→   872→          <span className="h-2 w-2 animate-bounce rounded-full bg-qbit-outline [animation-delay:-0.15s]" />
+   873→   873→          <span className="h-2 w-2 animate-bounce rounded-full bg-qbit-outline" />
+   874→   874→          <span className="ml-1 text-sm italic">typing...</span>
+   875→   875→        </span>
+   876→   876→      </div>
+   877→   877→    </div>
+   878→   878→  );
+   879→   879→}
+   880→   880→
+   881→   881→/* ------------------------------------------------------------------ */
+   882→   882→/* Knowledge Base & Troubleshooting Sections                           */
+   883→   883→/* ------------------------------------------------------------------ */
+   884→   884→
+   885→   885→function TroubleshootingCenterSection() {
+   886→   886→  return (
+   887→   887→    <section className="space-y-6">
+   888→   888→      <SectionHeader title="Troubleshooting Center" accentDot />
+   889→   889→      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+   890→   890→        {TROUBLESHOOTING_ISSUES.map((issue) => (
+   891→   891→          <TroubleshootingCard key={issue.id} issue={issue} />
+   892→   892→        ))}
+   893→   893→      </div>
+   894→   894→    </section>
+   895→   895→  );
+   896→   896→}
+   897→   897→
+   898→   898→function CommonErrorCodesSection() {
+   899→   899→  return (
+   900→   900→    <section className="space-y-6">
+   901→   901→      <SectionHeader title="Common Error Codes" accentDot />
+   902→   902→      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+   903→   903→        {COMMON_ERRORS.map((error) => (
+   904→   904→          <ErrorCodeCard key={error.id} error={error} />
+   905→   905→        ))}
+   906→   906→      </div>
+   907→   907→    </section>
+   908→   908→  );
+   909→   909→}
+   910→   910→
+   911→   911→function FAQSection() {
+   912→   912→  return <FAQAccordion faqs={FAQS} searchable />;
+   913→   913→}
+   914→   914→
+   915→   915→function CategoriesGridSection() {
+   916→   916→  const navigate = useNavigation((s) => s.navigate);
+   917→   917→  return (
+   918→   918→    <section className="space-y-6">
+   919→   919→      <SectionHeader title="Browse by Category" accentDot />
+   920→   920→      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+   921→   921→        {KNOWLEDGE_CATEGORIES.map((cat) => (
+   922→   922→          <button
+   923→   923→            key={cat.id}
+   924→   924→            onClick={() => navigate("installation-center")}
+   925→   925→            className="group flex flex-col items-start gap-2 rounded-2xl border border-qbit-outline-variant bg-qbit-surface-container-lowest p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-md"
+   926→   926→          >
+   927→   927→            <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${cat.color} text-white`}>
+   928→   928→              <Icon name={cat.icon} className="text-[20px]" filled />
+   929→   929→            </div>
+   930→   930→            <div className="flex-1 min-w-0">
+   931→   931→              <p className="text-sm font-semibold text-qbit-on-surface truncate">{cat.name}</p>
+   932→   932→              <p className="text-[10px] text-qbit-on-surface-variant">{cat.articleCount} articles</p>
+   933→   933→            </div>
+   934→   934→            <Icon name="arrow_forward" className="text-[16px] text-qbit-on-surface-variant group-hover:text-qbit-primary group-hover:translate-x-1 transition-all" />
+   935→   935→          </button>
+   936→   936→        ))}
+   937→   937→      </div>
+   938→   938→    </section>
+   939→   939→  );
+   940→   940→}
+
+[showing lines 400-940 of 941; use offset=941 with limit to continue reading]
