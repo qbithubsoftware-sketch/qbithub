@@ -1,438 +1,522 @@
 "use client";
 
 /**
- * AIPurchaseImportCenterPage — Enterprise AI Product Import Center.
+ * DeviceLookupCenterPage — Enterprise Device Lookup Center.
  *
- * Visible ONLY to super_administrator + administrator (enforced by RBAC
- * in SCREEN_PERMISSIONS + AuthGuard).
+ * Renamed from "AI Product Import Center" to "Device Lookup Center".
  *
- * Features:
- *   1. Upload purchase document (invoice/warranty card/registration form)
- *   2. AI extraction review (editable form with extracted fields)
- *   3. Register purchase (creates CustomerAccount + PurchaseRecord + links product)
- *   4. View all registered purchases (table with customer/product/warranty)
+ * Purpose: Enter a Serial Number → instantly view complete device details
+ * including customer, warranty, drivers, manuals, installation info, QR,
+ * and quick actions.
+ *
+ * Reuses the EXACT same UI pattern (AppShell + cards + tables + dialogs).
+ * Visible ONLY to super_administrator + administrator.
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { AppShell } from "@/components/qbit/shells/AppShell";
 import { Icon } from "@/components/qbit/primitives/Icon";
-import { KpiCard } from "@/components/qbit/primitives/KpiCard";
 import { QbitButton } from "@/components/qbit/primitives/QbitButton";
 import { StatusBadge, TagBadge } from "@/components/qbit/primitives/StatusBadge";
 import { SurfaceCard } from "@/components/qbit/primitives/GlassCard";
 import { ADMIN_NAV } from "@/lib/navigation/nav-config";
 import { useAuth } from "@/lib/auth/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 
-interface Purchase {
-  id: string;
-  purchaseId: string;
-  customerName: string;
-  mobileNumber: string;
-  productName: string;
-  modelNumber: string;
-  serialNumber: string | null;
-  purchaseDate: string | null;
-  warrantyEndDate: string | null;
-  totalAmount: number | null;
-  status: string;
-  productMatched: boolean;
+interface DeviceLookupResult {
+  found: boolean;
+  source?: string;
+  message?: string;
+  device?: {
+    productName: string;
+    modelNumber: string;
+    brand: string | null;
+    category: string | null;
+    deviceType: string | null;
+    productImage: string | null;
+    deviceStatus: string;
+    serialNumber: string;
+    qrCode: string | null;
+  };
+  customer?: {
+    name: string;
+    companyName: string | null;
+    mobileNumber: string;
+    email: string | null;
+    gstNumber: string | null;
+    address: string | null;
+  };
+  warranty?: {
+    status: string;
+    startDate: string | null;
+    endDate: string | null;
+    remainingDays: number | null;
+    period: string | null;
+  };
+  drivers?: {
+    driverDownloadUrl: string | null;
+    manualUrl: string | null;
+    brochureUrl: string | null;
+    datasheetUrl: string | null;
+    warrantyUrl: string | null;
+    sdkUrl: string | null;
+    utilityUrl: string | null;
+    installationGuideUrl: string | null;
+    knowledgeBaseUrl: string | null;
+    latestDriverVersion: string | null;
+    latestFirmwareVersion: string | null;
+    mediaFiles: Array<{ id: string; type: string; title: string; url: string; mimeType: string | null }>;
+  } | null;
+  installation?: {
+    installationDate: string | null;
+    installedBy: string | null;
+    lastServiceDate: string | null;
+    amcStatus: string;
+    firmwareVersion: string | null;
+    driverVersion: string | null;
+  };
+  installationResources?: {
+    instructions: string | null;
+    requiredSoftware: string | null;
+    requiredDrivers: string | null;
+    requiredAccessories: string | null;
+    installationTime: string | null;
+    difficultyLevel: string | null;
+  } | null;
+  specifications: Array<{ property: string; value: string; group: string | null }>;
+  purchase?: {
+    purchaseId: string;
+    invoiceNumber: string | null;
+    purchaseDate: string | null;
+    dealerName: string | null;
+    totalAmount: number | null;
+  };
 }
 
-interface ExtractedData {
-  customerName?: string | null;
-  companyName?: string | null;
-  mobileNumber?: string | null;
-  email?: string | null;
-  gstNumber?: string | null;
-  invoiceNumber?: string | null;
-  city?: string | null;
-  state?: string | null;
-  pinCode?: string | null;
-  productName?: string | null;
-  brand?: string | null;
-  modelNumber?: string | null;
-  serialNumber?: string | null;
-  quantity?: number | null;
-  unitPrice?: number | null;
-  totalAmount?: number | null;
-  warrantyPeriod?: string | null;
-  dealerName?: string | null;
-  paymentStatus?: string | null;
-  confidence?: number | null;
-}
-
-const DOCUMENT_TYPES = [
-  { value: "invoice", label: "Invoice PDF" },
-  { value: "gst_invoice", label: "GST Invoice" },
-  { value: "tax_invoice", label: "Tax Invoice" },
-  { value: "retail_bill", label: "Retail Bill" },
-  { value: "purchase_order", label: "Purchase Order" },
-  { value: "delivery_challan", label: "Delivery Challan" },
-  { value: "warranty_card", label: "Warranty Card" },
-  { value: "registration_form", label: "Product Registration Form" },
-];
+type LookupState = "idle" | "searching" | "found" | "not-found" | "error";
 
 export function AIPurchaseImportCenterPage() {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const [purchases, setPurchases] = useState<Purchase[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
-  const [registering, setRegistering] = useState(false);
-
-  // Upload state
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [documentType, setDocumentType] = useState("invoice");
-
-  // Extraction review dialog
-  const [reviewOpen, setReviewOpen] = useState(false);
-  const [invoiceId, setInvoiceId] = useState<string | null>(null);
-  const [extracted, setExtracted] = useState<ExtractedData>({});
-  const [extractionError, setExtractionError] = useState<string | null>(null);
+  const [serialInput, setSerialInput] = useState("");
+  const [lookupState, setLookupState] = useState<LookupState>("idle");
+  const [result, setResult] = useState<DeviceLookupResult | null>(null);
 
   const userName = user?.name ?? "Admin";
   const initials = userName.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 
-  const fetchPurchases = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/admin/purchases?limit=50", { cache: "no-store" });
-      if (!res.ok) throw new Error("Failed");
-      const data = await res.json();
-      setPurchases(data.purchases?.map((p: Record<string, unknown>) => ({
-        id: p.id as string,
-        purchaseId: p.purchaseId as string,
-        customerName: (p.customer as { name: string })?.name ?? "—",
-        mobileNumber: (p.customer as { mobileNumber: string })?.mobileNumber ?? "—",
-        productName: p.productName as string,
-        modelNumber: p.modelNumber as string,
-        serialNumber: p.serialNumber as string | null,
-        purchaseDate: p.purchaseDate ? new Date(p.purchaseDate as string).toLocaleDateString("en-IN") : null,
-        warrantyEndDate: p.warrantyEndDate ? new Date(p.warrantyEndDate as string).toLocaleDateString("en-IN") : null,
-        totalAmount: p.totalAmount as number | null,
-        status: p.installationStatus as string,
-        productMatched: !!p.productId,
-      })) ?? []);
-    } catch {
-      toast({ title: "Failed to load purchases", variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
-
-  useEffect(() => { void fetchPurchases(); }, [fetchPurchases]);
-
-  async function handleUpload() {
-    if (!selectedFile) {
-      toast({ title: "Please select a file first", variant: "destructive" });
+  async function handleLookup(e: React.FormEvent) {
+    e.preventDefault();
+    if (!serialInput.trim()) {
+      toast({ title: "Please enter a serial number", variant: "destructive" });
       return;
     }
-    setUploading(true);
-    setExtractionError(null);
-    try {
-      const formData = new FormData();
-      formData.append("file", selectedFile);
-      formData.append("documentType", documentType);
 
-      const res = await fetch("/api/admin/purchases/upload", {
-        method: "POST",
-        body: formData,
-      });
+    setLookupState("searching");
+    setResult(null);
+
+    try {
+      const res = await fetch(`/api/admin/device-lookup?serialNumber=${encodeURIComponent(serialInput.trim())}`, { cache: "no-store" });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error ?? "Upload failed");
+        throw new Error(err.error ?? "Lookup failed");
       }
-      const data = await res.json();
+      const data: DeviceLookupResult = await res.json();
 
-      setInvoiceId(data.invoiceId);
-
-      if (data.extracted) {
-        setExtracted(data.extracted);
-        setReviewOpen(true);
-        toast({ title: "AI extraction complete", description: `Confidence: ${data.extracted.confidence ?? "N/A"}%` });
-      } else if (data.manualEntryRequired) {
-        setExtracted({});
-        setExtractionError(data.error ?? "AI extraction not configured. Please enter data manually.");
-        setReviewOpen(true);
-        toast({ title: "Manual entry required", description: data.error, variant: "destructive" });
+      if (data.found) {
+        setResult(data);
+        setLookupState("found");
+        toast({ title: "Device found!", description: `${data.device?.productName} — S/N: ${data.device?.serialNumber}` });
+      } else {
+        setResult(data);
+        setLookupState("not-found");
       }
     } catch (e) {
-      toast({ title: "Upload failed", description: e instanceof Error ? e.message : "", variant: "destructive" });
-    } finally {
-      setUploading(false);
+      setLookupState("error");
+      toast({ title: "Lookup failed", description: e instanceof Error ? e.message : "", variant: "destructive" });
     }
   }
 
-  async function handleRegister() {
-    if (!extracted.mobileNumber || !extracted.modelNumber) {
-      toast({ title: "Mobile Number and Model Number are required", variant: "destructive" });
-      return;
-    }
-    setRegistering(true);
-    try {
-      const res = await fetch("/api/admin/purchases/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data: extracted, invoiceId }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error ?? "Registration failed");
-      }
-      const data = await res.json();
-      toast({
-        title: "Purchase registered!",
-        description: `Purchase ID: ${data.purchaseId?.slice(0, 20)}... | Customer ${data.customerCreated ? "created" : "updated"} | Product ${data.productMatched ? "matched" : "not found"}`,
-      });
-      setReviewOpen(false);
-      setSelectedFile(null);
-      setExtracted({});
-      void fetchPurchases();
-    } catch (e) {
-      toast({ title: "Registration failed", description: e instanceof Error ? e.message : "", variant: "destructive" });
-    } finally {
-      setRegistering(false);
+  function handleReset() {
+    setLookupState("idle");
+    setResult(null);
+    setSerialInput("");
+  }
+
+  function handleCopyDetails() {
+    if (!result?.device) return;
+    const details = [
+      `Product: ${result.device.productName}`,
+      `Model: ${result.device.modelNumber}`,
+      `Serial: ${result.device.serialNumber}`,
+      result.customer ? `Customer: ${result.customer.name}` : "",
+      result.customer ? `Mobile: ${result.customer.mobileNumber}` : "",
+      result.warranty ? `Warranty: ${result.warranty.status}` : "",
+    ].filter(Boolean).join("\n");
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      void navigator.clipboard.writeText(details);
+      toast({ title: "Device details copied!" });
     }
   }
 
   return (
     <AppShell
       variant="admin"
-      brand={{ title: "QBIT Hub", tagline: "AI Purchase Import", icon: "auto_awesome" }}
+      brand={{ title: "QBIT Hub", tagline: "Device Lookup", icon: "search" }}
       navItems={ADMIN_NAV}
       activeScreen="ai-purchase-center"
       user={{ name: userName, role: "Administrator", initials }}
-      cta={{ label: "Refresh", icon: "refresh", onClick: () => void fetchPurchases() }}
-      topBar={{ searchPlaceholder: "Search purchases…", user: { name: userName, role: "Administrator", initials } }}
+      cta={{ label: "Reset", icon: "refresh", onClick: handleReset }}
+      topBar={{ searchPlaceholder: "Search devices…", user: { name: userName, role: "Administrator", initials } }}
     >
       <div className="space-y-5">
         {/* Header */}
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h2 className="flex items-center gap-2 text-2xl font-bold tracking-tight text-qbit-on-surface">
-              <Icon name="auto_awesome" className="text-[28px] text-qbit-primary" />
-              AI Product Import Center
-            </h2>
-            <p className="mt-1 text-sm text-qbit-on-surface-variant">
-              Upload customer purchase documents. AI extracts customer + product info, matches to Product Library, and auto-registers the purchase.
-            </p>
-          </div>
+        <div>
+          <h2 className="flex items-center gap-2 text-2xl font-bold tracking-tight text-qbit-on-surface">
+            <Icon name="search" className="text-[28px] text-qbit-primary" />
+            Device Lookup Center
+          </h2>
+          <p className="mt-1 text-sm text-qbit-on-surface-variant">
+            Enter a Serial Number to instantly view complete device details — customer, warranty, drivers, manuals, installation info, and more.
+          </p>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <KpiCard label="Total Purchases" value={purchases.length.toString()} icon="receipt_long" iconBg="bg-qbit-primary/10 text-qbit-primary" />
-          <KpiCard label="Products Matched" value={purchases.filter((p) => p.productMatched).length.toString()} icon="link" iconBg="bg-qbit-success/10 text-qbit-success" />
-          <KpiCard label="Pending Match" value={purchases.filter((p) => !p.productMatched).length.toString()} icon="pending" iconBg="bg-qbit-warning/10 text-qbit-warning" />
-          <KpiCard label="Installations" value={purchases.filter((p) => p.status === "completed").length.toString()} icon="build_circle" iconBg="bg-qbit-secondary/10 text-qbit-secondary" />
-        </div>
-
-        {/* Upload section */}
+        {/* Search box */}
         <SurfaceCard className="p-6">
-          <h3 className="mb-4 flex items-center gap-2 text-base font-bold text-qbit-on-surface">
-            <Icon name="upload_file" className="text-[20px] text-qbit-primary" />
-            Upload Purchase Document
-          </h3>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="md:col-span-1">
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-qbit-on-surface-variant">Document Type</label>
-              <select
-                value={documentType}
-                onChange={(e) => setDocumentType(e.target.value)}
-                className="w-full rounded-md border border-qbit-outline-variant bg-white px-3 py-2 text-sm"
-              >
-                {DOCUMENT_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>{t.label}</option>
-                ))}
-              </select>
-            </div>
-            <div className="md:col-span-2">
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-qbit-on-surface-variant">Document File (PDF, PNG, JPG)</label>
-              <div className="flex gap-2">
+          <form onSubmit={handleLookup} className="flex flex-wrap items-end gap-3">
+            <div className="flex-1">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-qbit-on-surface-variant">
+                Serial Number
+              </label>
+              <div className="relative">
+                <Icon name="fingerprint" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-qbit-on-surface-variant" />
                 <input
-                  type="file"
-                  accept=".pdf,.png,.jpg,.jpeg"
-                  onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
-                  className="flex-1 rounded-md border border-qbit-outline-variant bg-white px-3 py-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-qbit-primary file:px-3 file:py-1 file:text-xs file:font-semibold file:text-qbit-on-primary"
+                  type="text"
+                  value={serialInput}
+                  onChange={(e) => setSerialInput(e.target.value)}
+                  placeholder="Enter Serial Number (e.g. DEMO-T800-001)"
+                  className="w-full rounded-xl border border-qbit-outline-variant bg-qbit-surface-container-lowest py-3 pl-11 pr-4 text-sm text-qbit-on-surface focus:border-qbit-primary focus:outline-none focus:ring-2 focus:ring-qbit-primary/30"
+                  autoFocus
                 />
-                <QbitButton
-                  variant="primary"
-                  icon={uploading ? "progress_activity" : "cloud_upload"}
-                  disabled={!selectedFile || uploading}
-                  onClick={handleUpload}
-                >
-                  {uploading ? "Processing…" : "Upload & Extract"}
-                </QbitButton>
-              </div>
-              {selectedFile && (
-                <p className="mt-1 text-xs text-qbit-on-surface-variant">
-                  Selected: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
-                </p>
-              )}
-            </div>
-          </div>
-        </SurfaceCard>
-
-        {/* Purchases table */}
-        <SurfaceCard className="overflow-hidden">
-          <div className="border-b border-qbit-outline-variant/50 px-6 py-4">
-            <h3 className="text-base font-bold text-qbit-on-surface">Registered Purchases</h3>
-          </div>
-          {loading ? (
-            <div className="px-6 py-12 text-center">
-              <Icon name="progress_activity" className="mx-auto animate-spin text-[28px] text-qbit-primary" />
-            </div>
-          ) : purchases.length === 0 ? (
-            <div className="px-6 py-12 text-center">
-              <Icon name="receipt_long" className="mx-auto text-[40px] text-qbit-on-surface-variant/40" />
-              <p className="mt-3 text-sm font-medium text-qbit-on-surface">No purchases registered yet.</p>
-              <p className="mt-1 text-xs text-qbit-on-surface-variant">Upload a purchase document above to get started.</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Purchase ID</TableHead>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Mobile</TableHead>
-                    <TableHead>Product</TableHead>
-                    <TableHead>Model</TableHead>
-                    <TableHead>Serial</TableHead>
-                    <TableHead>Purchase Date</TableHead>
-                    <TableHead>Warranty End</TableHead>
-                    <TableHead>Match</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {purchases.map((p) => (
-                    <TableRow key={p.id}>
-                      <TableCell className="font-mono text-xs">{p.purchaseId}</TableCell>
-                      <TableCell className="font-medium">{p.customerName}</TableCell>
-                      <TableCell className="text-xs">{p.mobileNumber}</TableCell>
-                      <TableCell className="text-sm">{p.productName}</TableCell>
-                      <TableCell className="font-mono text-xs">{p.modelNumber}</TableCell>
-                      <TableCell className="font-mono text-xs">{p.serialNumber ?? "—"}</TableCell>
-                      <TableCell className="text-xs">{p.purchaseDate ?? "—"}</TableCell>
-                      <TableCell className="text-xs">{p.warrantyEndDate ?? "—"}</TableCell>
-                      <TableCell>
-                        {p.productMatched ? (
-                          <StatusBadge variant="success" dot>Linked</StatusBadge>
-                        ) : (
-                          <StatusBadge variant="warning" dot>Pending</StatusBadge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <TagBadge variant="neutral">{p.status}</TagBadge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </SurfaceCard>
-      </div>
-
-      {/* ===== Extraction Review Dialog ===== */}
-      <Dialog open={reviewOpen} onOpenChange={setReviewOpen}>
-        <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Icon name="auto_awesome" className="text-[24px] text-qbit-primary" />
-              Review Extracted Data
-            </DialogTitle>
-            <DialogDescription>
-              Review the AI-extracted fields below. Edit any incorrect values before registering the purchase.
-              {extracted.confidence && (
-                <span className="ml-2 rounded-full bg-qbit-primary/10 px-2 py-0.5 text-xs font-bold text-qbit-primary">
-                  Confidence: {extracted.confidence}%
-                </span>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-
-          {extractionError && (
-            <div className="mb-4 flex items-center gap-2 rounded-xl border border-qbit-warning/30 bg-qbit-warning/5 px-3 py-2.5 text-xs text-qbit-on-surface-variant">
-              <Icon name="info" className="text-[16px] text-qbit-warning" />
-              {extractionError}
-            </div>
-          )}
-
-          <div className="space-y-4 py-2">
-            {/* Customer section */}
-            <div>
-              <h4 className="mb-2 text-xs font-bold uppercase tracking-wider text-qbit-primary">Customer Information</h4>
-              <div className="grid grid-cols-2 gap-3">
-                <FieldInput label="Customer Name" value={extracted.customerName} onChange={(v) => setExtracted({ ...extracted, customerName: v })} />
-                <FieldInput label="Company Name" value={extracted.companyName} onChange={(v) => setExtracted({ ...extracted, companyName: v })} />
-                <FieldInput label="Mobile Number *" value={extracted.mobileNumber} onChange={(v) => setExtracted({ ...extracted, mobileNumber: v })} />
-                <FieldInput label="Email" value={extracted.email} onChange={(v) => setExtracted({ ...extracted, email: v })} />
-                <FieldInput label="GST Number" value={extracted.gstNumber} onChange={(v) => setExtracted({ ...extracted, gstNumber: v })} />
-                <FieldInput label="City" value={extracted.city} onChange={(v) => setExtracted({ ...extracted, city: v })} />
               </div>
             </div>
-
-            {/* Product section */}
-            <div>
-              <h4 className="mb-2 text-xs font-bold uppercase tracking-wider text-qbit-primary">Product Information</h4>
-              <div className="grid grid-cols-2 gap-3">
-                <FieldInput label="Product Name" value={extracted.productName} onChange={(v) => setExtracted({ ...extracted, productName: v })} />
-                <FieldInput label="Brand" value={extracted.brand} onChange={(v) => setExtracted({ ...extracted, brand: v })} />
-                <FieldInput label="Model Number *" value={extracted.modelNumber} onChange={(v) => setExtracted({ ...extracted, modelNumber: v })} />
-                <FieldInput label="Serial Number" value={extracted.serialNumber} onChange={(v) => setExtracted({ ...extracted, serialNumber: v })} />
-              </div>
-            </div>
-
-            {/* Invoice section */}
-            <div>
-              <h4 className="mb-2 text-xs font-bold uppercase tracking-wider text-qbit-primary">Invoice & Warranty</h4>
-              <div className="grid grid-cols-2 gap-3">
-                <FieldInput label="Invoice Number" value={extracted.invoiceNumber} onChange={(v) => setExtracted({ ...extracted, invoiceNumber: v })} />
-                <FieldInput label="Warranty Period" value={extracted.warrantyPeriod} onChange={(v) => setExtracted({ ...extracted, warrantyPeriod: v })} />
-                <FieldInput label="Dealer Name" value={extracted.dealerName} onChange={(v) => setExtracted({ ...extracted, dealerName: v })} />
-                <FieldInput label="Total Amount" value={extracted.totalAmount?.toString()} onChange={(v) => setExtracted({ ...extracted, totalAmount: v ? parseFloat(v) : null })} />
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <QbitButton variant="ghost" onClick={() => setReviewOpen(false)}>Cancel</QbitButton>
             <QbitButton
+              type="submit"
               variant="primary"
-              icon={registering ? "progress_activity" : "check_circle"}
-              disabled={registering || !extracted.mobileNumber || !extracted.modelNumber}
-              onClick={handleRegister}
+              size="lg"
+              icon={lookupState === "searching" ? "progress_activity" : "search"}
+              disabled={lookupState === "searching"}
             >
-              {registering ? "Registering…" : "Register Purchase"}
+              {lookupState === "searching" ? "Searching…" : "Lookup Device"}
             </QbitButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </form>
+          {/* Quick examples */}
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="text-xs text-qbit-on-surface-variant">Try:</span>
+            {["DEMO-T800-001", "DEMO-CD410-002", "DEMO-SME1-003"].map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => { setSerialInput(s); }}
+                className="rounded-md border border-dashed border-qbit-outline-variant px-2 py-1 text-xs font-mono text-qbit-on-surface-variant hover:border-qbit-primary hover:text-qbit-primary transition-colors"
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        </SurfaceCard>
+
+        {/* ===== SEARCHING state ===== */}
+        {lookupState === "searching" && (
+          <div className="rounded-2xl border border-qbit-outline-variant bg-white p-12 text-center shadow-sm">
+            <Icon name="progress_activity" className="mx-auto animate-spin text-[40px] text-qbit-primary" />
+            <p className="mt-4 text-sm font-medium text-qbit-on-surface">Searching device registry…</p>
+            <p className="mt-1 text-xs text-qbit-on-surface-variant">Looking up serial number across all records</p>
+          </div>
+        )}
+
+        {/* ===== NOT FOUND ===== */}
+        {lookupState === "not-found" && (
+          <div className="rounded-2xl border border-dashed border-qbit-outline-variant px-6 py-12 text-center">
+            <Icon name="search_off" className="mx-auto text-[48px] text-qbit-on-surface-variant/40" />
+            <p className="mt-3 text-sm font-medium text-qbit-on-surface">No device found with this Serial Number.</p>
+            <p className="mt-1 text-xs text-qbit-on-surface-variant">
+              Check the serial number and try again, or register a new purchase via the Product Master.
+            </p>
+            <QbitButton variant="outline" size="sm" icon="refresh" className="mt-4" onClick={handleReset}>
+              New Lookup
+            </QbitButton>
+          </div>
+        )}
+
+        {/* ===== ERROR ===== */}
+        {lookupState === "error" && (
+          <div className="rounded-2xl border border-qbit-error/30 bg-qbit-error/5 p-8 text-center">
+            <Icon name="error" className="mx-auto text-[40px] text-qbit-error" />
+            <p className="mt-3 text-sm font-medium text-qbit-on-surface">Lookup failed.</p>
+            <QbitButton variant="outline" size="sm" icon="refresh" className="mt-4" onClick={handleReset}>
+              Try Again
+            </QbitButton>
+          </div>
+        )}
+
+        {/* ===== FOUND — full device details ===== */}
+        {lookupState === "found" && result && result.device && (
+          <div className="space-y-5">
+            {/* Success banner */}
+            <div className="flex items-center justify-between rounded-2xl border border-qbit-success/30 bg-qbit-success/5 p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-qbit-success/15 text-qbit-success">
+                  <Icon name="check_circle" className="text-[22px]" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-qbit-on-surface">Device Found</p>
+                  <p className="text-xs text-qbit-on-surface-variant">Source: {result.source === "purchase-record" ? "Purchase Database" : "Asset Registry"} · S/N: {result.device.serialNumber}</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <QbitButton variant="ghost" size="sm" icon="content_copy" onClick={handleCopyDetails}>Copy Details</QbitButton>
+                <QbitButton variant="ghost" size="sm" icon="refresh" onClick={handleReset}>New Lookup</QbitButton>
+              </div>
+            </div>
+
+            {/* Device Information + Image */}
+            <SurfaceCard className="overflow-hidden">
+              <div className="grid grid-cols-1 gap-6 p-6 md:grid-cols-3">
+                <div className="md:col-span-1">
+                  <div className="aspect-square overflow-hidden rounded-xl border border-qbit-outline-variant bg-qbit-surface-container-low">
+                    {result.device.productImage ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={result.device.productImage} alt={result.device.productName} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="flex h-full items-center justify-center">
+                        <Icon name="inventory_2" className="text-[80px] text-qbit-primary/40" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="md:col-span-2">
+                  <h3 className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-qbit-primary">
+                    <Icon name="info" className="text-[16px]" /> Device Information
+                  </h3>
+                  <h2 className="text-2xl font-bold text-qbit-on-surface">{result.device.productName}</h2>
+                  <div className="mt-3 grid grid-cols-2 gap-3">
+                    <InfoRow label="Model" value={result.device.modelNumber} />
+                    <InfoRow label="Brand" value={result.device.brand ?? "—"} />
+                    <InfoRow label="Category" value={result.device.category?.replace(/-/g, " ") ?? "—"} />
+                    <InfoRow label="Serial Number" value={result.device.serialNumber} mono />
+                    <InfoRow label="Device Type" value={result.device.deviceType?.replace(/_/g, " ") ?? "—"} />
+                    <InfoRow label="Status" value={result.device.deviceStatus} />
+                  </div>
+                </div>
+              </div>
+            </SurfaceCard>
+
+            {/* Customer + Warranty (side by side) */}
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+              {/* Customer */}
+              {result.customer && (
+                <SurfaceCard className="p-6">
+                  <h3 className="mb-4 flex items-center gap-2 text-sm font-bold text-qbit-on-surface">
+                    <Icon name="person" className="text-[20px] text-qbit-primary" /> Customer Information
+                  </h3>
+                  <div className="space-y-2">
+                    <InfoRow label="Customer Name" value={result.customer.name} />
+                    <InfoRow label="Company" value={result.customer.companyName ?? "—"} />
+                    <InfoRow label="Mobile Number" value={result.customer.mobileNumber} />
+                    <InfoRow label="Email" value={result.customer.email ?? "—"} />
+                    <InfoRow label="GST Number" value={result.customer.gstNumber ?? "—"} />
+                    <InfoRow label="Address" value={result.customer.address ?? "—"} />
+                  </div>
+                </SurfaceCard>
+              )}
+
+              {/* Warranty */}
+              {result.warranty && (
+                <SurfaceCard className="p-6">
+                  <h3 className="mb-4 flex items-center gap-2 text-sm font-bold text-qbit-on-surface">
+                    <Icon name="verified_user" className="text-[20px] text-qbit-primary" /> Warranty
+                  </h3>
+                  <div className="mb-4">
+                    <StatusBadge
+                      variant={
+                        result.warranty.status === "active" ? "success"
+                        : result.warranty.status === "expired" ? "error"
+                        : result.warranty.status === "expiring_soon" ? "warning"
+                        : "neutral"
+                      }
+                      dot
+                    >
+                      {result.warranty.status === "active" ? "Active"
+                        : result.warranty.status === "expired" ? "Expired"
+                        : result.warranty.status === "expiring_soon" ? "Expiring Soon"
+                        : "Unknown"}
+                      {result.warranty.remainingDays !== null && result.warranty.status !== "expired" && ` · ${result.warranty.remainingDays} days left`}
+                    </StatusBadge>
+                  </div>
+                  <div className="space-y-2">
+                    <InfoRow label="Warranty Period" value={result.warranty.period ?? "—"} />
+                    <InfoRow label="Start Date" value={result.warranty.startDate ? new Date(result.warranty.startDate).toLocaleDateString("en-IN") : "—"} />
+                    <InfoRow label="Expiry Date" value={result.warranty.endDate ? new Date(result.warranty.endDate).toLocaleDateString("en-IN") : "—"} />
+                    <InfoRow label="Remaining Days" value={result.warranty.remainingDays !== null ? `${result.warranty.remainingDays} days` : "—"} />
+                  </div>
+                </SurfaceCard>
+              )}
+            </div>
+
+            {/* Driver Downloads */}
+            {result.drivers && (
+              <SurfaceCard className="p-6">
+                <h3 className="mb-4 flex items-center gap-2 text-sm font-bold text-qbit-on-surface">
+                  <Icon name="download" className="text-[20px] text-qbit-primary" /> Driver Downloads
+                </h3>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  <DownloadCard label="Driver" version={result.drivers.latestDriverVersion} url={result.drivers.driverDownloadUrl} icon="memory" color="bg-qbit-primary/10 text-qbit-primary" />
+                  <DownloadCard label="Firmware" version={result.drivers.latestFirmwareVersion} url={null} icon="upgrade" color="bg-qbit-secondary/10 text-qbit-secondary" />
+                  <DownloadCard label="SDK" url={result.drivers.sdkUrl} icon="code" color="bg-qbit-primary/10 text-qbit-primary" />
+                  <DownloadCard label="Utility" url={result.drivers.utilityUrl} icon="build" color="bg-qbit-secondary/10 text-qbit-secondary" />
+                  {result.drivers.mediaFiles
+                    .filter((m) => ["driver", "firmware", "sdk", "utility"].includes(m.type))
+                    .map((m) => (
+                      <DownloadCard key={m.id} label={m.title} url={m.url} icon="attach_file" color="bg-qbit-surface-container-high text-qbit-on-surface-variant" />
+                    ))}
+                </div>
+              </SurfaceCard>
+            )}
+
+            {/* Documents */}
+            {result.drivers && (
+              <SurfaceCard className="p-6">
+                <h3 className="mb-4 flex items-center gap-2 text-sm font-bold text-qbit-on-surface">
+                  <Icon name="description" className="text-[20px] text-qbit-primary" /> Documents
+                </h3>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  <DownloadCard label="User Manual" url={result.drivers.manualUrl} icon="menu_book" color="bg-qbit-tertiary/10 text-qbit-tertiary" />
+                  <DownloadCard label="Datasheet" url={result.drivers.datasheetUrl} icon="article" color="bg-qbit-primary/10 text-qbit-primary" />
+                  <DownloadCard label="Brochure" url={result.drivers.brochureUrl} icon="picture_as_pdf" color="bg-qbit-error/10 text-qbit-error" />
+                  <DownloadCard label="Warranty Card" url={result.drivers.warrantyUrl} icon="verified_user" color="bg-qbit-success/10 text-qbit-success" />
+                  <DownloadCard label="Installation Guide" url={result.drivers.installationGuideUrl} icon="menu_book" color="bg-qbit-tertiary/10 text-qbit-tertiary" />
+                  {result.drivers.mediaFiles
+                    .filter((m) => ["brochure", "datasheet", "manual", "warranty"].includes(m.type))
+                    .map((m) => (
+                      <DownloadCard key={m.id} label={m.title} url={m.url} icon="attach_file" color="bg-qbit-surface-container-high text-qbit-on-surface-variant" />
+                    ))}
+                </div>
+              </SurfaceCard>
+            )}
+
+            {/* Installation Resources */}
+            {result.installation && (
+              <SurfaceCard className="p-6">
+                <h3 className="mb-4 flex items-center gap-2 text-sm font-bold text-qbit-on-surface">
+                  <Icon name="build" className="text-[20px] text-qbit-primary" /> Installation & Service
+                </h3>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <InfoRow label="Installation Date" value={result.installation.installationDate ? new Date(result.installation.installationDate).toLocaleDateString("en-IN") : "—"} />
+                  <InfoRow label="Installed By" value={result.installation.installedBy ?? "—"} />
+                  <InfoRow label="Last Service" value={result.installation.lastServiceDate ? new Date(result.installation.lastServiceDate).toLocaleDateString("en-IN") : "—"} />
+                  <InfoRow label="AMC Status" value={result.installation.amcStatus} />
+                  <InfoRow label="Firmware Version" value={result.installation.firmwareVersion ?? "—"} />
+                  <InfoRow label="Driver Version" value={result.installation.driverVersion ?? "—"} />
+                </div>
+                {result.installationResources && (
+                  <div className="mt-4 border-t border-qbit-outline-variant/50 pt-4">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-qbit-on-surface-variant">Installation Resources</p>
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                      <InfoRow label="Install Time" value={result.installationResources.installationTime ?? "—"} />
+                      <InfoRow label="Difficulty" value={result.installationResources.difficultyLevel ?? "—"} />
+                      <InfoRow label="Required Software" value={result.installationResources.requiredSoftware ?? "—"} />
+                    </div>
+                    {result.installationResources.instructions && (
+                      <div className="mt-3">
+                        <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-qbit-on-surface-variant">Instructions</p>
+                        <p className="text-xs text-qbit-on-surface-variant whitespace-pre-line">{result.installationResources.instructions}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </SurfaceCard>
+            )}
+
+            {/* Purchase info */}
+            {result.purchase && (
+              <SurfaceCard className="p-6">
+                <h3 className="mb-4 flex items-center gap-2 text-sm font-bold text-qbit-on-surface">
+                  <Icon name="receipt_long" className="text-[20px] text-qbit-primary" /> Purchase Information
+                </h3>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <InfoRow label="Purchase ID" value={result.purchase.purchaseId} mono />
+                  <InfoRow label="Invoice Number" value={result.purchase.invoiceNumber ?? "—"} />
+                  <InfoRow label="Purchase Date" value={result.purchase.purchaseDate ? new Date(result.purchase.purchaseDate).toLocaleDateString("en-IN") : "—"} />
+                  <InfoRow label="Dealer" value={result.purchase.dealerName ?? "—"} />
+                  {result.purchase.totalAmount && (
+                    <InfoRow label="Total Amount" value={`₹${result.purchase.totalAmount.toLocaleString("en-IN")}`} />
+                  )}
+                </div>
+              </SurfaceCard>
+            )}
+
+            {/* Quick Actions */}
+            <SurfaceCard className="p-6">
+              <h3 className="mb-4 flex items-center gap-2 text-sm font-bold text-qbit-on-surface">
+                <Icon name="flash_on" className="text-[20px] text-qbit-primary" /> Quick Actions
+              </h3>
+              <div className="flex flex-wrap gap-3">
+                {result.drivers?.driverDownloadUrl && (
+                  <a href={result.drivers.driverDownloadUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-lg bg-qbit-primary px-4 py-2 text-xs font-semibold text-qbit-on-primary hover:bg-qbit-primary-container">
+                    <Icon name="download" className="text-[16px]" /> Download Driver
+                  </a>
+                )}
+                {result.drivers?.manualUrl && (
+                  <a href={result.drivers.manualUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-lg border border-qbit-outline-variant px-4 py-2 text-xs font-semibold text-qbit-on-surface hover:bg-qbit-surface-container-low">
+                    <Icon name="menu_book" className="text-[16px]" /> Download Manual
+                  </a>
+                )}
+                {result.device.qrCode && (
+                  <a href={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(result.device.qrCode)}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-lg border border-qbit-outline-variant px-4 py-2 text-xs font-semibold text-qbit-on-surface hover:bg-qbit-surface-container-low">
+                    <Icon name="qr_code" className="text-[16px]" /> View QR Code
+                  </a>
+                )}
+                <button onClick={handleCopyDetails} className="inline-flex items-center gap-1.5 rounded-lg border border-qbit-outline-variant px-4 py-2 text-xs font-semibold text-qbit-on-surface hover:bg-qbit-surface-container-low">
+                  <Icon name="content_copy" className="text-[16px]" /> Copy Details
+                </button>
+                <button onClick={() => window.print()} className="inline-flex items-center gap-1.5 rounded-lg border border-qbit-outline-variant px-4 py-2 text-xs font-semibold text-qbit-on-surface hover:bg-qbit-surface-container-low">
+                  <Icon name="print" className="text-[16px]" /> Print
+                </button>
+              </div>
+            </SurfaceCard>
+          </div>
+        )}
+      </div>
     </AppShell>
   );
 }
 
-function FieldInput({ label, value, onChange }: { label: string; value: string | null | undefined; onChange: (v: string) => void }) {
+/* ------------------------------------------------------------------ */
+/* Helper sub-components                                               */
+/* ------------------------------------------------------------------ */
+
+function InfoRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
     <div>
-      <label className="mb-1 block text-xs font-semibold text-qbit-on-surface-variant">{label}</label>
-      <Input
-        value={value ?? ""}
-        onChange={(e) => onChange(e.target.value)}
-        className="h-9 text-sm"
-      />
+      <p className="text-[10px] uppercase tracking-wide text-qbit-on-surface-variant">{label}</p>
+      <p className={`text-sm font-medium text-qbit-on-surface ${mono ? "font-mono" : ""}`}>{value}</p>
     </div>
+  );
+}
+
+function DownloadCard({ label, version, url, icon, color }: { label: string; version?: string | null; url: string | null; icon: string; color: string }) {
+  if (!url) return null;
+  return (
+    <a href={url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 rounded-xl border border-qbit-outline-variant bg-white p-4 transition-all hover:border-qbit-primary/30 hover:shadow-md">
+      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${color}`}>
+        <Icon name={icon} className="text-[20px]" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-sm font-bold text-qbit-on-surface">{label}</p>
+        {version && <p className="text-xs text-qbit-on-surface-variant">{version}</p>}
+      </div>
+    </a>
   );
 }
