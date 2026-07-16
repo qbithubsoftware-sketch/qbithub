@@ -89,7 +89,7 @@ interface ResourcesInfo {
   mediaFiles: MediaFile[];
 }
 
-interface LookupResponse {
+export interface LookupResponse {
   valid: boolean;
   found: boolean;
   source?: string;

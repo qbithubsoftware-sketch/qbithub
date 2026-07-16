@@ -23,6 +23,7 @@ import { db } from "@/lib/db";
 import { PublicLayout } from "@/components/qbit/public/PublicLayout";
 import { PublicHomepageClient } from "@/components/qbit/public/PublicHomepageClient";
 import { SerialLookupSection } from "@/components/qbit/public/SerialLookupSection";
+import { SmartSearchSection } from "@/components/qbit/public/SmartSearchSection";
 
 export const dynamic = "force-dynamic";
 
@@ -103,12 +104,16 @@ export default async function PublicHomePage() {
           </h1>
 
           <p className="mx-auto max-w-2xl text-base md:text-lg text-qbit-on-surface-variant mb-10">
-            Enter your device serial number to instantly access drivers, manuals,
-            warranty status, and support resources — all in one place.
+            Search by Serial Number, Product Name, Driver, Manual, or Error Code —
+            our smart search automatically routes you to the right destination.
           </p>
 
-          {/* Serial Number Search Bar — primary search method */}
-          <SerialLookupSection />
+          {/* Smart Multi-Search Bar — primary search method
+              Auto-detects: Serial Number, Product, Driver, Manual, Firmware,
+              Video, Knowledge Base, Error Code, FAQ, Category.
+              For serials: uses existing /api/public/serial-lookup flow.
+              For products: shows Product Preview Card below (no auto-redirect). */}
+          <SmartSearchSection />
         </div>
       </section>
 

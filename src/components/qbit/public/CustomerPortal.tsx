@@ -58,7 +58,7 @@ interface MediaFile {
   url: string;
 }
 
-interface DeviceInfo {
+export interface DeviceInfo {
   productName: string;
   modelNumber: string;
   brand: string | null;
@@ -74,7 +74,7 @@ interface DeviceInfo {
   dealerName: string | null;
 }
 
-interface CustomerInfo {
+export interface CustomerInfo {
   name: string;
   companyName: string | null;
   mobileNumber: string | null;
@@ -84,7 +84,7 @@ interface CustomerInfo {
   state: string | null;
 }
 
-interface WarrantyInfo {
+export interface WarrantyInfo {
   status: "active" | "expired" | "expiring_soon" | "unknown";
   startDate: string | null;
   endDate: string | null;
@@ -92,7 +92,7 @@ interface WarrantyInfo {
   period: string | null;
 }
 
-interface ResourcesInfo {
+export interface ResourcesInfo {
   driverDownloadUrl: string | null;
   manualUrl: string | null;
   brochureUrl: string | null;
@@ -113,7 +113,7 @@ interface ResourcesInfo {
   mediaFiles: MediaFile[];
 }
 
-interface LookupResponse {
+export interface LookupResponse {
   valid: boolean;
   found: boolean;
   source?: string;
@@ -337,7 +337,7 @@ export function CustomerPortal() {
 }
 
 // ====================== Result Card ======================
-function PortalResult({
+export function PortalResult({
   device, customer, warranty, resources, onReset,
 }: {
   device: DeviceInfo;
@@ -933,7 +933,7 @@ function SearchingCard() {
   );
 }
 
-function NotFoundCard({ serial, onReset }: { serial: string; onReset: () => void }) {
+export function NotFoundCard({ serial, onReset }: { serial: string; onReset: () => void }) {
   return (
     <div className="animate-fade-in-up rounded-3xl border border-qbit-warning/30 bg-qbit-warning/5 p-8 text-center shadow-sm md:p-12">
       <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-qbit-warning/15 text-qbit-warning">
@@ -967,7 +967,7 @@ function NotFoundCard({ serial, onReset }: { serial: string; onReset: () => void
   );
 }
 
-function InvalidCard({ onReset }: { onReset: () => void }) {
+export function InvalidCard({ onReset }: { onReset: () => void }) {
   return (
     <div className="animate-fade-in-up rounded-3xl border border-qbit-error/30 bg-qbit-error/5 p-8 text-center shadow-sm md:p-12">
       <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-qbit-error/15 text-qbit-error">
@@ -991,7 +991,7 @@ function InvalidCard({ onReset }: { onReset: () => void }) {
   );
 }
 
-function ErrorCard({ onReset }: { onReset: () => void }) {
+export function ErrorCard({ onReset }: { onReset: () => void }) {
   return (
     <div className="animate-fade-in-up rounded-3xl border border-qbit-error/30 bg-qbit-error/5 p-8 text-center shadow-sm md:p-12">
       <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-qbit-error/15 text-qbit-error">
