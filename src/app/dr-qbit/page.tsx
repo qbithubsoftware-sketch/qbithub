@@ -29,6 +29,7 @@
  *   based on their authenticated role.
  */
 
+import { Suspense } from "react";
 import { PublicLayout } from "@/components/qbit/public/PublicLayout";
 import { CustomerPortal } from "@/components/qbit/public/CustomerPortal";
 
@@ -54,8 +55,16 @@ export default async function DrQbitPage() {
           </p>
         </div>
 
-        {/* ===== Customer Portal (serial search + animated result) ===== */}
-        <CustomerPortal />
+        {/* ===== Customer Portal (serial search + animated result) =====
+             Wrapped in Suspense because CustomerPortal uses useSearchParams
+             to read ?serial= query param for auto-search (homepage handoff). */}
+        <Suspense fallback={
+          <div className="flex min-h-[40vh] items-center justify-center">
+            <span className="material-symbols-outlined animate-spin text-[40px] text-qbit-primary">progress_activity</span>
+          </div>
+        }>
+          <CustomerPortal />
+        </Suspense>
 
         {/* ===== What you'll see ===== */}
         <div className="mt-12 rounded-2xl border border-qbit-outline-variant/50 bg-qbit-surface-container-low p-6">

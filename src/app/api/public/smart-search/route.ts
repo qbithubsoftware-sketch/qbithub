@@ -128,7 +128,7 @@ export async function GET(req: NextRequest) {
           label: `Drivers for ${p.model}`,
           sublabel: `Driver Downloads · ${p.latestDriverVersion ?? "Latest"}`,
           icon: "memory",
-          url: `/downloads?type=driver&product=${p.slug}`,
+          url: `/drivers/${p.slug}`,
           productSlug: p.slug,
         });
       }
@@ -138,7 +138,7 @@ export async function GET(req: NextRequest) {
           label: `Manual for ${p.model}`,
           sublabel: "User Manual PDF",
           icon: "menu_book",
-          url: `/downloads?type=manual&product=${p.slug}`,
+          url: `/manuals/${p.slug}`,
           productSlug: p.slug,
         });
       }

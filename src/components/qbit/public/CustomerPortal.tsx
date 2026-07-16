@@ -49,6 +49,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 // ====================== Types ======================
 interface MediaFile {
@@ -138,6 +139,27 @@ export function CustomerPortal() {
   const [scanning, setScanning] = useState(false);
   const resultRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+
+  // ===== Auto-search from URL ?serial= query param =====
+  // When the homepage search bar detects a serial number, it redirects to
+  // /dr-qbit?serial=XXX. On mount, we read that query param, pre-fill the
+  // serial input, and auto-trigger performLookup — no second button click,
+  // no retyping. This makes the homepage → Dr. QBIT handoff seamless.
+  const searchParams = useSearchParams();
+  const autoSearchTriggered = useRef(false);
+  useEffect(() => {
+    if (autoSearchTriggered.current) return;
+    const serialFromUrl = searchParams?.get("serial")?.trim();
+    if (serialFromUrl && serialFromUrl.length >= 4) {
+      autoSearchTriggered.current = true;
+      setSerial(serialFromUrl);
+      // Small delay to let the input render with the value, then auto-search.
+      setTimeout(() => {
+        void performLookup(serialFromUrl);
+      }, 100);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   // Shared lookup logic — used by BOTH the manual serial-number search
   // AND the Hardware Scanner flow. Both methods call the SAME API and

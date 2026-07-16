@@ -3,43 +3,58 @@
 /**
  * SmartSearchSection — Universal Smart Search Bar for the homepage.
  *
- * Replaces SerialLookupSection as the homepage search. CRITICAL: it PRESERVES
- * the existing Serial Number Lookup functionality 100% — when the user enters
- * a serial number (SNQBT*, DEMO-*, or generic prefix+digit pattern), it calls
- * the SAME /api/public/serial-lookup API and renders the SAME Support Card.
+ * SINGLE SOURCE OF TRUTH RULE:
+ *   The homepage search bar is ONLY a smart gateway. It collects user input
+ *   and routes to the correct destination. It NEVER displays:
+ *     - Warranty Card
+ *     - Customer Information
+ *     - Drivers / Manuals / Firmware / Installation Guide
+ *     - Device Registration Information
  *
- * ADDITIONAL CAPABILITIES (additive, never replacing):
- *   - Live autocomplete dropdown (200ms debounce, <150ms render)
- *   - Detects search type and routes accordingly:
- *       Serial Number  → existing Device Lookup Portal flow (unchanged)
- *       Product Name   → Product Preview Card below search (NOT auto-redirect)
- *       Model Number   → Product Preview Card
- *       Driver         → /downloads?type=driver&product=<slug>
- *       Manual         → /downloads?type=manual&product=<slug>
- *       Firmware       → /downloads?type=firmware&product=<slug>
- *       Installation   → /knowledge-base
- *       Video          → /videos?product=<slug>
- *       Error Code     → /knowledge-base?error=<code>
- *       Knowledge Base → /knowledge-base?article=<slug>
- *       FAQ            → /knowledge-base?faq=<id>
- *       Category       → /products?category=<slug>
- *   - Keyboard navigation: ↑/↓ to move, Enter to select, Esc to close
+ *   All of that lives on /dr-qbit (Dr. QBIT Device Lookup page) — the ONLY
+ *   page responsible for displaying device information.
+ *
+ * ROUTING BEHAVIOUR:
+ *   Case 1 — Serial Number (SNQBT*, DEMO-*, W55-250700152, etc.)
+ *     → router.push('/dr-qbit?serial=XXX')
+ *     → Dr. QBIT page reads the ?serial= query param, auto-fills the input,
+ *       auto-calls the existing Device Lookup API, and displays the result.
+ *     → No second search, no second button click, no retyping.
+ *
+ *   Case 2 — Product Name (e.g. "Windows POS W512")
+ *     → Show a small Product Preview Card under the search bar (NOT auto-redirect)
+ *     → User clicks "View Product" → /products/<slug>
+ *
+ *   Case 3 — Driver (e.g. "Windows POS Driver")
+ *     → /drivers/<slug>
+ *
+ *   Case 4 — Manual (e.g. "W512 Manual")
+ *     → /manuals/<slug>
+ *
+ *   Case 5 — Video (e.g. "POS Installation Video")
+ *     → /videos?product=<slug>
+ *
+ *   Case 6 — Firmware
+ *     → /downloads?type=firmware&product=<slug>
+ *
+ *   Case 7 — Knowledge Base / Error / FAQ / Category
+ *     → /knowledge-base?article=<slug> | ?error=<code> | ?faq=<id>
+ *     → /products?category=<slug>
+ *
+ * AUTOCOMPLETE:
+ *   - 200ms debounce on input
+ *   - Live dropdown with categorized suggestions (icon + label + sublabel + type badge)
+ *   - Keyboard navigation: ↑↓ arrows, Enter, Escape
  *   - Mobile responsive
- *   - Recent + popular searches (localStorage)
- *   - No page reload, no popup, no external redirect for serial results
+ *   - No page reload
  *
- * Design: Identical to the existing search bar — same rounded corners, same
- * blue Search Device button, same fingerprint icon. Only adds the dropdown.
- *
- * Inspired by HP Support Assistant, Dell Support, Microsoft Docs, Lenovo
- * Support, and Apple Support.
+ * Inspired by HP Support Assistant, Dell SupportAssist, Lenovo Support,
+ * Apple Support, Microsoft Docs.
  */
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LookupResponse } from "./SerialLookupSection";
-import { PortalResult, NotFoundCard, InvalidCard, ErrorCard } from "./CustomerPortal";
 
 // ====================== Types ======================
 interface SmartSuggestion {
@@ -71,8 +86,6 @@ interface ProductPreview {
   latestFirmwareVersion: string | null;
 }
 
-type State = "idle" | "searching" | "found" | "not-found" | "invalid" | "error";
-
 // Serial patterns — kept in sync with backend
 const SERIAL_PATTERNS = [
   /^SNQBT\d+/i,
@@ -81,6 +94,7 @@ const SERIAL_PATTERNS = [
   /^SE[-_]/i,
   /^[A-Z0-9]{1,5}[-_]\d{4,}/i,
   /^[A-Z]{1,5}[-_]?\d{6,}/i,
+  /^QBT[-_]?\d/i, // QBT-2026-001245 pattern
 ];
 
 function looksLikeSerial(input: string): boolean {
@@ -126,11 +140,8 @@ export function SmartSearchSection() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [loading, setLoading] = useState(false);
-
-  // Existing serial lookup state (preserved 1:1 from SerialLookupSection)
-  const [state, setState] = useState<State>("idle");
-  const [result, setResult] = useState<LookupResponse | null>(null);
   const [productPreview, setProductPreview] = useState<ProductPreview | null>(null);
+  const [redirecting, setRedirecting] = useState(false);
 
   const resultRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -179,78 +190,51 @@ export function SmartSearchSection() {
     }, 200);
   };
 
-  // ===== Existing serial lookup flow (UNCHANGED from SerialLookupSection) =====
-  // Called when:
-  //   - User presses Enter and input matches serial pattern, OR
-  //   - User clicks the "Search Serial: ..." suggestion
-  async function performSerialLookup(serialToSearch: string) {
-    const trimmed = serialToSearch.trim();
-    if (!trimmed) {
-      setState("invalid");
-      setResult({ valid: false, found: false });
-      return;
-    }
-    setState("searching");
-    setResult(null);
-    setShowDropdown(false);
-    setProductPreview(null);
-    try {
-      const res = await fetch(
-        `/api/public/serial-lookup?serial=${encodeURIComponent(trimmed)}`,
-        { cache: "no-store" }
-      );
-      if (!res.ok) throw new Error("Lookup failed");
-      const data: LookupResponse = await res.json();
-      setResult(data);
-      if (!data.valid) setState("invalid");
-      else if (!data.found) setState("not-found");
-      else setState("found");
-    } catch {
-      setState("error");
-      setResult({ valid: true, found: false, error: "Network error" });
-    }
-  }
-
-  // ===== Form submit (Enter key) =====
-  async function handleSubmit(e?: React.FormEvent) {
+  // ===== Form submit (Enter key or Search button click) =====
+  function handleSubmit(e?: React.FormEvent) {
     e?.preventDefault();
     const trimmed = query.trim();
     if (!trimmed) return;
 
     // If a suggestion is highlighted via keyboard, select it instead
     if (selectedIndex >= 0 && suggestions[selectedIndex]) {
-      await selectSuggestion(suggestions[selectedIndex]);
+      void selectSuggestion(suggestions[selectedIndex]);
       return;
     }
 
-    // Priority 1: if input looks like serial → existing serial lookup flow
+    // Priority 1: if input looks like serial → REDIRECT to /dr-qbit?serial=XXX
+    // The Dr. QBIT page reads the ?serial= query param, auto-fills the input,
+    // auto-calls the existing Device Lookup API, and displays the result.
+    // No second search, no second button click, no retyping.
     if (looksLikeSerial(trimmed) || isSerialInput) {
-      await performSerialLookup(trimmed);
+      setRedirecting(true);
+      setShowDropdown(false);
+      router.push(`/dr-qbit?serial=${encodeURIComponent(trimmed)}`);
       return;
     }
 
     // Priority 2: if first suggestion is a product → show preview card
     const firstProduct = suggestions.find((s) => s.type === "product");
     if (firstProduct?.productSlug) {
-      await fetchProductPreview(firstProduct.productSlug);
+      void fetchProductPreview(firstProduct.productSlug);
       return;
     }
 
     // Priority 3: if any suggestion exists → navigate to first
     if (suggestions.length > 0) {
-      await selectSuggestion(suggestions[0]);
+      void selectSuggestion(suggestions[0]);
       return;
     }
 
-    // No suggestions: try as serial anyway (fallback)
-    await performSerialLookup(trimmed);
+    // No suggestions: fall back to treating as serial → redirect to Dr. QBIT
+    setRedirecting(true);
+    router.push(`/dr-qbit?serial=${encodeURIComponent(trimmed)}`);
   }
 
   // ===== Fetch full product detail for the preview card =====
   async function fetchProductPreview(slug: string) {
     setShowDropdown(false);
-    setState("idle");
-    setResult(null);
+    setProductPreview(null);
     try {
       const res = await fetch(`/api/public/products/${slug}`, { cache: "no-store" });
       if (!res.ok) throw new Error("Failed");
@@ -275,32 +259,33 @@ export function SmartSearchSection() {
   }
 
   // ===== Select a suggestion from dropdown =====
-  async function selectSuggestion(s: SmartSuggestion) {
+  function selectSuggestion(s: SmartSuggestion) {
     setShowDropdown(false);
     setQuery(s.label);
 
     if (s.type === "serial") {
-      // Existing serial lookup flow
+      // Serial suggestion → redirect to Dr. QBIT with ?serial= query param
       const serialMatch = s.label.match(/:\s*(.+)$/);
       const serial = serialMatch ? serialMatch[1] : s.label;
-      await performSerialLookup(serial);
+      setRedirecting(true);
+      router.push(`/dr-qbit?serial=${encodeURIComponent(serial)}`);
       return;
     }
 
     if (s.type === "product" && s.productSlug) {
       // Show Product Preview Card below search (don't redirect immediately)
-      await fetchProductPreview(s.productSlug);
+      void fetchProductPreview(s.productSlug);
       return;
     }
 
-    // All other types → navigate to URL
+    // All other types → navigate to URL (driver/manual/firmware/video/kb/error/faq/category)
     router.push(s.url);
   }
 
   // ===== Keyboard navigation =====
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (!showDropdown || suggestions.length === 0) {
-      if (e.key === "Enter") void handleSubmit(e);
+      if (e.key === "Enter") handleSubmit(e);
       return;
     }
     if (e.key === "ArrowDown") {
@@ -311,7 +296,7 @@ export function SmartSearchSection() {
       setSelectedIndex((i) => Math.max(i - 1, 0));
     } else if (e.key === "Enter") {
       e.preventDefault();
-      void handleSubmit(e);
+      handleSubmit(e);
     } else if (e.key === "Escape") {
       e.preventDefault();
       setShowDropdown(false);
@@ -335,29 +320,27 @@ export function SmartSearchSection() {
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
 
-  // ===== Smooth-scroll result into view =====
+  // ===== Smooth-scroll product preview into view =====
   useEffect(() => {
-    if (state === "idle" && !productPreview) return;
+    if (!productPreview) return;
     if (!resultRef.current) return;
     const t = setTimeout(() => {
       resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 80);
     return () => clearTimeout(t);
-  }, [state, productPreview]);
+  }, [productPreview]);
 
   function handleReset() {
-    setState("idle");
-    setResult(null);
     setProductPreview(null);
     setQuery("");
+    setRedirecting(false);
     inputRef.current?.focus();
   }
 
   function fillExample(s: string) {
     setQuery(s);
     setProductPreview(null);
-    setState("idle");
-    setResult(null);
+    setRedirecting(false);
     inputRef.current?.focus();
     // Immediately fetch suggestions for the example
     void fetchSuggestions(s);
@@ -390,15 +373,15 @@ export function SmartSearchSection() {
           />
           <button
             type="submit"
-            disabled={state === "searching"}
+            disabled={redirecting}
             className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex items-center gap-1.5 rounded-xl bg-qbit-primary px-5 py-2.5 text-sm font-semibold text-qbit-on-primary hover:bg-qbit-primary-container transition-colors disabled:opacity-60"
           >
-            {state === "searching" ? (
+            {redirecting ? (
               <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
             ) : (
               <span className="material-symbols-outlined text-[18px]">search</span>
             )}
-            {state === "searching" ? "Searching…" : "Search"}
+            {redirecting ? "Redirecting…" : "Search"}
           </button>
         </div>
 
@@ -470,40 +453,11 @@ export function SmartSearchSection() {
         ))}
       </div>
 
-      {/* ===== Result Area (existing serial lookup OR product preview card) ===== */}
+      {/* ===== Result Area (ONLY Product Preview Card — no serial lookup here) ===== */}
       <div ref={resultRef} className="mx-auto mt-10 max-w-5xl scroll-mt-24">
-        {/* Existing serial lookup result (UNCHANGED from SerialLookupSection) */}
-        {state === "searching" && (
-          <div className="animate-fade-in rounded-3xl border border-qbit-outline-variant bg-white p-12 text-center shadow-sm">
-            <span className="material-symbols-outlined mx-auto animate-spin text-[48px] text-qbit-primary">progress_activity</span>
-            <p className="mt-4 text-base font-semibold text-qbit-on-surface">Searching Device Registration Database…</p>
-            <p className="mt-1 text-sm text-qbit-on-surface-variant">Looking up serial number across all registered devices</p>
-          </div>
-        )}
-
-        {state === "found" && result?.device && (
-          <PortalResult
-            device={result.device}
-            customer={result.customer}
-            warranty={result.warranty}
-            resources={result.resources}
-            onReset={handleReset}
-          />
-        )}
-
-        {state === "not-found" && (
-          <NotFoundCard serial={query} onReset={handleReset} />
-        )}
-
-        {state === "invalid" && (
-          <InvalidCard onReset={handleReset} />
-        )}
-
-        {state === "error" && (
-          <ErrorCard onReset={handleReset} />
-        )}
-
-        {/* Product Preview Card (shown for product searches — does NOT auto-redirect) */}
+        {/* Product Preview Card — only shown for product searches.
+            Per spec: serial number searches redirect to /dr-qbit, never
+            display device info on the homepage. */}
         {productPreview && (
           <ProductPreviewCard product={productPreview} onReset={handleReset} />
         )}
@@ -590,7 +544,7 @@ function ProductPreviewCard({
               <p className="mt-3 text-sm text-qbit-on-surface-variant line-clamp-3">{product.description}</p>
             )}
 
-            {/* Quick action buttons */}
+            {/* Quick action buttons — primary CTA is "View Product" */}
             <div className="mt-5 flex flex-wrap gap-2">
               <Link
                 href={`/products/${product.slug}`}
@@ -600,14 +554,14 @@ function ProductPreviewCard({
                 View Product
               </Link>
               <Link
-                href={`/downloads?type=driver&product=${product.slug}`}
+                href={`/drivers/${product.slug}`}
                 className="inline-flex items-center gap-1.5 rounded-xl border border-qbit-outline-variant px-4 py-2 text-sm font-semibold text-qbit-on-surface hover:bg-qbit-surface-container-low transition-colors"
               >
                 <span className="material-symbols-outlined text-[18px]">memory</span>
                 Download Drivers
               </Link>
               <Link
-                href={`/downloads?type=manual&product=${product.slug}`}
+                href={`/manuals/${product.slug}`}
                 className="inline-flex items-center gap-1.5 rounded-xl border border-qbit-outline-variant px-4 py-2 text-sm font-semibold text-qbit-on-surface hover:bg-qbit-surface-container-low transition-colors"
               >
                 <span className="material-symbols-outlined text-[18px]">menu_book</span>
