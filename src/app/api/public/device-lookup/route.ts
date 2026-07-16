@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
     // Search PurchaseRecord by serial number
     const purchase = await db.purchaseRecord.findFirst({
       where: {
-        serialNumber: { equals: serialNumber, mode: "insensitive" },
+        serialNumber: { equals: serialNumber },
       },
       include: {
         product: {
@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
     // Fallback: FSMCustomerAsset
     if (!purchase) {
       const asset = await db.fSMCustomerAsset.findFirst({
-        where: { serialNumber: { equals: serialNumber, mode: "insensitive" } },
+        where: { serialNumber: { equals: serialNumber } },
       });
 
       if (!asset) {
@@ -56,7 +56,7 @@ export async function GET(req: NextRequest) {
 
       const product = asset.model
         ? await db.qbitProduct.findFirst({
-            where: { model: asset.model },
+            where: { model: { contains: asset.model } },
             select: {
               id: true, name: true, slug: true, model: true, brand: true,
               category: true, deviceType: true, imageUrl: true, description: true,
