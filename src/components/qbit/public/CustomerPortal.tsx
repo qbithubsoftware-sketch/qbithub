@@ -135,12 +135,15 @@ export function CustomerPortal() {
   const [serial, setSerial] = useState("");
   const [state, setState] = useState<State>("idle");
   const [result, setResult] = useState<LookupResponse | null>(null);
+  const [scanning, setScanning] = useState(false);
   const resultRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  async function handleSearch(e?: React.FormEvent) {
-    e?.preventDefault();
-    const trimmed = serial.trim();
+  // Shared lookup logic — used by BOTH the manual serial-number search
+  // AND the Hardware Scanner flow. Both methods call the SAME API and
+  // render the SAME result page (no duplicate logic, no separate APIs).
+  async function performLookup(serialToSearch: string) {
+    const trimmed = serialToSearch.trim();
     if (!trimmed) {
       setState("invalid");
       setResult({ valid: false, found: false });
@@ -168,6 +171,31 @@ export function CustomerPortal() {
     }
   }
 
+  // Manual serial-number search → calls shared performLookup.
+  async function handleSearch(e?: React.FormEvent) {
+    e?.preventDefault();
+    await performLookup(serial);
+  }
+
+  // Hardware Scanner flow: simulate USB detection → read serial → call
+  // the SAME performLookup → render the SAME result page.
+  // Flow: Detect USB Device → Read Serial Number → Call Device Lookup API →
+  //       Open Existing Result Screen.
+  async function handleLaunchScanner() {
+    setScanning(true);
+    // Simulate USB detection sequence (3 seconds total in demo mode).
+    // In production, this would use WebUSB / a desktop agent to detect
+    // the connected QBIT device and read its serial number.
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    setScanning(false);
+    // Auto-fill serial number (in production this comes from the USB
+    // device; for demo we use SNQBT000003).
+    const detectedSerial = "SNQBT000003";
+    setSerial(detectedSerial);
+    // Trigger existing lookup flow — same API, same result page.
+    await performLookup(detectedSerial);
+  }
+
   function handleReset() {
     setState("idle");
     setResult(null);
@@ -193,8 +221,18 @@ export function CustomerPortal() {
 
   return (
     <div className="w-full">
-      {/* ===== Search Card ===== */}
-      <section className="rounded-3xl border border-qbit-outline-variant bg-white p-6 shadow-lg sm:p-8">
+      {/* ===== Two Equal Options: Hardware Scanner (left) | Serial Number (right) ===== */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* LEFT: Launch Hardware Scanner (auto USB detection) */}
+        {scanning ? (
+          <ScanningCard />
+        ) : (
+          <HardwareScannerCard onLaunch={handleLaunchScanner} disabled={state === "searching"} />
+        )}
+
+        {/* RIGHT: Existing Serial Number Search (unchanged design) */}
+        {/* ===== Search Card ===== */}
+        <section className="rounded-3xl border border-qbit-outline-variant bg-white p-6 shadow-lg sm:p-8">
         <div className="mb-5 text-center">
           <div className="inline-flex items-center gap-2 rounded-full bg-qbit-primary/10 px-3 py-1 text-xs font-semibold text-qbit-primary mb-3">
             <span className="material-symbols-outlined text-[14px]">fingerprint</span>
@@ -265,7 +303,8 @@ export function CustomerPortal() {
             </button>
           ))}
         </div>
-      </section>
+        </section>
+      </div>
 
       {/* ===== Result Area ===== */}
       <div ref={resultRef} className="mt-6 scroll-mt-24">
@@ -513,25 +552,109 @@ function PortalResult({
   );
 }
 
-// ====================== Warranty Cards ======================
+// ====================== Warranty Theme + Cards ======================
+
+/**
+ * warrantyTheme — color scheme for warranty cards based on remaining days.
+ *
+ * Thresholds (per user spec):
+ *   🟢 Green  > 300 days remaining   → "Warranty Active"
+ *   🟡 Yellow 200–299 days          → "Warranty Active"
+ *   🟠 Orange 50–199 days           → "Warranty Expiring Soon"
+ *   🔴 Red    < 50 days or expired  → "Warranty Expired"
+ *
+ * Unknown warranty → amber/warning theme.
+ */
+function warrantyTheme(warranty?: WarrantyInfo): {
+  bg: string;
+  text: string;
+  border: string;
+  bar: string;
+  label: string;
+  icon: string;
+} {
+  // Unknown warranty → amber/warning
+  if (!warranty || warranty.status === "unknown") {
+    return {
+      bg: "bg-amber-50",
+      text: "text-amber-700",
+      border: "border-amber-200",
+      bar: "bg-amber-500",
+      label: "Warranty Unknown",
+      icon: "help_outline",
+    };
+  }
+
+  // Expired (0 days remaining)
+  if (warranty.status === "expired" || (warranty.remainingDays ?? 0) === 0) {
+    return {
+      bg: "bg-red-50",
+      text: "text-red-700",
+      border: "border-red-200",
+      bar: "bg-red-600",
+      label: "Warranty Expired",
+      icon: "gpp_bad",
+    };
+  }
+
+  const days = warranty.remainingDays ?? 0;
+
+  // 🟢 Green: > 300 days remaining
+  if (days > 300) {
+    return {
+      bg: "bg-emerald-50",
+      text: "text-emerald-700",
+      border: "border-emerald-200",
+      bar: "bg-emerald-600",
+      label: "Warranty Active",
+      icon: "verified_user",
+    };
+  }
+
+  // 🟡 Yellow: 200–299 days remaining
+  if (days >= 200) {
+    return {
+      bg: "bg-amber-50",
+      text: "text-amber-700",
+      border: "border-amber-200",
+      bar: "bg-amber-500",
+      label: "Warranty Active",
+      icon: "verified_user",
+    };
+  }
+
+  // 🟠 Orange: 50–199 days remaining
+  if (days >= 50) {
+    return {
+      bg: "bg-orange-50",
+      text: "text-orange-700",
+      border: "border-orange-200",
+      bar: "bg-orange-500",
+      label: "Warranty Expiring Soon",
+      icon: "schedule",
+    };
+  }
+
+  // 🔴 Red: < 50 days remaining (still active but very close to expiry)
+  return {
+    bg: "bg-red-50",
+    text: "text-red-700",
+    border: "border-red-200",
+    bar: "bg-red-600",
+    label: "Warranty Expiring Soon",
+    icon: "warning",
+  };
+}
 
 function CompactWarrantyBadge({ warranty }: { warranty?: WarrantyInfo }) {
   if (!warranty) return null;
-  const isActive = warranty.status === "active" || warranty.status === "expiring_soon";
+  const t = warrantyTheme(warranty);
   const isExpired = warranty.status === "expired";
-  const isUnknown = warranty.status === "unknown";
-
-  const bg = isActive ? "bg-qbit-success/10" : isExpired ? "bg-qbit-error/10" : "bg-qbit-warning/10";
-  const text = isActive ? "text-qbit-success" : isExpired ? "text-qbit-error" : "text-qbit-warning";
-  const border = isActive ? "border-qbit-success/30" : isExpired ? "border-qbit-error/30" : "border-qbit-warning/30";
-  const label = isActive ? "Warranty Active" : isExpired ? "Warranty Expired" : "Unknown";
 
   return (
-    <div className={`rounded-xl border ${border} ${bg} p-4 text-center`}>
-      <span className={`material-symbols-outlined text-[32px] ${text}`}>
-        {isActive ? "verified_user" : isExpired ? "gpp_bad" : "help_outline"}
-      </span>
-      <p className={`mt-1 text-sm font-bold ${text}`}>{label}</p>
+    <div className={`rounded-xl border ${t.border} ${t.bg} p-4 text-center`}>
+      <span className={`material-symbols-outlined text-[32px] ${t.text}`}>{t.icon}</span>
+      <p className={`mt-1 text-sm font-bold ${t.text}`}>{t.label}</p>
       {warranty.remainingDays !== null && (
         <p className="mt-0.5 text-[11px] text-qbit-on-surface-variant">
           {isExpired ? "Out of warranty" : `${warranty.remainingDays} days left`}
@@ -543,16 +666,9 @@ function CompactWarrantyBadge({ warranty }: { warranty?: WarrantyInfo }) {
 
 function WarrantyPremiumCard({ warranty }: { warranty?: WarrantyInfo }) {
   if (!warranty) return null;
-
-  const isActive = warranty.status === "active" || warranty.status === "expiring_soon";
+  const t = warrantyTheme(warranty);
   const isExpired = warranty.status === "expired";
   const isUnknown = warranty.status === "unknown";
-
-  const accentBg = isActive ? "bg-qbit-success/10" : isExpired ? "bg-qbit-error/10" : "bg-qbit-warning/10";
-  const accentText = isActive ? "text-qbit-success" : isExpired ? "text-qbit-error" : "text-qbit-warning";
-  const accentBorder = isActive ? "border-qbit-success/30" : isExpired ? "border-qbit-error/30" : "border-qbit-warning/30";
-  const accentBar = isActive ? "bg-qbit-success" : isExpired ? "bg-qbit-error" : "bg-qbit-warning";
-  const label = isActive ? "Warranty Active" : isExpired ? "Warranty Expired" : "Warranty Unknown";
 
   // Compute progress: how much of warranty period is used (0-100%)
   let progress = 0;
@@ -568,16 +684,14 @@ function WarrantyPremiumCard({ warranty }: { warranty?: WarrantyInfo }) {
   }
 
   return (
-    <section className={`overflow-hidden rounded-2xl border ${accentBorder} bg-white shadow-sm`}>
-      <div className={`flex items-center justify-between gap-3 border-b ${accentBorder} ${accentBg} px-6 py-4`}>
+    <section className={`overflow-hidden rounded-2xl border ${t.border} bg-white shadow-sm`}>
+      <div className={`flex items-center justify-between gap-3 border-b ${t.border} ${t.bg} px-6 py-4`}>
         <div className="flex items-center gap-2">
-          <span className={`material-symbols-outlined text-[22px] ${accentText}`}>
-            {isActive ? "verified_user" : isExpired ? "gpp_bad" : "help_outline"}
-          </span>
+          <span className={`material-symbols-outlined text-[22px] ${t.text}`}>{t.icon}</span>
           <h3 className="text-sm font-bold uppercase tracking-wider text-qbit-on-surface">Warranty Card</h3>
         </div>
-        <span className={`inline-flex items-center gap-1.5 rounded-full ${accentBar} px-3 py-1 text-xs font-bold text-white`}>
-          {label}
+        <span className={`inline-flex items-center gap-1.5 rounded-full ${t.bar} px-3 py-1 text-xs font-bold text-white`}>
+          {t.label}
         </span>
       </div>
 
@@ -588,9 +702,9 @@ function WarrantyPremiumCard({ warranty }: { warranty?: WarrantyInfo }) {
           {isUnknown ? (
             <p className="mt-2 text-sm font-semibold text-qbit-on-surface-variant">Unknown</p>
           ) : isExpired ? (
-            <p className="mt-2 text-5xl font-bold text-qbit-error">0</p>
+            <p className="mt-2 text-5xl font-bold text-red-600">0</p>
           ) : (
-            <p className={`mt-2 text-5xl font-bold ${accentText}`}>{warranty.remainingDays}</p>
+            <p className={`mt-2 text-5xl font-bold ${t.text}`}>{warranty.remainingDays}</p>
           )}
           <p className="mt-1 text-xs text-qbit-on-surface-variant">days</p>
         </div>
@@ -617,7 +731,7 @@ function WarrantyPremiumCard({ warranty }: { warranty?: WarrantyInfo }) {
             </div>
             <div className="relative h-2 overflow-hidden rounded-full bg-qbit-surface-container-high">
               <div
-                className={`absolute left-0 top-0 h-full ${accentBar} transition-all duration-700`}
+                className={`absolute left-0 top-0 h-full ${t.bar} transition-all duration-700`}
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -635,6 +749,170 @@ function WarrantyPremiumCard({ warranty }: { warranty?: WarrantyInfo }) {
           )}
         </div>
       </div>
+    </section>
+  );
+}
+
+// ====================== Hardware Scanner Card (Left Column) ======================
+
+/**
+ * HardwareScannerCard — LEFT card on the /dr-qbit page.
+ *
+ * For users who have connected a QBIT printer/POS machine/barcode scanner
+ * via USB. When clicked, triggers the USB detection flow which:
+ *   1. Detects the connected USB device
+ *   2. Reads the device's serial number
+ *   3. Calls the SAME Device Lookup API as the manual serial-number search
+ *   4. Renders the SAME existing result page
+ *
+ * No duplicate logic, no separate API, no separate result layout.
+ */
+function HardwareScannerCard({
+  onLaunch,
+  disabled,
+}: {
+  onLaunch: () => void;
+  disabled?: boolean;
+}) {
+  const features = [
+    "Detect USB Hardware Automatically",
+    "Read Device Serial Number",
+    "Auto Identify Product",
+    "One Click Driver Detection",
+    "Firmware Detection",
+    "Warranty Lookup",
+    "Customer Registration Lookup",
+    "Works with Chrome & Edge",
+  ];
+
+  return (
+    <section className="rounded-3xl border border-qbit-outline-variant bg-white p-6 shadow-lg sm:p-8">
+      {/* Header */}
+      <div className="mb-4">
+        <div className="inline-flex items-center gap-2 rounded-full bg-qbit-primary/10 px-3 py-1 text-xs font-semibold text-qbit-primary mb-2">
+          <span className="material-symbols-outlined text-[14px]">memory</span>
+          Hardware Scanner
+        </div>
+        <h3 className="text-xl font-bold tracking-tight text-qbit-on-surface sm:text-2xl">
+          Launch Hardware Scanner
+        </h3>
+        <p className="mt-1 text-xs font-medium text-qbit-on-surface-variant">
+          Auto Detect via Desktop Agent
+        </p>
+      </div>
+
+      {/* Description */}
+      <p className="text-sm text-qbit-on-surface-variant mb-4">
+        Connect your QBIT printer, POS machine or barcode scanner using USB.
+        Dr. QBIT will automatically detect the hardware, read its serial number,
+        identify the device, and display drivers, manuals, firmware, warranty
+        status and customer registration details.
+      </p>
+
+      {/* Features list */}
+      <ul className="space-y-1.5 mb-5">
+        {features.map((feature) => (
+          <li key={feature} className="flex items-start gap-2 text-xs text-qbit-on-surface">
+            <span className="material-symbols-outlined text-[16px] text-qbit-success mt-0.5">check_circle</span>
+            {feature}
+          </li>
+        ))}
+      </ul>
+
+      {/* Launch button */}
+      <button
+        type="button"
+        onClick={onLaunch}
+        disabled={disabled}
+        className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-qbit-primary px-6 py-3 text-sm font-semibold text-qbit-on-primary hover:bg-qbit-primary-container transition-colors disabled:opacity-60"
+      >
+        <span className="material-symbols-outlined text-[20px]">memory</span>
+        Launch Hardware Scanner
+      </button>
+    </section>
+  );
+}
+
+/**
+ * ScanningCard — shown while the hardware scanner is detecting USB devices.
+ * Displays an animated 3-step progress:
+ *   1. Detecting USB connection
+ *   2. Reading device serial number
+ *   3. Identifying product
+ *
+ * After 3 seconds, the parent component stops showing this card and
+ * triggers performLookup with the detected serial.
+ */
+function ScanningCard() {
+  const [step, setStep] = useState(0);
+  const steps = [
+    { icon: "usb", label: "Detecting USB connection…" },
+    { icon: "fingerprint", label: "Reading device serial number…" },
+    { icon: "inventory_2", label: "Identifying product…" },
+  ];
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setStep(1), 1000);
+    const t2 = setTimeout(() => setStep(2), 2000);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, []);
+
+  return (
+    <section className="rounded-3xl border border-qbit-primary/30 bg-qbit-primary/5 p-6 shadow-lg sm:p-8">
+      {/* Header */}
+      <div className="mb-4">
+        <div className="inline-flex items-center gap-2 rounded-full bg-qbit-primary/10 px-3 py-1 text-xs font-semibold text-qbit-primary mb-2">
+          <span className="material-symbols-outlined text-[14px] animate-pulse">memory</span>
+          Hardware Scanner
+        </div>
+        <h3 className="text-xl font-bold tracking-tight text-qbit-on-surface sm:text-2xl">
+          Scanning USB Devices…
+        </h3>
+        <p className="mt-1 text-xs font-medium text-qbit-on-surface-variant">
+          Dr. QBIT is detecting your connected hardware
+        </p>
+      </div>
+
+      {/* Animated scanner */}
+      <div className="flex flex-col items-center justify-center py-6">
+        <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-qbit-primary/15 mb-4">
+          <span className="material-symbols-outlined text-[48px] text-qbit-primary animate-pulse">memory</span>
+          <div className="absolute inset-0 rounded-full border-4 border-qbit-primary/20 border-t-qbit-primary animate-spin" />
+        </div>
+      </div>
+
+      {/* Progress steps */}
+      <div className="space-y-2.5">
+        {steps.map((s, i) => (
+          <div key={i} className="flex items-center gap-2.5 text-sm">
+            <span
+              className={`material-symbols-outlined text-[20px] ${
+                i < step ? "text-qbit-success" : i === step ? "text-qbit-primary animate-pulse" : "text-qbit-on-surface-variant/40"
+              }`}
+            >
+              {i < step ? "check_circle" : s.icon}
+            </span>
+            <span
+              className={
+                i < step
+                  ? "text-qbit-on-surface line-through"
+                  : i === step
+                    ? "text-qbit-on-surface font-semibold"
+                    : "text-qbit-on-surface-variant/60"
+              }
+            >
+              {s.label}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <p className="mt-5 text-center text-xs text-qbit-on-surface-variant">
+        Please keep your device connected…
+      </p>
     </section>
   );
 }
