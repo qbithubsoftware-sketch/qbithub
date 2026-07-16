@@ -493,3 +493,67 @@ Stage Summary:
 - Demo serial numbers work end-to-end: enter serial → see customer + purchase + warranty + drivers + brochures + manuals + installation info.
 - No code changes needed — only DB data was missing.
 - Files added: scripts/populate-product-downloads.ts, scripts/relink-demo-assets.ts.
+
+---
+Task ID: homepage-serial-lookup-redesign
+Agent: main
+Task: Replace homepage "Enter Model Number" search with "Enter Serial Number" search. Build HP/Dell/Lenovo-style animated Support Card that expands below hero on the same page (no reload, no popup).
+
+Work Log:
+
+1. Read current homepage (src/app/page.tsx) — found hero had generic product search bar + "Popular: T800, HUB-X Pro, BS550, LD300, CD200" model chips + Dr. QBIT section with "Enter Model Number" button.
+
+2. Created new API endpoint: src/app/api/public/serial-lookup/route.ts
+   - GET /api/public/serial-lookup?serial=XXX
+   - Returns FULL info: device + customer (mobile/email masked) + warranty + resources
+   - Three response shapes: invalid input, not found, found (with all data)
+   - Searches PurchaseRecord first, falls back to FSMCustomerAsset
+   - Computes warranty status (active/expired/expiring_soon/unknown) + remaining days
+   - Mobile masked as "+91 ••••••1234", email as "ab••••@domain.com"
+
+3. Created new component: src/components/qbit/public/SerialLookupSection.tsx (560 lines)
+   - Client component with 6 states: idle / searching / found / not-found / invalid / error
+   - Search bar: fingerprint icon + "Enter Serial Number (Example: W55-250700152)" placeholder + "Search Device" button
+   - Quick example chips: DEMO-T800-001, DEMO-CD410-002, DEMO-SME1-003
+   - Smooth scroll-into-view on result render
+   - Animated result card with 5 sections + warranty card:
+     a) Product Information (image, name, category, model, serial, status, brand, purchase date, installation date, dealer, link to product page)
+     b) Warranty Card (green=active / red=expired / amber=unknown + period, start, end, remaining days, renew CTA)
+     c) Customer Information (name, company, mobile [masked], email [masked], GST, city, state)
+     d) Device Information (status, warranty status, activation date, registration date, support status, firmware/driver versions)
+     e) Support Resources (9 cards: Windows Driver, Brochure, User Manual, Installation Guide, Installation Video, Firmware, FAQ, Troubleshooting, Raise Support Ticket) + additional media files section
+   - Not Found state: amber card with "Device Not Registered" + Register Device / Contact Support / Try Again buttons
+   - Invalid state: red card with "Invalid Serial Number" + retry guidance
+   - Error state: red card with "Lookup Failed" + retry
+
+4. Updated homepage: src/app/page.tsx
+   - Imported SerialLookupSection
+   - Replaced generic product search bar with <SerialLookupSection />
+   - Removed "Popular: T800, HUB-X Pro..." model-number chips row
+   - Updated hero subtitle to "Enter your device serial number to instantly access drivers, manuals, warranty status, and support resources"
+   - Dr. QBIT section: removed "or search by model number" headline, removed "Enter Model Number" button, removed T800/BS550/LD300/CD200 model-number chips, changed CTA to "Scan Hardware Now", updated preview card
+   - Deleted unused PublicHomepageSearchBar function
+
+5. Added animation utilities to src/app/globals.css:
+   - .animate-fade-in (0.3s ease-out)
+   - .animate-fade-in-up (0.35s ease-out)
+   - .animate-fade-in-down (0.35s ease-out)
+
+6. Build verification:
+   - npx tsc --noEmit -p tsconfig.build.json → 0 errors
+   - npm run build → ✓ Compiled successfully in 31.5s, 73 routes, /api/public/serial-lookup registered
+
+7. Committed to git: dd8e04c "feat: Replace homepage Model Number search with Serial Number lookup"
+
+Deployment status:
+- Build passes locally
+- Cannot push to GitHub (no stored GitHub PAT in this session)
+- Cannot deploy to Vercel directly (no stored Vercel token in this session)
+- User needs to either:
+  (a) Push commit dd8e04c to GitHub manually (Vercel-GitHub integration will auto-deploy), OR
+  (b) Provide a Vercel token so we can run `vercel deploy --prod --yes --token TOKEN --name qbithub`
+
+Stage Summary:
+- All code complete and build-clean.
+- 4 files changed: globals.css (3 lines added), page.tsx (rewritten hero + Dr. QBIT section), 2 new files (serial-lookup API + SerialLookupSection component).
+- Once deployed, homepage serial lookup will work end-to-end with existing DEMO-T800-001/002/003 serials + all 45 production products that already have download URLs populated.
