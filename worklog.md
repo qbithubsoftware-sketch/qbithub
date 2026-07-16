@@ -595,3 +595,101 @@ Stage Summary:
 - Invalid serial returns valid=false → frontend shows red "Invalid Serial Number" card.
 - Not-found serial returns found=false → frontend shows amber "Device Not Registered" card with Register Device + Contact Support CTAs.
 - Token used transiently; not persisted in any config file.
+
+---
+Task ID: drqbit-customer-portal-rbac
+Agent: main
+Task: Transform /dr-qbit from model-number-based DrQbitWorkflow into a Serial Number based Customer Device Portal with strict RBAC (Role-Based Access Control). Hide all internal/engineer/admin resources from guests.
+
+Work Log:
+
+1. Schema change: Added `visibility` field to ProductMedia model.
+   - Values: "public" | "employee" | "engineer" | "admin" (default "public")
+   - Added @@index([visibility]) for fast filtering
+   - Created scripts/migrate-add-visibility.sql
+   - Ran migration against production Neon Postgres: ✓ success
+
+2. API update: /api/public/serial-lookup now filters mediaFiles WHERE visibility = "public".
+   - Engineer Repair Manuals, Field Test Diagnostic Tools, Admin Security
+     Consoles, Internal Factory Firmware — NEVER exposed to guests.
+   - Filtering happens at Prisma query level (defense in depth).
+   - Both PurchaseRecord and FSMCustomerAsset code paths updated.
+
+3. Created new CustomerPortal component (879 lines, 5 sections):
+   - Product Card: image + name + model + serial + warranty badge (3+6+3 col grid)
+   - Warranty Premium Card: large remaining days + progress bar + timeline
+   - Downloads section: only PUBLIC resources assigned to that product
+   - Registered Device section: customer name, company, masked mobile/email,
+     city, state, purchase date, registration date, dealer, warranty status,
+     expiry, remaining days
+   - Support section: Raise Ticket, Contact Support, WhatsApp Support
+
+4. Edge cases implemented:
+   - Invalid serial format → red "Invalid Serial Number" card
+   - Not registered → amber "No registered device found" + Contact QBIT CTA
+   - Network error → red "Lookup Failed" + Try Again
+
+5. Replaced /dr-qbit page:
+   - Removed DrQbitWorkflow import + reference
+   - CustomerPortal is now the primary UI
+   - Header reworded: "Find your device by Serial Number"
+   - Privacy & Security notice explaining RBAC filtering
+   - "What you'll see after lookup" explainer section
+
+6. Seeded 3 demo devices with realistic Indian customer data:
+   - SNQBT000001 → Rahul Sharma / ABC Restaurant / Jaipur / P80UE Thermal
+     Printer / 365-day warranty starting 15 April 2026 / Active / 273 days
+   - SNQBT000002 → Priya Verma / Fresh Cafe / Delhi / 2DSW Barcode Scanner /
+     Expired (purchased 10 Jan 2024)
+   - SNQBT000003 → Amit Patel / Retail Mart / Ahmedabad / W512 POS Machine /
+     Active (purchased 1 March 2026, 2-year warranty)
+
+7. For each product, seeded 10 media files with mixed visibility:
+   - 6 public: Windows Driver, Android Driver, User Manual, Installation
+     Guide, Quick Start Guide, Software Utility
+   - 2 engineer-only: Engineer Repair Manual, Field Test Diagnostic Tool
+   - 2 admin-only: Admin Security Console, Internal Factory Firmware
+
+8. Build verified: 0 TS errors, ✓ Compiled in 30.2s.
+
+9. Security incident during push: GitHub secret scanner blocked the initial
+   push because worklog.md contained the actual GitHub PAT (line 567).
+   Fix: used git filter-branch to scrub the token from all commits in the
+   range 4872589..HEAD. Successfully pushed after rewrite.
+   - Token replaced with <REDACTED> in worklog.md
+   - git remote URL reset back to plain HTTPS form
+
+Production Verification (https://qbithub.vercel.app):
+
+  ✓ GET /dr-qbit → HTTP 200
+  ✓ Page contains "Customer Device Portal"
+  ✓ Page contains "Enter your Device Serial Number" placeholder
+  ✓ Page contains "Search Device" button
+  ✓ Page contains demo SNQBT serial chips (SNQBT000001, 2, 3)
+  ✓ Page contains "Warranty Card" section
+
+  ✓ GET /api/public/serial-lookup?serial=SNQBT000001 → 200, found=true
+    - Product: Thermal Printer P80UE / QBIT / thermal-printer
+    - Customer: Rahul Sharma / ABC Restaurant / Jaipur, Rajasthan
+    - Mobile: +91 ••••••2345 (masked middle digits)
+    - Email: ra••••@abcrestaurant.in (masked)
+    - Warranty: active / 273 days remaining / expires 2027-04-15
+    - PUBLIC media returned: 6 (Windows Driver, Android Driver, User Manual,
+      Installation Guide, Quick Start Guide, Software Utility)
+    - INTERNAL FILES HIDDEN: Engineer Repair Manual, Field Test Diagnostic
+      Tool, Admin Security Console, Internal Factory Firmware (0 leaked)
+
+  ✓ SNQBT000002 → Priya Verma / Fresh Cafe / Delhi / 2DSW Scanner / expired
+  ✓ SNQBT000003 → Amit Patel / Retail Mart / Ahmedabad / W512 POS / 594 days
+  ✓ Old DEMO-T800-001 still works (backward compatible)
+  ✓ Invalid serial (A1) → valid=false (frontend shows red card)
+  ✓ Unknown serial (SNQBT999999) → found=false (frontend shows amber card)
+
+Stage Summary:
+- /dr-qbit is now a Serial Number based Customer Device Portal.
+- Model Number search completely removed from this page.
+- RBAC enforced: only visibility=public resources are returned by the API.
+- Engineer/admin/internal tools are completely hidden from guests.
+- 3 realistic demo devices available for immediate testing.
+- Customer mobile/email are masked (last 4 digits / first 2 chars only).
+- Pushed commit c33ce59, deployed successfully to production.
