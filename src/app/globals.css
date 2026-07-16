@@ -564,6 +564,11 @@
 .animate-qbit-scale-in { animation: qbit-scale-in 0.2s ease-out; }
 .animate-qbit-slide-in-right { animation: qbit-slide-in-right 0.25s ease-out; }
 
+/* Short aliases used by SerialLookupSection */
+.animate-fade-in { animation: qbit-fade-in 0.3s ease-out; }
+.animate-fade-in-up { animation: qbit-fade-in-up 0.35s ease-out; }
+.animate-fade-in-down { animation: qbit-fade-in-down 0.35s ease-out; }
+
 /* ===== Premium Skeleton Shimmer ===== */
 .skeleton-premium {
   background: linear-gradient(

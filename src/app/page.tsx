@@ -5,19 +5,24 @@
  * language (qbit-primary palette, Material Symbols, SurfaceCard patterns).
  *
  * Sections (top to bottom):
- *   1. Hero — large headline + sub-copy + global search bar
- *   2. Dr. QBIT card — Auto Detect Hardware | Manual Model Search
- *   3. Browse Categories — 8 category tiles linking to /products?category=<slug>
+ *   1. Hero — large headline + sub-copy + SERIAL NUMBER SEARCH BAR
+ *      (primary search method — no model number entry on homepage)
+ *   2. Dr. QBIT card — Auto Detect Hardware only (model search removed)
+ *   3. Browse Categories — category tiles linking to /products?category=<slug>
  *   4. Featured Products — product grid pulled from DB (isFeatured=true)
  *   5. Video Center preview — 3-up YouTube gallery
  *   6. Download Center preview — drivers / firmware / manuals / SDK / utilities
  *   7. Support CTA band — links to /support, /knowledge-base, /contact
+ *
+ * The SerialLookupSection renders the search bar AND the animated result card
+ * below it. No page reload, no popup — HP/Dell/Lenovo-style support portal UX.
  */
 
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { PublicLayout } from "@/components/qbit/public/PublicLayout";
 import { PublicHomepageClient } from "@/components/qbit/public/PublicHomepageClient";
+import { SerialLookupSection } from "@/components/qbit/public/SerialLookupSection";
 
 export const dynamic = "force-dynamic";
 
@@ -98,29 +103,12 @@ export default async function PublicHomePage() {
           </h1>
 
           <p className="mx-auto max-w-2xl text-base md:text-lg text-qbit-on-surface-variant mb-10">
-            Find drivers, firmware, manuals, and videos for every QBIT product.
-            Run Dr. QBIT diagnostics, register your devices, and manage warranties —
-            all in one place.
+            Enter your device serial number to instantly access drivers, manuals,
+            warranty status, and support resources — all in one place.
           </p>
 
-          {/* Search bar */}
-          <div className="mx-auto max-w-2xl">
-            <PublicHomepageSearchBar />
-          </div>
-
-          {/* Quick links */}
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-xs text-qbit-on-surface-variant">
-            <span>Popular:</span>
-            {["T800", "HUB-X Pro", "BS550", "LD300", "CD200"].map((q) => (
-              <Link
-                key={q}
-                href={`/products?search=${encodeURIComponent(q)}`}
-                className="rounded-full border border-qbit-outline-variant bg-white/60 px-3 py-1 font-medium hover:border-qbit-primary hover:text-qbit-primary transition-colors"
-              >
-                {q}
-              </Link>
-            ))}
-          </div>
+          {/* Serial Number Search Bar — primary search method */}
+          <SerialLookupSection />
         </div>
       </section>
 
@@ -136,12 +124,12 @@ export default async function PublicHomePage() {
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-qbit-on-surface mb-3">
                 Auto-detect your hardware
                 <br />
-                or search by model number
+                with Dr. QBIT
               </h2>
               <p className="text-base text-qbit-on-surface-variant mb-6">
                 Let Dr. QBIT scan your connected devices and instantly fetch the
-                right driver, firmware, manual, and warranty information — or
-                enter a model number manually.
+                right driver, firmware, manual, and warranty information. No
+                serial number needed — just plug in and scan.
               </p>
               <div className="flex flex-wrap gap-3">
                 <Link
@@ -149,27 +137,8 @@ export default async function PublicHomePage() {
                   className="inline-flex items-center gap-2 rounded-xl bg-qbit-primary px-6 py-3 text-sm font-semibold text-qbit-on-primary hover:bg-qbit-primary-container transition-colors"
                 >
                   <span className="material-symbols-outlined text-[20px]">memory</span>
-                  Scan Hardware
+                  Scan Hardware Now
                 </Link>
-                <Link
-                  href="/dr-qbit"
-                  className="inline-flex items-center gap-2 rounded-xl border border-qbit-outline-variant px-6 py-3 text-sm font-semibold text-qbit-on-surface hover:bg-qbit-surface-container-low transition-colors"
-                >
-                  <span className="material-symbols-outlined text-[20px]">search</span>
-                  Enter Model Number
-                </Link>
-              </div>
-
-              <div className="mt-6 flex flex-wrap gap-2">
-                {["T800", "BS550", "LD300", "CD200"].map((m) => (
-                  <Link
-                    key={m}
-                    href={`/dr-qbit?model=${encodeURIComponent(m)}`}
-                    className="rounded-md border border-dashed border-qbit-outline-variant px-3 py-1 text-xs font-mono text-qbit-on-surface-variant hover:border-qbit-primary hover:text-qbit-primary transition-colors"
-                  >
-                    {m}
-                  </Link>
-                ))}
               </div>
             </div>
 
@@ -177,18 +146,18 @@ export default async function PublicHomePage() {
             <div className="rounded-2xl border border-qbit-outline-variant/50 bg-qbit-surface-container-lowest p-6 shadow-lg">
               <div className="flex items-center gap-3 mb-4">
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-qbit-primary-container">
-                  <span className="material-symbols-outlined text-[28px] text-qbit-on-primary-container">print</span>
+                  <span className="material-symbols-outlined text-[28px] text-qbit-on-primary-container">smart_toy</span>
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-qbit-on-surface">QBIT T-800 Thermal Printer</p>
-                  <p className="text-xs text-qbit-on-surface-variant">Model: T-800 · Thermal Printer</p>
+                  <p className="text-sm font-bold text-qbit-on-surface">Dr. QBIT Device Detection</p>
+                  <p className="text-xs text-qbit-on-surface-variant">Auto-identifies connected hardware in seconds</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  { label: "Driver", value: "v2.4.1", icon: "memory" },
-                  { label: "Firmware", value: "v1.8.0", icon: "upgrade" },
-                  { label: "Manual", value: "v4.0 PDF", icon: "menu_book" },
+                  { label: "Driver", value: "Auto-fetch", icon: "memory" },
+                  { label: "Firmware", value: "Latest", icon: "upgrade" },
+                  { label: "Manual", value: "PDF", icon: "menu_book" },
                   { label: "Video", value: "Available", icon: "videocam" },
                 ].map((row) => (
                   <div key={row.label} className="flex items-center gap-2 rounded-lg border border-qbit-outline-variant/50 bg-white p-3">
@@ -201,14 +170,14 @@ export default async function PublicHomePage() {
                 ))}
               </div>
               <Link
-                href="/products/t800"
+                href="/dr-qbit"
                 className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-qbit-primary px-4 py-3 text-sm font-semibold text-qbit-on-primary hover:bg-qbit-primary-container transition-colors"
               >
-                <span className="material-symbols-outlined text-[18px]">download</span>
-                Download Resources
+                <span className="material-symbols-outlined text-[18px]">smart_toy</span>
+                Launch Dr. QBIT
               </Link>
               <p className="mt-2 text-center text-[11px] text-qbit-on-surface-variant">
-                Warranty info visible after login
+                Or use the serial number search above
               </p>
             </div>
           </div>
@@ -360,34 +329,6 @@ export default async function PublicHomePage() {
         </div>
       </section>
     </PublicLayout>
-  );
-}
-
-/** Inline server-rendered search bar that hands off to client navigation */
-function PublicHomepageSearchBar() {
-  return (
-    <form
-      action="/products"
-      method="get"
-      className="relative"
-    >
-      <input type="hidden" name="search" value="" />
-      <span className="material-symbols-outlined absolute left-5 top-1/2 -translate-y-1/2 text-[24px] text-qbit-primary">
-        search
-      </span>
-      <input
-        type="text"
-        name="search"
-        placeholder="Search product, model number, driver, manual…"
-        className="w-full rounded-2xl border border-qbit-outline-variant bg-white py-4 pl-14 pr-32 text-sm text-qbit-on-surface shadow-lg transition-all placeholder:text-qbit-on-surface-variant/70 focus:border-qbit-primary focus:outline-none focus:ring-2 focus:ring-qbit-primary/30 md:text-base"
-      />
-      <button
-        type="submit"
-        className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl bg-qbit-primary px-5 py-2.5 text-sm font-semibold text-qbit-on-primary hover:bg-qbit-primary-container transition-colors"
-      >
-        Search
-      </button>
-    </form>
   );
 }
 
