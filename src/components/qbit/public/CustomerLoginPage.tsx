@@ -260,14 +260,14 @@ export function CustomerLoginPage() {
       {/* ===== Register Product + Activate Warranty ===== */}
       <div className="grid grid-cols-2 gap-3">
         <Link
-          href="/support"
+          href="/accounts/register"
           className="group flex flex-col items-center rounded-xl border border-qbit-outline-variant bg-qbit-surface-container-low p-4 text-center transition-all hover:border-qbit-primary/30 hover:shadow-md"
         >
           <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-qbit-primary/10 text-qbit-primary">
             <Icon name="add_circle" className="text-[22px]" />
           </div>
           <span className="text-sm font-bold text-qbit-on-surface group-hover:text-qbit-primary">Register Product</span>
-          <span className="mt-0.5 text-[11px] text-qbit-on-surface-variant">Link a new device</span>
+          <span className="mt-0.5 text-[11px] text-qbit-on-surface-variant">Create your account</span>
         </Link>
         <Link
           href="/support"
@@ -318,10 +318,10 @@ export function CustomerLoginPage() {
       {/* ===== Footer help ===== */}
       <p className="mt-6 text-center text-xs text-qbit-on-surface-variant">
         Don&apos;t have an account?{" "}
-        <Link href="/support" className="font-semibold text-qbit-primary hover:underline">
-          Contact us
+        <Link href="/accounts/register" className="font-semibold text-qbit-primary hover:underline">
+          Register your QBIT product
         </Link>{" "}
-        to register your QBIT product.
+        to create one.
       </p>
     </div>
   );
