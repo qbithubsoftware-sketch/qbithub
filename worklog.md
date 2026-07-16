@@ -978,3 +978,103 @@ Stage Summary:
 - All server-side validation rules enforced (weak password, mismatch, T&C, duplicate, no-device).
 - Login page "Register Product" button now opens /accounts/register (not /support).
 - Existing login flow UNCHANGED — sign-in still works exactly as before.
+
+---
+Task ID: single-search-experience
+Agent: main
+Task: Make the homepage search bar a SINGLE SEARCH GATEWAY only. Remove all device information rendering (warranty, customer, drivers, manuals, firmware, downloads) from the homepage. When user enters a serial number, redirect to /dr-qbit?serial=XXX and auto-search there. Dr. QBIT is the SINGLE SOURCE OF TRUTH for device info.
+
+Work Log:
+
+1. SmartSearchSection.tsx — REWROTE to remove all device info rendering:
+   - Removed performSerialLookup, state, result variables
+   - Removed PortalResult, NotFoundCard, InvalidCard, ErrorCard rendering
+   - Removed LookupResponse import
+   - When user enters serial number → router.push('/dr-qbit?serial=XXX')
+   - When user clicks serial suggestion → router.push('/dr-qbit?serial=XXX')
+   - Product Preview Card STILL shown for product searches (per spec)
+   - Other types navigate directly to their URLs
+
+2. CustomerPortal.tsx — added ?serial= query param auto-search:
+   - Added useSearchParams() hook
+   - On mount, reads ?serial=XXX from URL
+   - Pre-fills the serial input with the value
+   - Auto-triggers performLookup after 100ms delay
+   - No second button click, no retyping
+   - autoSearchTriggered ref prevents duplicate triggers
+
+3. /dr-qbit/page.tsx — wrapped CustomerPortal in <Suspense> because
+   useSearchParams requires it (Next.js 14+ requirement).
+
+4. NEW ROUTE /drivers/[slug] (page.tsx, 175 lines):
+   - Product-specific drivers page
+   - Shows QbitProduct.driverDownloadUrl + ProductMedia rows (type=driver,
+     visibility=public)
+   - Breadcrumb + product header + drivers list + installation instructions
+   - Empty state when no drivers available
+   - Related links (product details, manuals, all drivers)
+
+5. NEW ROUTE /manuals/[slug] (page.tsx, 195 lines):
+   - Product-specific manuals page
+   - Shows QbitProduct.manualUrl + installationGuideUrl + ProductMedia
+     rows (type=manual, visibility=public)
+   - Breadcrumb + product header + documents list + installation notes
+   - Empty state when no manuals available
+   - Related links (product details, drivers, all downloads)
+
+6. /api/public/smart-search — updated suggestion URLs:
+   - driver:  /downloads?type=driver&product=<slug>  →  /drivers/<slug>
+   - manual:  /downloads?type=manual&product=<slug>  →  /manuals/<slug>
+   - firmware: unchanged (/downloads?type=firmware&product=<slug>)
+   - video: unchanged (/videos?product=<slug>)
+   - serial:  unchanged (/dr-qbit?serial=XXX)
+
+WHAT WAS PRESERVED:
+   - /dr-qbit page layout (Hardware Scanner + Serial Number cards)
+   - /api/public/serial-lookup API (unchanged)
+   - PortalResult / WarrantyPremiumCard / Downloads / Registered Device /
+     Support sections on /dr-qbit (unchanged — single source of truth)
+   - /accounts/login + /accounts/register (unchanged)
+   - All existing routes work as before
+
+Production Verification (https://qbithub.vercel.app):
+
+  ✓ GET /                                    → HTTP 200 (smart search bar present)
+  ✓ GET /dr-qbit?serial=SNQBT000003          → HTTP 200, serial pre-filled, auto-searches
+  ✓ GET /drivers/w512                        → HTTP 200, "Drivers for Window POS W512"
+  ✓ GET /manuals/w512                        → HTTP 200, "Manuals for Window POS W512"
+
+  Smart Search suggestion URLs (verified):
+    W512 query:
+      [product]  Window POS W512           → /products/w512
+      [driver]   Drivers for W512          → /drivers/w512
+      [manual]   Manual for W512           → /manuals/w512
+      [firmware] Firmware for W512         → /downloads?type=firmware&product=w512
+      [video]    Installation Video for W512 → /videos?product=w512
+
+    Thermal Printer query:
+      [product] Thermal Printer P80UE      → /products/p80ue
+      [driver]  Drivers for P80UE          → /drivers/p80ue
+
+    SNQBT000003 serial query:
+      serial detected: True
+      [serial] Search Serial: SNQBT000003  → /dr-qbit?serial=SNQBT000003
+
+UX (per spec):
+  Homepage → user types SNQBT000003 → click Search
+           → instant redirect to /dr-qbit?serial=SNQBT000003
+           → Dr. QBIT opens with serial pre-filled
+           → search auto-executes (no second button click)
+           → device info displayed immediately (warranty card, customer,
+             drivers, manuals, firmware, installation guide, downloads)
+  No second search. No second button click. No retyping. No duplicate
+  information on the homepage.
+
+Stage Summary:
+- Homepage is now a SINGLE SEARCH GATEWAY — never displays device info.
+- /dr-qbit remains the SINGLE SOURCE OF TRUTH for device information.
+- Deep-linking works: /dr-qbit?serial=XXX auto-searches on page load.
+- New /drivers/<slug> and /manuals/<slug> routes for product-specific
+  downloads (reachable from homepage smart search suggestions).
+- HP Support Assistant / Dell SupportAssist / Lenovo / Apple Support style
+  seamless enterprise support experience.
