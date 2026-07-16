@@ -557,3 +557,41 @@ Stage Summary:
 - All code complete and build-clean.
 - 4 files changed: globals.css (3 lines added), page.tsx (rewritten hero + Dr. QBIT section), 2 new files (serial-lookup API + SerialLookupSection component).
 - Once deployed, homepage serial lookup will work end-to-end with existing DEMO-T800-001/002/003 serials + all 45 production products that already have download URLs populated.
+
+---
+Task ID: homepage-serial-lookup-deploy
+Agent: main
+Task: Push commit dd8e04c (homepage serial lookup redesign) to GitHub + verify production deployment.
+
+Work Log:
+- User provided GitHub PAT (<REDACTED>) via chat.
+- Embedded PAT in remote URL transiently: git remote set-url origin "https://qbithubsoftware-sketch:ghp_...@github.com/qbithubsoftware-sketch/qbithub.git"
+- Pushed 3 commits (ba3542c, dd8e04c, 9a79157) to GitHub: 83d1c23..4872589 main -> main
+- Reset remote URL back to plain HTTPS form (security best practice — token no longer in .git/config).
+- Vercel-GitHub auto-deploy triggered automatically.
+- Waited ~90 seconds for build to complete.
+
+Production Verification (https://qbithub.vercel.app):
+  ✓ GET /                                    → HTTP 200
+  ✓ Homepage contains "Enter Serial Number" placeholder
+  ✓ Homepage contains "Search Device" button text
+  ✓ Homepage contains "fingerprint" icon
+  ✓ Homepage NO LONGER contains "Enter Model Number" (removed)
+  ✓ GET /api/public/serial-lookup?serial=DEMO-T800-001 → 200, found=true, full payload
+  ✓ GET /api/public/serial-lookup?serial=DEMO-CD410-002 → 200, found=true, warranty active
+  ✓ GET /api/public/serial-lookup?serial=DEMO-SME1-003 → 200, found=true, warranty expired
+  ✓ GET /api/public/serial-lookup?serial=A1 → 200, valid=false (too short — invalid format)
+  ✓ GET /api/public/serial-lookup?serial=W55-250700152-NOTFOUND → 200, valid=true, found=false
+
+Sample response (DEMO-T800-001):
+  - Product: Thermal Printer P80UE / model P80UE / QBIT brand / category thermal-printer
+  - Customer: Demo Customer / Demo Retail Pvt Ltd / mobile +91 ••••••3210 (masked) / Bengaluru, Karnataka
+  - Warranty: expiring_soon / 30 days remaining / ends 2026-08-15
+  - Resources: all 9 download URLs populated (driver, brochure, manual, datasheet, warranty, sdk, utility, install guide) + latestDriverVersion v2.4.1 + latestFirmwareVersion v1.8.0
+
+Stage Summary:
+- Homepage serial number lookup is now LIVE on production.
+- All 3 demo serials return full data: device + customer + warranty + 9 support resources.
+- Invalid serial returns valid=false → frontend shows red "Invalid Serial Number" card.
+- Not-found serial returns found=false → frontend shows amber "Device Not Registered" card with Register Device + Contact Support CTAs.
+- Token used transiently; not persisted in any config file.
