@@ -218,11 +218,17 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
             <div>
               <h4 className="text-sm font-semibold mb-3 text-white/90">Products</h4>
               <ul className="space-y-2 text-sm text-white/70">
-                <li><Link href="/products?category=windows-pos" className="hover:text-white transition-colors">Windows POS</Link></li>
+                <li><Link href="/products?category=window-pos" className="hover:text-white transition-colors">Window POS</Link></li>
                 <li><Link href="/products?category=android-pos" className="hover:text-white transition-colors">Android POS</Link></li>
+                <li><Link href="/products?category=handy-pos" className="hover:text-white transition-colors">Handy POS</Link></li>
                 <li><Link href="/products?category=thermal-printer" className="hover:text-white transition-colors">Thermal Printers</Link></li>
+                <li><Link href="/products?category=portable-printer" className="hover:text-white transition-colors">Portable Printers</Link></li>
+                <li><Link href="/products?category=barcode-printer" className="hover:text-white transition-colors">Barcode Printers</Link></li>
                 <li><Link href="/products?category=barcode-scanner" className="hover:text-white transition-colors">Barcode Scanners</Link></li>
-                <li><Link href="/products?category=kiosk" className="hover:text-white transition-colors">Kiosks</Link></li>
+                <li><Link href="/products?category=cash-drawer" className="hover:text-white transition-colors">Cash Drawers</Link></li>
+                <li><Link href="/products?category=customer-side-display" className="hover:text-white transition-colors">Customer Displays</Link></li>
+                <li><Link href="/products?category=self-ordering-kiosk" className="hover:text-white transition-colors">Self-Ordering Kiosks</Link></li>
+                <li><Link href="/products?category=digital-standee" className="hover:text-white transition-colors">Digital Standees</Link></li>
               </ul>
             </div>
 

@@ -22,14 +22,17 @@ import { PublicHomepageClient } from "@/components/qbit/public/PublicHomepageCli
 export const dynamic = "force-dynamic";
 
 const CATEGORIES: ReadonlyArray<{ name: string; slug: string; icon: string; description: string }> = [
-  { name: "Windows POS", slug: "windows-pos", icon: "desktop_windows", description: "All-in-one touch terminals" },
+  { name: "Window POS", slug: "window-pos", icon: "desktop_windows", description: "All-in-one touch terminals" },
   { name: "Android POS", slug: "android-pos", icon: "phone_android", description: "Mobile & handheld POS" },
-  { name: "Thermal Printer", slug: "thermal-printer", icon: "print", description: "Receipt & label printers" },
+  { name: "Handy POS", slug: "handy-pos", icon: "phone_android", description: "Pocket-sized mobile POS" },
+  { name: "Thermal Printer", slug: "thermal-printer", icon: "print", description: "Receipt printers" },
+  { name: "Portable Printer", slug: "portable-printer", icon: "print", description: "Bluetooth mobile printers" },
+  { name: "Barcode Printer", slug: "barcode-printer", icon: "label", description: "Shipping & label printers" },
   { name: "Barcode Scanner", slug: "barcode-scanner", icon: "barcode_scanner", description: "1D / 2D wired & wireless" },
-  { name: "Cash Drawer", slug: "cash-drawer", icon: "point_of_sale", description: "RJ11 / USB cash drawers" },
-  { name: "Label Printer", slug: "label-printer", icon: "label", description: "4-inch shipping label printers" },
-  { name: "Kiosk", slug: "kiosk", icon: "storefront", description: "Self-service touch kiosks" },
-  { name: "Accessories", slug: "customer-display", icon: "monitor", description: "Customer displays & more" },
+  { name: "Cash Drawer", slug: "cash-drawer", icon: "point_of_sale", description: "RJ11 cash drawers" },
+  { name: "Customer Side Display", slug: "customer-side-display", icon: "monitor", description: "Customer-facing displays" },
+  { name: "Self Ordering Kiosk", slug: "self-ordering-kiosk", icon: "storefront", description: "Self-service kiosks" },
+  { name: "Digital Standee", slug: "digital-standee", icon: "monitor", description: "Digital signage displays" },
 ];
 
 const DOWNLOAD_CATEGORIES: ReadonlyArray<{ label: string; icon: string; href: string; description: string; color: string }> = [

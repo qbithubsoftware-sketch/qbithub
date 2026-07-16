@@ -16,14 +16,17 @@ export const dynamic = "force-dynamic";
 // Canonical list of categories shown in the Browse Categories strip.
 // Slugs match the `QbitProduct.category` field values exactly.
 const CATEGORIES: ReadonlyArray<{ name: string; slug: string; icon: string }> = [
-  { name: "Windows POS", slug: "windows-pos", icon: "desktop_windows" },
+  { name: "Window POS", slug: "window-pos", icon: "desktop_windows" },
   { name: "Android POS", slug: "android-pos", icon: "phone_android" },
+  { name: "Handy POS", slug: "handy-pos", icon: "phone_android" },
   { name: "Thermal Printer", slug: "thermal-printer", icon: "print" },
+  { name: "Portable Printer", slug: "portable-printer", icon: "print" },
+  { name: "Barcode Printer", slug: "barcode-printer", icon: "label" },
   { name: "Barcode Scanner", slug: "barcode-scanner", icon: "barcode_scanner" },
   { name: "Cash Drawer", slug: "cash-drawer", icon: "point_of_sale" },
-  { name: "Label Printer", slug: "label-printer", icon: "label" },
-  { name: "Kiosk", slug: "kiosk", icon: "storefront" },
-  { name: "Customer Display", slug: "customer-display", icon: "monitor" },
+  { name: "Customer Side Display", slug: "customer-side-display", icon: "monitor" },
+  { name: "Self Ordering Kiosk", slug: "self-ordering-kiosk", icon: "storefront" },
+  { name: "Digital Standee", slug: "digital-standee", icon: "monitor" },
 ];
 
 export default async function ProductsPage({
