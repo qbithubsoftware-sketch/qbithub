@@ -101,7 +101,7 @@ export function DrQbitWorkflow() {
 
   /* ----- Scan + Search handlers ----- */
 
-  const runScan = useCallback(async (modelOrSlug: string) => {
+  const runScan = useCallback(async (serialOrInput: string) => {
     setScanState("scanning");
     setScanProgress(0);
     setError(null);
@@ -113,13 +113,77 @@ export function DrQbitWorkflow() {
     }, 200);
 
     try {
-      // Fetch product by slug or search
-      const query = modelOrSlug.trim().toLowerCase().replace(/\s+/g, "-");
-      // Try direct slug lookup first
+      const input = serialOrInput.trim();
+
+      // Step 1: Try Device Lookup by serial number (PurchaseRecord + FSMCustomerAsset)
+      const deviceRes = await fetch(`/api/public/device-lookup?serialNumber=${encodeURIComponent(input)}`, { cache: "no-store" });
+
+      if (deviceRes.ok) {
+        const deviceData = await deviceRes.json();
+        if (deviceData.found && deviceData.device) {
+          // Device found by serial number — fetch full product details
+          clearInterval(progressInterval);
+          setScanProgress(100);
+
+          // If device has a model number, fetch product details
+          let productData = null;
+          if (deviceData.device.modelNumber) {
+            // Search product by model
+            const searchRes = await fetch(`/api/public/search?q=${encodeURIComponent(deviceData.device.modelNumber)}&limit=1`, { cache: "no-store" });
+            if (searchRes.ok) {
+              const searchData = await searchRes.json();
+              if (searchData.items && searchData.items.length > 0) {
+                const prodRes = await fetch(`/api/public/products/${encodeURIComponent(searchData.items[0].slug)}`, { cache: "no-store" });
+                if (prodRes.ok) {
+                  productData = (await prodRes.json()).product;
+                }
+              }
+            }
+          }
+
+          // Build result from device lookup + product data
+          setScanState("loading");
+          setTimeout(() => {
+            setResult({
+              ...(productData ?? {
+                id: "", name: deviceData.device.productName, brand: deviceData.device.brand ?? "QBIT",
+                model: deviceData.device.modelNumber, slug: "", deviceType: "", category: deviceData.device.category ?? null,
+                description: null, longDescription: null, imageUrl: deviceData.device.productImage,
+                galleryImages: [], specifications: [], features: [], operatingSystems: [],
+                videos: [], mediaFiles: [],
+                driverDownloadUrl: deviceData.drivers?.driverDownloadUrl ?? null,
+                manualUrl: deviceData.drivers?.manualUrl ?? null,
+                brochureUrl: deviceData.drivers?.brochureUrl ?? null,
+                datasheetUrl: deviceData.drivers?.datasheetUrl ?? null,
+                warrantyUrl: deviceData.drivers?.warrantyUrl ?? null,
+                sdkUrl: deviceData.drivers?.sdkUrl ?? null,
+                utilityUrl: deviceData.drivers?.utilityUrl ?? null,
+                installationGuideUrl: deviceData.drivers?.installationGuideUrl ?? null,
+                knowledgeBaseUrl: null, qrCodeUrl: deviceData.device.qrCode,
+                seoTitle: null, seoDescription: null,
+                viewCount: 0, downloadCount: 0,
+                aiDiagnosticsSupported: false, drQbitSupported: true,
+                latestDriverVersion: deviceData.drivers?.latestDriverVersion ?? null,
+                latestFirmwareVersion: deviceData.drivers?.latestFirmwareVersion ?? null,
+                lastUpdated: new Date().toISOString(),
+                relatedProducts: [],
+              }),
+              // Override with device-specific data
+              name: deviceData.device.productName,
+              model: deviceData.device.modelNumber,
+              imageUrl: deviceData.device.productImage,
+            });
+            setScanState("complete");
+          }, 600);
+          return;
+        }
+      }
+
+      // Step 2: Fallback — try product search by model/slug
+      const query = input.toLowerCase().replace(/\s+/g, "-");
       let res = await fetch(`/api/public/products/${encodeURIComponent(query)}`, { cache: "no-store" });
       if (!res.ok) {
-        // Fall back to search
-        const searchRes = await fetch(`/api/public/search?q=${encodeURIComponent(modelOrSlug.trim())}&limit=1`, { cache: "no-store" });
+        const searchRes = await fetch(`/api/public/search?q=${encodeURIComponent(input)}&limit=1`, { cache: "no-store" });
         if (searchRes.ok) {
           const searchData = await searchRes.json();
           if (searchData.items && searchData.items.length > 0) {
@@ -132,7 +196,7 @@ export function DrQbitWorkflow() {
 
       if (!res.ok) {
         setScanState("error");
-        setError("No product found for that model number. Please check and try again.");
+        setError("No device found with this Serial Number. Please check and try again.");
         return;
       }
 
@@ -264,12 +328,12 @@ export function DrQbitWorkflow() {
                 <span className="material-symbols-outlined text-[28px]">search</span>
               </div>
               <div>
-                <h2 className="text-lg font-bold text-qbit-on-surface">Enter Model Number</h2>
-                <p className="text-xs text-qbit-on-surface-variant">Manual search</p>
+                <h2 className="text-lg font-bold text-qbit-on-surface">Enter Serial Number</h2>
+                <p className="text-xs text-qbit-on-surface-variant">Search by device serial number</p>
               </div>
             </div>
             <p className="mb-4 text-sm text-qbit-on-surface-variant">
-              Know your model number? Type it below to jump straight to the diagnostic results.
+              Know your serial number? Type it below to instantly fetch all device information from the database.
             </p>
             <form onSubmit={handleManualSearch} className="relative mb-4">
               <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-qbit-on-surface-variant">search</span>
@@ -277,7 +341,7 @@ export function DrQbitWorkflow() {
                 type="text"
                 value={modelInput}
                 onChange={(e) => setModelInput(e.target.value)}
-                placeholder="e.g. T800, BS550, LD300…"
+                placeholder="e.g. W55XXXXXXX, SN-001…"
                 className="w-full rounded-xl border border-qbit-outline-variant bg-qbit-surface-container-lowest py-3 pl-12 pr-4 text-sm text-qbit-on-surface focus:border-qbit-primary focus:outline-none focus:ring-2 focus:ring-qbit-primary/30"
                 autoFocus
               />
@@ -285,7 +349,7 @@ export function DrQbitWorkflow() {
             <div className="mb-6">
               <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-qbit-on-surface-variant">Try:</p>
               <div className="flex flex-wrap gap-2">
-                {["T800", "BS550", "LD300", "CD200", "HUB-X Pro"].map((m) => (
+                {["DEMO-T800-001", "DEMO-CD410-002", "DEMO-SME1-003"].map((m) => (
                   <button
                     key={m}
                     type="button"
@@ -305,7 +369,7 @@ export function DrQbitWorkflow() {
               disabled={!modelInput.trim()}
               onClick={() => void runScan(modelInput.trim())}
             >
-              Search Products
+              Search Device
             </QbitButton>
           </div>
         </div>

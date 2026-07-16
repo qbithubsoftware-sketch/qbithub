@@ -45,7 +45,7 @@ export default async function DrQbitPage() {
             Find drivers, firmware, and manuals in seconds
           </h1>
           <p className="mt-3 text-base text-qbit-on-surface-variant">
-            Auto-detect your connected hardware, or search by model number.
+            Auto-detect your connected hardware, or search by serial number.
             No login required for public downloads.
           </p>
         </div>
