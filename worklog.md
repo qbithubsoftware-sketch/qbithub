@@ -784,3 +784,141 @@ Stage Summary:
 - Both methods render the same existing result page.
 - Warranty card colors now follow the 4-tier threshold spec.
 - No backend changes, no API changes, no result page redesign.
+
+---
+Task ID: smart-search-homepage
+Agent: main
+Task: Convert the existing homepage search bar into a Smart Multi-Search Bar that auto-detects search type (Serial / Product / Driver / Manual / Firmware / Video / KB / Error / FAQ / Category) and routes accordingly. PRESERVE existing Serial Number Lookup functionality 100% — same API, same result page, same customer details.
+
+Work Log:
+
+1. New API endpoint: /api/public/smart-search?q=XXX&limit=8
+   - Returns categorized suggestions across 10 types:
+     * serial   (when input matches serial pattern)
+     * product  (name/model/slug/brand match — top 5 by featured+viewCount)
+     * driver   (Drivers for <product> — top 2)
+     * manual   (Manual for <product> — top 2)
+     * firmware (Firmware for <product> — top 1)
+     * video    (Installation Video for <product> — top 1)
+     * kb       (KnowledgeArticle title/excerpt match — top 3)
+     * error    (CommonError code/meaning match — top 3)
+     * faq      (FAQ question match — top 2)
+     * category (11 hardcoded QBIT categories — top 1)
+   - Priority-sorted per spec:
+     serial > product > driver > manual > firmware > video > kb > error > faq > category
+   - Deduped by (type, label) tuple
+   - Graceful fallback: if KB/FAQ/Error tables don't exist, skip silently
+   - Serial detection regex covers: SNQBT*, DEMO-*, SN-*, SE-*, W55-250700152
+     (alphanumeric prefix + dash + 4+ digits), letter prefix + 6+ digits
+
+2. New SmartSearchSection component (replaces SerialLookupSection on homepage)
+   - Same visual design: rounded corners, blue Search button, centered
+   - Placeholder: "Search Serial Number, Product, Driver, Manual, Error Code…"
+   - 200ms debounce on input → live autocomplete dropdown
+   - Dropdown renders within ~150ms of debounce firing
+   - Each suggestion shows: icon (color-coded by type) + label + sublabel +
+     type badge (Device Lookup / Product / Driver / Manual / Firmware / Video /
+     Knowledge Base / Error Code / Category / FAQ)
+   - Keyboard navigation: ArrowUp/Down to move, Enter to select, Escape to close
+   - Mouse hover + click selection
+   - Click-outside-to-close (via document mousedown listener)
+   - ARIA combobox + listbox + option roles for accessibility
+   - Mobile responsive (dropdown max-height 400px with vertical scroll)
+   - Loading state with spinner during fetch
+   - Empty state with helpful guidance
+
+3. Smart routing on Enter / suggestion click:
+   - Serial input  → existing performSerialLookup (UNCHANGED — same API,
+     same PortalResult rendering, same customer/warranty/downloads sections)
+   - Product click → fetchProductPreview → ProductPreviewCard below search
+     (NOT auto-redirect per spec)
+   - Driver        → /downloads?type=driver&product=<slug>
+   - Manual        → /downloads?type=manual&product=<slug>
+   - Firmware      → /downloads?type=firmware&product=<slug>
+   - Video         → /videos?product=<slug>
+   - KB article    → /knowledge-base?article=<slug>
+   - Error code    → /knowledge-base?error=<code>
+   - FAQ           → /knowledge-base?faq=<id>
+   - Category      → /products?category=<slug>
+
+4. New ProductPreviewCard component:
+   - Premium card with product image, brand, name, model, category
+   - Latest driver + firmware versions displayed
+   - Description (3-line clamp)
+   - Quick action buttons (per spec):
+     * View Product (primary) → /products/<slug>
+     * Download Drivers → /downloads?type=driver&product=<slug>
+     * Manuals → /downloads?type=manual&product=<slug>
+     * Specifications → /products/<slug>#specifications
+   - 'New Search' reset button in header banner
+   - Only shown for product searches — NEVER for serial numbers
+   - Smooth fade-in-up animation
+
+5. Popular searches chips below search bar:
+   - SNQBT000001, Thermal Printer, Windows POS, W512, Barcode Scanner
+   - Clicking a chip immediately fetches suggestions + opens dropdown
+
+6. Code reuse — exported from existing modules to avoid duplication:
+   - CustomerPortal.tsx now exports: DeviceInfo, CustomerInfo, WarrantyInfo,
+     ResourcesInfo, LookupResponse types + PortalResult, NotFoundCard,
+     InvalidCard, ErrorCard components
+   - SerialLookupSection.tsx exports LookupResponse type
+   - SmartSearchSection imports these and reuses them for serial lookup
+     result rendering (same UI, same flow, no duplicate code)
+
+7. Homepage update:
+   - Imported SmartSearchSection
+   - Replaced <SerialLookupSection /> with <SmartSearchSection /> in hero
+   - Updated hero subtitle: "Search by Serial Number, Product Name, Driver,
+     Manual, or Error Code — our smart search automatically routes you to
+     the right destination."
+
+8. NO breaking changes:
+   - /api/public/serial-lookup API unchanged
+   - /dr-qbit page unchanged (still uses CustomerPortal with Hardware
+     Scanner card from previous task)
+   - Existing serial lookup result page unchanged (PortalResult)
+   - Customer details / warranty / downloads / support sections unchanged
+   - Only the homepage hero search bar was swapped from SerialLookupSection
+     to SmartSearchSection (which internally still uses performSerialLookup
+     for serial inputs — same code path, same UX)
+
+Production Verification (https://qbithub.vercel.app):
+
+  ✓ GET / → HTTP 200
+  ✓ Homepage contains "Search Serial Number, Product, Driver, Manual, Error Code..." placeholder
+  ✓ Homepage contains "Search" button
+  ✓ Homepage contains "Popular" searches label
+  ✓ trending_up icon rendered
+
+  ✓ GET /api/public/smart-search?q=SNQBT000001 → serial=true, 1 suggestion
+    [serial] Search Serial: SNQBT000001
+  ✓ GET /api/public/smart-search?q=Thermal+Printer → 8 suggestions
+    [product] Thermal Printer P80UE / P80 Beta / P80 Alpha / P80 UES
+    [driver] Drivers for P80UE / P80 Beta
+    [manual] Manual for P80UE / P80 Beta
+  ✓ GET /api/public/smart-search?q=W512 → 5 suggestions
+    [product] Window POS W512
+    [driver] Drivers for W512
+    [manual] Manual for W512
+    [firmware] Firmware for W512
+    [video] Installation Video for W512
+  ✓ GET /api/public/smart-search?q=Barcode → 8 suggestions (4 products + driver/manual)
+  ✓ GET /api/public/smart-search?q=W55-250700152 → serial=true, 1 suggestion
+    (generic alphanumeric-prefix+dash+digits pattern detected)
+  ✓ GET /api/public/smart-search?q=POS → 8 product matches
+  ✓ GET /api/public/smart-search?q=Cash+Drawer → 6 suggestions
+
+Commits:
+  - bce8385: Initial smart search implementation
+  - 61f39e2: Fix serial detection regex for W55-250700152 pattern
+
+Stage Summary:
+- Homepage search bar is now a Universal Smart Search Engine.
+- Auto-detects 10 search types and routes to correct destination.
+- Existing serial lookup flow 100% preserved (same API, same result page).
+- Product searches show a premium Product Preview Card below the search
+  bar (no auto-redirect).
+- All other types route directly to the appropriate page.
+- Live autocomplete with 200ms debounce, keyboard navigation, ARIA roles.
+- Premium Apple/HP/Microsoft/Dell/Lenovo-style support experience.
