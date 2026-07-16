@@ -33,7 +33,7 @@ import { db } from "@/lib/db";
 // Serial-number patterns:
 //   - SNQBT000001         → starts with SNQBT + digits
 //   - DEMO-T800-001       → DEMO- prefix
-//   - W55-250700152       → short prefix + dash + long digit run
+//   - W55-250700152       → short alphanumeric prefix + dash + long digit run
 //   - SN-XXX-12345        → SN prefix
 //   - SE-XXXX             → SE prefix
 const SERIAL_PATTERNS = [
@@ -41,7 +41,8 @@ const SERIAL_PATTERNS = [
   /^DEMO[-_]/i,
   /^SN[-_]/i,
   /^SE[-_]/i,
-  /^[A-Z]{1,5}[-_]?\d{6,}/i, // generic: prefix + 6+ digits
+  /^[A-Z0-9]{1,5}[-_]\d{4,}/i, // alphanumeric prefix + dash + 4+ digits (W55-250700152, T800-001)
+  /^[A-Z]{1,5}[-_]?\d{6,}/i,   // letter prefix + 6+ digits (no dash)
 ];
 
 function looksLikeSerial(input: string): boolean {
