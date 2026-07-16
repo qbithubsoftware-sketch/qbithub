@@ -1820,10 +1820,18 @@ model ProductMedia {
   altText      String?
   sortIndex    Int         @default(0)
   isPrimary    Boolean     @default(false) // for gallery cover selection
+  /// RBAC visibility: "public" (everyone) | "employee" (logged-in staff)
+  /// | "engineer" (engineer/admin) | "admin" (admin only).
+  /// Public serial-lookup API returns ONLY rows where visibility = "public".
+  /// This hides engineer tools, admin tools, security files, internal
+  /// utilities, testing files, factory software, debug files, etc. from
+  /// guests and customers.
+  visibility   String      @default("public")
   createdAt    DateTime    @default(now())
 
   @@index([productId, type])
   @@index([productId, sortIndex])
+  @@index([visibility])
 }
 
 /// Structured per-product specification rows (admin-managed).

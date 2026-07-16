@@ -7,7 +7,7 @@ Work Log:
 - Verified project directory at /home/z/my-project and git status (clean working tree on `main` branch).
 - Checked git remote configuration — `origin` already pointed at https://github.com/qbithubsoftware-sketch/qbithub.git.
 - Configured git identity (user.email + user.name) for commit attribution.
-- Temporarily set remote URL to embed the user-provided GitHub PAT (`ghp_***`) for authenticated push.
+- Temporarily set remote URL to embed the user-provided GitHub PAT (`ghp_<REDACTED>`) for authenticated push.
 - Verified remote repository was empty (`git ls-remote origin` returned no refs).
 - Executed `git push -u origin main` — successful; new branch `main` created on remote and tracking configured.
 - Confirmed remote `origin/main` HEAD now matches local `15df9bc` commit.
@@ -22,7 +22,7 @@ Stage Summary:
 ---
 Task ID: deploy-to-vercel
 Agent: main
-Task: Deploy qbithub project to Vercel using user-provided Vercel token (`vcp_***`). Connect deployment to GitHub repo.
+Task: Deploy qbithub project to Vercel using user-provided Vercel token (`vcp_<REDACTED>`). Connect deployment to GitHub repo.
 
 Work Log:
 - Installed Vercel CLI globally via `npm install -g vercel` (v55.0.0).
@@ -201,7 +201,7 @@ Agent: main
 Task: Verify GitHub changes have been deployed to Vercel production. Diagnosed + fixed 2 failing Vercel builds.
 
 Work Log:
-- Verified Vercel token (vcp_7lhH09...) — works, account: qbithubsoftware@gmail.com, team: qbithub-software.
+- Verified Vercel token (vcp_<REDACTED>) — works, account: qbithubsoftware@gmail.com, team: qbithub-software.
 - Listed latest deployments via Vercel API and discovered:
   - commit 7dce609 (Admin Product Management): ERROR state
   - commit 0562499 (Product navigation overhaul): ERROR state
@@ -565,7 +565,7 @@ Task: Push commit dd8e04c (homepage serial lookup redesign) to GitHub + verify p
 
 Work Log:
 - User provided GitHub PAT (<REDACTED>) via chat.
-- Embedded PAT in remote URL transiently: git remote set-url origin "https://qbithubsoftware-sketch:ghp_...@github.com/qbithubsoftware-sketch/qbithub.git"
+- Embedded PAT in remote URL transiently: git remote set-url origin "https://github.com/qbithubsoftware-sketch/qbithub.git"
 - Pushed 3 commits (ba3542c, dd8e04c, 9a79157) to GitHub: 83d1c23..4872589 main -> main
 - Reset remote URL back to plain HTTPS form (security best practice — token no longer in .git/config).
 - Vercel-GitHub auto-deploy triggered automatically.

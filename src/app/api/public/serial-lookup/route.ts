@@ -68,7 +68,7 @@ export async function GET(req: NextRequest) {
         product: {
           select: {
             id: true, name: true, slug: true, model: true, brand: true,
-            category: true, deviceType: true, imageUrl: true,
+            category: true, deviceType: true, imageUrl: true, description: true,
             driverDownloadUrl: true, manualUrl: true, brochureUrl: true,
             datasheetUrl: true, warrantyUrl: true, sdkUrl: true, utilityUrl: true,
             installationGuideUrl: true, knowledgeBaseUrl: true,
@@ -76,7 +76,12 @@ export async function GET(req: NextRequest) {
             qrCodeUrl: true, status: true,
             installationInstructions: true, installationTime: true,
             difficultyLevel: true,
-            mediaFiles: { orderBy: { sortIndex: "asc" } },
+            // RBAC: filter mediaFiles to PUBLIC visibility only.
+            // Engineer/admin/internal resources are NEVER exposed to guests.
+            mediaFiles: {
+              where: { visibility: "public" },
+              orderBy: { sortIndex: "asc" },
+            },
           },
         },
         invoices: { take: 1, orderBy: { createdAt: "desc" } },
@@ -163,7 +168,7 @@ export async function GET(req: NextRequest) {
           where: { model: { equals: asset.model, mode: "insensitive" } },
           select: {
             id: true, name: true, slug: true, model: true, brand: true,
-            category: true, deviceType: true, imageUrl: true,
+            category: true, deviceType: true, imageUrl: true, description: true,
             driverDownloadUrl: true, manualUrl: true, brochureUrl: true,
             datasheetUrl: true, warrantyUrl: true, sdkUrl: true, utilityUrl: true,
             installationGuideUrl: true, knowledgeBaseUrl: true,
@@ -171,7 +176,11 @@ export async function GET(req: NextRequest) {
             qrCodeUrl: true, status: true,
             installationInstructions: true, installationTime: true,
             difficultyLevel: true,
-            mediaFiles: { orderBy: { sortIndex: "asc" } },
+            // RBAC: filter mediaFiles to PUBLIC visibility only.
+            mediaFiles: {
+              where: { visibility: "public" },
+              orderBy: { sortIndex: "asc" },
+            },
           },
         })
       : null;
