@@ -1078,3 +1078,123 @@ Stage Summary:
   downloads (reachable from homepage smart search suggestions).
 - HP Support Assistant / Dell SupportAssist / Lenovo / Apple Support style
   seamless enterprise support experience.
+
+---
+Task ID: v4-smart-device-setup
+Agent: main
+Task: Upgrade Dr. QBIT with Smart Wi-Fi Setup & Hardware Detection. Add 3-card homepage (Dr. QBIT Scanner | Wi-Fi Setup | Serial Number), Wi-Fi Setup Wizard with 4-step flow, Smart Device Setup section below Downloads (Driver Installation + Wi-Fi Setup), and capability-based smart rules. Preserve all existing features.
+
+Work Log:
+
+1. Schema change: Added 5 new fields to QbitProduct:
+   - supportsWifi (Boolean, default false)
+   - autoDriverInstall (Boolean, default false)
+   - sdkAvailable (Boolean, default false)
+   - firmwareConfigSupported (Boolean, default false)
+   - connectionTypes (String?, CSV: "usb", "usb,wifi", etc.)
+   - Migration applied to production Neon Postgres.
+
+2. API update: /api/public/serial-lookup now returns a `capabilities` object
+   inside `resources` for both PurchaseRecord and FSMCustomerAsset code paths.
+   The field is optional in TypeScript interface for backward compatibility.
+
+3. New WifiSetupWizard component (480 lines):
+   - 4-step flow with animated step indicator
+   - Step 1 (Detect): Simulated USB detection reads product name, model,
+     serial, USB Vendor ID, USB Product ID, firmware version. Progress bar
+     + 3-step checklist.
+   - Step 2 (Compatibility): Verifies supportsWifi=true. If false → shows
+     "USB Connection Only" message and stops (no error page).
+   - Step 3 (SDK Check): Verifies sdkAvailable + firmwareConfigSupported.
+     Shows checklist of 4 capabilities (Manufacturer SDK, USB Communication
+     Protocol, Configuration API, Firmware Commands). Decision preview
+     tells user whether Auto or Guided mode will be used.
+   - Step 4 Auto (when SDK + firmware config available): SSID + password
+     form with show/hide toggle → "Connect Device" button → simulated
+     credential transmission → "Connected Successfully" + IP address +
+     connection status display.
+   - Step 4 Guided (when SDK or firmware config unavailable): 6-step
+     instructions (turn on, enable pairing, connect to hotspot, open
+     setup page, enter password, finish). Support links.
+   - Step 5 (Connected): Success card with IP, SSID, device serial.
+   - Cancel button + onComplete callback.
+
+4. New SmartDeviceSetupSection component (added to CustomerPortal.tsx):
+   - Appears below Downloads section on /dr-qbit result page.
+   - Driver Installation card:
+     * autoDriverInstall=true → "Install Driver Automatically" button with
+       simulated flow (detecting OS → downloading → installing → verifying)
+       + live installation log + success message + manual fallback link.
+     * autoDriverInstall=false → "Download Driver" button (manual only).
+   - Wi-Fi Setup card:
+     * supportsWifi=true → "Configure Wi-Fi" button → opens WifiSetupWizard
+       in modal overlay. Connection type badges shown.
+     * supportsWifi=false → "USB Connection Only" message. NEVER shows
+       unsupported features as available.
+   - Wi-Fi Setup Wizard modal opens inline (fixed inset-0 z-50 overlay).
+
+5. Homepage /dr-qbit layout change:
+   - Replaced 2-column grid with 3-column grid:
+     LEFT:   Launch Dr. QBIT (Hardware Scanner) — unchanged
+     MIDDLE: Wi-Fi Setup (NEW) — WifiSetupCard with badge, title,
+             description, 5 features, blue "Launch Wi-Fi Setup" button
+     RIGHT:  Enter Device Serial Number — unchanged
+   - WifiSetupCardActive: shown when user clicks "Launch Wi-Fi Setup" —
+     shows "Before you begin" checklist + "Start Wi-Fi Setup" button →
+     opens WifiSetupWizard modal with demo device (P80UE, supportsWifi=true).
+
+6. Demo products seeded with capabilities:
+   - P80UE  → supportsWifi ✓, autoDriverInstall ✓, sdkAvailable ✓,
+              firmwareConfigSupported ✓, connectionTypes: usb,wifi
+              (Wi-Fi Auto mode — full SDK + firmware config)
+   - W512   → supportsWifi ✓, autoDriverInstall ✓, sdkAvailable ✗,
+              firmwareConfigSupported ✗, connectionTypes: usb,wifi,lan
+              (Wi-Fi Guided mode — no SDK, falls back to instructions)
+   - 2DSW   → supportsWifi ✗, autoDriverInstall ✗, connectionTypes: usb
+              (USB only — Wi-Fi section hidden, "USB Connection Only")
+   - CD85   → supportsWifi ✗, autoDriverInstall ✗, connectionTypes: usb
+              (USB only)
+
+Smart Rules enforced:
+  - Wi-Fi Supported = No  → hide Wi-Fi Setup, show "USB Connection Only"
+  - SDK Available = No    → disable Automatic config, use Guided Setup
+  - Auto Driver Install = No → show only Driver Download (manual)
+  - Customer NEVER sees unsupported features as available.
+
+Production Verification (https://qbithub.vercel.app):
+
+  ✓ GET /dr-qbit → HTTP 200
+  ✓ Page contains "Launch Dr. QBIT" (left card)
+  ✓ Page contains "Wi-Fi Setup" + "Configure Wi-Fi" + "Launch Wi-Fi Setup" (middle card)
+  ✓ Page contains "Enter your Device Serial" (right card)
+
+  ✓ GET /api/public/serial-lookup?serial=SNQBT000001 → P80UE capabilities:
+    supportsWifi=true, autoDriverInstall=true, sdkAvailable=true,
+    firmwareConfigSupported=true, connectionTypes=["usb","wifi"]
+  ✓ GET /api/public/serial-lookup?serial=SNQBT000003 → W512 capabilities:
+    supportsWifi=true, sdkAvailable=false (Guided mode), connectionTypes=["usb","wifi","lan"]
+  ✓ GET /api/public/serial-lookup?serial=SNQBT000002 → 2DSW capabilities:
+    supportsWifi=false (USB only — Wi-Fi section hidden)
+
+What was preserved:
+  - All existing Dr. QBIT features (serial lookup, hardware scanner, device
+    registration, warranty, driver downloads, manuals, installation guide,
+    customer information)
+  - /dr-qbit page flow (3 cards instead of 2, but additive — existing
+    Hardware Scanner + Serial Number cards unchanged)
+  - /api/public/serial-lookup API (capabilities field is optional)
+  - PortalResult layout (Product Card, Warranty Card, Downloads,
+    Registered Device, Support — all unchanged)
+  - Smart Search on homepage (unchanged)
+  - /accounts/login + /accounts/register (unchanged)
+
+Commits:
+  - 870f7ae: V4 Smart Device Setup implementation
+
+Stage Summary:
+- Dr. QBIT upgraded with Wi-Fi Setup Wizard + Auto Driver Installation.
+- 3-card homepage: Launch Dr. QBIT | Wi-Fi Setup | Enter Serial Number.
+- Smart Device Setup section below Downloads on result page.
+- Capability-based smart rules — never shows unsupported features.
+- 4 demo products with different capability combinations for testing.
+- HP Smart / Epson Smart Panel / Brother iPrint&Scan style experience.
