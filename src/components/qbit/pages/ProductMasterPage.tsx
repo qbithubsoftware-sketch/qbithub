@@ -182,6 +182,14 @@ export function ProductMasterPage() {
   };
 
   const handleEditProduct = (product: Product) => {
+    // V5: Navigate to the full-page editor instead of opening a popup.
+    // Passes the product ID via the navigation store params.
+    navigate("product-master-edit", { productId: product.id });
+  };
+
+  const _handleEditProductLegacy = (product: Product) => {
+    // Legacy popup-based editor — kept for reference but no longer called.
+    // The new handleEditProduct above navigates to the full-page editor.
     setEditingProduct(product);
     setFormData({
       name: product.name, brand: product.brand, manufacturer: product.manufacturer ?? "",
@@ -196,7 +204,7 @@ export function ProductMasterPage() {
       installationTime: "", difficultyLevel: "",
       canonicalUrl: "", openGraphImage: "", twitterCard: "",
       seoTitle: "", seoDescription: "", seoKeywords: "",
-      
+
       warrantyDuration: "",
       upgradedModel: "", previousModel: "",
       isFeatured: product.isFeatured ?? false, isTrending: product.isTrending ?? false,
@@ -563,8 +571,8 @@ export function ProductMasterPage() {
                               <button
                                 type="button"
                                 aria-label={`Manage ${product.name}`}
-                                title="Manage full product details"
-                                onClick={() => setDrawerProductId(product.id)}
+                                title="Edit product (full page)"
+                                onClick={() => handleEditProduct(product)}
                                 className="flex h-8 w-8 items-center justify-center rounded-lg text-qbit-primary transition-colors hover:bg-qbit-primary/10"
                               >
                                 <Icon name="tune" className="text-[20px]" />

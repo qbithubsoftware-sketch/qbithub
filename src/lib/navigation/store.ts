@@ -45,6 +45,7 @@ export type ScreenId =
   | "upload-certificate"
   | "upload-resource-center"
   | "product-resource-manager"
+  | "product-master-edit"
   | "system-settings"
   | "ai-purchase-center"
   | "device-register"

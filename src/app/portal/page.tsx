@@ -20,6 +20,7 @@ import { AdminDashboardPage } from "@/components/qbit/pages/AdminDashboardPage";
 import { UserRoleManagementPage } from "@/components/qbit/pages/UserRoleManagementPage";
 import { ProductMasterPage } from "@/components/qbit/pages/ProductMasterPage";
 import { ProductMasterCreatePage } from "@/components/qbit/pages/ProductMasterCreatePage";
+import { ProductMasterFullEditPage } from "@/components/qbit/pages/ProductMasterFullEditPage";
 import { UploadMasterContent } from "@/components/qbit/pages/UploadMasterContent";
 import { ProductResourceUploadCenter } from "@/components/qbit/pages/ProductResourceUploadCenter";
 import { ProductAndResourceManager } from "@/components/qbit/pages/ProductAndResourceManager";
@@ -92,6 +93,8 @@ export default function Home() {
         return <ProductAndResourceManager />;
       case "product-master-create":
         return <ProductMasterCreatePage />;
+      case "product-master-edit":
+        return <ProductMasterFullEditPage />;
       case "upload-master":
       case "upload-driver":
       case "upload-manual":
