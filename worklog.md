@@ -1306,3 +1306,115 @@ Stage Summary:
 - When a customer searches for a product in Dr. QBIT, all resources added
   via this Upload Center will automatically appear on the product page in
   their respective sections — no additional configuration needed.
+
+---
+Task ID: product-and-resource-manager
+Agent: main
+Task: Merge Product Master + Upload Master + Resource Center into a single 'Product & Resource Manager' page with unified workflow: Create Product → Save → Upload Resources → Done. Use accordion cards. Add live resource summary.
+
+Work Log:
+
+1. New screen ID 'product-resource-manager' added to:
+   - src/lib/navigation/store.ts (ScreenId type)
+   - src/lib/rbac/roles.ts (admin only)
+   - src/lib/navigation/nav-config.ts (top-level sidebar item with NEW badge)
+
+2. Nav-config restructured:
+   - OLD: 'Product Master' (top-level) + 'Upload Master' (collapsible with 11 children)
+   - NEW: 'Product & Resource Manager' (top-level, NEW badge) + 'Legacy Upload'
+     (collapsible group containing old Product Master, Resource Center,
+     and per-category upload screens — preserved for backward compat)
+
+3. New ProductAndResourceManager component (1100+ lines):
+   - Unified single-page workflow per spec
+   - 3 sections + top bar:
+
+   TOP BAR:
+   - Search Product (by name/model/brand)
+   - Filter by Category (13 categories dropdown)
+   - Filter by Brand (dropdown, dynamic from existing products)
+   - Recent Products (5 quick-access chips, shows when no filter active)
+   - Filtered list (collapsible, shows when search/filter active)
+   - 'Create New Product' button (top-right)
+
+   SECTION 1 — Product Information:
+   - Category (required, 13 options) → auto-sets deviceType
+   - Brand (default QBIT)
+   - Product Name * (required)
+   - Model Number * (required)
+   - Serial Prefix
+   - Warranty (default '12 months')
+   - Description (textarea)
+   - Product Image URL (with live preview)
+   - Status (Active/Inactive)
+   - Save Product button:
+     * Creates via POST /api/admin/products (new product)
+     * Updates via PUT /api/admin/products/[id] (existing product)
+     * On success: SAVED badge appears, auto-scrolls to Section 2,
+       first accordion card (Windows Drivers) auto-expands
+
+   SECTION 2 — Product Resources (auto-appears after save):
+   - 7 accordion cards (only one expanded at a time):
+     ▶ Windows Drivers (.zip/.exe/.msi) — name, version, supported OS, release notes
+     ▶ Windows Software (EXE/MSI/ZIP) — name, version, release date, description
+     ▶ Android Software (APK/ZIP or Play Store URL) — name, version, min Android, Play Store link, description (URL mode toggle)
+     ▶ Firmware (BIN/HEX) — name, version, supported models, release notes
+     ▶ Manuals & Guides (PDF/DOC) — name, type (7 options: User/Quick Start/Installation/Warranty/Maintenance/Troubleshooting/Cleaning), language (9 options)
+     ▶ Installation Videos (URL) — title, video URL, thumbnail, duration, category
+     ▶ Product Gallery (images) — name, view type (8 options: Front/Back/Side/Ports/Inside/Accessories/Packaging/Other), alt text
+   - Each accordion card shows: existing resources list (with download/edit/delete icons) + upload form
+   - Resource counter badge on each accordion header (shows count)
+   - 'Upload Resource' button per card
+
+   SECTION 3 — Live Resource Summary:
+   - Product card: image, brand, name, category, model, serial prefix, warranty
+   - 7 resource count tiles in grid (Windows Drivers, Windows Software, Android Apps, Firmware, Manuals, Videos, Images)
+   - Each tile: icon + label + count (green if >0, gray if 0)
+   - Overall Status badge: 'Complete' (green, total>0) / 'Incomplete' (amber, total=0)
+   - Footer: total resources linked + status
+   - Auto-updates whenever resources change (no manual refresh)
+
+4. Admin features per resource:
+   - Search Resources (top filter by product name/model/brand)
+   - Edit Resource (modal with title/URL/visibility/metadata)
+   - Replace File (prompt for new URL)
+   - Delete File (with confirmation)
+   - Download Test (opens URL in new tab)
+   - Preview Image (for image types)
+
+5. Workflow (per spec):
+   Dashboard → Product & Resource Manager → Create New OR Search Existing
+   → Save Product → Resource Upload Section Automatically Appears
+   → Upload Drivers/Software/Manuals/Videos → Review Live Resource Summary
+   → Save Changes → Product is Ready for Dr. QBIT
+
+   No redirect to another module. No re-selecting product. No separate
+   Windows Portal / Android Portal / Manual Portal pages.
+
+6. /portal switch updated:
+   - case 'product-resource-manager' → <ProductAndResourceManager />
+   - Old cases preserved (product-master, upload-*, upload-resource-center)
+
+7. Build verified: 0 TS errors, ✓ Compiled in 37.6s.
+
+Production Verification (https://qbithub.vercel.app):
+  ✓ GET /portal → HTTP 200
+  ✓ GET /api/admin/products → HTTP 403 (auth required, working)
+  ✓ GET /api/admin/products/test-id/resources → HTTP 403 (auth required)
+  ✓ New screen ID 'product-resource-manager' in production bundle
+
+LEGACY PRESERVED:
+  - Old Product Master, Upload Master, Resource Center moved under
+    'Legacy Upload' collapsible group in sidebar
+  - ProductResourceUploadCenter component kept (used by upload-resource-center)
+  - UploadMasterContent component kept (used by upload-driver screens)
+  - All existing API endpoints unchanged
+  - All existing products/resources preserved (backward compatible)
+
+UI inspired by Microsoft 365 Admin Center, Atlassian, Stripe Dashboard,
+Apple Business Manager — clean spacing, minimal clicks, responsive design,
+fast loading, professional admin experience.
+
+When a customer searches the product in Dr. QBIT (by serial number or
+model number), all resources added via this manager automatically appear
+on the product page without any additional configuration.
