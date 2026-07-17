@@ -1418,3 +1418,102 @@ fast loading, professional admin experience.
 When a customer searches the product in Dr. QBIT (by serial number or
 model number), all resources added via this manager automatically appear
 on the product page without any additional configuration.
+
+---
+Task ID: legacy-product-master-ux-redesign
+Agent: main
+Task: Improve Legacy Product Master — replace popup Quick Edit with full-page editor, add image upload, replace manual URL fields with searchable resource dropdowns.
+
+Work Log:
+
+1. New screen ID 'product-master-edit' added to:
+   - src/lib/navigation/store.ts (ScreenId type)
+   - src/lib/rbac/roles.ts (admin only)
+
+2. ProductMasterPage 'Quick Edit' (edit icon) + 'Manage' (tune icon) buttons
+   now navigate to the full-page editor via navigate('product-master-edit',
+   { productId: product.id }). Legacy popup code (_handleEditProductLegacy)
+   preserved but unused.
+
+3. New SearchableResourceDropdown component (300 lines):
+   - Search filter (type to filter by title/version)
+   - Keyboard navigation (ArrowUp/Down, Enter, Escape)
+   - Resource type icon (color-coded per type)
+   - Version display (parsed from metadata stored in altText JSON)
+   - 'Latest' badge for highest-version resource
+   - 'None' option to clear selection
+   - Click-outside-to-close
+   - ARIA combobox + listbox + option roles for accessibility
+   - Read-only URL display below dropdown (shows linked resource URL)
+   - Mobile responsive
+   - Footer: resource count + keyboard hints
+
+4. New ProductMasterFullEditPage component (650 lines) with 4 sections:
+
+   Section 1 — Basic Information:
+   - Product Name *, Model Number *, Brand, Manufacturer, Device Type
+   - SKU, Serial Prefix, Warranty Duration
+   - Description + Long Description (textareas)
+   - Status (Active/Inactive/Deprecated)
+   - Featured + Trending checkboxes
+
+   Section 2 — Product Images (drag & drop):
+   - Main Product Image: upload/replace button, 24x24 preview, JPG/PNG/WEBP, 5MB max
+   - Gallery Images: drag & drop zone (border-dashed), multi-file upload
+   - Gallery thumbnail grid with hover actions:
+     * 'Set as Main' (star icon) — promotes gallery image to main
+     * 'Delete' (trash icon) — removes from gallery
+   - Image URLs stored on product (imageUrl + galleryImages JSON)
+
+   Section 3 — Resource Mapping (dropdowns replace URL fields):
+   5 SearchableResourceDropdowns replace manual URL text fields:
+   - Driver Resource (filter: windows_driver, driver) → driverDownloadUrl
+   - Maintenance Resource (filter: manual, troubleshooting) → manualUrl
+   - Browser Resource (filter: windows_software, utility) → utilityUrl
+   - Download Resource (filter: sdk, windows_software, utility, android_software) → sdkUrl
+   - Installation Resource (filter: manual) → installationGuideUrl
+   Auto-mapping: on load, existing URL fields matched to resource IDs so
+   dropdowns pre-select currently-linked resource.
+   Empty state: "No resources uploaded" with hint to use Product & Resource Manager.
+
+   Section 4 — Live Preview:
+   - 5 rows showing linked resources with green 'Linked' badges
+   - Unlinked rows show 'Pending' state
+   - Each row: icon + label + resource title + version + open-in-new-tab link
+   - Summary: 'X of 5 resources linked' + total available count
+
+5. Save logic:
+   - PUT /api/admin/products/[id] with updated fields
+   - Resource URLs auto-populated from selected dropdown resources
+   - Image URLs (main + gallery) saved to product
+   - latestDriverVersion auto-updated from selected driver resource version
+   - On success: toast + navigate back to Product Master
+
+6. Auto Resource Mapping (per spec):
+   - Each dropdown filters resources by type AND by current product
+   - Only resources uploaded for THIS product appear (no cross-product leaks)
+   - Resources sorted by version descending (latest first)
+   - 'Latest' badge on the highest-version resource
+
+7. /portal switch updated:
+   - case 'product-master-edit' → <ProductMasterFullEditPage />
+   - Other cases preserved (product-master, product-master-create, etc.)
+
+8. Build verified: 0 TS errors, ✓ Compiled in 50s.
+
+Production Verification (https://qbithub.vercel.app):
+  ✓ GET /portal → HTTP 200
+  ✓ GET /api/admin/products/test-id → HTTP 403 (auth required, working)
+  ✓ GET /api/admin/products/test-id/resources → HTTP 403 (auth required)
+  ✓ New screen 'product-master-edit' live in production bundle
+
+LEGACY PRESERVED:
+  - ProductEditDrawer component kept (still used internally)
+  - Old popup form state (editingProduct, formData, showCreateEdit) kept but unused
+  - All existing API endpoints unchanged
+  - All existing products/resources preserved (backward compatible)
+
+UI inspired by Microsoft 365 Admin Center, Atlassian, Stripe Dashboard,
+Apple Business Manager — clean spacing, minimal clicks, responsive design,
+professional admin experience. Administrators never paste URLs manually —
+every resource is selected from uploaded resources via searchable dropdowns.
