@@ -11,6 +11,7 @@ export interface NavChild {
   label: string;
   icon: string;
   screen?: ScreenId;
+  badge?: string;
   children?: NavChild[];
 }
 

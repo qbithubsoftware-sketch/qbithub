@@ -43,6 +43,7 @@ export type ScreenId =
   | "upload-video"
   | "upload-guide"
   | "upload-certificate"
+  | "upload-resource-center"
   | "system-settings"
   | "ai-purchase-center"
   | "device-register"

@@ -145,6 +145,7 @@ export const ADMIN_NAV: NavItem[] = [
     label: "Upload Master",
     icon: "folder_open",
     children: [
+      { label: "Resource Center", icon: "dashboard", screen: "upload-resource-center", badge: "NEW" },
       { label: "Window POS", icon: "desktop_windows", screen: "upload-driver" },
       { label: "Android POS", icon: "phone_android", screen: "upload-driver" },
       { label: "Handy POS", icon: "phone_android", screen: "upload-driver" },

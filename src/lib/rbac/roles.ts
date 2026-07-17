@@ -111,6 +111,7 @@ export const SCREEN_PERMISSIONS: Record<ScreenId, Role[]> = {
   "upload-video": ["super_administrator", "administrator"],
   "upload-guide": ["super_administrator", "administrator"],
   "upload-certificate": ["super_administrator", "administrator"],
+  "upload-resource-center": ["super_administrator", "administrator"],
   "system-settings": ["super_administrator", "administrator"],
   "ai-purchase-center": ["super_administrator", "administrator"],
   "device-register": ["super_administrator", "administrator"],
