@@ -1198,3 +1198,111 @@ Stage Summary:
 - Capability-based smart rules — never shows unsupported features.
 - 4 demo products with different capability combinations for testing.
 - HP Smart / Epson Smart Panel / Brother iPrint&Scan style experience.
+
+---
+Task ID: product-resource-upload-center
+Agent: main
+Task: Redesign Upload Master into a complete Product Resource Management System with 9 cards (Windows Drivers, Windows Software, Android Software, Firmware, Manuals, Troubleshooting, Videos, Gallery, Summary).
+
+Work Log:
+
+1. New API endpoints (4 routes):
+   - GET    /api/admin/products/[id]/resources — list all ProductMedia for a product, grouped by type, with counters
+   - POST   /api/admin/products/[id]/resources — create new ProductMedia row
+   - PUT    /api/admin/products/[id]/resources/[resourceId] — update existing resource
+   - DELETE /api/admin/products/[id]/resources/[resourceId] — delete resource
+   - All endpoints secured with requireSuperAdminOrAdmin()
+   - Validates type (8 new V4 types + existing types) and visibility
+
+2. Extended ProductMedia types (added to VALID_TYPES set):
+   - windows_driver, windows_software, android_software, troubleshooting,
+     gallery_image (existing types preserved: image, brochure, datasheet,
+     warranty, sdk, utility, video, manual, firmware, driver, other)
+
+3. New ProductResourceUploadCenter component (830 lines):
+   - Product selection: searchable list (filter by name/model/brand/category),
+     product preview card with image, SKU, warranty
+   - 9 cards per spec:
+     Card 1 — Windows Drivers (.zip/.exe/.msi): name, version, supported
+              Windows (select), release notes (textarea)
+     Card 2 — Windows Software (EXE/MSI/ZIP): name, version, release date,
+              description
+     Card 3 — Android Software (APK/ZIP or Play Store link): name, version,
+              min Android version, Play Store link, description. URL mode
+              toggle for Play Store links.
+     Card 4 — Firmware Files (BIN/HEX): name, version, compatible models,
+              release notes
+     Card 5 — User Manuals (PDF/DOC): name, type (User Manual, Quick Start,
+              Installation, Warranty, Maintenance, Cleaning), language
+              (English, Hindi, Marathi, Tamil, Telugu, etc.)
+     Card 6 — Troubleshooting Documents (PDF/ZIP/Excel): name, type
+              (Common Error Guide, Error Code List, Repair Guide, FAQ),
+              description
+     Card 7 — Installation Videos (URL or upload): title, video URL,
+              thumbnail URL, duration, category (Installation, Setup,
+              Troubleshooting, Maintenance, Training, Product Demo)
+     Card 8 — Product Gallery (images): name, view type (Front, Back, Side,
+              Ports, Inside View, Packaging, Other), alt text
+     Card 9 — Resource Summary: live preview with product card (image,
+              name, brand, category, model, SKU, warranty) + grouped
+              resources by type with counts + bullet list of resource
+              titles (with version + language metadata)
+
+4. Admin features per resource:
+   - Search Resources (filter products by name/model/brand/category)
+   - Edit Resource (modal with title/URL/visibility/metadata display)
+   - Replace File (prompt for new URL)
+   - Delete File (with confirmation)
+   - Download Test (opens URL in new tab)
+   - Preview Image (for image types)
+   - Resource counter badges in header (shows count per type)
+
+5. Resource counter badges:
+   - Displayed in page header (desktop only)
+   - Shows per-type count: Windows Drivers: 3, Windows Software: 2, etc.
+   - Only shows types with count > 0
+
+6. Metadata storage:
+   - V4 meta fields (version, releaseDate, supportedOS, language, duration,
+     thumbnailUrl, compatibleModels, releaseNotes, description, etc.) are
+     encoded as JSON in the existing `altText` column (workaround until
+     schema adds a dedicated `meta` JSON column)
+   - parseMeta() helper extracts meta from altText on read
+
+7. Navigation updates:
+   - New screen ID 'upload-resource-center' added to:
+     * src/lib/navigation/store.ts (ScreenId type)
+     * src/lib/rbac/roles.ts (SCREEN_PERMISSIONS — admin only)
+     * src/lib/navigation/nav-config.ts (Upload Master → 'Resource Center'
+       child with NEW badge, listed first)
+   - NavChild interface extended with optional 'badge' field
+   - /portal switch routes all upload-* screens (including the new
+     upload-resource-center) to ProductResourceUploadCenter
+
+8. Build verified: 0 TS errors, ✓ Compiled in 33.7s.
+
+Production Verification (https://qbithub.vercel.app):
+  ✓ GET /portal → HTTP 200 (admin page loads)
+  ✓ GET /api/admin/products/[id]/resources → HTTP 403 without auth
+    (returns {"error":"Administrator access required"})
+  ✓ Security check working as expected
+
+What was preserved:
+  - Old UploadMasterContent component kept (legacy upload-driver screens
+    still work if accessed directly)
+  - All existing ProductMedia rows (backward compatible — new types are
+    additive to the VALID_TYPES set)
+  - /api/admin/products, /api/admin/products/[id] endpoints unchanged
+  - Product Master, Device Lookup, all other admin pages unchanged
+  - Customer-facing /dr-qbit page unchanged (resources added via Upload
+    Center will automatically appear there)
+
+Stage Summary:
+- Upload Master is now a complete Product Resource Management System.
+- 9 cards manage ALL product resources in one page.
+- Live Resource Summary shows preview before saving.
+- Admin features: search, edit, replace, delete, download test, preview.
+- Resource counter badges show per-type counts.
+- When a customer searches for a product in Dr. QBIT, all resources added
+  via this Upload Center will automatically appear on the product page in
+  their respective sections — no additional configuration needed.
