@@ -36,6 +36,7 @@ import { useNavigation } from "@/lib/navigation/store";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { SearchableResourceDropdown, type ResourceOption } from "@/components/qbit/admin/SearchableResourceDropdown";
+import { compressImageToDataUrl, validateImageFile, formatFileSize } from "@/lib/images/compress";
 
 // ====================== Types ======================
 interface ProductDetail {
@@ -255,47 +256,46 @@ export function ProductMasterFullEditPage() {
   const downloadResource = resourceOptions.find((r) => r.id === downloadResourceId) ?? null;
   const installationResource = resourceOptions.find((r) => r.id === installationResourceId) ?? null;
 
-  // ===== Image upload handlers (REAL upload via /api/admin/upload-image) =====
+  // ===== Image upload handlers (CLIENT-SIDE compression + base64 data URL) =====
+  // No server upload needed — images are compressed in the browser using the
+  // Canvas API and stored as base64 data URLs directly in the database.
+  // This fixes the Vercel issue where /public/ is read-only at runtime.
   async function handleImageUpload(file: File, isGallery: boolean = false): Promise<void> {
-    if (!file.type.startsWith("image/")) {
-      toast({ title: "Please select an image file (JPG, PNG, WEBP)", variant: "destructive" });
+    // ===== Validate file =====
+    const validationError = validateImageFile(file);
+    if (validationError) {
+      toast({ title: "Invalid image", description: validationError, variant: "destructive" });
       return;
     }
-    if (!["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(file.type)) {
-      toast({ title: "Unsupported format. Use JPG, PNG, or WEBP.", variant: "destructive" });
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      toast({ title: "Image must be under 5MB", variant: "destructive" });
-      return;
-    }
+
     setUploadingImage(true);
     try {
-      // ===== REAL UPLOAD: POST file to /api/admin/upload-image =====
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await fetch("/api/admin/upload-image", {
-        method: "POST",
-        body: formData,
+      // ===== CLIENT-SIDE COMPRESSION =====
+      // Compresses the image to max 1200x1200, JPEG quality 85%.
+      // Takes ~200-500ms for a typical 5MB image.
+      // Returns a base64 data URL like "data:image/jpeg;base64,..."
+      const dataUrl = await compressImageToDataUrl(file, {
+        maxWidth: 1200,
+        maxHeight: 1200,
+        quality: 0.85,
       });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error ?? "Upload failed");
-      }
-      const data = await res.json();
-      const url: string = data.url; // "/uploads/products/<filename>"
 
       // ===== INSTANT PREVIEW: update state immediately (no save required) =====
+      // The data URL is self-contained — it renders in <img> tags without
+      // any server request. State update triggers immediate re-render.
       if (isGallery) {
-        setGalleryImages((prev) => [...prev, url]);
+        setGalleryImages((prev) => [...prev, dataUrl]);
       } else {
-        setMainImageUrl(url);
+        setMainImageUrl(dataUrl);
       }
-      toast({ title: "Image uploaded", description: file.name });
+      toast({
+        title: "Image ready",
+        description: `${file.name} (${formatFileSize(file.size)} → compressed)`,
+      });
     } catch (e) {
       toast({
-        title: "Image upload failed",
-        description: e instanceof Error ? e.message : "",
+        title: "Image processing failed",
+        description: e instanceof Error ? e.message : "Unknown error",
         variant: "destructive",
       });
     } finally {

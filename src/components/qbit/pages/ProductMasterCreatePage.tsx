@@ -12,6 +12,7 @@
 
 import { useState, useRef } from "react";
 import { AppShell } from "@/components/qbit/shells/AppShell";
+import { compressImageToDataUrl, validateImageFile, formatFileSize } from "@/lib/images/compress";
 import { Icon } from "@/components/qbit/primitives/Icon";
 import { QbitButton } from "@/components/qbit/primitives/QbitButton";
 import { SurfaceCard } from "@/components/qbit/primitives/GlassCard";
@@ -62,40 +63,36 @@ export function ProductMasterCreatePage() {
   const mainImageInputRef = useRef<HTMLInputElement | null>(null);
   const galleryInputRef = useRef<HTMLInputElement | null>(null);
 
-  // ===== V5: Real image upload via /api/admin/upload-image =====
+  // ===== V5: Client-side image compression (no server upload needed) =====
+  // Images are compressed in the browser using Canvas API and stored as
+  // base64 data URLs directly in the database. This fixes the Vercel issue
+  // where /public/ is read-only at runtime.
   async function handleImageUpload(file: File, isGallery: boolean = false): Promise<void> {
-    if (!["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(file.type)) {
-      toast({ title: "Unsupported format. Use JPG, PNG, or WEBP.", variant: "destructive" });
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      toast({ title: "Image must be under 5MB", variant: "destructive" });
+    const validationError = validateImageFile(file);
+    if (validationError) {
+      toast({ title: "Invalid image", description: validationError, variant: "destructive" });
       return;
     }
     setUploadingImage(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await fetch("/api/admin/upload-image", {
-        method: "POST",
-        body: formData,
+      const dataUrl = await compressImageToDataUrl(file, {
+        maxWidth: 1200,
+        maxHeight: 1200,
+        quality: 0.85,
       });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error ?? "Upload failed");
-      }
-      const data = await res.json();
-      const url: string = data.url;
       if (isGallery) {
-        setGalleryImages((prev) => [...prev, url]);
+        setGalleryImages((prev) => [...prev, dataUrl]);
       } else {
-        setMainImageUrl(url);
+        setMainImageUrl(dataUrl);
       }
-      toast({ title: "Image uploaded", description: file.name });
+      toast({
+        title: "Image ready",
+        description: `${file.name} (${formatFileSize(file.size)} → compressed)`,
+      });
     } catch (e) {
       toast({
-        title: "Image upload failed",
-        description: e instanceof Error ? e.message : "",
+        title: "Image processing failed",
+        description: e instanceof Error ? e.message : "Unknown error",
         variant: "destructive",
       });
     } finally {

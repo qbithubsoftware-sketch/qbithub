@@ -515,11 +515,16 @@ export function ProductMasterPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-qbit-primary/10 text-qbit-primary">
-                            <Icon name="inventory_2" className="text-[16px]" />
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-qbit-primary/10">
+                            {product.imageUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
+                            ) : (
+                              <Icon name="inventory_2" className="text-[16px] text-qbit-primary" />
+                            )}
                           </div>
-                          <div>
-                            <p className="font-medium text-qbit-on-surface">{product.name}</p>
+                          <div className="min-w-0">
+                            <p className="truncate font-medium text-qbit-on-surface">{product.name}</p>
                             <p className="text-xs text-qbit-on-surface-variant">{product.brand}</p>
                           </div>
                         </div>
