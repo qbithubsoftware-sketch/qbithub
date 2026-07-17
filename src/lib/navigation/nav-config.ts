@@ -139,24 +139,19 @@ export const ENGINEER_FOOTER: NavItem[] = [
 /** Admin portal sidebar items. */
 export const ADMIN_NAV: NavItem[] = [
   { label: "Dashboard", icon: "dashboard", screen: "home" },
-  { label: "Product Master", icon: "database", screen: "product-master", badge: "PIM" },
+  { label: "Product & Resource Manager", icon: "inventory_2", screen: "product-resource-manager", badge: "NEW" },
   { label: "Device Lookup", icon: "search", screen: "ai-purchase-center", badge: "NEW" },
   {
-    label: "Upload Master",
+    label: "Legacy Upload",
     icon: "folder_open",
     children: [
-      { label: "Resource Center", icon: "dashboard", screen: "upload-resource-center", badge: "NEW" },
+      { label: "Resource Center (legacy)", icon: "dashboard", screen: "upload-resource-center" },
+      { label: "Product Master (legacy)", icon: "database", screen: "product-master" },
       { label: "Window POS", icon: "desktop_windows", screen: "upload-driver" },
       { label: "Android POS", icon: "phone_android", screen: "upload-driver" },
-      { label: "Handy POS", icon: "phone_android", screen: "upload-driver" },
       { label: "Thermal Printer", icon: "print", screen: "upload-driver" },
-      { label: "Portable Printer", icon: "print", screen: "upload-driver" },
-      { label: "Barcode Printer", icon: "label", screen: "upload-driver" },
       { label: "Barcode Scanner", icon: "barcode_scanner", screen: "upload-driver" },
       { label: "Cash Drawer", icon: "account_balance_wallet", screen: "upload-driver" },
-      { label: "Customer Display", icon: "monitor", screen: "upload-driver" },
-      { label: "Self Ordering Kiosk", icon: "storefront", screen: "upload-driver" },
-      { label: "Digital Standee", icon: "monitor", screen: "upload-driver" },
     ],
   },
   { label: "Users", icon: "group", screen: "user-role-management" },

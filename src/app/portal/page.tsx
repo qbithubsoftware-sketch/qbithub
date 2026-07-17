@@ -22,6 +22,7 @@ import { ProductMasterPage } from "@/components/qbit/pages/ProductMasterPage";
 import { ProductMasterCreatePage } from "@/components/qbit/pages/ProductMasterCreatePage";
 import { UploadMasterContent } from "@/components/qbit/pages/UploadMasterContent";
 import { ProductResourceUploadCenter } from "@/components/qbit/pages/ProductResourceUploadCenter";
+import { ProductAndResourceManager } from "@/components/qbit/pages/ProductAndResourceManager";
 import { AIPurchaseImportCenterPage } from "@/components/qbit/pages/AIPurchaseImportCenterPage";
 import { DeviceRegisterPage } from "@/components/qbit/pages/DeviceRegisterPage";
 import { SystemSettingsPage } from "@/components/qbit/pages/SystemSettingsPage";
@@ -87,6 +88,8 @@ export default function Home() {
         return <UserRoleManagementPage />;
       case "product-master":
         return <ProductMasterPage />;
+      case "product-resource-manager":
+        return <ProductAndResourceManager />;
       case "product-master-create":
         return <ProductMasterCreatePage />;
       case "upload-master":
