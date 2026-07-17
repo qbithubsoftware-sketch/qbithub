@@ -255,10 +255,14 @@ export function ProductMasterFullEditPage() {
   const downloadResource = resourceOptions.find((r) => r.id === downloadResourceId) ?? null;
   const installationResource = resourceOptions.find((r) => r.id === installationResourceId) ?? null;
 
-  // ===== Image upload handlers (simulated — stores URL) =====
+  // ===== Image upload handlers (REAL upload via /api/admin/upload-image) =====
   async function handleImageUpload(file: File, isGallery: boolean = false): Promise<void> {
     if (!file.type.startsWith("image/")) {
       toast({ title: "Please select an image file (JPG, PNG, WEBP)", variant: "destructive" });
+      return;
+    }
+    if (!["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(file.type)) {
+      toast({ title: "Unsupported format. Use JPG, PNG, or WEBP.", variant: "destructive" });
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
@@ -267,17 +271,33 @@ export function ProductMasterFullEditPage() {
     }
     setUploadingImage(true);
     try {
-      // In production, this would upload to S3/Vercel Blob and return a URL.
-      // For demo, we use a placeholder URL with the filename.
-      const url = `https://qbithub.vercel.app/uploads/products/${productId}/${encodeURIComponent(file.name)}`;
+      // ===== REAL UPLOAD: POST file to /api/admin/upload-image =====
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/admin/upload-image", {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error ?? "Upload failed");
+      }
+      const data = await res.json();
+      const url: string = data.url; // "/uploads/products/<filename>"
+
+      // ===== INSTANT PREVIEW: update state immediately (no save required) =====
       if (isGallery) {
         setGalleryImages((prev) => [...prev, url]);
       } else {
         setMainImageUrl(url);
       }
-      toast({ title: "Image added", description: file.name });
-    } catch {
-      toast({ title: "Image upload failed", variant: "destructive" });
+      toast({ title: "Image uploaded", description: file.name });
+    } catch (e) {
+      toast({
+        title: "Image upload failed",
+        description: e instanceof Error ? e.message : "",
+        variant: "destructive",
+      });
     } finally {
       setUploadingImage(false);
     }

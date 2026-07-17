@@ -10,7 +10,7 @@
  * No design changes — same colors, typography, spacing.
  */
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { AppShell } from "@/components/qbit/shells/AppShell";
 import { Icon } from "@/components/qbit/primitives/Icon";
 import { QbitButton } from "@/components/qbit/primitives/QbitButton";
@@ -54,6 +54,83 @@ export function ProductMasterCreatePage() {
     status: "active",
   });
 
+  // ===== V5: Image upload state (during creation) =====
+  const [mainImageUrl, setMainImageUrl] = useState<string>("");
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const mainImageInputRef = useRef<HTMLInputElement | null>(null);
+  const galleryInputRef = useRef<HTMLInputElement | null>(null);
+
+  // ===== V5: Real image upload via /api/admin/upload-image =====
+  async function handleImageUpload(file: File, isGallery: boolean = false): Promise<void> {
+    if (!["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(file.type)) {
+      toast({ title: "Unsupported format. Use JPG, PNG, or WEBP.", variant: "destructive" });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "Image must be under 5MB", variant: "destructive" });
+      return;
+    }
+    setUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/admin/upload-image", {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error ?? "Upload failed");
+      }
+      const data = await res.json();
+      const url: string = data.url;
+      if (isGallery) {
+        setGalleryImages((prev) => [...prev, url]);
+      } else {
+        setMainImageUrl(url);
+      }
+      toast({ title: "Image uploaded", description: file.name });
+    } catch (e) {
+      toast({
+        title: "Image upload failed",
+        description: e instanceof Error ? e.message : "",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingImage(false);
+    }
+  }
+
+  function handleFileInput(e: React.ChangeEvent<HTMLInputElement>, isGallery: boolean) {
+    const files = Array.from(e.target.files ?? []);
+    for (const f of files) {
+      void handleImageUpload(f, isGallery);
+    }
+    e.target.value = "";
+  }
+
+  function handleDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setDragOver(false);
+    const files = Array.from(e.dataTransfer.files);
+    for (const f of files) {
+      void handleImageUpload(f, true);
+    }
+  }
+
+  function removeGalleryImage(idx: number) {
+    setGalleryImages((prev) => prev.filter((_, i) => i !== idx));
+  }
+
+  function setFeaturedFromGallery(idx: number) {
+    const url = galleryImages[idx];
+    setMainImageUrl(url);
+    setGalleryImages((prev) => prev.filter((_, i) => i !== idx));
+    toast({ title: "Set as main image" });
+  }
+
   const userName = user?.name ?? "Admin";
   const initials = userName.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 
@@ -81,6 +158,11 @@ export function ProductMasterCreatePage() {
         warrantyUrl: form.warrantyUrl || null,
         sdkUrl: form.sdkUrl || null,
         utilityUrl: form.utilityUrl || null,
+        // V5: Image URLs (uploaded during creation)
+        imageUrl: mainImageUrl || null,
+        galleryImages: galleryImages.length > 0
+          ? galleryImages.map((url) => ({ url, alt: form.name || "Product image" }))
+          : null,
       };
 
       const res = await fetch("/api/admin/products", {
@@ -120,7 +202,7 @@ export function ProductMasterCreatePage() {
               Create New Product
             </h2>
             <p className="mt-1 text-sm text-qbit-on-surface-variant">
-              Fill in the product information below. Use the Manage button later for images, drivers, and full details.
+              Fill in the product information below. Upload images now or manage them later via the editor.
             </p>
           </div>
         </div>
@@ -186,7 +268,111 @@ export function ProductMasterCreatePage() {
           </div>
         </SurfaceCard>
 
-        {/* Section 2 — Downloads & Resources */}
+        {/* Section 2 — Product Images (V5: upload during creation) */}
+        <SurfaceCard className="p-6">
+          <h3 className="mb-4 flex items-center gap-2 text-sm font-bold text-qbit-on-surface">
+            <Icon name="photo_library" className="text-[20px] text-qbit-primary" /> Product Images
+          </h3>
+
+          {/* Main image */}
+          <div className="mb-4">
+            <label className="mb-1.5 block text-sm font-medium">Main Product Image</label>
+            <div className="flex items-center gap-4">
+              <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-qbit-outline-variant bg-qbit-surface-container-low">
+                {mainImageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={mainImageUrl} alt="Main product" className="h-full w-full object-cover" />
+                ) : (
+                  <Icon name="image" className="text-[32px] text-qbit-on-surface-variant/40" />
+                )}
+              </div>
+              <div className="flex-1">
+                <input
+                  ref={mainImageInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={(e) => handleFileInput(e, false)}
+                  className="hidden"
+                />
+                <QbitButton
+                  variant="outline"
+                  size="sm"
+                  icon={uploadingImage ? "progress_activity" : "upload"}
+                  disabled={uploadingImage}
+                  onClick={() => mainImageInputRef.current?.click()}
+                >
+                  {mainImageUrl ? "Replace Main Image" : "Upload Main Image"}
+                </QbitButton>
+                <p className="mt-1.5 text-[11px] text-qbit-on-surface-variant">
+                  JPG, PNG, or WEBP · Max 5MB · This image appears as the product cover.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Gallery images */}
+          <div>
+            <label className="mb-1.5 block text-sm font-medium">
+              Gallery Images ({galleryImages.length})
+            </label>
+            <div
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleDrop}
+              onClick={() => galleryInputRef.current?.click()}
+              className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 transition-colors ${
+                dragOver
+                  ? "border-qbit-primary bg-qbit-primary/5"
+                  : "border-qbit-outline-variant bg-qbit-surface-container-low/30 hover:border-qbit-primary/40"
+              }`}
+            >
+              <Icon name="cloud_upload" className="text-[32px] text-qbit-on-surface-variant/60" />
+              <p className="mt-2 text-sm font-medium text-qbit-on-surface">
+                {dragOver ? "Drop images here…" : "Drag & drop gallery images here"}
+              </p>
+              <p className="mt-0.5 text-[11px] text-qbit-on-surface-variant">or click to browse · JPG, PNG, WEBP</p>
+              <input
+                ref={galleryInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                multiple
+                onChange={(e) => handleFileInput(e, true)}
+                className="hidden"
+              />
+            </div>
+
+            {galleryImages.length > 0 && (
+              <div className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
+                {galleryImages.map((url, idx) => (
+                  <div key={idx} className="group relative aspect-square overflow-hidden rounded-lg border border-qbit-outline-variant bg-qbit-surface-container-low">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={url} alt={`Gallery ${idx + 1}`} className="h-full w-full object-cover" />
+                    <div className="absolute inset-0 flex items-center justify-center gap-1 bg-black/60 opacity-0 transition-opacity group-hover:opacity-100">
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setFeaturedFromGallery(idx); }}
+                        className="rounded p-1.5 text-white hover:bg-white/20"
+                        title="Set as main image"
+                      >
+                        <Icon name="star" className="text-[16px]" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); removeGalleryImage(idx); }}
+                        className="rounded p-1.5 text-white hover:bg-red-500/40"
+                        title="Delete image"
+                      >
+                        <Icon name="delete" className="text-[16px]" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </SurfaceCard>
+
+        {/* Section 3 — Downloads & Resources */}
         <SurfaceCard className="p-6">
           <h3 className="mb-4 flex items-center gap-2 text-sm font-bold text-qbit-on-surface">
             <Icon name="download" className="text-[20px] text-qbit-primary" /> Downloads & Resources
