@@ -1738,6 +1738,28 @@ model QbitProduct {
   updatedBy String?
   version   Int     @default(1)
 
+  /// ===== V4 — Smart Device Setup capabilities (Dr. QBIT enhancement) =====
+  /// These flags control which Smart Device Setup features appear on the
+  /// /dr-qbit device lookup page. Set via Product Master admin UI.
+  /// Wi-Fi Supported: enables "Configure Wi-Fi" button + Wi-Fi Setup Wizard.
+  supportsWifi             Boolean @default(false)
+  /// Automatic Driver Installation: enables "Install Driver Automatically"
+  /// button (detects OS, downloads correct driver, launches installer).
+  /// If false, only manual download is shown.
+  autoDriverInstall        Boolean @default(false)
+  /// SDK Available: enables Automatic Wi-Fi configuration (sends credentials
+  /// via SDK / configuration API). If false, Wi-Fi Setup falls back to
+  /// Guided Mode (step-by-step instructions).
+  sdkAvailable             Boolean @default(false)
+  /// Firmware Configuration Supported: enables firmware-level config commands
+  /// (e.g. setting SSID/password via USB firmware commands). Combined with
+  /// sdkAvailable to decide Auto vs Guided Wi-Fi Setup.
+  firmwareConfigSupported  Boolean @default(false)
+  /// Comma-separated list of supported connection types.
+  /// Examples: "usb", "usb,lan", "usb,wifi", "usb,wifi,bluetooth", "lan"
+  /// Used by Dr. QBIT to show available connection options.
+  connectionTypes          String? // "usb" | "usb,lan" | "usb,wifi" | etc.
+
   hardwareSignatures HardwareSignature[]
   detectedDevices    DetectedDevice[]
   unknownDeviceMaps  UnknownDevice[]

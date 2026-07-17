@@ -76,8 +76,11 @@ export async function GET(req: NextRequest) {
             qrCodeUrl: true, status: true,
             installationInstructions: true, installationTime: true,
             difficultyLevel: true,
+            // V4 Smart Device Setup capability flags
+            supportsWifi: true, autoDriverInstall: true,
+            sdkAvailable: true, firmwareConfigSupported: true,
+            connectionTypes: true,
             // RBAC: filter mediaFiles to PUBLIC visibility only.
-            // Engineer/admin/internal resources are NEVER exposed to guests.
             mediaFiles: {
               where: { visibility: "public" },
               orderBy: { sortIndex: "asc" },
@@ -148,6 +151,16 @@ export async function GET(req: NextRequest) {
           mediaFiles: product.mediaFiles.map((m) => ({
             id: m.id, type: m.type, title: m.title, url: m.url,
           })),
+          // V4 Smart Device Setup capabilities
+          capabilities: {
+            supportsWifi: product.supportsWifi,
+            autoDriverInstall: product.autoDriverInstall,
+            sdkAvailable: product.sdkAvailable,
+            firmwareConfigSupported: product.firmwareConfigSupported,
+            connectionTypes: product.connectionTypes
+              ? product.connectionTypes.split(",").map((s) => s.trim()).filter(Boolean)
+              : ["usb"],
+          },
         } : null,
       });
     }
@@ -176,6 +189,10 @@ export async function GET(req: NextRequest) {
             qrCodeUrl: true, status: true,
             installationInstructions: true, installationTime: true,
             difficultyLevel: true,
+            // V4 Smart Device Setup capability flags
+            supportsWifi: true, autoDriverInstall: true,
+            sdkAvailable: true, firmwareConfigSupported: true,
+            connectionTypes: true,
             // RBAC: filter mediaFiles to PUBLIC visibility only.
             mediaFiles: {
               where: { visibility: "public" },
@@ -243,6 +260,16 @@ export async function GET(req: NextRequest) {
         mediaFiles: product.mediaFiles.map((m) => ({
           id: m.id, type: m.type, title: m.title, url: m.url,
         })),
+        // V4 Smart Device Setup capabilities
+        capabilities: {
+          supportsWifi: product.supportsWifi,
+          autoDriverInstall: product.autoDriverInstall,
+          sdkAvailable: product.sdkAvailable,
+          firmwareConfigSupported: product.firmwareConfigSupported,
+          connectionTypes: product.connectionTypes
+            ? product.connectionTypes.split(",").map((s) => s.trim()).filter(Boolean)
+            : ["usb"],
+        },
       } : null,
     });
   } catch (error) {

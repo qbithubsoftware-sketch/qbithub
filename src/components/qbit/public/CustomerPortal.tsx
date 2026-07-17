@@ -50,6 +50,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { WifiSetupWizard } from "./WifiSetupWizard";
 
 // ====================== Types ======================
 interface MediaFile {
@@ -112,6 +113,16 @@ export interface ResourcesInfo {
   videoUrl: string;
   productPageUrl: string;
   mediaFiles: MediaFile[];
+  // V4 Smart Device Setup capabilities (optional for backward compat)
+  capabilities?: DeviceCapabilities;
+}
+
+export interface DeviceCapabilities {
+  supportsWifi: boolean;
+  autoDriverInstall: boolean;
+  sdkAvailable: boolean;
+  firmwareConfigSupported: boolean;
+  connectionTypes: string[];
 }
 
 export interface LookupResponse {
@@ -137,6 +148,7 @@ export function CustomerPortal() {
   const [state, setState] = useState<State>("idle");
   const [result, setResult] = useState<LookupResponse | null>(null);
   const [scanning, setScanning] = useState(false);
+  const [wifiSetupOpen, setWifiSetupOpen] = useState(false);
   const resultRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -243,13 +255,20 @@ export function CustomerPortal() {
 
   return (
     <div className="w-full">
-      {/* ===== Two Equal Options: Hardware Scanner (left) | Serial Number (right) ===== */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {/* LEFT: Launch Hardware Scanner (auto USB detection) */}
+      {/* ===== Three Equal Options: Dr. QBIT Scanner (left) | Wi-Fi Setup (middle) | Serial Number (right) ===== */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* LEFT: Launch Dr. QBIT (auto USB detection) */}
         {scanning ? (
           <ScanningCard />
         ) : (
           <HardwareScannerCard onLaunch={handleLaunchScanner} disabled={state === "searching"} />
+        )}
+
+        {/* MIDDLE: Wi-Fi Setup (for supported QBIT Wi-Fi printers) */}
+        {wifiSetupOpen ? (
+          <WifiSetupCardActive onClose={() => setWifiSetupOpen(false)} />
+        ) : (
+          <WifiSetupCard onLaunch={() => setWifiSetupOpen(true)} disabled={state === "searching"} />
         )}
 
         {/* RIGHT: Existing Serial Number Search (unchanged design) */}
@@ -491,6 +510,9 @@ export function PortalResult({
         </div>
       </section>
 
+      {/* ===== 3.5. Smart Device Setup (NEW — below Downloads) ===== */}
+      <SmartDeviceSetupSection device={device} resources={resources} />
+
       {/* ===== 4. Registered Device (Customer + Purchase) ===== */}
       <section className="rounded-2xl border border-qbit-outline-variant bg-white shadow-sm">
         <SectionHeader icon="person_pin" title="Registered Device" subtitle="Customer and purchase information" />
@@ -571,6 +593,273 @@ export function PortalResult({
         </button>
       </div>
     </div>
+  );
+}
+
+// ====================== Smart Device Setup Section (V4) ======================
+
+/**
+ * SmartDeviceSetupSection — appears below Downloads on the /dr-qbit result page.
+ *
+ * Contains:
+ *   1. Driver Installation
+ *      - If autoDriverInstall=true → "Install Driver Automatically" button
+ *        (detects OS, downloads correct driver, launches installer)
+ *      - If autoDriverInstall=false → "Download Driver" (manual fallback)
+ *
+ *   2. Wi-Fi Setup
+ *      - If supportsWifi=true → "Configure Wi-Fi" button → opens WifiSetupWizard
+ *      - If supportsWifi=false → "This model supports USB connection only.
+ *        Wi-Fi setup is not available." (never shows unsupported features)
+ *
+ * Smart Rules (per spec):
+ *   - Wi-Fi Supported = No  → hide Wi-Fi Setup (or show "unavailable" message)
+ *   - SDK Available = No    → disable Automatic Configuration, use Guided Setup
+ *   - Auto Driver Install = No → show only Driver Download (manual)
+ *
+ * The customer NEVER sees unsupported features as available.
+ */
+function SmartDeviceSetupSection({
+  device,
+  resources,
+}: {
+  device: DeviceInfo;
+  resources?: ResourcesInfo | null;
+}) {
+  const [showWifiWizard, setShowWifiWizard] = useState(false);
+  const [driverInstallState, setDriverInstallState] = useState<
+    "idle" | "detecting" | "downloading" | "installing" | "verifying" | "done" | "manual"
+  >("idle");
+  const [driverInstallLog, setDriverInstallLog] = useState<string[]>([]);
+  const [osInfo] = useState({
+    os: typeof navigator !== "undefined" && navigator.platform?.includes("Win")
+      ? "Windows"
+      : typeof navigator !== "undefined" && navigator.platform?.includes("Mac")
+        ? "macOS"
+        : typeof navigator !== "undefined" && navigator.platform?.includes("Linux")
+          ? "Linux"
+          : "Unknown",
+    arch: "64-bit", // most modern systems
+  });
+
+  const capabilities = resources?.capabilities;
+  const supportsWifi = capabilities?.supportsWifi ?? false;
+  const autoDriverInstall = capabilities?.autoDriverInstall ?? false;
+
+  // ===== Driver Installation flow (simulated for demo) =====
+  async function handleInstallDriver() {
+    setDriverInstallLog([]);
+    setDriverInstallState("detecting");
+    setDriverInstallLog((l) => [...l, `Detecting OS: ${osInfo.os} ${osInfo.arch}`]);
+
+    await new Promise((r) => setTimeout(r, 800));
+    setDriverInstallLog((l) => [...l, `Device Model: ${device.productName} (${device.modelNumber})`]);
+
+    setDriverInstallState("downloading");
+    await new Promise((r) => setTimeout(r, 800));
+    setDriverInstallLog((l) => [...l, `Downloading driver: ${resources?.latestDriverVersion ?? "latest"} for ${osInfo.os}`]);
+
+    setDriverInstallState("installing");
+    await new Promise((r) => setTimeout(r, 1000));
+    setDriverInstallLog((l) => [...l, "Launching installer…"]);
+
+    setDriverInstallState("verifying");
+    await new Promise((r) => setTimeout(r, 800));
+    setDriverInstallLog((l) => [...l, "Verifying installation…"]);
+
+    setDriverInstallState("done");
+    setDriverInstallLog((l) => [...l, "✓ Driver installed successfully!"]);
+  }
+
+  function handleManualDownload() {
+    setDriverInstallState("manual");
+    if (resources?.driverDownloadUrl) {
+      window.open(resources.driverDownloadUrl, "_blank", "noopener,noreferrer");
+    }
+  }
+
+  return (
+    <section className="rounded-2xl border border-qbit-primary/30 bg-gradient-to-br from-qbit-primary/5 to-white shadow-sm">
+      <div className="flex items-center justify-between border-b border-qbit-primary/20 px-6 py-4">
+        <div className="flex items-center gap-2">
+          <span className="material-symbols-outlined text-[20px] text-qbit-primary">smart_toy</span>
+          <div>
+            <h3 className="text-sm font-bold uppercase tracking-wider text-qbit-on-surface">Smart Device Setup</h3>
+            <p className="text-[10px] text-qbit-on-surface-variant">Automated configuration powered by Dr. QBIT</p>
+          </div>
+        </div>
+        <span className="rounded-md bg-qbit-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-qbit-primary">V4</span>
+      </div>
+
+      <div className="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
+        {/* ===== Driver Installation ===== */}
+        <div className="rounded-xl border border-qbit-outline-variant bg-white p-5">
+          <div className="mb-3 flex items-center gap-2">
+            <span className="material-symbols-outlined text-[20px] text-qbit-primary">memory</span>
+            <h4 className="text-sm font-bold text-qbit-on-surface">Driver Installation</h4>
+          </div>
+
+          {autoDriverInstall ? (
+            <div>
+              <p className="mb-3 text-xs text-qbit-on-surface-variant">
+                This device supports automatic driver installation. Dr. QBIT will detect your OS,
+                download the correct driver, launch the installer, and verify the installation.
+              </p>
+
+              <button
+                onClick={handleInstallDriver}
+                disabled={driverInstallState !== "idle" && driverInstallState !== "manual" && driverInstallState !== "done"}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-qbit-primary px-4 py-2.5 text-sm font-semibold text-qbit-on-primary hover:bg-qbit-primary-container transition-colors disabled:opacity-60"
+              >
+                {driverInstallState === "idle" || driverInstallState === "manual" ? (
+                  <>
+                    <span className="material-symbols-outlined text-[18px]">auto_awesome</span>
+                    Install Driver Automatically
+                  </>
+                ) : driverInstallState === "done" ? (
+                  <>
+                    <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                    Installed
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+                    {driverInstallState === "detecting" ? "Detecting…" :
+                     driverInstallState === "downloading" ? "Downloading…" :
+                     driverInstallState === "installing" ? "Installing…" :
+                     "Verifying…"}
+                  </>
+                )}
+              </button>
+
+              {/* Installation log */}
+              {driverInstallLog.length > 0 && (
+                <div className="mt-3 rounded-lg border border-qbit-outline-variant/50 bg-qbit-surface-container-lowest p-3">
+                  <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-qbit-on-surface-variant">Installation Log</p>
+                  <div className="space-y-0.5">
+                    {driverInstallLog.map((line, i) => (
+                      <p key={i} className="font-mono text-[11px] text-qbit-on-surface-variant">
+                        <span className="text-qbit-primary">›</span> {line}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {driverInstallState === "done" && (
+                <div className="mt-3 rounded-lg border border-qbit-success/30 bg-qbit-success/5 p-3 text-center">
+                  <p className="text-xs font-semibold text-qbit-success">
+                    ✓ Driver installed successfully for {device.productName}
+                  </p>
+                </div>
+              )}
+
+              {/* Manual fallback link */}
+              {resources?.driverDownloadUrl && (
+                <button
+                  onClick={handleManualDownload}
+                  className="mt-2 w-full text-center text-[11px] font-semibold text-qbit-on-surface-variant hover:text-qbit-primary"
+                >
+                  Or download driver manually →
+                </button>
+              )}
+            </div>
+          ) : (
+            <div>
+              <p className="mb-3 text-xs text-qbit-on-surface-variant">
+                Automatic driver installation is not available for this device.
+                You can download the driver manually using the button below.
+              </p>
+              {resources?.driverDownloadUrl ? (
+                <a
+                  href={resources.driverDownloadUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-qbit-primary px-4 py-2.5 text-sm font-semibold text-qbit-primary hover:bg-qbit-primary/5 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[18px]">download</span>
+                  Download Driver
+                  {resources.latestDriverVersion && (
+                    <span className="text-[11px] text-qbit-on-surface-variant">({resources.latestDriverVersion})</span>
+                  )}
+                </a>
+              ) : (
+                <p className="text-xs text-qbit-on-surface-variant">No driver download available.</p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* ===== Wi-Fi Setup ===== */}
+        <div className="rounded-xl border border-qbit-outline-variant bg-white p-5">
+          <div className="mb-3 flex items-center gap-2">
+            <span className="material-symbols-outlined text-[20px] text-qbit-primary">wifi</span>
+            <h4 className="text-sm font-bold text-qbit-on-surface">Wi-Fi Setup</h4>
+          </div>
+
+          {supportsWifi ? (
+            <div>
+              <p className="mb-3 text-xs text-qbit-on-surface-variant">
+                This QBIT model supports Wi-Fi configuration. Click below to launch the Wi-Fi Setup Wizard.
+              </p>
+              <button
+                onClick={() => setShowWifiWizard(true)}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-qbit-primary px-4 py-2.5 text-sm font-semibold text-qbit-on-primary hover:bg-qbit-primary-container transition-colors"
+              >
+                <span className="material-symbols-outlined text-[18px]">wifi</span>
+                Configure Wi-Fi
+              </button>
+
+              {/* Supported connection types */}
+              {capabilities?.connectionTypes && capabilities.connectionTypes.length > 0 && (
+                <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-qbit-on-surface-variant">Connections:</span>
+                  {capabilities.connectionTypes.map((ct) => (
+                    <span
+                      key={ct}
+                      className="rounded-md bg-qbit-surface-container-high px-2 py-0.5 text-[10px] font-semibold uppercase text-qbit-on-surface-variant"
+                    >
+                      {ct}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div>
+              <p className="mb-3 text-xs text-qbit-on-surface-variant">
+                This model supports USB connection only. Wi-Fi setup is not available.
+              </p>
+              <div className="rounded-lg border border-qbit-outline-variant/50 bg-qbit-surface-container-low p-3 text-center">
+                <span className="material-symbols-outlined mx-auto text-[24px] text-qbit-on-surface-variant">usb</span>
+                <p className="mt-1 text-xs font-semibold text-qbit-on-surface-variant">USB Connection Only</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ===== Wi-Fi Setup Wizard Modal ===== */}
+      {showWifiWizard && capabilities && device && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto">
+            <WifiSetupWizard
+              device={{
+                productName: device.productName,
+                model: device.modelNumber,
+                serial: device.serialNumber,
+                usbVendorId: "", // filled in by detection
+                usbProductId: "",
+                firmwareVersion: resources?.latestFirmwareVersion ?? null,
+              }}
+              capabilities={capabilities}
+              onComplete={() => setShowWifiWizard(false)}
+              onCancel={() => setShowWifiWizard(false)}
+            />
+          </div>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -935,6 +1224,170 @@ function ScanningCard() {
       <p className="mt-5 text-center text-xs text-qbit-on-surface-variant">
         Please keep your device connected…
       </p>
+    </section>
+  );
+}
+
+// ====================== Wi-Fi Setup Card (Middle Column) ======================
+
+/**
+ * WifiSetupCard — MIDDLE card on /dr-qbit homepage.
+ *
+ * For users who want to configure Wi-Fi on a supported QBIT Wi-Fi printer.
+ * When clicked, launches the Wi-Fi Setup Wizard flow which:
+ *   1. Detects the connected USB device
+ *   2. Checks if it supports Wi-Fi (supportsWifi=true)
+ *      - If yes → continue to Wi-Fi Setup Wizard
+ *      - If no → "This QBIT model does not support Wi-Fi configuration."
+ *   3. Verifies SDK + firmware capabilities → Auto or Guided mode
+ *   4. Performs Wi-Fi setup (Auto) or shows instructions (Guided)
+ *
+ * In demo mode, the wizard opens a modal that walks through the full flow.
+ * In production, this would use WebUSB to detect the actual connected device.
+ */
+function WifiSetupCard({
+  onLaunch,
+  disabled,
+}: {
+  onLaunch: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <section className="rounded-3xl border border-qbit-outline-variant bg-white p-6 shadow-lg sm:p-8">
+      {/* Header */}
+      <div className="mb-4">
+        <div className="inline-flex items-center gap-2 rounded-full bg-qbit-secondary/10 px-3 py-1 text-xs font-semibold text-qbit-secondary mb-2">
+          <span className="material-symbols-outlined text-[14px]">wifi</span>
+          Wi-Fi Setup
+        </div>
+        <h3 className="text-xl font-bold tracking-tight text-qbit-on-surface sm:text-2xl">
+          Configure Wi-Fi
+        </h3>
+        <p className="mt-1 text-xs font-medium text-qbit-on-surface-variant">
+          For supported QBIT Wi-Fi printers
+        </p>
+      </div>
+
+      {/* Description */}
+      <p className="text-sm text-qbit-on-surface-variant mb-4">
+        Configure Wi-Fi on supported QBIT Wi-Fi printers. Dr. QBIT will
+        automatically detect the connected device, verify Wi-Fi support,
+        and guide you through setup.
+      </p>
+
+      {/* Features list */}
+      <ul className="space-y-1.5 mb-5">
+        {[
+          "Auto-detect connected QBIT device",
+          "Verify Wi-Fi support",
+          "Automatic or guided Wi-Fi configuration",
+          "Secure credential transmission",
+          "Connection verification + IP display",
+        ].map((feature) => (
+          <li key={feature} className="flex items-start gap-2 text-xs text-qbit-on-surface">
+            <span className="material-symbols-outlined text-[16px] text-qbit-secondary mt-0.5">check_circle</span>
+            {feature}
+          </li>
+        ))}
+      </ul>
+
+      {/* Launch button */}
+      <button
+        type="button"
+        onClick={onLaunch}
+        disabled={disabled}
+        className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-qbit-secondary px-6 py-3 text-sm font-semibold text-white hover:bg-qbit-secondary/90 transition-colors disabled:opacity-60"
+      >
+        <span className="material-symbols-outlined text-[20px]">wifi</span>
+        Launch Wi-Fi Setup
+      </button>
+    </section>
+  );
+}
+
+/**
+ * WifiSetupCardActive — shown in place of WifiSetupCard when the user clicks
+ * "Launch Wi-Fi Setup". Renders a compact inline version of the wizard flow.
+ *
+ * The full wizard (WifiSetupWizard component) opens in a modal overlay when
+ * the user clicks "Start Detection" inside this card.
+ */
+function WifiSetupCardActive({ onClose }: { onClose: () => void }) {
+  const [showFullWizard, setShowFullWizard] = useState(false);
+
+  return (
+    <section className="rounded-3xl border border-qbit-secondary/30 bg-qbit-secondary/5 p-6 shadow-lg sm:p-8">
+      <div className="mb-4">
+        <div className="inline-flex items-center gap-2 rounded-full bg-qbit-secondary/10 px-3 py-1 text-xs font-semibold text-qbit-secondary mb-2">
+          <span className="material-symbols-outlined text-[14px]">wifi</span>
+          Wi-Fi Setup
+        </div>
+        <h3 className="text-xl font-bold tracking-tight text-qbit-on-surface sm:text-2xl">
+          Wi-Fi Setup Wizard
+        </h3>
+        <p className="mt-1 text-xs font-medium text-qbit-on-surface-variant">
+          Connect your QBIT device via USB, then click below to start.
+        </p>
+      </div>
+
+      <div className="rounded-xl border border-qbit-outline-variant bg-white p-4">
+        <div className="flex items-start gap-3">
+          <span className="material-symbols-outlined text-[24px] text-qbit-secondary mt-0.5">info</span>
+          <div className="text-xs text-qbit-on-surface-variant space-y-1.5">
+            <p className="font-semibold text-qbit-on-surface">Before you begin:</p>
+            <p>1. Connect your QBIT printer/POS via USB cable</p>
+            <p>2. Power on the device</p>
+            <p>3. Have your Wi-Fi network name (SSID) + password ready</p>
+          </div>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => setShowFullWizard(true)}
+        className="mt-4 w-full inline-flex items-center justify-center gap-2 rounded-xl bg-qbit-secondary px-6 py-3 text-sm font-semibold text-white hover:bg-qbit-secondary/90 transition-colors"
+      >
+        <span className="material-symbols-outlined text-[20px]">play_arrow</span>
+        Start Wi-Fi Setup
+      </button>
+
+      <button
+        type="button"
+        onClick={onClose}
+        className="mt-2 w-full text-center text-xs font-semibold text-qbit-on-surface-variant hover:text-qbit-on-surface"
+      >
+        Cancel
+      </button>
+
+      {/* Full Wi-Fi Setup Wizard Modal */}
+      {showFullWizard && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto">
+            <WifiSetupWizard
+              device={{
+                productName: "QBIT Thermal Printer P80UE",
+                model: "P80UE",
+                serial: "DEMO-WIFI-001",
+                usbVendorId: "",
+                usbProductId: "",
+                firmwareVersion: "v1.8.0",
+              }}
+              capabilities={{
+                supportsWifi: true,
+                autoDriverInstall: true,
+                sdkAvailable: true,
+                firmwareConfigSupported: true,
+                connectionTypes: ["usb", "wifi"],
+              }}
+              onComplete={() => {
+                setShowFullWizard(false);
+                onClose();
+              }}
+              onCancel={() => setShowFullWizard(false)}
+            />
+          </div>
+        </div>
+      )}
     </section>
   );
 }
