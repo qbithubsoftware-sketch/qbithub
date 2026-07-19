@@ -808,7 +808,7 @@ export function ProductDetailClient({ product }: { product: ProductDetail }) {
                           </div>
                           {r.type === "video" ? (
                             <a
-                              href={r.url.startsWith("http") ? r.url : `/api/resources/${r.resourceId}/download`}
+                              href={r.url.startsWith("http") ? r.url : `/api/admin/resources/${r.resourceId}/download`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-qbit-primary hover:underline"
@@ -818,7 +818,7 @@ export function ProductDetailClient({ product }: { product: ProductDetail }) {
                             </a>
                           ) : (
                             <a
-                              href={`/api/resources/${r.resourceId}/download`}
+                              href={`/api/admin/resources/${r.resourceId}/download`}
                               className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-qbit-primary hover:underline"
                             >
                               Download / Open

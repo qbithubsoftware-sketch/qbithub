@@ -277,7 +277,7 @@ export function GlobalResourceLibrary() {
                           <Icon name="edit" className="text-[18px]" />
                         </button>
                         <a
-                          href={`/api/resources/${r.id}/download`}
+                          href={`/api/admin/resources/${r.id}/download`}
                           className="rounded p-1.5 text-qbit-on-surface-variant hover:bg-qbit-surface-container-high"
                           title="Download"
                         >
