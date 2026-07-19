@@ -1803,3 +1803,56 @@ BENEFITS (per spec):
   ✅ Duplicate protection
   ✅ Resource usage information
   ✅ Multi-select support
+
+---
+Task ID: legacy-cleanup-video-optimization
+Agent: main
+Task: Legacy module cleanup, video optimization (YouTube only), resource status display, delete demo data button, remove redundant navigation.
+
+Work Log:
+
+1. LEGACY CLEANUP — removed redundant navigation:
+   - Removed 'Legacy Upload' collapsible group from admin sidebar entirely
+   - Removed: Resource Center (legacy), Window POS, Android POS, Thermal
+     Printer, Barcode Scanner, Cash Drawer upload screens from nav
+   - Kept 'Product Master' as a top-level item (needed for product list
+     + Quick Edit full-page editor)
+   - Admin sidebar is now clean:
+     Dashboard → Product & Resource Manager → Global Resource Library →
+     Product Master → Device Lookup → Users → Analytics → Settings
+
+2. VIDEO OPTIMIZATION — no video file uploads:
+   - When resource type = 'video', form shows YouTube URL input instead
+     of file upload
+   - YouTube ID auto-extracted from URL (supports youtube.com/watch,
+     youtu.be, /embed/, /v/ patterns)
+   - Thumbnail auto-fetched: https://img.youtube.com/vi/<id>/hqdefault.jpg
+   - mimeType set to 'video/youtube'
+   - Videos NEVER hosted on server — only YouTube URL stored
+   - Reduces storage, bandwidth, backup size, improves performance
+
+3. RESOURCE STATUS DISPLAY:
+   - MultiSelectResourceDropdown now shows per resource:
+     * 'Active' badge (green) / 'Deprecated' badge (amber)
+     * 'Last Updated' date with schedule icon
+     * 'Used by N products' count
+     * Version + 'Latest' badge
+   - Selected resource chips show deprecated status (amber border)
+   - Admins see exactly what's linked at a glance
+
+4. DELETE ALL DEMO RESOURCES button:
+   - 'Delete All' button in GlobalResourceLibrary header
+   - Confirmation dialog with resource count
+   - Iterates through all resources and DELETEs each
+   - Toast: 'Deleted N resources. Library is now empty.'
+   - Allows admins to clear demo data and start fresh
+
+5. FINAL ARCHITECTURE (per spec):
+   Dashboard → Global Resource Library → Product Master (Edit) →
+   Resource Mapping → Customer Product Page
+
+Production Verification (https://qbithub.vercel.app):
+  ✓ GET /portal → HTTP 200
+  ✓ GET /api/admin/resources → HTTP 403 (auth working)
+  ✓ GET /api/admin/products/test-id/resource-mappings → HTTP 403 (auth working)
+  ✓ Build: 0 TS errors, ✓ Compiled in 36.4s
