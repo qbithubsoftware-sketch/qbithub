@@ -10,6 +10,8 @@ import { SurfaceCard } from "@/components/qbit/primitives/GlassCard";
 
 // WhatsApp inquiry number — will be configured via system settings later
 const WHATSAPP_INQUIRY_NUMBER = "918527545414";
+// Company phone number for "Call Now" button (tel: deep link)
+const COMPANY_PHONE_NUMBER = "+918527545414";
 
 // Deterministic pseudo-random number generator based on product ID
 // Ensures view/download counts are consistent across page reloads
@@ -153,6 +155,7 @@ export function ProductDetailClient({ product }: { product: ProductDetail }) {
   const [activeTab, setActiveTab] = useState<"specs" | "features" | "downloads" | "videos">("specs");
   const [activeVideo, setActiveVideo] = useState(0);
   const [loadedVideos, setLoadedVideos] = useState<Set<number>>(new Set());
+  const [imageTransition, setImageTransition] = useState(false);
   const touchStartX = useRef<number | null>(null);
 
   // ===== Generate realistic view/download counts (deterministic per product) =====
@@ -179,13 +182,29 @@ export function ProductDetailClient({ product }: { product: ProductDetail }) {
     return imgs;
   }, [product]);
 
-  // ===== Image navigation (next/prev/keyboard/swipe) =====
+  // ===== Image navigation (next/prev/keyboard/swipe) with smooth fade =====
+  const goToImage = useCallback((index: number) => {
+    setImageTransition(true);
+    setTimeout(() => {
+      setActiveImage(index);
+      setImageTransition(false);
+    }, 150);
+  }, []);
+
   const nextImage = useCallback(() => {
-    setActiveImage((prev) => (prev + 1) % gallery.length);
+    setImageTransition(true);
+    setTimeout(() => {
+      setActiveImage((prev) => (prev + 1) % gallery.length);
+      setImageTransition(false);
+    }, 150);
   }, [gallery.length]);
 
   const prevImage = useCallback(() => {
-    setActiveImage((prev) => (prev - 1 + gallery.length) % gallery.length);
+    setImageTransition(true);
+    setTimeout(() => {
+      setActiveImage((prev) => (prev - 1 + gallery.length) % gallery.length);
+      setImageTransition(false);
+    }, 150);
   }, [gallery.length]);
 
   // Keyboard navigation for gallery
@@ -336,10 +355,13 @@ export function ProductDetailClient({ product }: { product: ProductDetail }) {
               {currentImage ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
+                  key={activeImage}
                   src={currentImage.url}
                   alt={currentImage.alt}
-                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  loading="lazy"
+                  className={`h-full w-full object-cover transition-all duration-300 group-hover:scale-105 ${
+                    imageTransition ? "opacity-0 scale-95" : "opacity-100 scale-100"
+                  }`}
+                  loading={activeImage === 0 ? "eager" : "lazy"}
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-qbit-surface-container-low via-white to-qbit-surface-container-high">
@@ -384,7 +406,7 @@ export function ProductDetailClient({ product }: { product: ProductDetail }) {
                 {gallery.map((img, i) => (
                   <button
                     key={i}
-                    onClick={() => setActiveImage(i)}
+                    onClick={() => goToImage(i)}
                     className={`relative h-20 w-24 shrink-0 overflow-hidden rounded-lg border-2 transition-all ${
                       i === activeImage
                         ? "border-qbit-primary ring-2 ring-qbit-primary/20"
@@ -490,34 +512,33 @@ export function ProductDetailClient({ product }: { product: ProductDetail }) {
               </div>
             )}
 
-            {/* Primary actions */}
-            <div className="flex flex-wrap gap-3 border-t border-qbit-outline-variant/50 pt-4">
+            {/* Primary actions — Send Inquiry + Call Now side-by-side */}
+            <div className="flex flex-col gap-3 border-t border-qbit-outline-variant/50 pt-4 sm:flex-row">
               {product.driverDownloadUrl && (
                 <QbitButton
                   variant="primary"
                   icon="download"
                   onClick={() => handleDownload(product.driverDownloadUrl!, "Driver")}
+                  className="sm:flex-1"
                 >
                   Download Driver{product.latestDriverVersion ? ` ${product.latestDriverVersion}` : ""}
-                </QbitButton>
-              )}
-              {product.manualUrl && (
-                <QbitButton
-                  variant="outline"
-                  icon="menu_book"
-                  onClick={() => handleDownload(product.manualUrl!, "Manual")}
-                >
-                  View Manual
                 </QbitButton>
               )}
               <QbitButton
                 variant="primary"
                 icon="chat"
                 onClick={handleInquiry}
-                className="bg-[#25D366] hover:bg-[#1da851] text-white"
+                className="bg-[#25D366] hover:bg-[#1da851] text-white sm:flex-1"
               >
                 Send Inquiry
               </QbitButton>
+              <a
+                href={`tel:${COMPANY_PHONE_NUMBER}`}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-qbit-primary px-5 py-2.5 text-sm font-semibold text-qbit-primary transition-all hover:bg-qbit-primary/5 sm:flex-1"
+              >
+                <Icon name="call" className="text-[18px]" />
+                Call Now
+              </a>
             </div>
 
             {/* Share section */}
