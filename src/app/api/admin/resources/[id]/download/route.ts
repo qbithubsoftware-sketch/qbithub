@@ -1,3 +1,4 @@
+/* V5 download endpoint */
 /**
  * GET /api/admin/resources/[id]/download
  *
