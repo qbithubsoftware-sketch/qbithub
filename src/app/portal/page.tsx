@@ -24,6 +24,7 @@ import { ProductMasterFullEditPage } from "@/components/qbit/pages/ProductMaster
 import { UploadMasterContent } from "@/components/qbit/pages/UploadMasterContent";
 import { ProductResourceUploadCenter } from "@/components/qbit/pages/ProductResourceUploadCenter";
 import { ProductAndResourceManager } from "@/components/qbit/pages/ProductAndResourceManager";
+import { GlobalResourceLibrary } from "@/components/qbit/pages/GlobalResourceLibrary";
 import { AIPurchaseImportCenterPage } from "@/components/qbit/pages/AIPurchaseImportCenterPage";
 import { DeviceRegisterPage } from "@/components/qbit/pages/DeviceRegisterPage";
 import { SystemSettingsPage } from "@/components/qbit/pages/SystemSettingsPage";
@@ -91,6 +92,8 @@ export default function Home() {
         return <ProductMasterPage />;
       case "product-resource-manager":
         return <ProductAndResourceManager />;
+      case "resource-library":
+        return <GlobalResourceLibrary />;
       case "product-master-create":
         return <ProductMasterCreatePage />;
       case "product-master-edit":

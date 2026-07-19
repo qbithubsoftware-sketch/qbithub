@@ -1789,6 +1789,86 @@ model QbitProduct {
   @@index([isTrending])
   @@index([status])
   @@index([isActive])
+
+  /// V5: Shared Resource Library mappings (many-to-many with Resource)
+  resourceMappings ProductResourceMapping[]
+}
+
+/// V5 — Global Shared Resource Library.
+/// Resources exist ONCE in this table and are linked to products via
+/// ProductResourceMapping. Eliminates duplicate uploads — one resource
+/// can be used by unlimited products.
+model Resource {
+  id              String   @id @default(cuid())
+  /// Resource name (e.g. "4Barcode APK", "Label Shop", "Windows Driver v2.4")
+  name            String
+  /// Resource type: "windows_driver" | "windows_software" | "android_software" |
+  /// "firmware" | "sdk" | "manual" | "installation_guide" |
+  /// "troubleshooting" | "video" | "browser_utility" | "maintenance_tool" |
+  /// "pos_utility" | "other"
+  type            String
+  /// Version string (e.g. "v2.4.1")
+  version         String?
+  /// Short description
+  description     String?
+  /// Comma-separated list of supported device categories (e.g. "thermal_printer,portable_printer")
+  /// Used for smart filtering in product mapping dropdowns.
+  supportedCategories String?
+  /// File URL — can be a data URL (base64), external URL, or download path.
+  /// Stored once here; all linked products reference this same URL.
+  url             String
+  /// MIME type of the file (e.g. "application/vnd.android.package-archive")
+  mimeType        String?
+  /// File size in bytes (for display)
+  fileSize        Int?
+  /// Thumbnail URL (for videos/images)
+  thumbnailUrl    String?
+  /// Release date
+  releaseDate     DateTime?
+  /// Status: "active" | "deprecated" | "draft"
+  status          String   @default("active")
+  /// Download counter (incremented when a customer downloads via any product)
+  downloadCount   Int      @default(0)
+  /// Admin who created this resource
+  createdBy       String?
+  /// Admin who last updated this resource
+  updatedBy       String?
+  /// Visibility: "public" | "employee" | "engineer" | "admin" (RBAC)
+  visibility      String   @default("public")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  /// Products linked to this resource (many-to-many)
+  productMappings ProductResourceMapping[]
+
+  @@index([type])
+  @@index([status])
+  @@index([visibility])
+  @@index([name])
+}
+
+/// V5 — Many-to-many mapping between QbitProduct and Resource.
+/// A single Resource can be linked to unlimited products.
+/// A single Product can have unlimited resources (grouped by type).
+/// Deleting a product cascade-deletes its mappings (but NOT the resource).
+/// Deleting a resource cascade-deletes its mappings (but NOT the product).
+model ProductResourceMapping {
+  id          String   @id @default(cuid())
+  productId   String
+  resourceId  String
+  /// Optional override of the resource type for this specific mapping
+  /// (usually null — uses the resource's type)
+  overrideType String?
+  /// Optional sort order for display on product page
+  sortIndex   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  product     QbitProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  resource    Resource    @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, resourceId])
+  @@index([productId])
+  @@index([resourceId])
 }
 
 /// Bidirectional product-to-product relation for "Related Products" section.

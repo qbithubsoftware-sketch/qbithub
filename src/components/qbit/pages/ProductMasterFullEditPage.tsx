@@ -36,6 +36,7 @@ import { useNavigation } from "@/lib/navigation/store";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { SearchableResourceDropdown, type ResourceOption } from "@/components/qbit/admin/SearchableResourceDropdown";
+import { MultiSelectResourceDropdown, type GlobalResource } from "@/components/qbit/admin/MultiSelectResourceDropdown";
 import { compressImageToDataUrl, validateImageFile, formatFileSize } from "@/lib/images/compress";
 
 // ====================== Types ======================
@@ -117,6 +118,11 @@ export function ProductMasterFullEditPage() {
   const [downloadResourceId, setDownloadResourceId] = useState<string | null>(null);
   const [installationResourceId, setInstallationResourceId] = useState<string | null>(null);
 
+  // V5: Global Resource Library state
+  const [globalResources, setGlobalResources] = useState<GlobalResource[]>([]);
+  const [productMappings, setProductMappings] = useState<Record<string, string[]>>({});
+  const [mappingsLoading, setMappingsLoading] = useState(false);
+
   // Image upload state
   const [mainImageUrl, setMainImageUrl] = useState<string>("");
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
@@ -127,6 +133,77 @@ export function ProductMasterFullEditPage() {
 
   const userName = user?.name ?? "Admin";
   const initials = userName.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+
+  // ===== V5: Fetch global resources (library) =====
+  const fetchGlobalResources = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/resources?limit=500", { cache: "no-store" });
+      if (!res.ok) return;
+      const data = await res.json();
+      setGlobalResources(data.items ?? []);
+    } catch { /* silent */ }
+  }, []);
+
+  // ===== V5: Fetch product resource mappings =====
+  const fetchProductMappings = useCallback(async () => {
+    if (!productId) return;
+    setMappingsLoading(true);
+    try {
+      const res = await fetch(`/api/admin/products/${productId}/resource-mappings`, { cache: "no-store" });
+      if (!res.ok) return;
+      const data = await res.json();
+      // Convert grouped format to Record<type, string[]>
+      const mappings: Record<string, string[]> = {};
+      for (const [type, items] of Object.entries(data.grouped ?? {})) {
+        mappings[type] = (items as Array<{ resourceId: string }>).map((m) => m.resourceId);
+      }
+      setProductMappings(mappings);
+    } catch { /* silent */ } finally { setMappingsLoading(false); }
+  }, [productId]);
+
+  // ===== V5: Map/unmap resource (instant — no save button needed) =====
+  async function handleMappingChange(type: string, newIds: string[]) {
+    if (!productId) return;
+    const oldIds = productMappings[type] ?? [];
+    // Resources to add (in newIds but not in oldIds)
+    const toAdd = newIds.filter((id) => !oldIds.includes(id));
+    // Resources to remove (in oldIds but not in newIds)
+    const toRemove = oldIds.filter((id) => !newIds.includes(id));
+
+    // Optimistic update
+    setProductMappings((prev) => ({ ...prev, [type]: newIds }));
+
+    // Add new mappings
+    for (const resourceId of toAdd) {
+      try {
+        await fetch(`/api/admin/products/${productId}/resource-mappings`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ resourceId }),
+        });
+      } catch { /* will be caught by re-fetch */ }
+    }
+    // Remove old mappings — need to find mappingId by resourceId
+    if (toRemove.length > 0) {
+      try {
+        const res = await fetch(`/api/admin/products/${productId}/resource-mappings`, { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          const allMappings = data.mappings ?? [];
+          for (const m of allMappings) {
+            if (toRemove.includes(m.resourceId)) {
+              await fetch(`/api/admin/products/${productId}/resource-mappings/${m.mappingId}`, { method: "DELETE" });
+            }
+          }
+        }
+      } catch { /* silent */ }
+    }
+    toast({ title: `${toAdd.length > 0 ? `Linked ${toAdd.length}` : ""}${toAdd.length > 0 && toRemove.length > 0 ? " · " : ""}${toRemove.length > 0 ? `Unlinked ${toRemove.length}` : ""} resource${(toAdd.length + toRemove.length) !== 1 ? "s" : ""}` });
+    void fetchProductMappings(); // refresh
+  }
+
+  useEffect(() => { void fetchGlobalResources(); }, [fetchGlobalResources]);
+  useEffect(() => { if (product) { void fetchProductMappings(); } }, [product, fetchProductMappings]);
 
   // ===== Fetch product details =====
   const fetchProduct = useCallback(async () => {
@@ -733,6 +810,123 @@ export function ProductMasterFullEditPage() {
               </p>
             </div>
           )}
+        </SurfaceCard>
+
+        {/* ===== V5: Shared Resource Library Mapping (multi-select dropdowns) ===== */}
+        <SurfaceCard className="border-qbit-primary/30 p-6">
+          <div className="mb-4">
+            <div className="flex items-center gap-2">
+              <Icon name="library_books" className="text-[20px] text-qbit-primary" />
+              <h3 className="text-sm font-bold text-qbit-on-surface">Shared Resource Library Mapping</h3>
+              <span className="rounded-md bg-qbit-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase text-qbit-primary">V5</span>
+            </div>
+            <p className="mt-1 text-[11px] text-qbit-on-surface-variant">
+              Select resources from the Global Resource Library. One resource can be linked to unlimited products.
+              Updates to a shared resource automatically reflect across all linked products.
+            </p>
+          </div>
+
+          {mappingsLoading ? (
+            <div className="py-6 text-center"><Icon name="progress_activity" className="mx-auto animate-spin text-[28px] text-qbit-primary" /></div>
+          ) : (
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              <MultiSelectResourceDropdown
+                label="Windows Drivers"
+                icon="memory"
+                resources={globalResources}
+                filterTypes={["windows_driver"]}
+                productCategory={product.category ?? undefined}
+                selectedIds={productMappings["windows_driver"] ?? []}
+                onChange={(ids) => void handleMappingChange("windows_driver", ids)}
+              />
+              <MultiSelectResourceDropdown
+                label="Windows Software"
+                icon="apps"
+                resources={globalResources}
+                filterTypes={["windows_software", "pos_utility"]}
+                productCategory={product.category ?? undefined}
+                selectedIds={[...(productMappings["windows_software"] ?? []), ...(productMappings["pos_utility"] ?? [])]}
+                onChange={(ids) => void handleMappingChange("windows_software", ids)}
+              />
+              <MultiSelectResourceDropdown
+                label="Android Software"
+                icon="phone_android"
+                resources={globalResources}
+                filterTypes={["android_software"]}
+                productCategory={product.category ?? undefined}
+                selectedIds={productMappings["android_software"] ?? []}
+                onChange={(ids) => void handleMappingChange("android_software", ids)}
+              />
+              <MultiSelectResourceDropdown
+                label="Firmware"
+                icon="upgrade"
+                resources={globalResources}
+                filterTypes={["firmware"]}
+                productCategory={product.category ?? undefined}
+                selectedIds={productMappings["firmware"] ?? []}
+                onChange={(ids) => void handleMappingChange("firmware", ids)}
+              />
+              <MultiSelectResourceDropdown
+                label="Manuals & Guides"
+                icon="menu_book"
+                resources={globalResources}
+                filterTypes={["manual", "installation_guide"]}
+                productCategory={product.category ?? undefined}
+                selectedIds={[...(productMappings["manual"] ?? []), ...(productMappings["installation_guide"] ?? [])]}
+                onChange={(ids) => void handleMappingChange("manual", ids)}
+              />
+              <MultiSelectResourceDropdown
+                label="Videos"
+                icon="videocam"
+                resources={globalResources}
+                filterTypes={["video"]}
+                productCategory={product.category ?? undefined}
+                selectedIds={productMappings["video"] ?? []}
+                onChange={(ids) => void handleMappingChange("video", ids)}
+              />
+              <MultiSelectResourceDropdown
+                label="SDK & Browser Utilities"
+                icon="code"
+                resources={globalResources}
+                filterTypes={["sdk", "browser_utility"]}
+                productCategory={product.category ?? undefined}
+                selectedIds={[...(productMappings["sdk"] ?? []), ...(productMappings["browser_utility"] ?? [])]}
+                onChange={(ids) => void handleMappingChange("sdk", ids)}
+              />
+              <MultiSelectResourceDropdown
+                label="Troubleshooting & Maintenance"
+                icon="build"
+                resources={globalResources}
+                filterTypes={["troubleshooting", "maintenance_tool"]}
+                productCategory={product.category ?? undefined}
+                selectedIds={[...(productMappings["troubleshooting"] ?? []), ...(productMappings["maintenance_tool"] ?? [])]}
+                onChange={(ids) => void handleMappingChange("troubleshooting", ids)}
+              />
+            </div>
+          )}
+
+          {globalResources.length === 0 && (
+            <div className="mt-4 rounded-lg border border-dashed border-qbit-warning/40 bg-qbit-warning/5 p-4 text-center">
+              <Icon name="info" className="mx-auto text-[20px] text-qbit-warning" />
+              <p className="mt-1 text-xs font-medium text-qbit-on-surface">Global Resource Library is empty.</p>
+              <p className="mt-0.5 text-[11px] text-qbit-on-surface-variant">
+                Add resources via <strong>Global Resource Library</strong> in the sidebar, then link them here.
+              </p>
+            </div>
+          )}
+
+          {/* Summary */}
+          <div className="mt-4 flex items-center justify-between rounded-lg border border-qbit-outline-variant/50 bg-qbit-surface-container-low p-3">
+            <div className="flex items-center gap-2">
+              <Icon name="check_circle" className="text-[18px] text-qbit-success" />
+              <p className="text-xs font-semibold text-qbit-on-surface">
+                {Object.values(productMappings).reduce((a, b) => a + b.length, 0)} shared resources linked
+              </p>
+            </div>
+            <span className="rounded-md bg-qbit-primary/10 px-2 py-0.5 text-[11px] font-semibold text-qbit-primary">
+              {globalResources.length} available in library
+            </span>
+          </div>
         </SurfaceCard>
 
         {/* ===== Section 4: Live Preview of Linked Resources ===== */}

@@ -140,6 +140,7 @@ export const ENGINEER_FOOTER: NavItem[] = [
 export const ADMIN_NAV: NavItem[] = [
   { label: "Dashboard", icon: "dashboard", screen: "home" },
   { label: "Product & Resource Manager", icon: "inventory_2", screen: "product-resource-manager", badge: "NEW" },
+  { label: "Global Resource Library", icon: "library_books", screen: "resource-library", badge: "V5" },
   { label: "Device Lookup", icon: "search", screen: "ai-purchase-center", badge: "NEW" },
   {
     label: "Legacy Upload",
