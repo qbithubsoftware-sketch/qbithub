@@ -99,6 +99,22 @@ export interface ProductDetail {
     mimeType: string | null; thumbnailUrl: string | null; altText: string | null;
     provider: string | null; externalId: string | null;
   }[];
+  // V5: Shared resources from Global Resource Library
+  sharedResources: {
+    mappingId: string;
+    resourceId: string;
+    type: string;
+    name: string;
+    version: string | null;
+    description: string | null;
+    url: string;
+    mimeType: string | null;
+    fileSize: number | null;
+    thumbnailUrl: string | null;
+    status: string;
+    downloadCount: number;
+    releaseDate: string | null;
+  }[];
   sku: string | null;
   startingPrice: string | null;
   badgeLabel: string | null;
@@ -728,7 +744,75 @@ export function ProductDetailClient({ product }: { product: ProductDetail }) {
                   ))}
               </div>
 
-              {availableDownloads.length === 0 && !hasFirmwareCard && product.mediaFiles.length === 0 && (
+              {/* V5: Shared Resources from Global Resource Library */}
+              {product.sharedResources && product.sharedResources.length > 0 && (
+                <div className="mt-6">
+                  <div className="mb-3 flex items-center gap-2">
+                    <Icon name="library_books" className="text-[20px] text-qbit-primary" />
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-qbit-on-surface">
+                      Shared Resources ({product.sharedResources.length})
+                    </h3>
+                  </div>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {product.sharedResources.map((r) => (
+                      <SurfaceCard key={r.mappingId} className="flex items-start gap-4 p-5">
+                        <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${sharedResourceIconBg(r.type)}`}>
+                          <Icon name={sharedResourceIcon(r.type)} className="text-[24px]" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-sm font-bold text-qbit-on-surface">{r.name}</h4>
+                            {r.version && (
+                              <span className="shrink-0 rounded bg-qbit-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-qbit-primary">
+                                {r.version}
+                              </span>
+                            )}
+                            {r.status === "deprecated" && (
+                              <span className="shrink-0 rounded bg-qbit-warning/15 px-1.5 py-0.5 text-[9px] font-bold uppercase text-qbit-warning">
+                                Deprecated
+                              </span>
+                            )}
+                          </div>
+                          <p className="mt-1 text-xs text-qbit-on-surface-variant">
+                            {r.description ?? sharedResourceTypeLabel(r.type)}
+                          </p>
+                          <div className="mt-1 flex items-center gap-3 text-[10px] text-qbit-on-surface-variant/70">
+                            <span className="flex items-center gap-0.5">
+                              <Icon name="download" className="text-[12px]" />
+                              {r.downloadCount} downloads
+                            </span>
+                            {r.releaseDate && (
+                              <span className="flex items-center gap-0.5">
+                                <Icon name="schedule" className="text-[12px]" />
+                                {new Date(r.releaseDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                              </span>
+                            )}
+                          </div>
+                          {r.type === "video" ? (
+                            <button
+                              onClick={() => { setActiveTab("videos"); }}
+                              className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-qbit-primary hover:underline"
+                            >
+                              Watch Video
+                              <Icon name="arrow_forward" className="text-[14px]" />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleDownload(r.url, r.name)}
+                              className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-qbit-primary hover:underline"
+                            >
+                              Download / Open
+                              <Icon name="arrow_forward" className="text-[14px]" />
+                            </button>
+                          )}
+                        </div>
+                      </SurfaceCard>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {availableDownloads.length === 0 && !hasFirmwareCard && product.mediaFiles.length === 0 && (!product.sharedResources || product.sharedResources.length === 0) && (
                 <EmptyState icon="download" message="No downloads available for this product yet." />
               )}
             </div>
@@ -1073,4 +1157,62 @@ function EmptyState({ icon, message }: { icon: string; message: string }) {
       <p className="mt-3 text-sm font-medium text-qbit-on-surface-variant">{message}</p>
     </div>
   );
+}
+
+// V5: Shared resource icon helpers
+function sharedResourceIcon(type: string): string {
+  const map: Record<string, string> = {
+    windows_driver: "memory",
+    windows_software: "apps",
+    android_software: "phone_android",
+    firmware: "upgrade",
+    sdk: "code",
+    manual: "menu_book",
+    installation_guide: "menu_book",
+    troubleshooting: "build",
+    video: "videocam",
+    browser_utility: "apps",
+    maintenance_tool: "build",
+    pos_utility: "point_of_sale",
+    other: "attach_file",
+  };
+  return map[type] ?? "attach_file";
+}
+
+function sharedResourceIconBg(type: string): string {
+  const map: Record<string, string> = {
+    windows_driver: "bg-green-50 text-green-600",
+    windows_software: "bg-blue-50 text-blue-600",
+    android_software: "bg-purple-50 text-purple-600",
+    firmware: "bg-amber-50 text-amber-600",
+    sdk: "bg-indigo-50 text-indigo-600",
+    manual: "bg-cyan-50 text-cyan-600",
+    installation_guide: "bg-teal-50 text-teal-600",
+    troubleshooting: "bg-red-50 text-red-600",
+    video: "bg-rose-50 text-rose-600",
+    browser_utility: "bg-blue-50 text-blue-600",
+    maintenance_tool: "bg-orange-50 text-orange-600",
+    pos_utility: "bg-emerald-50 text-emerald-600",
+    other: "bg-gray-50 text-gray-600",
+  };
+  return map[type] ?? "bg-gray-50 text-gray-600";
+}
+
+function sharedResourceTypeLabel(type: string): string {
+  const map: Record<string, string> = {
+    windows_driver: "Windows Driver",
+    windows_software: "Windows Software",
+    android_software: "Android Application",
+    firmware: "Firmware",
+    sdk: "SDK",
+    manual: "User Manual",
+    installation_guide: "Installation Guide",
+    troubleshooting: "Troubleshooting Document",
+    video: "Video Tutorial",
+    browser_utility: "Browser Utility",
+    maintenance_tool: "Maintenance Tool",
+    pos_utility: "POS Utility",
+    other: "Resource",
+  };
+  return map[type] ?? "Resource";
 }

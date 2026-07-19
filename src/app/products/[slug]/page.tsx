@@ -33,7 +33,24 @@ export default async function ProductDetailPage({ params }: PageProps) {
       specEntries: { orderBy: { sortIndex: "asc" } },
       featureEntries: { orderBy: { sortIndex: "asc" } },
       productOS: { orderBy: { sortIndex: "asc" } },
-      mediaFiles: { orderBy: [{ isPrimary: "desc" }, { sortIndex: "asc" }] },
+      mediaFiles: {
+        where: { visibility: "public" },
+        orderBy: [{ isPrimary: "desc" }, { sortIndex: "asc" }],
+      },
+      // V5: Fetch shared resources from Global Resource Library
+      resourceMappings: {
+        include: {
+          resource: {
+            select: {
+              id: true, name: true, type: true, version: true,
+              description: true, url: true, mimeType: true, fileSize: true,
+              thumbnailUrl: true, status: true, downloadCount: true,
+              releaseDate: true,
+            },
+          },
+        },
+        orderBy: { sortIndex: "asc" },
+      },
       relatedProducts: {
         orderBy: { sortIndex: "asc" },
         take: 4,
@@ -90,6 +107,22 @@ export default async function ProductDetailPage({ params }: PageProps) {
       id: m.id, type: m.type, title: m.title, url: m.url, mimeType: m.mimeType ?? null,
       thumbnailUrl: m.thumbnailUrl ?? null, altText: m.altText ?? null,
       provider: m.provider ?? null, externalId: m.externalId ?? null,
+    })),
+    // V5: Shared resources from Global Resource Library
+    sharedResources: product.resourceMappings.map((m) => ({
+      mappingId: m.id,
+      resourceId: m.resource.id,
+      type: m.overrideType ?? m.resource.type,
+      name: m.resource.name,
+      version: m.resource.version,
+      description: m.resource.description,
+      url: m.resource.url,
+      mimeType: m.resource.mimeType,
+      fileSize: m.resource.fileSize,
+      thumbnailUrl: m.resource.thumbnailUrl,
+      status: m.resource.status,
+      downloadCount: m.resource.downloadCount,
+      releaseDate: m.resource.releaseDate?.toISOString() ?? null,
     })),
     sku: null, // SECURITY: SKU is internal-inventory — never expose on public product page.
     startingPrice: product.startingPrice,

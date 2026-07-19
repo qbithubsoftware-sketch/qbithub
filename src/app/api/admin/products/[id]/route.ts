@@ -80,7 +80,16 @@ export async function PUT(req: NextRequest, { params }: Params) {
     if (body.description !== undefined) updateData.description = body.description ? sanitizeText(body.description, 1000) : null;
     if (body.longDescription !== undefined) updateData.longDescription = body.longDescription ?? null;
     if (body.imageUrl !== undefined) updateData.imageUrl = body.imageUrl ?? null;
-    if (body.galleryImages !== undefined) updateData.galleryImages = Array.isArray(body.galleryImages) && body.galleryImages.length > 0 ? JSON.stringify(body.galleryImages) : null;
+    if (body.galleryImages !== undefined) {
+      // Handle both string (JSON.stringify from frontend) and array formats
+      if (typeof body.galleryImages === "string" && body.galleryImages.length > 0) {
+        updateData.galleryImages = body.galleryImages;
+      } else if (Array.isArray(body.galleryImages) && body.galleryImages.length > 0) {
+        updateData.galleryImages = JSON.stringify(body.galleryImages);
+      } else {
+        updateData.galleryImages = null;
+      }
+    }
     if (body.sku !== undefined) updateData.sku = body.sku ?? null;
     if (body.serialPattern !== undefined) updateData.serialPattern = body.serialPattern ?? null;
     if (body.startingPrice !== undefined) updateData.startingPrice = body.startingPrice ?? null;
