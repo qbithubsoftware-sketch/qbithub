@@ -181,15 +181,20 @@ export function ProductDetailClient({ product }: { product: ProductDetail }) {
     return { views, downloads };
   }, [product.id]);
 
-  // Build gallery: prefer product.galleryImages, fall back to imageUrl, fall back to icon placeholder.
+  // Build gallery: Featured/Main image ALWAYS first, then gallery images, then media images.
   const gallery = useMemo(() => {
     const imgs: { url: string; alt: string }[] = [];
-    if (product.galleryImages.length > 0) {
-      imgs.push(...product.galleryImages);
-    } else if (product.imageUrl) {
+    // 1. Featured/Main Product Image (always first)
+    if (product.imageUrl) {
       imgs.push({ url: product.imageUrl, alt: product.name });
     }
-    // Also include any media files of type "image"
+    // 2. Gallery Images (appended after featured)
+    for (const g of product.galleryImages) {
+      if (!imgs.some((i) => i.url === g.url)) {
+        imgs.push(g);
+      }
+    }
+    // 3. Media files of type "image" (appended after gallery, deduped)
     for (const m of product.mediaFiles) {
       if (m.type === "image" && !imgs.some((i) => i.url === m.url)) {
         imgs.push({ url: m.url, alt: m.altText ?? product.name });
