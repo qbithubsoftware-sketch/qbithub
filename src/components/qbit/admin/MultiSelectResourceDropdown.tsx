@@ -225,11 +225,16 @@ export function MultiSelectResourceDropdown({
           {selectedResources.map((r) => (
             <div
               key={r.id}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-qbit-primary/30 bg-qbit-primary/5 px-2 py-1"
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 ${
+                r.status === "deprecated"
+                  ? "border-qbit-warning/40 bg-qbit-warning/5"
+                  : "border-qbit-primary/30 bg-qbit-primary/5"
+              }`}
             >
               <Icon name={iconForType(r.type)} className={`text-[14px] ${colorForType(r.type)}`} />
               <span className="text-[11px] font-semibold text-qbit-on-surface">{r.name}</span>
               {r.version && <span className="text-[10px] text-qbit-on-surface-variant">{r.version}</span>}
+              {r.status === "deprecated" && <span className="text-[9px] font-bold uppercase text-qbit-warning">Deprecated</span>}
               <button
                 type="button"
                 onClick={() => toggleResource(r.id)}
@@ -325,9 +330,21 @@ export function MultiSelectResourceDropdown({
                           {r.description && (
                             <p className="truncate text-[11px] text-qbit-on-surface-variant">{r.description}</p>
                           )}
-                          <p className="text-[10px] text-qbit-on-surface-variant/70">
-                            Used by {r.usedByCount} product{r.usedByCount !== 1 ? "s" : ""}
-                          </p>
+                          <div className="mt-0.5 flex items-center gap-2 text-[10px] text-qbit-on-surface-variant/70">
+                            <span className="flex items-center gap-0.5"><Icon name="link" className="text-[12px]" /> {r.usedByCount} product{r.usedByCount !== 1 ? "s" : ""}</span>
+                            {r.status === "deprecated" && (
+                              <span className="rounded bg-qbit-warning/15 px-1 py-0.5 text-[9px] font-bold uppercase text-qbit-warning">Deprecated</span>
+                            )}
+                            {r.status === "active" && (
+                              <span className="rounded bg-qbit-success/15 px-1 py-0.5 text-[9px] font-bold uppercase text-qbit-success">Active</span>
+                            )}
+                            {r.updatedAt && (
+                              <span className="flex items-center gap-0.5">
+                                <Icon name="schedule" className="text-[10px]" />
+                                {new Date(r.updatedAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </button>
                     </li>

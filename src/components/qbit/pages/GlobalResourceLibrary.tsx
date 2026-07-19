@@ -167,9 +167,29 @@ export function GlobalResourceLibrary() {
               Master storage for all downloadable resources. Upload once, link to unlimited products.
             </p>
           </div>
-          <QbitButton variant="primary" icon="add_circle" onClick={() => setShowCreate(true)}>
-            Add Resource
-          </QbitButton>
+          <div className="flex gap-2">
+            {resources.length > 0 && (
+              <QbitButton variant="ghost" icon="delete_sweep" onClick={async () => {
+                if (!confirm(`Delete ALL ${resources.length} resources from the library? This will unlink them from all products. This cannot be undone.`)) return;
+                try {
+                  let deleted = 0;
+                  for (const r of resources) {
+                    const res = await fetch(`/api/admin/resources/${r.id}`, { method: "DELETE" });
+                    if (res.ok) deleted++;
+                  }
+                  toast({ title: `Deleted ${deleted} resources`, description: "Library is now empty. Add real resources to start fresh." });
+                  void fetchResources();
+                } catch {
+                  toast({ title: "Bulk delete failed", variant: "destructive" });
+                }
+              }}>
+                Delete All
+              </QbitButton>
+            )}
+            <QbitButton variant="primary" icon="add_circle" onClick={() => setShowCreate(true)}>
+              Add Resource
+            </QbitButton>
+          </div>
         </div>
 
         {/* Stats */}
@@ -309,11 +329,36 @@ function ResourceFormModal({ resource, onClose, onSaved }: { resource: GlobalRes
     url: resource?.url ?? "",
     mimeType: resource?.mimeType ?? "",
     fileSize: resource?.fileSize ?? 0,
+    thumbnailUrl: resource?.thumbnailUrl ?? "",
     releaseDate: resource?.releaseDate ? resource.releaseDate.split("T")[0] : "",
     status: resource?.status ?? "active",
     visibility: resource?.visibility ?? "public",
   });
   const [uploading, setUploading] = useState(false);
+
+  const isVideoType = form.type === "video";
+
+  // Auto-fetch YouTube thumbnail from URL
+  function extractYouTubeId(url: string): string | null {
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([a-zA-Z0-9_-]{11})/,
+    ];
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match) return match[1];
+    }
+    return null;
+  }
+
+  function handleVideoUrlChange(url: string) {
+    const newForm = { ...form, url, mimeType: "video/youtube" };
+    // Auto-fetch thumbnail from YouTube
+    const ytId = extractYouTubeId(url);
+    if (ytId) {
+      newForm.thumbnailUrl = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+    }
+    setForm(newForm);
+  }
 
   async function handleFileUpload(file: File) {
     const validationError = validateImageFile(file);
@@ -351,6 +396,7 @@ function ResourceFormModal({ resource, onClose, onSaved }: { resource: GlobalRes
         url: form.url,
         mimeType: form.mimeType || null,
         fileSize: form.fileSize || null,
+        thumbnailUrl: form.thumbnailUrl || null,
         releaseDate: form.releaseDate || null,
         status: form.status,
         visibility: form.visibility,
@@ -410,15 +456,43 @@ function ResourceFormModal({ resource, onClose, onSaved }: { resource: GlobalRes
               <p className="mt-1 text-[10px] text-qbit-on-surface-variant">When mapping to a product, only resources matching the product's category will appear. Leave empty to show for all categories.</p>
             </div>
             <div className="md:col-span-2">
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-qbit-on-surface-variant">File *</label>
-              <input type="file" onChange={(e) => { const f = e.target.files?.[0]; if (f) void handleFileUpload(f); }} className="block w-full text-xs text-qbit-on-surface-variant file:mr-3 file:rounded-md file:border-0 file:bg-qbit-primary file:px-4 file:py-2 file:text-xs file:font-semibold file:text-qbit-on-primary hover:file:bg-qbit-primary-container" />
-              {form.url && (
-                <p className="mt-1.5 flex items-center gap-1 rounded-md border border-qbit-success/30 bg-qbit-success/5 px-2 py-1 text-[10px] text-qbit-on-surface-variant">
-                  <Icon name="check_circle" className="text-[12px] text-qbit-success" />
-                  File linked ({form.mimeType || "unknown type"}{form.fileSize ? `, ${formatFileSize(form.fileSize)}` : ""})
-                </p>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-qbit-on-surface-variant">
+                {isVideoType ? "YouTube Video URL *" : "File *"}
+              </label>
+              {isVideoType ? (
+                <div className="space-y-2">
+                  <Input
+                    type="url"
+                    value={form.url}
+                    onChange={(e) => handleVideoUrlChange(e.target.value)}
+                    placeholder="https://www.youtube.com/watch?v=..."
+                  />
+                  <p className="text-[10px] text-qbit-on-surface-variant">
+                    Videos are NOT uploaded to the server — only the YouTube URL is stored.
+                    Thumbnail is auto-fetched from YouTube.
+                  </p>
+                  {form.thumbnailUrl && (
+                    <div className="flex items-center gap-2 rounded-md border border-qbit-success/30 bg-qbit-success/5 px-2 py-1.5">
+                      <div className="h-10 w-16 shrink-0 overflow-hidden rounded">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={form.thumbnailUrl} alt="Video thumbnail" className="h-full w-full object-cover" />
+                      </div>
+                      <p className="text-[10px] text-qbit-on-surface-variant">YouTube thumbnail auto-fetched</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <input type="file" onChange={(e) => { const f = e.target.files?.[0]; if (f) void handleFileUpload(f); }} className="block w-full text-xs text-qbit-on-surface-variant file:mr-3 file:rounded-md file:border-0 file:bg-qbit-primary file:px-4 file:py-2 file:text-xs file:font-semibold file:text-qbit-on-primary hover:file:bg-qbit-primary-container" />
+                  {form.url && (
+                    <p className="mt-1.5 flex items-center gap-1 rounded-md border border-qbit-success/30 bg-qbit-success/5 px-2 py-1 text-[10px] text-qbit-on-surface-variant">
+                      <Icon name="check_circle" className="text-[12px] text-qbit-success" />
+                      File linked ({form.mimeType || "unknown type"}{form.fileSize ? `, ${formatFileSize(form.fileSize)}` : ""})
+                    </p>
+                  )}
+                  {uploading && <p className="mt-1 text-[10px] text-qbit-primary"><Icon name="progress_activity" className="inline animate-spin text-[12px]" /> Processing…</p>}
+                </>
               )}
-              {uploading && <p className="mt-1 text-[10px] text-qbit-primary"><Icon name="progress_activity" className="inline animate-spin text-[12px]" /> Processing…</p>}
             </div>
             <div>
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-qbit-on-surface-variant">Release Date</label>
