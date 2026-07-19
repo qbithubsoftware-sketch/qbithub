@@ -24,7 +24,7 @@
  *   6. If resource version changes → update ONCE in library → ALL linked products get the update
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { AppShell } from "@/components/qbit/shells/AppShell";
 import { Icon } from "@/components/qbit/primitives/Icon";
 import { QbitButton } from "@/components/qbit/primitives/QbitButton";
@@ -276,8 +276,15 @@ export function GlobalResourceLibrary() {
                         <button onClick={() => setEditingResource(r)} className="rounded p-1.5 text-qbit-on-surface-variant hover:bg-qbit-surface-container-high" title="Edit">
                           <Icon name="edit" className="text-[18px]" />
                         </button>
-                        <a href={r.url} target="_blank" rel="noopener noreferrer" className="rounded p-1.5 text-qbit-on-surface-variant hover:bg-qbit-surface-container-high" title="Download test">
-                          <Icon name="download" className="text-[18px]" />
+                        <a
+                          href={r.url}
+                          download={r.type !== "video" ? r.name : undefined}
+                          target={r.type === "video" || r.url.startsWith("http") ? "_blank" : undefined}
+                          rel="noopener noreferrer"
+                          className="rounded p-1.5 text-qbit-on-surface-variant hover:bg-qbit-surface-container-high"
+                          title="Download"
+                        >
+                          <Icon name={r.type === "video" ? "open_in_new" : "download"} className="text-[18px]" />
                         </a>
                         <button onClick={() => handleDelete(r)} className="rounded p-1.5 text-qbit-error hover:bg-qbit-error/10" title="Delete">
                           <Icon name="delete" className="text-[18px]" />
@@ -336,6 +343,55 @@ function ResourceFormModal({ resource, onClose, onSaved }: { resource: GlobalRes
   });
   const [uploading, setUploading] = useState(false);
 
+  // ===== Category multi-select state =====
+  const [allCategories, setAllCategories] = useState<Array<{ slug: string; label: string }>>([]);
+  const [catDropdownOpen, setCatDropdownOpen] = useState(false);
+  const [catSearch, setCatSearch] = useState("");
+  const catDropdownRef = useRef<HTMLDivElement | null>(null);
+
+  // Fetch categories on mount
+  useEffect(() => {
+    async function fetchCats() {
+      try {
+        const res = await fetch("/api/admin/product-categories", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        setAllCategories(data.categories ?? []);
+      } catch { /* silent */ }
+    }
+    void fetchCats();
+  }, []);
+
+  // Parse existing supportedCategories (comma-separated string) into array
+  const selectedCategorySlugs = form.supportedCategories
+    ? form.supportedCategories.split(",").map((s) => s.trim()).filter(Boolean)
+    : [];
+
+  function toggleCategory(slug: string) {
+    const current = selectedCategorySlugs;
+    const next = current.includes(slug)
+      ? current.filter((s) => s !== slug)
+      : [...current, slug];
+    setForm({ ...form, supportedCategories: next.join(",") });
+  }
+
+  // Click outside to close category dropdown
+  useEffect(() => {
+    function onClick(e: MouseEvent) {
+      if (catDropdownRef.current && !catDropdownRef.current.contains(e.target as Node)) {
+        setCatDropdownOpen(false);
+      }
+    }
+    if (catDropdownOpen) {
+      document.addEventListener("mousedown", onClick);
+      return () => document.removeEventListener("mousedown", onClick);
+    }
+  }, [catDropdownOpen]);
+
+  const filteredCategories = allCategories.filter((c) =>
+    !catSearch || c.label.toLowerCase().includes(catSearch.toLowerCase()) || c.slug.includes(catSearch.toLowerCase())
+  );
+
   const isVideoType = form.type === "video";
 
   // Auto-fetch YouTube thumbnail from URL
@@ -362,17 +418,24 @@ function ResourceFormModal({ resource, onClose, onSaved }: { resource: GlobalRes
 
   async function handleFileUpload(file: File) {
     const validationError = validateImageFile(file);
-    if (validationError) {
-      // Not an image — use as file URL directly (store filename as URL)
-      setForm({ ...form, url: `https://qbithub.vercel.app/downloads/${form.type}/${encodeURIComponent(file.name)}`, mimeType: file.type, fileSize: file.size });
-      toast({ title: "File linked", description: file.name });
-      return;
-    }
     setUploading(true);
     try {
-      const dataUrl = await compressImageToDataUrl(file, { maxWidth: 800, maxHeight: 800, quality: 0.85 });
-      setForm({ ...form, url: dataUrl, mimeType: file.type, fileSize: file.size });
-      toast({ title: "Image processed", description: file.name });
+      if (validationError) {
+        // Non-image file — convert to base64 data URL so downloads work
+        const reader = new FileReader();
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => reject(new Error("Could not read file."));
+          reader.readAsDataURL(file);
+        });
+        setForm({ ...form, url: dataUrl, mimeType: file.type, fileSize: file.size });
+        toast({ title: "File uploaded", description: `${file.name} (${formatFileSize(file.size)})` });
+      } else {
+        // Image file — compress + convert to data URL
+        const dataUrl = await compressImageToDataUrl(file, { maxWidth: 800, maxHeight: 800, quality: 0.85 });
+        setForm({ ...form, url: dataUrl, mimeType: file.type, fileSize: file.size });
+        toast({ title: "Image processed", description: file.name });
+      }
     } catch (e) {
       toast({ title: "Processing failed", description: e instanceof Error ? e.message : "", variant: "destructive" });
     } finally {
@@ -451,9 +514,103 @@ function ResourceFormModal({ resource, onClose, onSaved }: { resource: GlobalRes
               <Textarea rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Short description…" />
             </div>
             <div className="md:col-span-2">
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-qbit-on-surface-variant">Supported Categories (comma-separated, for smart filtering)</label>
-              <Input value={form.supportedCategories} onChange={(e) => setForm({ ...form, supportedCategories: e.target.value })} placeholder="thermal-printer,portable-printer (leave empty for universal)" />
-              <p className="mt-1 text-[10px] text-qbit-on-surface-variant">When mapping to a product, only resources matching the product's category will appear. Leave empty to show for all categories.</p>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-qbit-on-surface-variant">Supported Categories</label>
+              <p className="mb-2 text-[10px] text-qbit-on-surface-variant">Select product categories where this resource should appear. Leave empty for universal (all categories).</p>
+
+              {/* Selected category chips */}
+              {selectedCategorySlugs.length > 0 && (
+                <div className="mb-2 flex flex-wrap gap-1.5">
+                  {selectedCategorySlugs.map((slug) => {
+                    const cat = allCategories.find((c) => c.slug === slug);
+                    return (
+                      <span
+                        key={slug}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-qbit-primary/30 bg-qbit-primary/5 px-2 py-1"
+                      >
+                        <span className="text-[11px] font-semibold text-qbit-on-surface">{cat?.label ?? slug}</span>
+                        <button
+                          type="button"
+                          onClick={() => toggleCategory(slug)}
+                          className="text-qbit-on-surface-variant hover:text-qbit-error"
+                        >
+                          <Icon name="close" className="text-[14px]" />
+                        </button>
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Dropdown trigger */}
+              <div ref={catDropdownRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => setCatDropdownOpen((o) => !o)}
+                  className={`flex w-full items-center justify-between gap-2 rounded-lg border bg-white px-3 py-2.5 text-left transition-all hover:border-qbit-primary/40 ${
+                    catDropdownOpen ? "border-qbit-primary ring-2 ring-qbit-primary/20" : "border-qbit-outline-variant"
+                  }`}
+                >
+                  <span className="text-sm text-qbit-on-surface-variant">
+                    {selectedCategorySlugs.length === 0 ? "Select categories (empty = universal)…" : `${selectedCategorySlugs.length} selected`}
+                  </span>
+                  <Icon name={catDropdownOpen ? "expand_less" : "expand_more"} className="text-[18px] text-qbit-on-surface-variant shrink-0" />
+                </button>
+
+                {catDropdownOpen && (
+                  <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-lg border border-qbit-outline-variant bg-white shadow-2xl">
+                    {/* Search */}
+                    <div className="border-b border-qbit-outline-variant/50 p-2">
+                      <div className="relative">
+                        <Icon name="search" className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-[16px] text-qbit-on-surface-variant" />
+                        <input
+                          type="text"
+                          value={catSearch}
+                          onChange={(e) => setCatSearch(e.target.value)}
+                          placeholder="Search categories…"
+                          className="w-full rounded-md border border-qbit-outline-variant bg-qbit-surface-container-low py-2 pl-8 pr-3 text-sm focus:border-qbit-primary focus:outline-none"
+                          autoFocus
+                        />
+                      </div>
+                    </div>
+
+                    {/* Options */}
+                    <ul className="max-h-48 overflow-y-auto py-1">
+                      {filteredCategories.length === 0 ? (
+                        <li className="px-3 py-3 text-center text-xs text-qbit-on-surface-variant">No categories found.</li>
+                      ) : (
+                        filteredCategories.map((c) => {
+                          const isSelected = selectedCategorySlugs.includes(c.slug);
+                          return (
+                            <li key={c.slug}>
+                              <button
+                                type="button"
+                                onClick={() => toggleCategory(c.slug)}
+                                className={`flex w-full items-center gap-2.5 px-3 py-2 text-left transition-colors ${
+                                  isSelected ? "bg-qbit-primary/5" : "hover:bg-qbit-surface-container-low"
+                                }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  readOnly
+                                  className="h-4 w-4 rounded border-qbit-outline-variant text-qbit-primary"
+                                />
+                                <span className="text-sm font-medium text-qbit-on-surface">{c.label}</span>
+                                <span className="ml-auto text-[10px] text-qbit-on-surface-variant/60">{c.slug}</span>
+                              </button>
+                            </li>
+                          );
+                        })
+                      )}
+                    </ul>
+
+                    {/* Footer */}
+                    <div className="border-t border-qbit-outline-variant/50 bg-qbit-surface-container-low/50 px-3 py-1.5 text-[10px] text-qbit-on-surface-variant">
+                      {selectedCategorySlugs.length} selected · Leave empty for universal
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
             <div className="md:col-span-2">
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-qbit-on-surface-variant">

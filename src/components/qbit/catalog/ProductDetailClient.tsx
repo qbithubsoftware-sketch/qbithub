@@ -282,7 +282,20 @@ export function ProductDetailClient({ product }: { product: ProductDetail }) {
   const hasFirmwareCard = !!product.latestFirmwareVersion;
 
   const handleDownload = (url: string, label: string) => {
-    if (typeof window !== "undefined") {
+    if (typeof window === "undefined") return;
+    // For data URLs (base64), create a temporary anchor with download attribute
+    if (url.startsWith("data:")) {
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = label || "download";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } else if (url.startsWith("http")) {
+      // External URL (YouTube, etc.) — open in new tab
+      window.open(url, "_blank", "noopener,noreferrer");
+    } else {
+      // Relative path — try navigating directly (may trigger download)
       window.open(url, "_blank", "noopener,noreferrer");
     }
   };
