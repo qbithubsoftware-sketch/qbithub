@@ -277,10 +277,7 @@ export function GlobalResourceLibrary() {
                           <Icon name="edit" className="text-[18px]" />
                         </button>
                         <a
-                          href={r.url}
-                          download={r.type !== "video" ? r.name : undefined}
-                          target={r.type === "video" || r.url.startsWith("http") ? "_blank" : undefined}
-                          rel="noopener noreferrer"
+                          href={`/api/resources/${r.id}/download`}
                           className="rounded p-1.5 text-qbit-on-surface-variant hover:bg-qbit-surface-container-high"
                           title="Download"
                         >
@@ -417,27 +414,38 @@ function ResourceFormModal({ resource, onClose, onSaved }: { resource: GlobalRes
   }
 
   async function handleFileUpload(file: File) {
-    const validationError = validateImageFile(file);
     setUploading(true);
     try {
-      if (validationError) {
-        // Non-image file — convert to base64 data URL so downloads work
-        const reader = new FileReader();
-        const dataUrl = await new Promise<string>((resolve, reject) => {
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = () => reject(new Error("Could not read file."));
-          reader.readAsDataURL(file);
-        });
-        setForm({ ...form, url: dataUrl, mimeType: file.type, fileSize: file.size });
-        toast({ title: "File uploaded", description: `${file.name} (${formatFileSize(file.size)})` });
-      } else {
-        // Image file — compress + convert to data URL
-        const dataUrl = await compressImageToDataUrl(file, { maxWidth: 800, maxHeight: 800, quality: 0.85 });
-        setForm({ ...form, url: dataUrl, mimeType: file.type, fileSize: file.size });
-        toast({ title: "Image processed", description: file.name });
+      // ===== Upload via Storage Service API =====
+      // POST file to /api/admin/resources/upload — returns storageKey
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/admin/resources/upload", {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error ?? "Upload failed");
       }
+      const data = await res.json();
+      // Store the storageKey in the form's url field
+      setForm({
+        ...form,
+        url: data.storageKey, // e.g. "/uploads/resources/1700000000-abc-driver.exe"
+        mimeType: data.mimeType,
+        fileSize: data.fileSize,
+      });
+      toast({
+        title: "File uploaded",
+        description: `${file.name} (${formatFileSize(file.size)})`,
+      });
     } catch (e) {
-      toast({ title: "Processing failed", description: e instanceof Error ? e.message : "", variant: "destructive" });
+      toast({
+        title: "Upload failed",
+        description: e instanceof Error ? e.message : "Unknown error",
+        variant: "destructive",
+      });
     } finally {
       setUploading(false);
     }

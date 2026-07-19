@@ -807,21 +807,23 @@ export function ProductDetailClient({ product }: { product: ProductDetail }) {
                             )}
                           </div>
                           {r.type === "video" ? (
-                            <button
-                              onClick={() => { setActiveTab("videos"); }}
+                            <a
+                              href={r.url.startsWith("http") ? r.url : `/api/resources/${r.resourceId}/download`}
+                              target="_blank"
+                              rel="noopener noreferrer"
                               className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-qbit-primary hover:underline"
                             >
                               Watch Video
                               <Icon name="arrow_forward" className="text-[14px]" />
-                            </button>
+                            </a>
                           ) : (
-                            <button
-                              onClick={() => handleDownload(r.url, r.name)}
+                            <a
+                              href={`/api/resources/${r.resourceId}/download`}
                               className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-qbit-primary hover:underline"
                             >
                               Download / Open
                               <Icon name="arrow_forward" className="text-[14px]" />
-                            </button>
+                            </a>
                           )}
                         </div>
                       </SurfaceCard>

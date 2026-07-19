@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireSuperAdminOrAdmin } from "@/lib/notifications/auth";
+import { StorageService } from "@/lib/storage/storage";
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await requireSuperAdminOrAdmin();
@@ -52,8 +53,22 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   const existing = await db.resource.findUnique({ where: { id } });
   if (!existing) return NextResponse.json({ error: "Resource not found" }, { status: 404 });
 
-  // Cascade-deletes ProductResourceMapping rows (FK onDelete: Cascade)
+  // ===== Delete physical file from Storage Service =====
+  // (only if URL is a storage key, not a data URL or external URL)
+  if (existing.url && !existing.url.startsWith("data:") && !existing.url.startsWith("http")) {
+    try {
+      await StorageService.delete(existing.url);
+      console.log(`[ResourceDelete] Physical file deleted: ${existing.url}`);
+    } catch (err) {
+      console.warn(`[ResourceDelete] Physical file deletion failed: ${existing.url}`, err);
+      // Don't fail the DB delete if file deletion fails — just log it
+    }
+  }
+
+  // ===== Delete database metadata (cascade-deletes ProductResourceMapping) =====
   await db.resource.delete({ where: { id } });
+
+  console.log(`[ResourceDelete] Resource deleted: ${id} (${existing.name})`);
 
   return NextResponse.json({ success: true, deleted: id });
 }
