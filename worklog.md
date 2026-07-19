@@ -1725,3 +1725,81 @@ EXPECTED RESULT (all met per spec):
   ✅ Images display correctly across Product List, Product Details, Quick Edit
   ✅ New products can be created with images in a single workflow
   ✅ Entire image upload flow is production-ready, reliable, optimized
+
+---
+Task ID: v5-global-resource-library
+Agent: main
+Task: Transform Resource Center into Global Resource Library + Product Resource Mapping System. Eliminate duplicate uploads — resources exist once, linked to unlimited products via many-to-many mapping.
+
+Work Log:
+
+1. SCHEMA:
+   - New Resource model: global shared resource library (standalone). Fields:
+     name, type, version, description, supportedCategories, url, mimeType,
+     fileSize, thumbnailUrl, releaseDate, status, downloadCount, createdBy,
+     updatedBy, visibility.
+   - New ProductResourceMapping model: many-to-many join (productId, resourceId).
+     Unique constraint on [productId, resourceId]. Cascade delete both sides.
+   - Migration applied to production Neon Postgres.
+
+2. API ENDPOINTS (8 new routes):
+   - GET/POST /api/admin/resources — list + create (with duplicate protection)
+   - PUT/DELETE /api/admin/resources/[id] — update + delete
+   - GET /api/admin/resources/[id]/products — usage info (linked products)
+   - GET/POST /api/admin/products/[id]/resource-mappings — list + map
+   - DELETE /api/admin/products/[id]/resource-mappings/[mappingId] — unmap
+
+3. NEW COMPONENTS:
+   a) GlobalResourceLibrary (admin page, 500+ lines):
+      - Lists all resources grouped by type with counts
+      - Search + filter by type
+      - Create/Edit modal with file upload (client-side compression)
+      - Delete with confirmation (shows linked product count)
+      - Usage viewer modal (shows all products using a resource)
+      - Stats: total resources, types, mappings, downloads
+      - Duplicate protection (name + version → 409)
+
+   b) MultiSelectResourceDropdown (300 lines):
+      - Searchable multi-select (checkbox per resource)
+      - Smart filtering by product category (supportedCategories)
+      - Keyboard navigation (ArrowUp/Down, Enter, Escape)
+      - Resource type icon + version + 'Latest' badge
+      - 'Used by N products' count per resource
+      - Selected resources as removable chips
+      - ARIA combobox + listbox roles
+
+4. PRODUCT MASTER FULL EDIT PAGE:
+   - New 'Shared Resource Library Mapping' section (V5 badge)
+   - 8 multi-select dropdowns covering all resource types
+   - Smart filtering by product category
+   - INSTANT mapping (POST/DELETE on select/deselect — no save needed)
+   - Optimistic UI updates
+   - Summary: 'X shared resources linked' + 'Y available in library'
+
+5. NAVIGATION:
+   - New sidebar item 'Global Resource Library' (V5 badge)
+   - New screen ID 'resource-library' in nav store + rbac
+   - Wired in /portal switch
+
+6. DEMO RESOURCES SEEDED (11 resources):
+   - 4Barcode APK, Label Shop, POS Utility, Windows Driver v2.4.1,
+     USB Driver (universal), Thermal Printer User Manual, Quick Start Guide
+     (universal), P80UE Firmware v1.8.0, Installation Video,
+     Common Error Guide (universal), QBIT SDK (universal)
+
+Production Verification (https://qbithub.vercel.app):
+  ✓ GET /portal → HTTP 200
+  ✓ GET /api/admin/resources → HTTP 403 (auth required, working)
+  ✓ GET /api/admin/products/test-id/resource-mappings → HTTP 403 (auth required)
+  ✓ Build verified: 0 TS errors, ✓ Compiled in 39.7s
+
+BENEFITS (per spec):
+  ✅ One upload, multiple products
+  ✅ No duplicate files
+  ✅ Lower storage usage
+  ✅ Easier version management (update once → all products get update)
+  ✅ Instant updates across all linked products
+  ✅ Smart filtering by product category
+  ✅ Duplicate protection
+  ✅ Resource usage information
+  ✅ Multi-select support
