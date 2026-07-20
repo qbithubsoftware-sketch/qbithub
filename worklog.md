@@ -134,3 +134,38 @@ Stage Summary:
 - Both full Blob URLs and relative paths work in download/delete/exists
 - Clear STORAGE_CONFIGURATION_ERROR when relative key cannot be resolved (no store ID)
 - Full diagnostic logging at every step
+---
+Task ID: 5
+Agent: Main Agent
+Task: Trace blob object lifecycle from upload to download; fix FILE_NOT_FOUND for relative storage keys
+
+Work Log:
+- Traced full upload flow: put() → blob.url → storageKey → frontend form.url → POST body.url → DB resource.url
+- Traced full download flow: DB resource.url → StorageService.download() → provider.download() → resolve → fetch
+- Confirmed put() returns: { url, pathname, downloadUrl, contentType, contentDisposition, etag }
+- Confirmed upload route returns storageKey: result.storageKey = blob.url (full Blob URL)
+- Confirmed frontend saves data.storageKey as form.url, then POSTs it as body.url to create resource
+- **ROOT CAUSE FOUND**: resolveBlobUrl() constructed URL using raw BLOB_STORE_ID (e.g. "store_abc123")
+  but the Blob URL subdomain uses the NORMALIZED ID (e.g. "abc123" without "store_" prefix)
+- The SDK's normalizeStoreId() strips "store_" prefix. Our code was missing this normalization.
+- Result: resolveBlobUrl("resources/...", { storeId: "store_abc123" }) produced:
+    https://store_abc123.public.blob.vercel-storage.com/resources/...  ← WRONG (404)
+  But the actual URL is:
+    https://abc123.public.blob.vercel-storage.com/resources/...  ← CORRECT
+- Added normalizeStoreId() function: strips "store_" prefix if present
+- Fixed detectBlobAuth(): now calls normalizeStoreId(blobStoreId) for OIDC path
+- Added post-upload head() verification: after put() succeeds, immediately calls head(blob.url)
+  to confirm the stored key is reachable. Logs: Verified URL, pathname, size, upload date.
+  If head() fails, logs the mismatch without blocking the upload response.
+- Added download-time HEAD+GET trace: download() now does head() first, logs full result,
+  then does fetch() GET. This gives us both HEAD and GET results for diagnosis.
+- Added OBJECT LIFECYCLE TRACE in upload route: prints 7-step chain from put() response → DB
+- Added OBJECT LIFECYCLE TRACE in resource-download.ts: prints DB storageKey → StorageService.download()
+- TypeScript compilation passes with zero storage/download errors
+
+Stage Summary:
+- ROOT CAUSE: BLOB_STORE_ID contains "store_abc123" but Blob URL uses "abc123"
+- FIXED: normalizeStoreId() strips "store_" prefix before constructing URLs
+- ADDED: Post-upload head() verification catches key mismatches immediately
+- ADDED: Download-time HEAD+GET trace for full diagnosis
+- ADDED: Object lifecycle trace from upload to DB to download

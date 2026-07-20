@@ -105,8 +105,8 @@ export function detectBlobAuth(): BlobAuthDetection {
   if (hasOidcToken && hasStoreId) {
     // OIDC + BLOB_STORE_ID — this is the current recommended pattern
     method = "oidc";
-    storeId = blobStoreId!;
-    description = `OIDC (auto on Vercel) + BLOB_STORE_ID="${blobStoreId}"`;
+    storeId = normalizeStoreId(blobStoreId!);
+    description = `OIDC (auto on Vercel) + BLOB_STORE_ID="${blobStoreId}" (normalized: "${storeId}")`;
   } else if (hasReadWriteToken) {
     // Legacy read-write token
     method = "readWriteToken";
@@ -218,14 +218,33 @@ function readEnv(name: string): string | undefined {
 }
 
 /**
+ * Normalize a store ID — strip the "store_" prefix if present.
+ *
+ * The Vercel Dashboard sets BLOB_STORE_ID with a "store_" prefix
+ * (e.g. "store_abc123"), but the Blob URL subdomain uses just the
+ * ID part (e.g. "abc123"). The SDK's resolveBlobAuth() does this
+ * normalization via normalizeStoreId(). We must do the same.
+ *
+ * constructBlobUrl(storeId, pathname, access) produces:
+ *   https://${storeId}.${access}.blob.vercel-storage.com/${pathname}
+ * So storeId must NOT have the "store_" prefix.
+ */
+function normalizeStoreId(storeId: string): string {
+  return storeId.startsWith("store_") ? storeId.slice("store_".length) : storeId;
+}
+
+/**
  * Parse store ID from a read-write token.
  * Token format: vercel_blob_rw_<storeId>_<random>
+ *
+ * The storeId in the token does NOT have the "store_" prefix.
+ * It's already the raw ID used in the Blob URL subdomain.
  */
 function parseStoreIdFromToken(token: string): string | null {
   try {
     const parts = token.split("_");
     // Format: vercel_blob_rw_<storeId>_<random>
-    // storeId is at index 3
+    // storeId is at index 3 — already normalized (no "store_" prefix)
     if (parts.length >= 4 && parts[0] === "vercel" && parts[1] === "blob" && parts[2] === "rw") {
       return parts[3];
     }
@@ -388,6 +407,35 @@ export class VercelBlobStorageProvider implements StorageProvider {
       throw sdkError;
     }
 
+    // ---- Post-upload verification: head() the stored key ----
+    // This confirms the blob is reachable using the SAME key we'll store
+    // in the database. If head() fails here, the storageKey is wrong
+    // and downloads will break.
+    console.log(`[VercelBlob] === POST-UPLOAD VERIFICATION ===`);
+    console.log(`[VercelBlob]   Verifying stored key with head()...`);
+    console.log(`[VercelBlob]   storageKey (will be stored in DB): ${blob.url}`);
+    try {
+      const blobOptions2 = buildBlobCommandOptions(auth);
+      const verification = await head(blob.url, blobOptions2 as Parameters<typeof head>[1] | undefined);
+      if (verification) {
+        console.log(`[VercelBlob]   head() SUCCESS — blob exists at stored key`);
+        console.log(`[VercelBlob]   Verified URL:      ${verification.url}`);
+        console.log(`[VercelBlob]   Verified pathname:  ${verification.pathname}`);
+        console.log(`[VercelBlob]   Verified size:      ${verification.size} bytes`);
+      } else {
+        console.error(`[VercelBlob]   head() returned NULL — blob NOT found at stored key!`);
+        console.error(`[VercelBlob]   This means download() will also fail for this key.`);
+        console.error(`[VercelBlob]   Stored key: ${blob.url}`);
+      }
+    } catch (headErr) {
+      const headErrClass = headErr instanceof Error ? headErr.constructor.name : typeof headErr;
+      const headErrMsg = headErr instanceof Error ? headErr.message : String(headErr);
+      console.error(`[VercelBlob]   head() FAILED — ${headErrClass}: ${headErrMsg}`);
+      console.error(`[VercelBlob]   The blob WAS uploaded (put() succeeded) but head() cannot find it.`);
+      console.error(`[VercelBlob]   This may indicate an auth or store ID mismatch.`);
+      // Non-blocking — the upload itself succeeded. The download issue will be caught at download time.
+    }
+
     return {
       storageKey: blob.url,
       fileName: uniqueName,
@@ -431,10 +479,34 @@ export class VercelBlobStorageProvider implements StorageProvider {
     console.log(`[VercelBlob]   Original key:     ${storageKey.slice(0, 80)}${storageKey.length > 80 ? "..." : ""}`);
     console.log(`[VercelBlob]   Resolved URL:     ${resolvedUrl.slice(0, 100)}...`);
 
-    // ---- Fetch the blob via HTTP ----
-    // Public blobs can be fetched without auth headers.
-    // Private blobs would need the SDK's get() method with auth.
-    // All our uploads use access: "public", so fetch() is sufficient.
+    // ---- STEP 1: HEAD check — verify the blob exists before GET ----
+    console.log(`[VercelBlob]   STEP 1: head() check...`);
+    try {
+      const blobOptions2 = buildBlobCommandOptions(auth);
+      const headResult = await head(resolvedUrl, blobOptions2 as Parameters<typeof head>[1] | undefined);
+      if (headResult) {
+        console.log(`[VercelBlob]   HEAD RESULT: blob exists`);
+        console.log(`[VercelBlob]     head.url:         ${headResult.url}`);
+        console.log(`[VercelBlob]     head.pathname:     ${headResult.pathname}`);
+        console.log(`[VercelBlob]     head.size:         ${headResult.size} bytes`);
+        console.log(`[VercelBlob]     head.contentType:  ${headResult.contentType ?? "(unknown)"}`);
+        console.log(`[VercelBlob]     head.uploadedAt:   ${headResult.uploadedAt.toISOString()}`);
+      } else {
+        console.error(`[VercelBlob]   HEAD RESULT: NULL — blob NOT found at resolved URL`);
+        console.error(`[VercelBlob]   The blob may have been deleted, or the resolved URL is wrong.`);
+        console.error(`[VercelBlob]   DB storageKey:   ${storageKey}`);
+        console.error(`[VercelBlob]   Resolved URL:    ${resolvedUrl}`);
+        console.error(`[VercelBlob]   storeId used:    ${auth.storeId ?? "(none)"}`);
+      }
+    } catch (headErr) {
+      const headErrClass = headErr instanceof Error ? headErr.constructor.name : typeof headErr;
+      const headErrMsg = headErr instanceof Error ? headErr.message : String(headErr);
+      console.error(`[VercelBlob]   HEAD RESULT: ERROR — ${headErrClass}: ${headErrMsg}`);
+      console.error(`[VercelBlob]   The blob may not exist at the resolved URL, or auth is insufficient.`);
+    }
+
+    // ---- STEP 2: GET — fetch the blob content ----
+    console.log(`[VercelBlob]   STEP 2: fetch() GET...`);
     let response: Response;
     try {
       response = await fetch(resolvedUrl, { method: "GET" });

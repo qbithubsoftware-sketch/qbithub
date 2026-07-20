@@ -510,6 +510,23 @@ export async function POST(req: NextRequest) {
     console.log(`[UPLOAD-SUCCESS]   checksum:        ${result.checksum}`);
     console.log(`[UPLOAD-SUCCESS]   urlType:         storage_key`);
 
+    // ---- OBJECT LIFECYCLE TRACE ----
+    // Print the full chain from Blob Upload Response → DB storageKey
+    // so we can verify exactly what identifier is stored.
+    console.log(`[UPLOAD-TRACE] === OBJECT LIFECYCLE: Upload → DB ===`);
+    console.log(`[UPLOAD-TRACE]   1. Blob put() response → storageKey: ${result.storageKey}`);
+    console.log(`[UPLOAD-TRACE]   2. This value will be sent to frontend as data.storageKey`);
+    console.log(`[UPLOAD-TRACE]   3. Frontend stores it as form.url = data.storageKey`);
+    console.log(`[UPLOAD-TRACE]   4. Frontend POSTs it to /api/admin/resources as body.url`);
+    console.log(`[UPLOAD-TRACE]   5. DB resource.url = body.url = ${result.storageKey}`);
+    console.log(`[UPLOAD-TRACE]   6. On download, resource.url is passed to StorageService.download()`);
+    console.log(`[UPLOAD-TRACE]   7. StorageService passes it to provider.download("${result.storageKey.slice(0, 60)}...")`);
+    if (result.storageKey.startsWith("http")) {
+      console.log(`[UPLOAD-TRACE]   KEY FORMAT: Full Blob URL — download() will use it directly`);
+    } else {
+      console.log(`[UPLOAD-TRACE]   KEY FORMAT: Relative path — download() must resolve via store ID`);
+    }
+
     logger.storageUpload({
       userId, fileName: file.name, storageKey: result.storageKey,
       fileSize: result.fileSize, mimeType: result.mimeType,

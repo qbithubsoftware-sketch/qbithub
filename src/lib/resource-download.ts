@@ -181,6 +181,12 @@ export async function serveResourceFile(
   }
 
   // ---- 3. Storage key → StorageService ----
+  console.log(`[ResourceDownload] === OBJECT LIFECYCLE: DB → Download ===`);
+  console.log(`[ResourceDownload]   resource.id:       ${resource.id}`);
+  console.log(`[ResourceDownload]   resource.url:      ${resource.url}`);
+  console.log(`[ResourceDownload]   resource.urlType:  ${urlType}`);
+  console.log(`[ResourceDownload]   Calling StorageService.download("${resource.url.slice(0, 60)}...")`);
+
   try {
     const downloadResult = await StorageService.download(resource.url);
     const uint8Array = new Uint8Array(downloadResult.buffer);
