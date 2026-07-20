@@ -29,7 +29,6 @@ import { Icon } from "@/components/qbit/primitives/Icon";
 const NAV_ITEMS: ReadonlyArray<{ label: string; href: string; icon: string }> = [
   { label: "Products", href: "/products", icon: "inventory_2" },
   { label: "Drivers", href: "/drivers", icon: "memory" },
-  { label: "Downloads", href: "/downloads", icon: "download" },
   { label: "Knowledge Base", href: "/knowledge-base", icon: "menu_book" },
   { label: "Support", href: "/support", icon: "support_agent" },
   { label: "Videos", href: "/videos", icon: "videocam" },

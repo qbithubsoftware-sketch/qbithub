@@ -255,8 +255,8 @@ export function CustomerPortal() {
 
   return (
     <div className="w-full">
-      {/* ===== Three Equal Options: Dr. QBIT Scanner (left) | Wi-Fi Setup (middle) | Serial Number (right) ===== */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      {/* ===== Top Row: Dr. QBIT Scanner (left) | Wi-Fi Setup (right) ===== */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* LEFT: Launch Dr. QBIT (auto USB detection) */}
         {scanning ? (
           <ScanningCard />
@@ -264,15 +264,16 @@ export function CustomerPortal() {
           <HardwareScannerCard onLaunch={handleLaunchScanner} disabled={state === "searching"} />
         )}
 
-        {/* MIDDLE: Wi-Fi Setup (for supported QBIT Wi-Fi printers) */}
+        {/* RIGHT: Wi-Fi Setup (for supported QBIT Wi-Fi printers) */}
         {wifiSetupOpen ? (
           <WifiSetupCardActive onClose={() => setWifiSetupOpen(false)} />
         ) : (
           <WifiSetupCard onLaunch={() => setWifiSetupOpen(true)} disabled={state === "searching"} />
         )}
+      </div>
 
-        {/* RIGHT: Existing Serial Number Search (unchanged design) */}
-        {/* ===== Search Card ===== */}
+      {/* ===== Search Device — Full-width below the cards ===== */}
+      <div className="mt-5">
         <section className="rounded-3xl border border-qbit-outline-variant bg-white p-6 shadow-lg sm:p-8">
         <div className="mb-5 text-center">
           <div className="inline-flex items-center gap-2 rounded-full bg-qbit-primary/10 px-3 py-1 text-xs font-semibold text-qbit-primary mb-3">
