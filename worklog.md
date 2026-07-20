@@ -1,34 +1,27 @@
 ---
 Task ID: 1
 Agent: Main Agent
-Task: Verify, Connect & Sync with Original GitHub Project
+Task: Complete Architecture Audit & Enterprise Overhaul of Global Resources Module
 
 Work Log:
-- Verified current sandbox project was NOT connected to original GitHub repository
-- No Git remote configured, no Vercel project linked
-- Found original repository: qbithubsoftware-sketch/qbithub
-- Cloned original repository from GitHub
-- Replaced sandbox scaffold with original project code
-- Connected working directory to original GitHub remote (origin)
-- Analyzed original project's download architecture:
-  - 1072 files, 3005-line Prisma schema, PostgreSQL (Neon)
-  - Existing download system with StorageService, provider pattern, visibility enforcement
-  - Missing LocalStorageProvider file (critical bug!)
-  - Download file endpoint generating placeholder text instead of real files
-  - Token generation using simple base64 instead of HMAC
-- Fixed critical bugs:
-  1. Created LocalStorageProvider (src/lib/storage/local-storage.ts) - was imported but didn't exist
-  2. Fixed /api/downloads/[id]/file/route.ts to serve real files from StorageService
-  3. Added HMAC-signed download tokens for security
-  4. Added path traversal prevention in LocalStorageProvider
-  5. Fixed .gitignore local-* pattern blocking local-storage.ts
-- Reverted Prisma schema back to PostgreSQL provider for production
-- Committed and pushed all fixes to original GitHub repository
-- Commit: c24a506 - "fix: Complete download system repair"
+- Read all 30+ files related to the Global Resources Module (Prisma schema, API routes, storage providers, frontend components, middleware, config)
+- Identified ROOT CAUSE: LocalStorageProvider.upload() wrote files to WRONG PATH
+  - storageKey = "/uploads/resources/..." but absPath = path.join(process.cwd(), storageKey) 
+  - This resolved to /project/uploads/resources/ instead of /project/public/uploads/resources/
+  - Result: ENOENT on every single upload attempt → "Upload Failed"
+- Found 12+ additional issues during audit
+- Fixed all critical issues
 
 Stage Summary:
-- Original GitHub repository: https://github.com/qbithubsoftware-sketch/qbithub
-- Successfully connected and pushed to origin/main
-- 5 files changed, 220 insertions, 14 deletions
-- Zero UI changes made
-- All download architecture bugs fixed
+- ROOT CAUSE: Path resolution bug in local-storage.ts (missing "public/" prefix in writeFile path)
+- FIXED: Files now stored in data/uploads/resources/ (outside public/ for security)
+- FIXED: Enterprise error handling with structured JSON responses
+- FIXED: Magic byte verification for anti-MIME-spoofing
+- FIXED: Unified filename sanitization (was duplicated in 3 places)
+- FIXED: Unified MIME type mapping (was duplicated in 2 places)
+- ADDED: Enterprise resource logger with pipeline-stage logging
+- ADDED: Extension allowlist + blocklist validation
+- ADDED: Backward compatibility for files in old public/uploads/resources/ location
+- ADDED: Support for .cab, .dmg, .ipa, .mov, .yaml, .inf and more file types
+- INCREASED: Max file size from 50MB to 100MB
+- DEPLOYED: Pushed to GitHub and auto-deployed to Vercel production
