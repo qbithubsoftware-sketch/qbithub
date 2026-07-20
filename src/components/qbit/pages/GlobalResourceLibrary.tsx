@@ -423,17 +423,33 @@ function ResourceFormModal({ resource, onClose, onSaved }: { resource: GlobalRes
       // POST file to /api/admin/resources/upload — returns storageKey + checksum
       const formData = new FormData();
       formData.append("file", file);
+
+      console.log(`[FRONTEND-UPLOAD] Sending file: name="${file.name}", type="${file.type}", size=${file.size}`);
+      console.log(`[FRONTEND-UPLOAD] FormData keys: [${[...formData.keys()]}]`);
+
       const res = await fetch("/api/admin/resources/upload", {
         method: "POST",
         body: formData,
       });
       const data = await res.json().catch(() => null);
       if (!res.ok || !data?.success) {
-        // Enterprise error response: { success, code, message, stage, details }
+        // Structured field-level error response:
+        //   { success, code, field, expected, received, message, stage, details }
         const errorCode = data?.code ?? "UNKNOWN";
         const errorMsg = data?.message ?? data?.error ?? "Upload failed";
         const errorStage = data?.stage ?? "unknown";
-        throw new Error(`[${errorCode}] ${errorMsg} (at ${errorStage})`);
+        const errorField = data?.field ?? "";
+        const errorExpected = data?.expected ?? "";
+        const errorReceived = data?.received ?? "";
+
+        // Build a human-readable error with field-level detail
+        let detail = errorMsg;
+        if (errorField && errorExpected && errorReceived) {
+          detail = `${errorMsg} (field: "${errorField}", expected: ${errorExpected}, received: ${errorReceived})`;
+        }
+        console.error(`[FRONTEND-UPLOAD] Upload failed: [${errorCode}] ${detail} (at ${errorStage})`);
+        console.error(`[FRONTEND-UPLOAD] Full error response:`, data);
+        throw new Error(`[${errorCode}] ${detail} (at ${errorStage})`);
       }
       // Store the storageKey + metadata in the form
       setForm({
@@ -495,7 +511,14 @@ function ResourceFormModal({ resource, onClose, onSaved }: { resource: GlobalRes
       }
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error ?? "Save failed");
+        // Use structured error if available
+        const errMsg = err.message ?? err.error ?? "Save failed";
+        const errField = err.field ?? "";
+        const errCode = err.code ?? "";
+        if (errField) {
+          throw new Error(`[${errCode}] ${errMsg} (field: "${errField}")`);
+        }
+        throw new Error(errMsg);
       }
       toast({ title: resource ? "Resource updated" : "Resource created!", description: form.name });
       onSaved();
