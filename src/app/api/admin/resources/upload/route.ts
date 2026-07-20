@@ -430,13 +430,24 @@ export async function POST(req: NextRequest) {
           userId, fileName: file.name,
           errorCode: uploadError.code, errorDetails: uploadError.details,
         });
+        // Build a field-level error based on which credential is missing
+        const detectedAuth = (uploadError.details as Record<string, unknown>)?.detectedAuth as { method?: string; hasStoreId?: boolean; hasReadWriteToken?: boolean } | undefined;
+        const missingField = !detectedAuth?.hasStoreId
+          ? "BLOB_STORE_ID"
+          : "BLOB_READ_WRITE_TOKEN";
+        const expectedDesc = !detectedAuth?.hasStoreId
+          ? "BLOB_STORE_ID (for OIDC auth) or BLOB_READ_WRITE_TOKEN (legacy)"
+          : "Valid Vercel Blob read-write token";
+        const receivedDesc = !detectedAuth?.hasStoreId
+          ? "BLOB_STORE_ID is missing; BLOB_READ_WRITE_TOKEN also not set"
+          : "Token is missing, invalid, or for a different store";
         return NextResponse.json(
           {
             success: false,
             code: uploadError.code,
-            field: "BLOB_READ_WRITE_TOKEN",
-            expected: "Valid Vercel Blob read-write token",
-            received: "Token is missing, invalid, or for a different store",
+            field: missingField,
+            expected: expectedDesc,
+            received: receivedDesc,
             message: uploadError.message,
             stage: "storage_configuration",
             details: uploadError.details ?? {},

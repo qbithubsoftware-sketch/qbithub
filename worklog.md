@@ -59,3 +59,44 @@ Stage Summary:
 - Vercel/Lambda: /tmp/qbit-uploads/resources/ (ephemeral but writable)
 - Cloud storage: auto-detected when BLOB_READ_WRITE_TOKEN is present
 - Zero vendor lock-in: switch providers by changing one env var
+---
+Task ID: 3
+Agent: Main Agent
+Task: Migrate Vercel Blob storage auth from BLOB_READ_WRITE_TOKEN (legacy) to OIDC + BLOB_STORE_ID (current)
+
+Work Log:
+- Audited @vercel/blob SDK v2.6.1 source code (chunk-CIIQSN42.js, index.js, type definitions)
+- Discovered resolveBlobAuth() authentication priority chain:
+  1. presignedUrlPayload (delegated access)
+  2. options.token (explicit read-write token — LEGACY)
+  3. OIDC (auto from @vercel/oidc) + BLOB_STORE_ID — CURRENT recommended
+  4. BLOB_READ_WRITE_TOKEN env var — LEGACY fallback
+- Identified root cause: Our code demanded BLOB_READ_WRITE_TOKEN in requireToken(), blocking OIDC auth
+- The Vercel integration now sets BLOB_STORE_ID and BLOB_WEBHOOK_PUBLIC_KEY but NOT BLOB_READ_WRITE_TOKEN
+- @vercel/oidc is included as a dependency of @vercel/blob and auto-provisions OIDC tokens on Vercel runtime
+- Rewrote vercel-blob-storage.ts:
+  - Added detectBlobAuth() that inspects env vars and Vercel runtime to predict auth method
+  - Added buildBlobCommandOptions() that constructs proper SDK options based on detected auth
+  - Replaced requireToken() (hard BLOB_READ_WRITE_TOKEN demand) with requireAuth() (checks OIDC or legacy)
+  - OIDC auth: passes storeId to put()/head()/del() so SDK can use OIDC + BLOB_STORE_ID
+  - Legacy auth: passes token explicitly so SDK uses BLOB_READ_WRITE_TOKEN
+  - All SDK calls now pass auth-derived options (storeId, token) explicitly
+  - Added diagnostic logging at every step: auth method, token presence, store ID, SDK calls
+  - Error messages distinguish OIDC vs legacy auth failures with specific fix guidance
+- Rewrote provider.ts:
+  - Provider selection checks for EITHER OIDC-ready OR BLOB_READ_WRITE_TOKEN
+  - "auto" mode now uses Vercel Blob if BLOB_STORE_ID + OIDC available (not just legacy token)
+  - getStorageDiagnostics() now reports authMethod, authDescription, hasOidcToken, isVercelRuntime
+  - Detailed logging of auth detection during provider initialization
+- Updated upload route error response:
+  - StorageConfigurationError now dynamically identifies which credential is missing
+  - Field name changes from hardcoded "BLOB_READ_WRITE_TOKEN" to either "BLOB_STORE_ID" or "BLOB_READ_WRITE_TOKEN"
+- TypeScript compilation passes with zero storage-related errors
+
+Stage Summary:
+- BLOB_READ_WRITE_TOKEN is LEGACY — OIDC + BLOB_STORE_ID is the current recommended auth
+- Code no longer demands BLOB_READ_WRITE_TOKEN; supports both auth methods
+- OIDC auth works automatically on Vercel when BLOB_STORE_ID is set
+- Legacy BLOB_READ_WRITE_TOKEN still supported as fallback
+- STORAGE_CONFIGURATION_ERROR now correctly identifies which credential is missing
+- Full diagnostic logging at every pipeline stage
