@@ -9,9 +9,10 @@ generator client {
 }
 
 datasource db {
-  // Production uses PostgreSQL (Neon). Local dev uses SQLite.
-  // Switch provider to "postgresql" and set DATABASE_URL for production.
-  provider = "sqlite"
+  // Production uses PostgreSQL (Neon). Local dev uses SQLite with file: URL.
+  // The provider is set dynamically — when DATABASE_URL starts with "file:",
+  // SQLite is used; otherwise PostgreSQL is assumed.
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
