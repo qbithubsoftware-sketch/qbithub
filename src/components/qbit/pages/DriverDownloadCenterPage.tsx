@@ -163,7 +163,7 @@ export function DriverDownloadCenterPage() {
         title: "Download started",
         description: `${download.name} ${download.version} (${download.fileSize})`,
       });
-      // In production: window.location.href = `/api/downloads/${download.id}`;
+      window.location.href = `/api/downloads/${download.id}`;
     },
     [session, toast],
   );

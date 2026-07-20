@@ -1,0 +1,2002 @@
+     1→// This is your Prisma schema file,
+     2→// learn more about it in the docs: https://pris.ly/d/prisma-schema
+     3→
+     4→// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+     5→// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+     6→
+     7→generator client {
+     8→  provider = "prisma-client-js"
+     9→}
+    10→
+    11→datasource db {
+    12→  // Production uses PostgreSQL (Neon). Local dev can override with
+    13→  // DATABASE_URL=postgresql://... in .env, or use the SQLite file URL —
+    14→  // both providers support every type used below, but Prisma generates
+    15→  // different client types per provider, so we MUST match production.
+    16→  provider = "postgresql"
+    17→  url      = env("DATABASE_URL")
+    18→}
+    19→
+    20→model User {
+    21→  id           String   @id @default(cuid())
+    22→  email        String   @unique
+    23→  name         String?
+    24→  image        String?
+    25→  role         String   @default("viewer")
+    26→  passwordHash String?
+    27→  createdAt    DateTime @default(now())
+    28→  updatedAt    DateTime @updatedAt
+    29→
+    30→  downloadHistory     DownloadHistory[]
+    31→  favoriteDownloads   FavoriteDownload[]
+    32→  articleBookmarks    ArticleBookmark[]
+    33→  assignedWorkOrders  WorkOrder[]          @relation("AssignedEngineer")
+    34→  installationRatings InstallationRating[]
+    35→  /// V3 — Customer account linked to this user (for public_customer role).
+    36→  customerAccount     CustomerAccount?
+    37→}
+    38→
+    39→model Post {
+    40→  id        String   @id @default(cuid())
+    41→  title     String
+    42→  content   String?
+    43→  published Boolean  @default(false)
+    44→  authorId  String
+    45→  createdAt DateTime @default(now())
+    46→  updatedAt DateTime @updatedAt
+    47→}
+    48→
+    49→// =====================================================
+    50→// Driver Download Center models
+    51→// =====================================================
+    52→
+    53→/// Lookup table — normalised list of operating systems (Windows 11, Ubuntu 22.04, …)
+    54→model OperatingSystem {
+    55→  id        String   @id @default(cuid())
+    56→  name      String   @unique // "Windows 11", "Ubuntu 22.04", "Android 13.0"
+    57→  slug      String   @unique // "win11", "ubuntu-2204", "android-13"
+    58→  icon      String? // Material Symbol name, e.g. "desktop_windows"
+    59→  sortIndex Int      @default(0)
+    60→  createdAt DateTime @default(now())
+    61→
+    62→  downloads DownloadOS[]
+    63→}
+    64→
+    65→/// Lookup table — download categories (Driver, Firmware, SDK, Utility, Manual)
+    66→model DownloadCategory {
+    67→  id        String   @id @default(cuid())
+    68→  name      String   @unique // "Driver", "Firmware", "SDK", "Utility", "Manual"
+    69→  slug      String   @unique // "driver", "firmware", "sdk", "utility", "manual"
+    70→  icon      String? // Material Symbol name
+    71→  sortIndex Int      @default(0)
+    72→  createdAt DateTime @default(now())
+    73→
+    74→  downloads Download[]
+    75→}
+    76→
+    77→/// Master record for a downloadable file.  Only metadata + a secure storage
+    78→/// path are stored here — the binary itself lives in cloud storage.
+    79→model Download {
+    80→  id                  String           @id @default(cuid())
+    81→  productId           String? // reference to the product this download belongs to
+    82→  name                String // "Universal Thermal Printer Driver"
+    83→  version             String // "v2.4.1"
+    84→  categoryId          String
+    85→  category            DownloadCategory @relation(fields: [categoryId], references: [id])
+    86→  releaseDate         DateTime
+    87→  fileSize            Int // bytes
+    88→  storagePath         String // secure cloud-storage key (never exposed to client)
+    89→  checksum            String? // SHA-256 hash for integrity verification
+    90→  visibility          String           @default("public") // "public" | "internal" | "restricted"
+    91→  featured            Boolean          @default(false)
+    92→  latest              Boolean          @default(false)
+    93→  downloadCount       Int              @default(0)
+    94→  description         String?
+    95→  installInstructions String?
+    96→  knownIssues         String?
+    97→  supportedProducts   String? // JSON string array of product names/models
+    98→  createdAt           DateTime         @default(now())
+    99→  updatedAt           DateTime         @updatedAt
+   100→
+   101→  operatingSystems DownloadOS[]
+   102→  releaseNotes     ReleaseNote[]
+   103→  downloadHistory  DownloadHistory[]
+   104→  favorites        FavoriteDownload[]
+   105→  firmwareReleases FirmwareRelease[]
+   106→
+   107→  @@index([categoryId])
+   108→  @@index([visibility])
+   109→  @@index([featured])
+   110→  @@index([latest])
+   111→}
+   112→
+   113→/// Many-to-many join between Download and OperatingSystem.
+   114→model DownloadOS {
+   115→  downloadId String
+   116→  osId       String
+   117→  download   Download        @relation(fields: [downloadId], references: [id], onDelete: Cascade)
+   118→  os         OperatingSystem @relation(fields: [osId], references: [id], onDelete: Cascade)
+   119→
+   120→  @@id([downloadId, osId])
+   121→  @@index([osId])
+   122→}
+   123→
+   124→/// Versioned release notes for a download (changelog, bug fixes, security updates).
+   125→model ReleaseNote {
+   126→  id              String   @id @default(cuid())
+   127→  downloadId      String
+   128→  download        Download @relation(fields: [downloadId], references: [id], onDelete: Cascade)
+   129→  version         String // "v2.4.1"
+   130→  releaseDate     DateTime
+   131→  changes         String // JSON string array of change descriptions
+   132→  bugFixes        String? // JSON string array
+   133→  securityUpdates String? // JSON string array
+   134→  isCurrent       Boolean  @default(false)
+   135→  createdAt       DateTime @default(now())
+   136→
+   137→  @@index([downloadId])
+   138→  @@index([isCurrent])
+   139→}
+   140→
+   141→/// Tracks every download event for analytics + user history.
+   142→model DownloadHistory {
+   143→  id           String   @id @default(cuid())
+   144→  userId       String
+   145→  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+   146→  downloadId   String
+   147→  download     Download @relation(fields: [downloadId], references: [id], onDelete: Cascade)
+   148→  downloadedAt DateTime @default(now())
+   149→  ipAddress    String?
+   150→  userAgent    String?
+   151→
+   152→  @@index([userId])
+   153→  @@index([downloadId])
+   154→  @@index([downloadedAt])
+   155→}
+   156→
+   157→/// User-favourited downloads for quick access.
+   158→model FavoriteDownload {
+   159→  id         String   @id @default(cuid())
+   160→  userId     String
+   161→  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+   162→  downloadId String
+   163→  download   Download @relation(fields: [downloadId], references: [id], onDelete: Cascade)
+   164→  createdAt  DateTime @default(now())
+   165→
+   166→  @@unique([userId, downloadId])
+   167→  @@index([userId])
+   168→}
+   169→
+   170→/// Driver master record (one per physical driver family, e.g. "Universal Thermal Printer Driver").
+   171→model Driver {
+   172→  id          String   @id @default(cuid())
+   173→  name        String   @unique
+   174→  productId   String?
+   175→  description String?
+   176→  createdAt   DateTime @default(now())
+   177→  updatedAt   DateTime @updatedAt
+   178→
+   179→  versions DriverVersion[]
+   180→}
+   181→
+   182→/// Individual version of a driver (v2.4.0, v2.4.1, …) linked to a Download record.
+   183→model DriverVersion {
+   184→  id          String   @id @default(cuid())
+   185→  driverId    String
+   186→  driver      Driver   @relation(fields: [driverId], references: [id], onDelete: Cascade)
+   187→  version     String
+   188→  downloadId  String? // optional link to the Download record
+   189→  releaseDate DateTime
+   190→  isCurrent   Boolean  @default(false)
+   191→  createdAt   DateTime @default(now())
+   192→
+   193→  @@index([driverId])
+   194→  @@index([isCurrent])
+   195→}
+   196→
+   197→/// Firmware master record.
+   198→model Firmware {
+   199→  id          String   @id @default(cuid())
+   200→  name        String   @unique
+   201→  productId   String?
+   202→  description String?
+   203→  createdAt   DateTime @default(now())
+   204→  updatedAt   DateTime @updatedAt
+   205→
+   206→  releases FirmwareRelease[]
+   207→}
+   208→
+   209→/// SDK master record.
+   210→model SDK {
+   211→  id          String   @id @default(cuid())
+   212→  name        String   @unique
+   213→  productId   String?
+   214→  description String?
+   215→  createdAt   DateTime @default(now())
+   216→  updatedAt   DateTime @updatedAt
+   217→}
+   218→
+   219→/// Utility master record (helper tools, config utilities, etc.).
+   220→model Utility {
+   221→  id          String   @id @default(cuid())
+   222→  name        String   @unique
+   223→  productId   String?
+   224→  description String?
+   225→  createdAt   DateTime @default(now())
+   226→  updatedAt   DateTime @updatedAt
+   227→}
+   228→
+   229→/// Manual master record.
+   230→model Manual {
+   231→  id          String   @id @default(cuid())
+   232→  name        String   @unique
+   233→  productId   String?
+   234→  description String?
+   235→  createdAt   DateTime @default(now())
+   236→  updatedAt   DateTime @updatedAt
+   237→}
+   238→
+   239→// =====================================================
+   240→// Installation Center models
+   241→// =====================================================
+   242→
+   243→/// Master record for an installation guide (one per product family).
+   244→model InstallationGuide {
+   245→  id              String   @id @default(cuid())
+   246→  title           String
+   247→  slug            String   @unique
+   248→  productId       String?
+   249→  product         String // "QBIT T-800", "HUB-X Pro", etc.
+   250→  category        String // "Windows POS", "Thermal Printer", etc.
+   251→  estimatedTime   Int // minutes
+   252→  difficulty      String // "Beginner" | "Intermediate" | "Expert"
+   253→  version         String // "v4.2.1"
+   254→  description     String?
+   255→  featured        Boolean  @default(false)
+   256→  latest          Boolean  @default(false)
+   257→  viewCount       Int      @default(0)
+   258→  completionCount Int      @default(0)
+   259→  createdAt       DateTime @default(now())
+   260→  updatedAt       DateTime @updatedAt
+   261→
+   262→  steps            InstallationStep[]
+   263→  tools            RequiredTool[]
+   264→  safetyRules      SafetyInstruction[]
+   265→  checklists       InstallationChecklist[]
+   266→  faqs             InstallationFAQ[]
+   267→  wiringDiagrams   WiringDiagram[]
+   268→  configGuides     ConfigurationGuide[]
+   269→  relatedDownloads ProductInstallationGuide[]
+   270→}
+   271→
+   272→/// A single step in an installation guide.
+   273→model InstallationStep {
+   274→  id                String            @id @default(cuid())
+   275→  guideId           String
+   276→  guide             InstallationGuide @relation(fields: [guideId], references: [id], onDelete: Cascade)
+   277→  stepNumber        Int
+   278→  title             String
+   279→  description       String
+   280→  imageUrl          String? // cloud-storage path (secure)
+   281→  estimatedTime     Int // minutes
+   282→  warning           String? // optional safety warning
+   283→  tip               String? // optional pro tip
+   284→  requiredToolId    String? // link to RequiredTool
+   285→  relatedDownloadId String? // link to Download (driver/firmware/SDK)
+   286→  relatedManualId   String? // link to Manual
+   287→  relatedVideoUrl   String? // YouTube URL
+   288→  createdAt         DateTime          @default(now())
+   289→
+   290→  @@index([guideId])
+   291→  @@index([stepNumber])
+   292→}
+   293→
+   294→/// A tool required for an installation (USB cable, screwdriver, etc.).
+   295→model RequiredTool {
+   296→  id          String            @id @default(cuid())
+   297→  guideId     String
+   298→  guide       InstallationGuide @relation(fields: [guideId], references: [id], onDelete: Cascade)
+   299→  name        String // "USB Cable"
+   300→  icon        String // Material Symbol name
+   301→  description String?
+   302→  included    Boolean           @default(false) // true = in-box, false = bring your own
+   303→  createdAt   DateTime          @default(now())
+   304→
+   305→  @@index([guideId])
+   306→}
+   307→
+   308→/// Safety instruction for an installation guide.
+   309→model SafetyInstruction {
+   310→  id        String            @id @default(cuid())
+   311→  guideId   String
+   312→  guide     InstallationGuide @relation(fields: [guideId], references: [id], onDelete: Cascade)
+   313→  text      String
+   314→  severity  String            @default("warning") // "info" | "warning" | "danger"
+   315→  createdAt DateTime          @default(now())
+   316→
+   317→  @@index([guideId])
+   318→}
+   319→
+   320→/// Configuration guide (OS provisioning, network setup, etc.).
+   321→model ConfigurationGuide {
+   322→  id          String            @id @default(cuid())
+   323→  guideId     String
+   324→  guide       InstallationGuide @relation(fields: [guideId], references: [id], onDelete: Cascade)
+   325→  title       String
+   326→  description String
+   327→  configType  String // "network" | "os" | "peripheral" | "security"
+   328→  createdAt   DateTime          @default(now())
+   329→
+   330→  @@index([guideId])
+   331→}
+   332→
+   333→/// Wiring diagram image for an installation guide.
+   334→model WiringDiagram {
+   335→  id           String            @id @default(cuid())
+   336→  guideId      String
+   337→  guide        InstallationGuide @relation(fields: [guideId], references: [id], onDelete: Cascade)
+   338→  title        String
+   339→  description  String?
+   340→  imageUrl     String // secure cloud-storage path
+   341→  thumbnailUrl String? // smaller version for the grid
+   342→  resolution   String? // "4096x2160"
+   343→  createdAt    DateTime          @default(now())
+   344→
+   345→  @@index([guideId])
+   346→}
+   347→
+   348→/// Installation checklist item (power, driver, firmware, tests, etc.).
+   349→model InstallationChecklist {
+   350→  id          String            @id @default(cuid())
+   351→  guideId     String
+   352→  guide       InstallationGuide @relation(fields: [guideId], references: [id], onDelete: Cascade)
+   353→  group       String // "Power" | "Software" | "Hardware Tests" | "Final Verification"
+   354→  label       String // "Power Connected"
+   355→  description String?
+   356→  sortOrder   Int               @default(0)
+   357→  createdAt   DateTime          @default(now())
+   358→
+   359→  @@index([guideId])
+   360→  @@index([group])
+   361→}
+   362→
+   363→/// Many-to-many between InstallationGuide and Download (related drivers/firmware/SDKs).
+   364→model ProductInstallationGuide {
+   365→  id           String            @id @default(cuid())
+   366→  guideId      String
+   367→  guide        InstallationGuide @relation(fields: [guideId], references: [id], onDelete: Cascade)
+   368→  downloadId   String? // optional link to Download
+   369→  relationType String // "driver" | "firmware" | "manual" | "sdk" | "utility"
+   370→  createdAt    DateTime          @default(now())
+   371→
+   372→  @@index([guideId])
+   373→}
+   374→
+   375→/// FAQ entry for an installation guide.
+   376→model InstallationFAQ {
+   377→  id        String            @id @default(cuid())
+   378→  guideId   String
+   379→  guide     InstallationGuide @relation(fields: [guideId], references: [id], onDelete: Cascade)
+   380→  question  String
+   381→  answer    String
+   382→  sortOrder Int               @default(0)
+   383→  createdAt DateTime          @default(now())
+   384→
+   385→  @@index([guideId])
+   386→}
+   387→
+   388→// =====================================================
+   389→// Knowledge Base & Troubleshooting models
+   390→// =====================================================
+   391→
+   392→/// Lookup table — knowledge article categories (Products, Drivers, Installation, Firmware, Networking, etc.)
+   393→model KnowledgeCategory {
+   394→  id          String   @id @default(cuid())
+   395→  name        String   @unique
+   396→  slug        String   @unique
+   397→  icon        String? // Material Symbol name
+   398→  description String?
+   399→  color       String? // tailwind gradient class, e.g. "from-qbit-primary to-qbit-secondary"
+   400→  sortIndex   Int      @default(0)
+   401→  createdAt   DateTime @default(now())
+   402→
+   403→  articles KnowledgeArticle[]
+   404→}
+   405→
+   406→/// Knowledge article master record.
+   407→model KnowledgeArticle {
+   408→  id                 String            @id @default(cuid())
+   409→  title              String
+   410→  slug               String            @unique
+   411→  excerpt            String
+   412→  content            String // rich-text JSON (sections, paragraphs, callouts, code blocks)
+   413→  categoryId         String
+   414→  category           KnowledgeCategory @relation(fields: [categoryId], references: [id])
+   415→  author             String
+   416→  authorAvatar       String?
+   417→  readingTime        Int // minutes
+   418→  difficulty         String // "Beginner" | "Intermediate" | "Expert"
+   419→  featured           Boolean           @default(false)
+   420→  popular            Boolean           @default(false)
+   421→  latest             Boolean           @default(false)
+   422→  viewCount          Int               @default(0)
+   423→  helpfulCount       Int               @default(0)
+   424→  notHelpfulCount    Int               @default(0)
+   425→  relatedProductIds  String? // JSON string array of product ids
+   426→  relatedDownloadIds String? // JSON string array of download ids
+   427→  relatedGuideIds    String? // JSON string array of installation guide ids
+   428→  relatedVideoUrls   String? // JSON string array of YouTube URLs
+   429→  relatedFaqIds      String? // JSON string array of FAQ ids
+   430→  publishedAt        DateTime
+   431→  updatedAt          DateTime          @updatedAt
+   432→  createdAt          DateTime          @default(now())
+   433→
+   434→  sections  ArticleSection[]
+   435→  bookmarks ArticleBookmark[]
+   436→  feedback  ArticleFeedback[]
+   437→
+   438→  @@index([categoryId])
+   439→  @@index([featured])
+   440→  @@index([popular])
+   441→  @@index([latest])
+   442→}
+   443→
+   444→/// A titled section within a knowledge article.
+   445→model ArticleSection {
+   446→  id        String           @id @default(cuid())
+   447→  articleId String
+   448→  article   KnowledgeArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+   449→  title     String
+   450→  content   String // rich-text content
+   451→  sortOrder Int              @default(0)
+   452→  createdAt DateTime         @default(now())
+   453→
+   454→  @@index([articleId])
+   455→}
+   456→
+   457→/// Frequently asked question.
+   458→model FAQ {
+   459→  id            String   @id @default(cuid())
+   460→  question      String
+   461→  answer        String
+   462→  categoryId    String?
+   463→  relatedFaqIds String? // JSON string array
+   464→  sortOrder     Int      @default(0)
+   465→  createdAt     DateTime @default(now())
+   466→  updatedAt     DateTime @updatedAt
+   467→
+   468→  @@index([categoryId])
+   469→}
+   470→
+   471→/// Troubleshooting issue master record.
+   472→model TroubleshootingIssue {
+   473→  id                 String   @id @default(cuid())
+   474→  title              String
+   475→  slug               String   @unique
+   476→  productId          String?
+   477→  symptoms           String // JSON string array of symptom descriptions
+   478→  causes             String // JSON string array of possible causes
+   479→  resolution         String // summary of the resolution
+   480→  relatedDownloadIds String? // JSON string array
+   481→  relatedManualIds   String? // JSON string array
+   482→  relatedGuideIds    String? // JSON string array
+   483→  relatedVideoUrls   String? // JSON string array
+   484→  difficulty         String // "Beginner" | "Intermediate" | "Expert"
+   485→  viewCount          Int      @default(0)
+   486→  createdAt          DateTime @default(now())
+   487→  updatedAt          DateTime @updatedAt
+   488→
+   489→  steps TroubleshootingStep[]
+   490→
+   491→  @@index([productId])
+   492→}
+   493→
+   494→/// A single step in a troubleshooting resolution.
+   495→model TroubleshootingStep {
+   496→  id          String               @id @default(cuid())
+   497→  issueId     String
+   498→  issue       TroubleshootingIssue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+   499→  stepNumber  Int
+   500→  title       String
+   501→  description String
+   502→  warning     String?
+   503→  tip         String?
+   504→  createdAt   DateTime             @default(now())
+   505→
+   506→  @@index([issueId])
+   507→  @@index([stepNumber])
+   508→}
+   509→
+   510→/// Common error code lookup (e.g. E001, ERR_PRINTER_01).
+   511→model CommonError {
+   512→  id            String   @id @default(cuid())
+   513→  code          String   @unique // "E001", "ERR_PRINTER_01"
+   514→  meaning       String
+   515→  possibleCause String
+   516→  resolution    String
+   517→  productId     String?
+   518→  productName   String?
+   519→  severity      String   @default("warning") // "info" | "warning" | "error"
+   520→  createdAt     DateTime @default(now())
+   521→
+   522→  @@index([productId])
+   523→  @@index([severity])
+   524→}
+   525→
+   526→/// A solution linked to a troubleshooting issue or common error.
+   527→model Solution {
+   528→  id          String   @id @default(cuid())
+   529→  title       String
+   530→  description String
+   531→  issueId     String?
+   532→  errorId     String?
+   533→  steps       String? // JSON string array of resolution steps
+   534→  createdAt   DateTime @default(now())
+   535→
+   536→  @@index([issueId])
+   537→  @@index([errorId])
+   538→}
+   539→
+   540→/// Related-asset link (flexible — can point to a download, manual, guide, or video).
+   541→model RelatedAsset {
+   542→  id        String   @id @default(cuid())
+   543→  assetType String // "download" | "manual" | "guide" | "video" | "product"
+   544→  assetId   String?
+   545→  assetUrl  String?
+   546→  label     String
+   547→  icon      String?
+   548→  issueId   String?
+   549→  errorId   String?
+   550→  articleId String?
+   551→  createdAt DateTime @default(now())
+   552→
+   553→  @@index([issueId])
+   554→  @@index([errorId])
+   555→  @@index([articleId])
+   556→}
+   557→
+   558→/// User-bookmarked article (or FAQ or troubleshooting page).
+   559→model ArticleBookmark {
+   560→  id           String           @id @default(cuid())
+   561→  userId       String
+   562→  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+   563→  articleId    String
+   564→  article      KnowledgeArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+   565→  bookmarkType String           @default("article") // "article" | "faq" | "troubleshooting"
+   566→  createdAt    DateTime         @default(now())
+   567→
+   568→  @@unique([userId, articleId])
+   569→  @@index([userId])
+   570→}
+   571→
+   572→/// Feedback on a knowledge article.
+   573→model ArticleFeedback {
+   574→  id           String           @id @default(cuid())
+   575→  userId       String?
+   576→  articleId    String
+   577→  article      KnowledgeArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+   578→  rating       String // "helpful" | "not_helpful"
+   579→  comment      String?
+   580→  feedbackType String           @default("rating") // "rating" | "suggestion" | "report"
+   581→  createdAt    DateTime         @default(now())
+   582→
+   583→  @@index([articleId])
+   584→}
+   585→
+   586→// =====================================================
+   587→// Enterprise Admin Control Center models
+   588→// =====================================================
+   589→
+   590→/// Enterprise audit log — tracks every administrative action.
+   591→model AuditLog {
+   592→  id          String   @id @default(cuid())
+   593→  userId      String?
+   594→  userName    String? // denormalised for quick display
+   595→  action      String // "login" | "logout" | "create" | "edit" | "delete" | "download" | "upload" | "role_change" | "settings_change" | "product_update"
+   596→  entity      String // "user" | "product" | "driver" | "article" | "guide" | "setting" | etc.
+   597→  entityId    String?
+   598→  entityName  String? // human-readable name of the affected entity
+   599→  description String?
+   600→  ipAddress   String?
+   601→  userAgent   String?
+   602→  metadata    String? // JSON string of additional context
+   603→  createdAt   DateTime @default(now())
+   604→
+   605→  @@index([userId])
+   606→  @@index([action])
+   607→  @@index([entity])
+   608→  @@index([createdAt])
+   609→}
+   610→
+   611→/// System-wide key/value settings (company info, brand, defaults).
+   612→model SystemSetting {
+   613→  id          String   @id @default(cuid())
+   614→  key         String   @unique // "company_name" | "brand_logo_url" | "support_email" | etc.
+   615→  value       String // JSON-encoded value
+   616→  category    String   @default("general") // "company" | "branding" | "application" | "security" | "backup"
+   617→  description String?
+   618→  updatedAt   DateTime @updatedAt
+   619→  updatedBy   String? // user id of the admin who last changed it
+   620→}
+   621→
+   622→/// Announcement / maintenance notice / system message.
+   623→model Announcement {
+   624→  id          String    @id @default(cuid())
+   625→  title       String
+   626→  body        String
+   627→  type        String    @default("info") // "info" | "maintenance" | "driver_update" | "firmware_release" | "system_message"
+   628→  severity    String    @default("info") // "info" | "warning" | "critical"
+   629→  visibility  String    @default("public") // "public" | "internal" | "hidden"
+   630→  targetRoles String? // JSON string array of role ids; null = all roles
+   631→  startsAt    DateTime?
+   632→  endsAt      DateTime?
+   633→  active      Boolean   @default(true)
+   634→  createdBy   String?
+   635→  createdAt   DateTime  @default(now())
+   636→  updatedAt   DateTime  @updatedAt
+   637→
+   638→  @@index([type])
+   639→  @@index([visibility])
+   640→  @@index([active])
+   641→}
+   642→
+   643→/// Aggregated system metric (for dashboard widgets + analytics).
+   644→model SystemMetric {
+   645→  id         String   @id @default(cuid())
+   646→  metric     String // "total_products" | "total_drivers" | "downloads_today" | "active_users" | etc.
+   647→  value      Int
+   648→  unit       String? // "count" | "bytes" | "percent"
+   649→  category   String // "inventory" | "usage" | "health"
+   650→  recordedAt DateTime @default(now())
+   651→
+   652→  @@index([metric])
+   653→  @@index([category])
+   654→  @@index([recordedAt])
+   655→}
+   656→
+   657→/// Activity feed entry (lighter than AuditLog — for dashboard timelines).
+   658→model ActivityFeed {
+   659→  id         String   @id @default(cuid())
+   660→  userId     String?
+   661→  userName   String?
+   662→  action     String // "uploaded" | "updated" | "deleted" | "downloaded" | "invited" | "completed"
+   663→  entity     String
+   664→  entityName String?
+   665→  icon       String? // Material Symbol name
+   666→  dotColor   String   @default("primary") // "primary" | "secondary" | "error" | "neutral"
+   667→  attachment String? // JSON { icon, label }
+   668→  invitees   String? // JSON string array of initials
+   669→  dim        Boolean  @default(false)
+   670→  createdAt  DateTime @default(now())
+   671→
+   672→  @@index([userId])
+   673→  @@index([createdAt])
+   674→}
+   675→
+   676→/// Asset category (for unified asset manager — extends DownloadCategory).
+   677→model AssetCategory {
+   678→  id        String          @id @default(cuid())
+   679→  name      String          @unique
+   680→  slug      String          @unique
+   681→  icon      String?
+   682→  parentId  String? // self-reference for nested categories
+   683→  parent    AssetCategory?  @relation("AssetCategoryHierarchy", fields: [parentId], references: [id])
+   684→  children  AssetCategory[] @relation("AssetCategoryHierarchy")
+   685→  sortOrder Int             @default(0)
+   686→  visible   Boolean         @default(true)
+   687→  createdAt DateTime        @default(now())
+   688→
+   689→  @@index([parentId])
+   690→  @@index([sortOrder])
+   691→}
+   692→
+   693→/// Permission definition (view, create, edit, delete, upload, download, publish, approve, manage_users, manage_settings).
+   694→model Permission {
+   695→  id          String  @id @default(cuid())
+   696→  key         String  @unique // "view" | "create" | "edit" | "delete" | "upload" | "download" | "publish" | "approve" | "manage_users" | "manage_settings"
+   697→  label       String // "View" | "Create" | etc.
+   698→  description String?
+   699→  category    String  @default("general") // "general" | "admin"
+   700→  sortOrder   Int     @default(0)
+   701→
+   702→  rolePermissions RolePermission[]
+   703→}
+   704→
+   705→/// Many-to-many between Role (string on User) and Permission.
+   706→model RolePermission {
+   707→  id           String     @id @default(cuid())
+   708→  role         String // "administrator" | "support_engineer" | etc.
+   709→  permissionId String
+   710→  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+   711→  createdAt    DateTime   @default(now())
+   712→
+   713→  @@unique([role, permissionId])
+   714→  @@index([role])
+   715→}
+   716→
+   717→/// Per-user UI preferences (theme, density, notification toggles).
+   718→model UserPreference {
+   719→  id                 String   @id @default(cuid())
+   720→  userId             String   @unique
+   721→  theme              String   @default("system") // "light" | "dark" | "system"
+   722→  density            String   @default("comfortable") // "comfortable" | "compact"
+   723→  emailNotifications Boolean  @default(true)
+   724→  pushNotifications  Boolean  @default(true)
+   725→  sidebarCollapsed   Boolean  @default(false)
+   726→  dashboardLayout    String? // JSON for custom widget arrangement
+   727→  updatedAt          DateTime @updatedAt
+   728→
+   729→  @@index([userId])
+   730→}
+   731→
+   732→/// Admin notification (in-app banner / toast for administrators).
+   733→model AdminNotification {
+   734→  id           String   @id @default(cuid())
+   735→  title        String
+   736→  message      String
+   737→  type         String   @default("info") // "info" | "warning" | "error" | "success"
+   738→  category     String   @default("system") // "system" | "security" | "storage" | "user"
+   739→  actionUrl    String?
+   740→  actionLabel  String?
+   741→  read         Boolean  @default(false)
+   742→  targetUserId String? // null = all admins
+   743→  createdAt    DateTime @default(now())
+   744→
+   745→  @@index([read])
+   746→  @@index([category])
+   747→  @@index([targetUserId])
+   748→}
+   749→
+   750→// =====================================================
+   751→// Customer Public Portal models
+   752→// =====================================================
+   753→
+   754→/// Customer inquiry / contact form submission.
+   755→model CustomerInquiry {
+   756→  id          String   @id @default(cuid())
+   757→  name        String
+   758→  email       String
+   759→  phone       String?
+   760→  company     String?
+   761→  subject     String
+   762→  message     String
+   763→  productId   String? // optional product reference
+   764→  productName String?
+   765→  status      String   @default("new") // "new" | "in_progress" | "resolved" | "closed"
+   766→  priority    String   @default("normal") // "low" | "normal" | "high" | "urgent"
+   767→  assignedTo  String? // admin user id
+   768→  response    String? // admin response
+   769→  ipAddress   String?
+   770→  createdAt   DateTime @default(now())
+   771→  updatedAt   DateTime @updatedAt
+   772→
+   773→  @@index([status])
+   774→  @@index([priority])
+   775→  @@index([createdAt])
+   776→}
+   777→
+   778→/// Tracks page visits for public analytics (no PII — just counts).
+   779→model PublicPageVisit {
+   780→  id        String   @id @default(cuid())
+   781→  page      String // "product-overview" | "product-library" | "product-details" | etc.
+   782→  pageId    String? // e.g. product id or article id
+   783→  referrer  String? // where the visitor came from
+   784→  country   String? // geo-IP country code
+   785→  visitedAt DateTime @default(now())
+   786→
+   787→  @@index([page])
+   788→  @@index([visitedAt])
+   789→}
+   790→
+   791→/// Tracks product views for analytics (most-viewed products).
+   792→model PublicProductView {
+   793→  id          String       @id @default(cuid())
+   794→  productId   String?
+   795→  product     QbitProduct? @relation(fields: [productId], references: [id], onDelete: SetNull)
+   796→  productName String?
+   797→  viewedAt    DateTime     @default(now())
+   798→  referrer    String?
+   799→
+   800→  @@index([productId])
+   801→  @@index([viewedAt])
+   802→}
+   803→
+   804→/// Newsletter subscription.
+   805→model CustomerNewsletter {
+   806→  id               String   @id @default(cuid())
+   807→  email            String   @unique
+   808→  name             String?
+   809→  subscribedAt     DateTime @default(now())
+   810→  active           Boolean  @default(true)
+   811→  unsubscribeToken String   @unique
+   812→
+   813→  @@index([active])
+   814→}
+   815→
+   816→/// Public contact message (quick contact form, lighter than inquiry).
+   817→model PublicContactMessage {
+   818→  id        String   @id @default(cuid())
+   819→  name      String
+   820→  email     String
+   821→  message   String
+   822→  category  String   @default("general") // "general" | "sales" | "support" | "partnership"
+   823→  createdAt DateTime @default(now())
+   824→  handled   Boolean  @default(false)
+   825→
+   826→  @@index([handled])
+   827→  @@index([category])
+   828→}
+   829→
+   830→// =====================================================
+   831→// Enterprise AI Assistant models
+   832→// =====================================================
+   833→
+   834→/// AI conversation session.
+   835→model AIConversation {
+   836→  id        String   @id @default(cuid())
+   837→  userId    String?
+   838→  title     String   @default("New Conversation")
+   839→  pinned    Boolean  @default(false)
+   840→  createdAt DateTime @default(now())
+   841→  updatedAt DateTime @updatedAt
+   842→
+   843→  messages AIMessage[]
+   844→
+   845→  @@index([userId])
+   846→  @@index([pinned])
+   847→}
+   848→
+   849→/// A single message in an AI conversation.
+   850→model AIMessage {
+   851→  id             String         @id @default(cuid())
+   852→  conversationId String
+   853→  conversation   AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+   854→  role           String // "user" | "assistant" | "system"
+   855→  content        String
+   856→  model          String? // AI model used (e.g. "glm-4")
+   857→  provider       String? // "zai" | "openai" | "gemini" | "claude" | "local"
+   858→  tokensUsed     Int            @default(0)
+   859→  responseTimeMs Int? // latency in milliseconds
+   860→  createdAt      DateTime       @default(now())
+   861→
+   862→  sourceRefs SourceReference[]
+   863→  feedback   AIFeedback[]
+   864→
+   865→  @@index([conversationId])
+   866→  @@index([role])
+   867→}
+   868→
+   869→/// Search history entry (user questions asked to the AI).
+   870→model SearchHistory {
+   871→  id          String   @id @default(cuid())
+   872→  userId      String?
+   873→  query       String
+   874→  resultCount Int      @default(0)
+   875→  createdAt   DateTime @default(now())
+   876→
+   877→  @@index([userId])
+   878→  @@index([createdAt])
+   879→}
+   880→
+   881→/// Suggested question shown in the chat UI.
+   882→model SuggestedQuestion {
+   883→  id        String   @id @default(cuid())
+   884→  question  String
+   885→  category  String // "installation" | "drivers" | "troubleshooting" | "firmware" | "general"
+   886→  icon      String?
+   887→  sortOrder Int      @default(0)
+   888→  active    Boolean  @default(true)
+   889→  createdAt DateTime @default(now())
+   890→
+   891→  @@index([active])
+   892→  @@index([category])
+   893→}
+   894→
+   895→/// User feedback on an AI message.
+   896→model AIFeedback {
+   897→  id        String    @id @default(cuid())
+   898→  messageId String
+   899→  message   AIMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+   900→  userId    String?
+   901→  rating    String // "helpful" | "not_helpful"
+   902→  comment   String?
+   903→  createdAt DateTime  @default(now())
+   904→
+   905→  @@index([messageId])
+   906→  @@index([rating])
+   907→}
+   908→
+   909→/// Source reference — documents/sources used by the AI to generate a response.
+   910→model SourceReference {
+   911→  id         String    @id @default(cuid())
+   912→  messageId  String
+   913→  message    AIMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+   914→  sourceType String // "product" | "driver" | "manual" | "article" | "guide" | "faq" | "troubleshooting" | "video"
+   915→  sourceId   String?
+   916→  title      String
+   917→  url        String?
+   918→  excerpt    String? // relevant snippet
+   919→  relevance  Float     @default(0) // 0-1 relevance score
+   920→  createdAt  DateTime  @default(now())
+   921→
+   922→  @@index([messageId])
+   923→  @@index([sourceType])
+   924→}
+   925→
+   926→// =====================================================
+   927→// Production Data Management & CMS models
+   928→// =====================================================
+   929→
+   930→/// Bulk import job (products, assets, categories, etc.)
+   931→model ImportJob {
+   932→  id           String    @id @default(cuid())
+   933→  type         String // "product" | "driver" | "manual" | "category" | "youtube" | "image" | "document"
+   934→  fileName     String
+   935→  fileSize     Int
+   936→  status       String    @default("pending") // "pending" | "previewing" | "importing" | "completed" | "failed" | "rolled_back"
+   937→  totalRows    Int       @default(0)
+   938→  successCount Int       @default(0)
+   939→  errorCount   Int       @default(0)
+   940→  errors       String? // JSON array of error messages
+   941→  startedBy    String? // admin user id
+   942→  startedAt    DateTime?
+   943→  completedAt  DateTime?
+   944→  createdAt    DateTime  @default(now())
+   945→
+   946→  logs ImportLog[]
+   947→
+   948→  @@index([type])
+   949→  @@index([status])
+   950→  @@index([createdAt])
+   951→}
+   952→
+   953→/// Individual row-level log for an import job.
+   954→model ImportLog {
+   955→  id        String    @id @default(cuid())
+   956→  jobId     String
+   957→  job       ImportJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+   958→  rowNumber Int
+   959→  status    String // "success" | "error" | "skipped"
+   960→  message   String?
+   961→  data      String? // JSON of the row data
+   962→  createdAt DateTime  @default(now())
+   963→
+   964→  @@index([jobId])
+   965→  @@index([status])
+   966→}
+   967→
+   968→/// Content versioning — tracks revisions for products, drivers, manuals, guides, articles.
+   969→model ContentVersion {
+   970→  id            String   @id @default(cuid())
+   971→  entityType    String // "product" | "driver" | "manual" | "guide" | "article" | "faq"
+   972→  entityId      String
+   973→  version       Int // incrementing version number
+   974→  content       String // JSON snapshot of the entity at this version
+   975→  changedBy     String? // admin user id
+   976→  changedByName String?
+   977→  changeSummary String? // optional description of changes
+   978→  createdAt     DateTime @default(now())
+   979→
+   980→  @@index([entityType, entityId])
+   981→  @@index([version])
+   982→  @@index([createdAt])
+   983→}
+   984→
+   985→/// Central media library file.
+   986→model MediaFile {
+   987→  id            String   @id @default(cuid())
+   988→  fileName      String
+   989→  originalName  String
+   990→  mimeType      String
+   991→  fileSize      Int
+   992→  storagePath   String // secure cloud-storage key
+   993→  thumbnailPath String? // generated thumbnail path
+   994→  webpPath      String? // generated WebP version path
+   995→  width         Int?
+   996→  height        Int?
+   997→  altText       String?
+   998→  folder        String   @default("general") // "products" | "documents" | "icons" | "banners" | "general"
+   999→  tags          String? // JSON string array
+  1000→  usageCount    Int      @default(0) // how many entities reference this file
+  1001→  uploadedBy    String?
+  1002→  createdAt     DateTime @default(now())
+  1003→  updatedAt     DateTime @updatedAt
+  1004→
+  1005→  @@index([folder])
+  1006→  @@index([mimeType])
+  1007→  @@index([createdAt])
+  1008→}
+  1009→
+  1010→/// SEO configuration per entity (product, article, guide).
+  1011→model SEOConfiguration {
+  1012→  id            String   @id @default(cuid())
+  1013→  entityType    String // "product" | "article" | "guide" | "page"
+  1014→  entityId      String
+  1015→  slug          String   @unique // SEO-friendly URL slug
+  1016→  title         String?
+  1017→  description   String?
+  1018→  keywords      String? // JSON string array
+  1019→  ogImage       String?
+  1020→  canonicalUrl  String?
+  1021→  jsonLd        String? // custom JSON-LD structured data override
+  1022→  autoGenerated Boolean  @default(true)
+  1023→  createdAt     DateTime @default(now())
+  1024→  updatedAt     DateTime @updatedAt
+  1025→
+  1026→  @@index([entityType, entityId])
+  1027→  @@index([slug])
+  1028→}
+  1029→
+  1030→/// QR code mapping — links QR codes to products, drivers, manuals, share pages.
+  1031→model QRMapping {
+  1032→  id            String   @id @default(cuid())
+  1033→  entityType    String // "product" | "driver" | "manual" | "share"
+  1034→  entityId      String
+  1035→  qrType        String // "product_page" | "driver_download" | "manual_view" | "share_link"
+  1036→  targetUrl     String // the URL the QR code opens
+  1037→  qrImageUrl    String? // generated QR code image URL
+  1038→  downloadCount Int      @default(0)
+  1039→  createdAt     DateTime @default(now())
+  1040→
+  1041→  @@index([entityType, entityId])
+  1042→  @@index([qrType])
+  1043→}
+  1044→
+  1045→/// Slug history — tracks URL changes to support redirects.
+  1046→model SlugHistory {
+  1047→  id         String   @id @default(cuid())
+  1048→  entityType String // "product" | "article" | "guide"
+  1049→  entityId   String
+  1050→  oldSlug    String
+  1051→  newSlug    String
+  1052→  changedAt  DateTime @default(now())
+  1053→
+  1054→  @@index([entityType, entityId])
+  1055→  @@index([oldSlug])
+  1056→}
+  1057→
+  1058→// =====================================================
+  1059→// Field Service Management (FSM) models
+  1060→// =====================================================
+  1061→//
+  1062→// Designed strictly for installation & service teams.
+  1063→// NEVER stores: price, purchase cost, profit, margin,
+  1064→// commission, invoice amount, or any sales-internal data.
+  1065→
+  1066→/// A customer site that owns one or more installed devices.
+  1067→/// Reused across multiple work orders.
+  1068→model FSMCustomer {
+  1069→  id          String   @id @default(cuid())
+  1070→  name        String // contact person name
+  1071→  companyName String?
+  1072→  phone       String
+  1073→  email       String?
+  1074→  addressLine String
+  1075→  city        String?
+  1076→  state       String?
+  1077→  postalCode  String?
+  1078→  country     String   @default("India")
+  1079→  geoLat      Float?
+  1080→  geoLng      Float?
+  1081→  notes       String? // public service notes ONLY — never sales notes
+  1082→  createdAt   DateTime @default(now())
+  1083→  updatedAt   DateTime @updatedAt
+  1084→
+  1085→  workOrders WorkOrder[]
+  1086→  assets     FSMCustomerAsset[]
+  1087→  branches   Branch[]
+  1088→}
+  1089→
+  1090→/// A device owned by a customer (reuses Product module for catalog link).
+  1091→/// Stores only service-relevant data — no purchase/sales info.
+  1092→model FSMCustomerAsset {
+  1093→  id              String      @id @default(cuid())
+  1094→  customerId      String
+  1095→  customer        FSMCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  1096→  productName     String // "QBIT T-800 Thermal Printer"
+  1097→  model           String // "T-800"
+  1098→  serialNumber    String      @unique
+  1099→  qrCode          String? // QR payload (URL or code)
+  1100→  purchaseDate    DateTime? // for warranty calc only — no price
+  1101→  warrantyStatus  String      @default("active") // "active" | "expired" | "void"
+  1102→  warrantyExpiry  DateTime?
+  1103→  firmwareVersion String?
+  1104→  driverVersion   String?
+  1105→  createdAt       DateTime    @default(now())
+  1106→  updatedAt       DateTime    @updatedAt
+  1107→
+  1108→  workOrders WorkOrder[]
+  1109→
+  1110→  @@index([customerId])
+  1111→  @@index([model])
+  1112→}
+  1113→
+  1114→/// The master work order — covers all service types.
+  1115→model WorkOrder {
+  1116→  id                 String            @id @default(cuid())
+  1117→  jobNumber          String            @unique // "WO-94281" — human-readable
+  1118→  publicTrackingCode String            @unique // for /track page (no auth)
+  1119→  type               String // see WorkOrderType union
+  1120→  status             String            @default("pending") // see WorkOrderStatus union
+  1121→  priority           String            @default("normal") // "low" | "normal" | "high" | "urgent"
+  1122→  customerId         String
+  1123→  customer           FSMCustomer       @relation(fields: [customerId], references: [id])
+  1124→  assetId            String?
+  1125→  asset              FSMCustomerAsset? @relation(fields: [assetId], references: [id])
+  1126→  assignedEngineerId String? // User.id of installation_engineer
+  1127→  assignedEngineer   User?             @relation("AssignedEngineer", fields: [assignedEngineerId], references: [id])
+  1128→  scheduledDate      DateTime
+  1129→  scheduledTime      String? // "10:30"
+  1130→  estimatedMinutes   Int               @default(60)
+  1131→  startedAt          DateTime?
+  1132→  arrivedAt          DateTime?
+  1133→  completedAt        DateTime?
+  1134→  cancelledAt        DateTime?
+  1135→  rescheduledFrom    DateTime?
+  1136→  rescheduledTo      DateTime?
+  1137→  description        String?
+  1138→  // Deliberately NO price/cost/margin/commission/invoice fields.
+  1139→  createdAt          DateTime          @default(now())
+  1140→  updatedAt          DateTime          @updatedAt
+  1141→
+  1142→  timeline           JobTimeline[]
+  1143→  photos             WorkOrderPhoto[]
+  1144→  signatures         CustomerSignature[]
+  1145→  notes              EngineerNote[]
+  1146→  report             CompletionReport?
+  1147→  notifications      NotificationLog[]
+  1148→  inAppNotifications Notification[]
+  1149→  reminders          Reminder[]
+  1150→  emailQueue         EmailQueue[]
+  1151→  whatsappQueue      WhatsAppQueue[]
+  1152→  trackingTokens     TrackingToken[]
+  1153→  feedback           CustomerFeedback?
+  1154→
+  1155→  @@index([status])
+  1156→  @@index([assignedEngineerId])
+  1157→  @@index([customerId])
+  1158→  @@index([assetId])
+  1159→  @@index([scheduledDate])
+  1160→  @@index([type])
+  1161→}
+  1162→
+  1163→/// One row per status change — full audit trail of the job lifecycle.
+  1164→model JobTimeline {
+  1165→  id          String    @id @default(cuid())
+  1166→  workOrderId String
+  1167→  workOrder   WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  1168→  status      String // the new status that was set
+  1169→  label       String // human label, e.g. "Engineer Arrived"
+  1170→  description String?
+  1171→  actorId     String? // User.id (null for system-generated events)
+  1172→  actorName   String?
+  1173→  metadata    String? // JSON string for extra context
+  1174→  occurredAt  DateTime  @default(now())
+  1175→
+  1176→  @@index([workOrderId])
+  1177→  @@index([occurredAt])
+  1178→}
+  1179→
+  1180→/// Photos captured before/during/after installation.
+  1181→model WorkOrderPhoto {
+  1182→  id            String    @id @default(cuid())
+  1183→  workOrderId   String
+  1184→  workOrder     WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  1185→  category      String // "before" | "setup" | "cables" | "after" | "issue"
+  1186→  caption       String?
+  1187→  storagePath   String // /uploads/fsm/wo-94281/before-1.jpg
+  1188→  thumbnailPath String?
+  1189→  mimeType      String    @default("image/jpeg")
+  1190→  fileSize      Int       @default(0)
+  1191→  geoLat        Float?
+  1192→  geoLng        Float?
+  1193→  uploadedById  String?
+  1194→  capturedAt    DateTime  @default(now())
+  1195→  createdAt     DateTime  @default(now())
+  1196→
+  1197→  @@index([workOrderId])
+  1198→  @@index([category])
+  1199→}
+  1200→
+  1201→/// Customer digital signature at completion.
+  1202→model CustomerSignature {
+  1203→  id          String    @id @default(cuid())
+  1204→  workOrderId String
+  1205→  workOrder   WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  1206→  storagePath String // PNG file path
+  1207→  signerName  String
+  1208→  signedAt    DateTime  @default(now())
+  1209→  ipAddress   String?
+  1210→  userAgent   String?
+  1211→
+  1212→  @@index([workOrderId])
+  1213→}
+  1214→
+  1215→/// Private notes added by the engineer during the job (never shown to customer).
+  1216→model EngineerNote {
+  1217→  id          String    @id @default(cuid())
+  1218→  workOrderId String
+  1219→  workOrder   WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  1220→  authorId    String
+  1221→  authorName  String?
+  1222→  body        String
+  1223→  isInternal  Boolean   @default(true) // always true — never expose to customer
+  1224→  createdAt   DateTime  @default(now())
+  1225→
+  1226→  @@index([workOrderId])
+  1227→}
+  1228→
+  1229→/// Auto-generated completion report (one per work order, created on completion).
+  1230→model CompletionReport {
+  1231→  id              String    @id @default(cuid())
+  1232→  workOrderId     String    @unique
+  1233→  workOrder       WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  1234→  reportNumber    String    @unique // "RPT-2026-94281"
+  1235→  summary         String
+  1236→  testsPerformed  String // JSON array of { name, result, notes }
+  1237→  partsReplaced   String? // JSON array
+  1238→  recommendations String?
+  1239→  pdfStoragePath  String? // generated PDF file
+  1240→  generatedAt     DateTime  @default(now())
+  1241→  generatedById   String?
+  1242→
+  1243→  @@index([workOrderId])
+  1244→}
+  1245→
+  1246→/// Outbound notification log — email/WhatsApp sent to customer.
+  1247→model NotificationLog {
+  1248→  id                String                @id @default(cuid())
+  1249→  workOrderId       String
+  1250→  workOrder         WorkOrder             @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  1251→  channel           String // "email" | "whatsapp" | "sms" | "in_app"
+  1252→  templateCode      String                @default("legacy") // template code (e.g. "customer.job_assigned.whatsapp")
+  1253→  templateId        String? // optional FK to NotificationTemplate
+  1254→  templateRef       NotificationTemplate? @relation(fields: [templateId], references: [id])
+  1255→  recipient         String // email or phone
+  1256→  recipientRole     String                @default("customer") // "admin" | "engineer" | "customer"
+  1257→  subject           String?
+  1258→  body              String
+  1259→  status            String                @default("sent") // "queued" | "sent" | "failed" | "read"
+  1260→  attempts          Int                   @default(0)
+  1261→  sentAt            DateTime              @default(now())
+  1262→  deliveredAt       DateTime?
+  1263→  readAt            DateTime?
+  1264→  error             String?
+  1265→  providerName      String?
+  1266→  providerMessageId String?
+  1267→
+  1268→  @@index([workOrderId])
+  1269→  @@index([channel])
+  1270→  @@index([sentAt])
+  1271→  @@index([status])
+  1272→  @@index([recipientRole])
+  1273→}
+  1274→
+  1275→// =====================================================
+  1276→// Notification Automation Engine — Version 2
+  1277→// =====================================================
+  1278→//
+  1279→// Centralised notification system with provider abstraction.
+  1280→// Extends the existing NotificationLog (FSM audit trail) with:
+  1281→//   - NotificationTemplate — reusable WhatsApp/Email/SMS templates
+  1282→//   - Notification — in-app notifications (admin/engineer inbox)
+  1283→//   - EmailQueue — outbound email queue (provider-independent)
+  1284→//   - WhatsAppQueue — outbound WhatsApp queue (provider-independent)
+  1285→//   - Reminder — scheduled job reminders (1d/2h/30min before visit)
+  1286→//
+  1287→// The existing NotificationLog remains the immutable audit trail
+  1288→// for every outbound message. New models sit alongside it.
+  1289→
+  1290→/// Reusable notification template — one per (event × channel).
+  1291→/// Variables use {{VarName}} syntax, substituted by the template engine.
+  1292→model NotificationTemplate {
+  1293→  id            String   @id @default(cuid())
+  1294→  code          String   @unique // "customer.job_assigned.whatsapp"
+  1295→  name          String // "Customer: Job Assigned (WhatsApp)"
+  1296→  event         String // "job_assigned" | "engineer_accepted" | ...
+  1297→  recipientType String // "admin" | "engineer" | "customer"
+  1298→  channel       String // "email" | "whatsapp" | "sms" | "in_app"
+  1299→  subject       String? // email only
+  1300→  body          String // template body with {{Var}} placeholders
+  1301→  htmlBody      String? // email only — HTML version
+  1302→  isActive      Boolean  @default(true)
+  1303→  createdAt     DateTime @default(now())
+  1304→  updatedAt     DateTime @updatedAt
+  1305→
+  1306→  notifications Notification[] // in-app notifications spawned from this template
+  1307→  emailQueue    EmailQueue[]
+  1308→  whatsappQueue WhatsAppQueue[]
+  1309→  logs          NotificationLog[]
+  1310→
+  1311→  @@index([event])
+  1312→  @@index([channel])
+  1313→  @@index([recipientType])
+  1314→  @@index([isActive])
+  1315→}
+  1316→
+  1317→/// In-app notification — surfaced in the admin/engineer Notification Center.
+  1318→/// Stored separately from NotificationLog (which is for outbound messages).
+  1319→model Notification {
+  1320→  id            String                @id @default(cuid())
+  1321→  recipientId   String // User.id (admin or engineer)
+  1322→  recipientType String // "admin" | "engineer"
+  1323→  title         String
+  1324→  message       String
+  1325→  category      String                @default("system") // "system" | "job" | "reminder" | "alert"
+  1326→  priority      String                @default("normal") // "low" | "normal" | "high" | "urgent"
+  1327→  actionUrl     String? // deep link into the app
+  1328→  actionLabel   String?
+  1329→  readAt        DateTime?
+  1330→  archivedAt    DateTime?
+  1331→  // Link to template + work order for traceability
+  1332→  templateId    String?
+  1333→  template      NotificationTemplate? @relation(fields: [templateId], references: [id])
+  1334→  workOrderId   String?
+  1335→  workOrder     WorkOrder?            @relation(fields: [workOrderId], references: [id])
+  1336→  // Metadata for filtering / dedup
+  1337→  metadata      String? // JSON string
+  1338→  createdAt     DateTime              @default(now())
+  1339→
+  1340→  @@index([recipientId, readAt])
+  1341→  @@index([recipientType])
+  1342→  @@index([category])
+  1343→  @@index([createdAt])
+  1344→  @@index([workOrderId])
+  1345→}
+  1346→
+  1347→/// Email queue — provider-independent outbound email queue.
+  1348→/// Workers (or cron) process this queue and call the configured EmailProvider.
+  1349→model EmailQueue {
+  1350→  id                String                @id @default(cuid())
+  1351→  toAddress         String
+  1352→  fromAddress       String                @default("noreply@qbithub.com")
+  1353→  replyTo           String?
+  1354→  subject           String
+  1355→  textBody          String
+  1356→  htmlBody          String?
+  1357→  // Status lifecycle: queued → sent | failed | retried
+  1358→  status            String                @default("queued") // "queued" | "sent" | "failed" | "retried"
+  1359→  attempts          Int                   @default(0)
+  1360→  maxAttempts       Int                   @default(3)
+  1361→  nextRetryAt       DateTime?
+  1362→  sentAt            DateTime?
+  1363→  lastError         String?
+  1364→  // Linkage
+  1365→  templateId        String?
+  1366→  template          NotificationTemplate? @relation(fields: [templateId], references: [id])
+  1367→  workOrderId       String?
+  1368→  workOrder         WorkOrder?            @relation(fields: [workOrderId], references: [id])
+  1369→  recipientUserId   String?
+  1370→  // Provider tracking
+  1371→  providerName      String? // "sendgrid" | "ses" | "console"
+  1372→  providerMessageId String?
+  1373→  createdAt         DateTime              @default(now())
+  1374→  updatedAt         DateTime              @updatedAt
+  1375→
+  1376→  @@index([status, nextRetryAt])
+  1377→  @@index([workOrderId])
+  1378→  @@index([recipientUserId])
+  1379→  @@index([createdAt])
+  1380→}
+  1381→
+  1382→/// WhatsApp queue — provider-independent outbound WhatsApp queue.
+  1383→/// Workers process this queue and call the configured WhatsAppProvider.
+  1384→model WhatsAppQueue {
+  1385→  id                String                @id @default(cuid())
+  1386→  toPhone           String // E.164 format: +919876543210
+  1387→  templateName      String? // WhatsApp Business template name (for approved templates)
+  1388→  body              String // message body (variables already substituted)
+  1389→  // Status lifecycle: queued → sent | failed | retried
+  1390→  status            String                @default("queued") // "queued" | "sent" | "failed" | "retried"
+  1391→  attempts          Int                   @default(0)
+  1392→  maxAttempts       Int                   @default(3)
+  1393→  nextRetryAt       DateTime?
+  1394→  sentAt            DateTime?
+  1395→  lastError         String?
+  1396→  // Linkage
+  1397→  templateId        String?
+  1398→  template          NotificationTemplate? @relation(fields: [templateId], references: [id])
+  1399→  workOrderId       String?
+  1400→  workOrder         WorkOrder?            @relation(fields: [workOrderId], references: [id])
+  1401→  recipientUserId   String?
+  1402→  // Provider tracking
+  1403→  providerName      String? // "twilio" | "gupshup" | "console"
+  1404→  providerMessageId String?
+  1405→  createdAt         DateTime              @default(now())
+  1406→  updatedAt         DateTime              @updatedAt
+  1407→
+  1408→  @@index([status, nextRetryAt])
+  1409→  @@index([workOrderId])
+  1410→  @@index([recipientUserId])
+  1411→  @@index([createdAt])
+  1412→}
+  1413→
+  1414→/// Scheduled reminder for a work order.
+  1415→/// Cron job scans for due reminders and dispatches notifications.
+  1416→model Reminder {
+  1417→  id                 String    @id @default(cuid())
+  1418→  workOrderId        String
+  1419→  workOrder          WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  1420→  recipientType      String // "engineer" | "customer"
+  1421→  recipientId        String? // User.id (engineer) — null for customer (uses work order phone)
+  1422→  recipientContact   String // phone or email
+  1423→  offsetMinutes      Int // negative offset from scheduledDate: -1440 (1d), -120 (2h), -30 (30min)
+  1424→  offsetLabel        String // "1 Day Before" | "2 Hours Before" | "30 Minutes Before"
+  1425→  channels           String // JSON array: ["in_app", "whatsapp", "email"]
+  1426→  // Status lifecycle
+  1427→  status             String    @default("scheduled") // "scheduled" | "sent" | "skipped" | "cancelled"
+  1428→  dueAt              DateTime // computed: scheduledDate + offsetMinutes
+  1429→  sentAt             DateTime?
+  1430→  // Linkage
+  1431→  notificationLogIds String? // JSON array of NotificationLog IDs created
+  1432→  createdAt          DateTime  @default(now())
+  1433→  updatedAt          DateTime  @updatedAt
+  1434→
+  1435→  @@index([status, dueAt])
+  1436→  @@index([workOrderId])
+  1437→  @@index([recipientType])
+  1438→}
+  1439→
+  1440→/// Extend the existing NotificationLog with optional template linkage
+  1441→/// (non-breaking — the field is nullable so existing rows are unaffected).
+  1442→/// NOTE: NotificationLog already exists in the schema. The relation
+  1443→/// NotificationTemplate.logs is declared above and Prisma will create
+  1444→/// the nullable foreign key column automatically when we push.
+  1445→
+  1446→// =====================================================
+  1447→// Customer Live Tracking Portal — Version 2
+  1448→// =====================================================
+  1449→//
+  1450→// Public tracking portal with secure random tokens, customer feedback,
+  1451→// and rating collection. Extends existing WorkOrder.publicTrackingCode
+  1452→// (legacy short code) with a dedicated TrackingToken table that supports:
+  1453→//   - Cryptographically random tokens (URL-safe, 32 chars)
+  1454→//   - View count + last-viewed tracking
+  1455→//   - Optional expiry
+  1456→//   - Optional QR code generation
+  1457→//
+  1458→// Reuses the existing JobTimeline as the StatusTimeline (no new table).
+  1459→// Reuses the existing WorkOrder + FSMCustomer + FSMCustomerAsset models.
+  1460→
+  1461→/// Secure tracking token — one per work order (1:N if rotated).
+  1462→/// Customers access /track/<token> to view their job status without login.
+  1463→model TrackingToken {
+  1464→  id                  String    @id @default(cuid())
+  1465→  token               String    @unique // 32-char URL-safe random
+  1466→  workOrderId         String
+  1467→  workOrder           WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  1468→  // Audit fields
+  1469→  viewCount           Int       @default(0)
+  1470→  lastViewedAt        DateTime?
+  1471→  lastViewedIp        String?
+  1472→  lastViewedUserAgent String?
+  1473→  // Lifecycle
+  1474→  isActive            Boolean   @default(true)
+  1475→  expiresAt           DateTime? // null = never expires
+  1476→  revokedAt           DateTime?
+  1477→  revokedReason       String?
+  1478→  // Source — how the customer received this token
+  1479→  source              String    @default("email") // "email" | "whatsapp" | "sms" | "qr_code" | "manual"
+  1480→  createdAt           DateTime  @default(now())
+  1481→  createdBy           String? // User.id of admin who created, or "system"
+  1482→
+  1483→  @@index([workOrderId])
+  1484→  @@index([isActive])
+  1485→  @@index([expiresAt])
+  1486→}
+  1487→
+  1488→/// Customer feedback submitted after job completion.
+  1489→/// One feedback per work order (enforced by unique constraint).
+  1490→model CustomerFeedback {
+  1491→  id                    String    @id @default(cuid())
+  1492→  workOrderId           String    @unique
+  1493→  workOrder             WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  1494→  // Link to tracking token used to submit (for audit)
+  1495→  trackingTokenId       String?
+  1496→  // Rating (1-5 stars)
+  1497→  overallRating         Int // 1-5
+  1498→  // Optional category breakdowns (nullable — only set if customer rates them)
+  1499→  punctualityRating     Int?
+  1500→  professionalismRating Int?
+  1501→  qualityRating         Int?
+  1502→  communicationRating   Int?
+  1503→  // Free-form feedback
+  1504→  comment               String? // optional, max 2000 chars
+  1505→  recommendImprovement  String? // optional, max 1000 chars
+  1506→  wouldRecommend        Boolean? // "Would you recommend QBIT to others?"
+  1507→  // Submitter metadata
+  1508→  customerName          String?
+  1509→  submittedAt           DateTime  @default(now())
+  1510→  ipAddress             String?
+  1511→  userAgent             String?
+  1512→
+  1513→  @@index([workOrderId])
+  1514→  @@index([overallRating])
+  1515→  @@index([submittedAt])
+  1516→}
+  1517→
+  1518→/// Per-engineer rating aggregate — derived from CustomerFeedback but
+  1519→/// stored separately for fast dashboard queries.
+  1520→model InstallationRating {
+  1521→  id                 String    @id @default(cuid())
+  1522→  engineerId         String    @unique
+  1523→  engineer           User      @relation(fields: [engineerId], references: [id], onDelete: Cascade)
+  1524→  // Aggregate stats
+  1525→  totalRatings       Int       @default(0)
+  1526→  averageRating      Float     @default(0)
+  1527→  fiveStarCount      Int       @default(0)
+  1528→  fourStarCount      Int       @default(0)
+  1529→  threeStarCount     Int       @default(0)
+  1530→  twoStarCount       Int       @default(0)
+  1531→  oneStarCount       Int       @default(0)
+  1532→  // Category averages (nullable until first rating)
+  1533→  avgPunctuality     Float?
+  1534→  avgProfessionalism Float?
+  1535→  avgQuality         Float?
+  1536→  avgCommunication   Float?
+  1537→  // Last updated
+  1538→  lastRatingAt       DateTime?
+  1539→  updatedAt          DateTime  @updatedAt
+  1540→
+  1541→  @@index([engineerId])
+  1542→  @@index([averageRating])
+  1543→}
+  1544→
+  1545→// =====================================================
+  1546→// Engineer Mobile Portal (PWA) — Version 2
+  1547→// =====================================================
+  1548→//
+  1549→// PWA-specific models for field engineer mobile operations:
+  1550→//   - EngineerLocation: GPS tracking for "On The Way" status
+  1551→//   - OfflineSyncQueue: mutations made offline, synced when back online
+  1552→
+  1553→/// Engineer GPS location ping — written by the mobile app periodically
+  1554→/// and on status transitions (e.g. when engineer clicks "On The Way").
+  1555→model EngineerLocation {
+  1556→  id           String   @id @default(cuid())
+  1557→  engineerId   String // User.id
+  1558→  workOrderId  String? // optional link to active job
+  1559→  geoLat       Float
+  1560→  geoLng       Float
+  1561→  accuracy     Float? // meters
+  1562→  heading      Float? // degrees (0-360)
+  1563→  speed        Float? // m/s
+  1564→  batteryLevel Float? // 0-1
+  1565→  isOnline     Boolean  @default(true)
+  1566→  capturedAt   DateTime @default(now())
+  1567→  createdAt    DateTime @default(now())
+  1568→
+  1569→  @@index([engineerId, capturedAt])
+  1570→  @@index([workOrderId])
+  1571→  @@index([capturedAt])
+  1572→}
+  1573→
+  1574→/// Offline sync queue — one row per mutation made while offline.
+  1575→/// The mobile app writes to this table when it can't reach the server,
+  1576→/// then a background sync (or next-online trigger) replays the mutation.
+  1577→model OfflineSyncQueue {
+  1578→  id             String    @id @default(cuid())
+  1579→  engineerId     String // User.id
+  1580→  // Mutation details
+  1581→  method         String // "PATCH" | "POST"
+  1582→  url            String // "/api/fsm/work-orders/wo_94281"
+  1583→  body           String // JSON string
+  1584→  // Sync state
+  1585→  status         String    @default("pending") // "pending" | "syncing" | "synced" | "failed"
+  1586→  attempts       Int       @default(0)
+  1587→  maxAttempts    Int       @default(5)
+  1588→  lastAttemptAt  DateTime?
+  1589→  syncedAt       DateTime?
+  1590→  // Result (filled after sync)
+  1591→  responseStatus Int?
+  1592→  responseBody   String?
+  1593→  error          String?
+  1594→  // Client metadata
+  1595→  clientQueueId  String? // ID generated on client (IndexedDB)
+  1596→  createdAt      DateTime  @default(now())
+  1597→  updatedAt      DateTime  @updatedAt
+  1598→
+  1599→  @@index([engineerId, status])
+  1600→  @@index([status, createdAt])
+  1601→  @@index([clientQueueId])
+  1602→}
+  1603→
+  1604→// =====================================================
+  1605→// Dr. QBIT Device Detection Engine — Version 2
+  1606→// =====================================================
+  1607→//
+  1608→// Hardware discovery + identification. NO AI diagnostics.
+  1609→// NO driver installation. NO firmware updates.
+  1610→//
+  1611→// Architecture: Device → Desktop Agent → Secure Local API → QBIT Hub
+  1612→// The browser never directly accesses low-level hardware.
+  1613→// A Windows Desktop Companion Agent scans USB/COM/LAN/WiFi and
+  1614→// POSTs results to /api/dr-qbit/scan (authenticated with DESKTOP_AGENT_SECRET).
+  1615→
+  1616→/// Known product in the QBIT catalog — used as the matching target for
+  1617→/// detected devices. Created lazily: when an admin maps an unknown device,
+  1618→/// the target product is created here (or linked if it already exists).
+  1619→model QbitProduct {
+  1620→  id                     String    @id @default(cuid())
+  1621→  name                   String // "QBIT T-800 Thermal Printer"
+  1622→  brand                  String    @default("QBIT") // "QBIT" | "Epson" | "Zebra" | etc.
+  1623→  manufacturer           String? // "QBIT Technologies"
+  1624→  model                  String // "T-800" — NOT unique (multiple products may share model naming)
+  1625→  /// URL-friendly slug used for /products/[slug] deep links (e.g. "t800", "hub-x-pro").
+  1626→  /// Auto-generated from model on create if not supplied. Unique.
+  1627→  slug                   String    @unique
+  1628→  deviceType             String // "thermal_printer" | "barcode_scanner" | etc.
+  1629→  /// SKU / part number for global search.
+  1630→  sku                    String?
+  1631→  /// Pattern matching serial numbers (regex or glob) — used by global search.
+  1632→  serialPattern          String?
+  1633→  description            String? // short description (one-liner)
+  1634→  longDescription        String? // long-form marketing description (markdown/JSON)
+  1635→  /// Hero/gallery images. Always non-empty after admin upload — the first
+  1636→  /// image is used as the cover on product cards. Each entry is a URL.
+  1637→  imageUrl               String? // primary cover image
+  1638→  galleryImages          String? // JSON array of {url, alt} objects
+  1639→  /// Category slug for Browse Categories filtering (kebab-case: "windows-pos", "thermal-printer", ...).
+  1640→  category               String?
+  1641→  /// Featured/trending flag for the Trending Hardware carousel.
+  1642→  isFeatured             Boolean   @default(false)
+  1643→  isTrending             Boolean   @default(false)
+  1644→  badgeLabel             String? // "Most Downloaded" | "Newly Released" | etc.
+  1645→  startingPrice          String? // display string e.g. "₹45,000"
+  1646→  /// Tech specs as JSON: [{ property, value }]. Rendered in detail page table.
+  1647→  specifications         String?
+  1648→  /// Features as JSON: [{ icon, title, description }].
+  1649→  features               String?
+  1650→  /// Supported operating systems as JSON: [{ icon, label }] (e.g. windows/android/linux).
+  1651→  operatingSystems       String?
+  1652→  /// YouTube/Drive video URLs as JSON: [{ title, url, type }] (type: "youtube" | "drive" | "external").
+  1653→  videos                 String?
+  1654→  /// Resource links (reuse existing modules)
+  1655→  driverDownloadUrl      String?
+  1656→  manualUrl              String?
+  1657→  installationGuideUrl   String?
+  1658→  knowledgeBaseUrl       String?
+  1659→  brochureUrl            String?
+  1660→  datasheetUrl           String?
+  1661→  warrantyUrl            String?
+  1662→  sdkUrl                 String?
+  1663→  utilityUrl             String?
+  1664→  /// Auto-generated QR code URL pointing to the public product detail page.
+  1665→  qrCodeUrl              String?
+  1666→  /// SEO fields.
+  1667→  seoTitle               String?
+  1668→  seoDescription         String?
+  1669→  seoKeywords            String? // comma-separated
+  1670→  /// Comma-separated tags for filtering and search.
+  1671→  tags                   String?
+  1672→  /// Comma-separated list of compatible device names (free text).
+  1673→  compatibleDevices      String?
+  1674→  /// Lifecycle status: "active" | "deprecated" | "coming_soon" | "discontinued".
+  1675→  status                 String    @default("active")
+  1676→  /// Aggregated counters (denormalized for fast reads).
+  1677→  viewCount              Int       @default(0)
+  1678→  downloadCount          Int       @default(0)
+  1679→  /// Dr. QBIT / AI Diagnostics flags.
+  1680→  aiDiagnosticsSupported Boolean   @default(true)
+  1681→  drQbitSupported        Boolean   @default(true)
+  1682→  /// Latest driver / firmware version strings (denormalized for fast display).
+  1683→  latestDriverVersion    String?
+  1684→  latestFirmwareVersion  String?
+  1685→  lastUpdated            DateTime?
+  1686→  isActive               Boolean   @default(true)
+  1687→  createdAt              DateTime  @default(now())
+  1688→  updatedAt              DateTime  @updatedAt
+  1689→
+  1690→  // ===== V3 PIM — Product Master fields =====
+  1691→  /// Section 1 — Basic Information
+  1692→  subCategory   String?
+  1693→  productSeries String?
+  1694→  productType   String?
+  1695→  highlights    String? // JSON array of highlight strings
+  1696→
+  1697→  /// Section 4 — Installation Resources
+  1698→  installationInstructions String? // rich text / markdown
+  1699→  requiredSoftware         String? // JSON array
+  1700→  requiredDrivers          String? // JSON array
+  1701→  requiredAccessories      String? // JSON array
+  1702→  installationTime         String? // e.g. "15 minutes"
+  1703→  difficultyLevel          String? // "Beginner" | "Intermediate" | "Expert"
+  1704→
+  1705→  /// Section 9 — SEO
+  1706→  canonicalUrl   String?
+  1707→  openGraphImage String?
+  1708→  twitterCard    String? // "summary" | "summary_large_image" | "product"
+  1709→  productSchema  String? // JSON-LD structured data
+  1710→
+  1711→  /// Section 12 — Related Products (structured)
+  1712→  frequentlyBoughtTogether String? // JSON array of product IDs
+  1713→  alternativeProducts      String? // JSON array of product IDs
+  1714→  upgradedModel            String? // product ID or model number
+  1715→  previousModel            String? // product ID or model number
+  1716→
+  1717→  /// Section 13 — Pricing REMOVED (not an eCommerce catalog)
+  1718→  /// Only warranty duration kept for product-level info.
+  1719→  warrantyDuration String? // e.g. "12 months", "2 years"
+  1720→  amcAvailable     Boolean @default(false)
+  1721→
+  1722→  /// Section 14 — Product Status flags
+  1723→  isDraft      Boolean @default(false)
+  1724→  isPublished  Boolean @default(true)
+  1725→  isBestSeller Boolean @default(false)
+  1726→  isNewArrival Boolean @default(false)
+  1727→
+  1728→  /// Section 15 — Analytics (denormalized counters)
+  1729→  driverDownloadCount            Int @default(0)
+  1730→  manualDownloadCount            Int @default(0)
+  1731→  installationGuideDownloadCount Int @default(0)
+  1732→  qrScanCount                    Int @default(0)
+  1733→  barcodePrintCount              Int @default(0)
+  1734→  shareCount                     Int @default(0)
+  1735→
+  1736→  /// Section 16 — Activity Timeline
+  1737→  createdBy String?
+  1738→  updatedBy String?
+  1739→  version   Int     @default(1)
+  1740→
+  1741→  /// ===== V4 — Smart Device Setup capabilities (Dr. QBIT enhancement) =====
+  1742→  /// These flags control which Smart Device Setup features appear on the
+  1743→  /// /dr-qbit device lookup page. Set via Product Master admin UI.
+  1744→  /// Wi-Fi Supported: enables "Configure Wi-Fi" button + Wi-Fi Setup Wizard.
+  1745→  supportsWifi             Boolean @default(false)
+  1746→  /// Automatic Driver Installation: enables "Install Driver Automatically"
+  1747→  /// button (detects OS, downloads correct driver, launches installer).
+  1748→  /// If false, only manual download is shown.
+  1749→  autoDriverInstall        Boolean @default(false)
+  1750→  /// SDK Available: enables Automatic Wi-Fi configuration (sends credentials
+  1751→  /// via SDK / configuration API). If false, Wi-Fi Setup falls back to
+  1752→  /// Guided Mode (step-by-step instructions).
+  1753→  sdkAvailable             Boolean @default(false)
+  1754→  /// Firmware Configuration Supported: enables firmware-level config commands
+  1755→  /// (e.g. setting SSID/password via USB firmware commands). Combined with
+  1756→  /// sdkAvailable to decide Auto vs Guided Wi-Fi Setup.
+  1757→  firmwareConfigSupported  Boolean @default(false)
+  1758→  /// Comma-separated list of supported connection types.
+  1759→  /// Examples: "usb", "usb,lan", "usb,wifi", "usb,wifi,bluetooth", "lan"
+  1760→  /// Used by Dr. QBIT to show available connection options.
+  1761→  connectionTypes          String? // "usb" | "usb,lan" | "usb,wifi" | etc.
+  1762→
+  1763→  hardwareSignatures HardwareSignature[]
+  1764→  detectedDevices    DetectedDevice[]
+  1765→  unknownDeviceMaps  UnknownDevice[]
+  1766→  devicePassports    DevicePassport[]
+  1767→  firmwareCompat     FirmwareCompatibility[]
+  1768→  /// Self-relation: products related to this one (e.g. accessories, variants).
+  1769→  /// Stored as a join table to support ordering + bidirectional reads.
+  1770→  relatedProducts    ProductRelation[]       @relation("ProductRelationsFrom")
+  1771→  relatedTo          ProductRelation[]       @relation("ProductRelationsTo")
+  1772→  /// Per-product OS compatibility (structured form, optional — supplement to operatingSystems JSON).
+  1773→  productOS          ProductOS[]
+  1774→  /// Media files (gallery images, brochures, datasheets, warranty PDFs, etc.).
+  1775→  mediaFiles         ProductMedia[]
+  1776→  /// Structured specs (supplement to specifications JSON).
+  1777→  specEntries        ProductSpecification[]
+  1778→  /// Structured features (supplement to features JSON).
+  1779→  featureEntries     ProductFeature[]
+  1780→  /// Public view log.
+  1781→  views              PublicProductView[]
+  1782→  /// V3 — Purchase records linked to this product (AI Purchase Import Center).
+  1783→  purchaseRecords    PurchaseRecord[]
+  1784→
+  1785→  @@index([slug])
+  1786→  @@index([category])
+  1787→  @@index([deviceType])
+  1788→  @@index([isFeatured])
+  1789→  @@index([isTrending])
+  1790→  @@index([status])
+  1791→  @@index([isActive])
+  1792→
+  1793→  /// V5: Shared Resource Library mappings (many-to-many with Resource)
+  1794→  resourceMappings ProductResourceMapping[]
+  1795→}
+  1796→
+  1797→/// V5 — Global Shared Resource Library.
+  1798→/// Resources exist ONCE in this table and are linked to products via
+  1799→/// ProductResourceMapping. Eliminates duplicate uploads — one resource
+  1800→/// can be used by unlimited products.
+  1801→model Resource {
+  1802→  id              String   @id @default(cuid())
+  1803→  /// Resource name (e.g. "4Barcode APK", "Label Shop", "Windows Driver v2.4")
+  1804→  name            String
+  1805→  /// Resource type: "windows_driver" | "windows_software" | "android_software" |
+  1806→  /// "firmware" | "sdk" | "manual" | "installation_guide" |
+  1807→  /// "troubleshooting" | "video" | "browser_utility" | "maintenance_tool" |
+  1808→  /// "pos_utility" | "other"
+  1809→  type            String
+  1810→  /// Version string (e.g. "v2.4.1")
+  1811→  version         String?
+  1812→  /// Short description
+  1813→  description     String?
+  1814→  /// Comma-separated list of supported device categories (e.g. "thermal_printer,portable_printer")
+  1815→  /// Used for smart filtering in product mapping dropdowns.
+  1816→  supportedCategories String?
+  1817→  /// File URL — can be a data URL (base64), external URL, or download path.
+  1818→  /// Stored once here; all linked products reference this same URL.
+  1819→  url             String
+  1820→  /// MIME type of the file (e.g. "application/vnd.android.package-archive")
+  1821→  mimeType        String?
+  1822→  /// File size in bytes (for display)
+  1823→  fileSize        Int?
+  1824→  /// Thumbnail URL (for videos/images)
+  1825→  thumbnailUrl    String?
+  1826→  /// Release date
+  1827→  releaseDate     DateTime?
+  1828→  /// Status: "active" | "deprecated" | "draft"
+  1829→  status          String   @default("active")
+  1830→  /// Download counter (incremented when a customer downloads via any product)
+  1831→  downloadCount   Int      @default(0)
+  1832→  /// Admin who created this resource
+  1833→  createdBy       String?
+  1834→  /// Admin who last updated this resource
+  1835→  updatedBy       String?
+  1836→  /// Visibility: "public" | "employee" | "engineer" | "admin" (RBAC)
+  1837→  visibility      String   @default("public")
+  1838→  createdAt       DateTime @default(now())
+  1839→  updatedAt       DateTime @updatedAt
+  1840→
+  1841→  /// Products linked to this resource (many-to-many)
+  1842→  productMappings ProductResourceMapping[]
+  1843→
+  1844→  @@index([type])
+  1845→  @@index([status])
+  1846→  @@index([visibility])
+  1847→  @@index([name])
+  1848→}
+  1849→
+  1850→/// V5 — Many-to-many mapping between QbitProduct and Resource.
+  1851→/// A single Resource can be linked to unlimited products.
+  1852→/// A single Product can have unlimited resources (grouped by type).
+  1853→/// Deleting a product cascade-deletes its mappings (but NOT the resource).
+  1854→/// Deleting a resource cascade-deletes its mappings (but NOT the product).
+  1855→model ProductResourceMapping {
+  1856→  id          String   @id @default(cuid())
+  1857→  productId   String
+  1858→  resourceId  String
+  1859→  /// Optional override of the resource type for this specific mapping
+  1860→  /// (usually null — uses the resource's type)
+  1861→  overrideType String?
+  1862→  /// Optional sort order for display on product page
+  1863→  sortIndex   Int      @default(0)
+  1864→  createdAt   DateTime @default(now())
+  1865→
+  1866→  product     QbitProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  1867→  resource    Resource    @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  1868→
+  1869→  @@unique([productId, resourceId])
+  1870→  @@index([productId])
+  1871→  @@index([resourceId])
+  1872→}
+  1873→
+  1874→/// Bidirectional product-to-product relation for "Related Products" section.
+  1875→model ProductRelation {
+  1876→  id        String      @id @default(cuid())
+  1877→  productId String // source product
+  1878→  product   QbitProduct @relation("ProductRelationsFrom", fields: [productId], references: [id], onDelete: Cascade)
+  1879→  relatedId String // target product
+  1880→  related   QbitProduct @relation("ProductRelationsTo", fields: [relatedId], references: [id], onDelete: Cascade)
+  1881→  sortIndex Int         @default(0)
+  1882→  createdAt DateTime    @default(now())
+  1883→
+  1884→  @@unique([productId, relatedId])
+  1885→  @@index([productId])
+  1886→  @@index([relatedId])
+  1887→}
+  1888→
+  1889→/// Structured per-product OS compatibility (many-to-many; supersedes
+  1890→/// the JSON `operatingSystems` field for admin-managed rows).
+  1891→model ProductOS {
+  1892→  id         String      @id @default(cuid())
+  1893→  productId  String
+  1894→  product    QbitProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  1895→  osName     String // "Windows 11", "Android 13", "Linux"
+  1896→  osIcon     String? // Material Symbols icon name
+  1897→  minVersion String? // optional minimum version constraint
+  1898→  sortIndex  Int         @default(0)
+  1899→
+  1900→  @@index([productId])
+  1901→}
+  1902→
+  1903→/// Media file attached to a product (image, brochure, datasheet, warranty,
+  1904→/// SDK, utility, video poster, etc.). Replaces the need for many separate
+  1905→/// tables and lets the admin reuse one Media Manager UI.
+  1906→model ProductMedia {
+  1907→  id           String      @id @default(cuid())
+  1908→  productId    String
+  1909→  product      QbitProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  1910→  /// Type of media: "image" | "brochure" | "datasheet" | "warranty" |
+  1911→  /// "sdk" | "utility" | "video" | "manual" | "firmware" | "driver" | "other".
+  1912→  type         String
+  1913→  title        String
+  1914→  url          String // public URL or storagePath
+  1915→  thumbnailUrl String?
+  1916→  mimeType     String?
+  1917→  fileSize     Int?
+  1918→  /// For videos: provider + external ID (e.g. YouTube video ID).
+  1919→  provider     String? // "youtube" | "drive" | "vimeo" | "internal"
+  1920→  externalId   String? // video ID for embedding
+  1921→  /// For images: alt text + sort order in the gallery.
+  1922→  altText      String?
+  1923→  sortIndex    Int         @default(0)
+  1924→  isPrimary    Boolean     @default(false) // for gallery cover selection
+  1925→  /// RBAC visibility: "public" (everyone) | "employee" (logged-in staff)
+  1926→  /// | "engineer" (engineer/admin) | "admin" (admin only).
+  1927→  /// Public serial-lookup API returns ONLY rows where visibility = "public".
+  1928→  /// This hides engineer tools, admin tools, security files, internal
+  1929→  /// utilities, testing files, factory software, debug files, etc. from
+  1930→  /// guests and customers.
+  1931→  visibility   String      @default("public")
+  1932→  createdAt    DateTime    @default(now())
+  1933→
+  1934→  @@index([productId, type])
+  1935→  @@index([productId, sortIndex])
+  1936→  @@index([visibility])
+  1937→}
+  1938→
+  1939→/// Structured per-product specification rows (admin-managed).
+  1940→model ProductSpecification {
+  1941→  id        String      @id @default(cuid())
+  1942→  productId String
+  1943→  product   QbitProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  1944→  property  String // "Processor (CPU)"
+  1945→  value     String // "Intel Core i5-1135G7"
+  1946→  group     String? // optional grouping (e.g. "Compute", "Display")
+  1947→  sortIndex Int         @default(0)
+  1948→
+  1949→  @@index([productId])
+  1950→}
+  1951→
+  1952→/// Structured per-product feature rows (admin-managed).
+  1953→model ProductFeature {
+  1954→  id          String      @id @default(cuid())
+  1955→  productId   String
+  1956→  product     QbitProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  1957→  icon        String // Material Symbols icon name
+  1958→  title       String
+  1959→  description String
+  1960→  sortIndex   Int         @default(0)
+  1961→
+  1962→  @@index([productId])
+  1963→}
+  1964→
+  1965→/// Hardware signature — the matching fingerprint for a known product.
+  1966→/// One product can have multiple signatures (e.g. different USB PIDs for
+  1967→/// different regional variants).
+  1968→model HardwareSignature {
+  1969→  id             String      @id @default(cuid())
+  1970→  productId      String
+  1971→  product        QbitProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  1972→  // Primary matching keys
+  1973→  vendorId       String? // USB VID (e.g. "0x04B8" for Epson)
+  1974→  productIdCode  String? // USB PID (e.g. "0x0202")
+  1975→  hardwareId     String? // composite hardware ID
+  1976→  manufacturer   String? // for matching non-USB devices
+  1977→  model          String? // for matching by model name
+  1978→  // Network signature (for LAN/WiFi devices)
+  1979→  macPrefix      String? // first 3 octets of MAC (OUI)
+  1980→  openPorts      String? // JSON array of ports, e.g. [9100, 515]
+  1981→  // Metadata
+  1982→  connectionType String? // "usb" | "com" | "lan" | "wifi"
+  1983→  notes          String?
+  1984→  createdAt      DateTime    @default(now())
+  1985→
+  1986→  @@index([productId])
+  1987→  @@index([vendorId, productIdCode])
+  1988→  @@index([macPrefix])
+  1989→}
+  1990→
+  1991→/// A scan session — one run of the Desktop Agent scanner.
+  1992→/// Records who/when/how-many devices were found.
+  1993→model ScanSession {
+  1994→  id             String    @id @default(cuid())
+  1995→  sessionToken   String    @unique // random token for this scan
+  1996→  engineerId     String? // User.id (null for admin-only scans)
+  1997→  engineerName   String?
+  1998→  customerId     String? // FSMCustomer.id (optional)
+  1999→  customerName   String?
+  2000→  workOrderId    String? // WorkOrder.id (optional)
+
+[showing lines 1-2000 of 3005; use offset=2001 with limit to continue reading]

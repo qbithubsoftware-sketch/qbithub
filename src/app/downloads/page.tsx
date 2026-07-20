@@ -56,7 +56,6 @@ export default async function DownloadsPage() {
           version: d.version,
           fileSize: d.fileSize,
           releaseDate: d.releaseDate?.toISOString() ?? null,
-          storagePath: d.storagePath,
           downloadCount: d.downloadCount,
           categoryName: d.category?.name ?? "Other",
           categorySlug: d.category?.slug ?? "other",

@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
 
         // Check serial number uniqueness
         const existing = await db.purchaseRecord.findFirst({
-          where: { serialNumber: { equals: entry.serialNumber, mode: "insensitive" } },
+          where: { serialNumber: { equals: entry.serialNumber } },
         });
         if (existing) {
           errors.push({ row: i + 1, serial: entry.serialNumber, error: "Serial number already exists" });

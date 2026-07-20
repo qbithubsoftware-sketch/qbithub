@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
 
     // ===== Step 1: Search PurchaseRecord by serialNumber =====
     const purchase = await db.purchaseRecord.findFirst({
-      where: { serialNumber: { equals: raw, mode: "insensitive" } },
+      where: { serialNumber: { equals: raw } },
       include: {
         customer: true,
         product: {
@@ -167,7 +167,7 @@ export async function GET(req: NextRequest) {
 
     // ===== Step 2: Fallback to FSMCustomerAsset =====
     const asset = await db.fSMCustomerAsset.findFirst({
-      where: { serialNumber: { equals: raw, mode: "insensitive" } },
+      where: { serialNumber: { equals: raw } },
       include: { customer: true },
     });
 
@@ -178,7 +178,7 @@ export async function GET(req: NextRequest) {
     // Match product by model
     const product = asset.model
       ? await db.qbitProduct.findFirst({
-          where: { model: { equals: asset.model, mode: "insensitive" } },
+          where: { model: { equals: asset.model } },
           select: {
             id: true, name: true, slug: true, model: true, brand: true,
             category: true, deviceType: true, imageUrl: true, description: true,

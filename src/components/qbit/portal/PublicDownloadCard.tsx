@@ -28,6 +28,8 @@ export function PublicDownloadCard({
       title: "Download started",
       description: `${download.name} ${download.version} (${download.fileSize})`,
     });
+    // Trigger the secure download API endpoint
+    window.location.href = `/api/downloads/${download.id}`;
   }
 
   return (

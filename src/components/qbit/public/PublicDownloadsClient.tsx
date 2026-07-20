@@ -6,8 +6,8 @@ import { useState, useMemo } from "react";
  * PublicDownloadsClient — interactive download list with category filter.
  *
  * Renders the list grouped by category. Each download card shows name,
- * version, file size, release date, and a Download button that opens
- * the storagePath in a new tab.
+ * version, file size, release date, and a Download button that triggers
+ * the secure download API endpoint.
  */
 
 interface DownloadItem {
@@ -16,7 +16,6 @@ interface DownloadItem {
   version: string;
   fileSize: number | string | null;
   releaseDate: string | null;
-  storagePath: string;
   downloadCount: number;
   categoryName: string;
   categorySlug: string;
@@ -133,9 +132,7 @@ export function PublicDownloadsClient({ downloads }: { downloads: DownloadItem[]
                     <span>· {d.downloadCount} downloads</span>
                   </div>
                   <a
-                    href={d.storagePath}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href={`/api/downloads/${d.id}`}
                     className="mt-4 inline-flex items-center justify-center gap-1.5 rounded-lg bg-qbit-primary px-4 py-2 text-xs font-semibold text-qbit-on-primary hover:bg-qbit-primary-container transition-colors"
                   >
                     <span className="material-symbols-outlined text-[16px]">download</span>

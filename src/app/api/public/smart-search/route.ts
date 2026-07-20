@@ -92,10 +92,10 @@ export async function GET(req: NextRequest) {
           { isActive: true, status: "active" },
           {
             OR: [
-              { name: { contains: q, mode: "insensitive" } },
-              { model: { contains: q, mode: "insensitive" } },
-              { slug: { contains: q, mode: "insensitive" } },
-              { brand: { contains: q, mode: "insensitive" } },
+              { name: { contains: q } },
+              { model: { contains: q } },
+              { slug: { contains: q } },
+              { brand: { contains: q } },
             ],
           },
         ],
@@ -170,8 +170,8 @@ export async function GET(req: NextRequest) {
         where: {
           publishedAt: { lte: new Date() },
           OR: [
-            { title: { contains: q, mode: "insensitive" } },
-            { excerpt: { contains: q, mode: "insensitive" } },
+            { title: { contains: q } },
+            { excerpt: { contains: q } },
           ],
         },
         select: { id: true, title: true, slug: true, excerpt: true, readingTime: true },
@@ -196,8 +196,8 @@ export async function GET(req: NextRequest) {
       const errors = await db.commonError.findMany({
         where: {
           OR: [
-            { code: { contains: q, mode: "insensitive" } },
-            { meaning: { contains: q, mode: "insensitive" } },
+            { code: { contains: q } },
+            { meaning: { contains: q } },
           ],
         },
         select: { id: true, code: true, meaning: true, severity: true },
@@ -221,8 +221,8 @@ export async function GET(req: NextRequest) {
       const issues = await db.troubleshootingIssue.findMany({
         where: {
           OR: [
-            { title: { contains: q, mode: "insensitive" } },
-            { resolution: { contains: q, mode: "insensitive" } },
+            { title: { contains: q } },
+            { resolution: { contains: q } },
           ],
         },
         select: { id: true, title: true, slug: true, difficulty: true },
@@ -244,7 +244,7 @@ export async function GET(req: NextRequest) {
     // ===== 6. FAQ =====
     try {
       const faqs = await db.fAQ.findMany({
-        where: { question: { contains: q, mode: "insensitive" } },
+        where: { question: { contains: q } },
         select: { id: true, question: true },
         take: 2,
       });

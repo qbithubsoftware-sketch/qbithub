@@ -70,7 +70,7 @@ export async function PUT(req: NextRequest, { params }: Params) {
     // Serial Number uniqueness check (if changing)
     if (body.serialNumber && body.serialNumber !== existing.serialNumber) {
       const dup = await db.purchaseRecord.findFirst({
-        where: { serialNumber: { equals: body.serialNumber, mode: "insensitive" } },
+        where: { serialNumber: { equals: body.serialNumber } },
       });
       if (dup && dup.id !== id) {
         return NextResponse.json({ error: `Serial Number "${body.serialNumber}" already exists.` }, { status: 409 });

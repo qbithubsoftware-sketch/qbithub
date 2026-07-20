@@ -2,17 +2,19 @@
  * GET /api/downloads/[id]/file — serve the actual download file
  *
  * Flow:
- *  1. Validate the download token
+ *  1. Validate the download token (HMAC signature + expiry)
  *  2. Look up the Download record by ID
  *  3. Enforce visibility (public/internal/restricted)
- *  4. Try to serve the real file from StorageService
- *  5. If no physical file exists, generate a descriptive placeholder
- *  6. Return the file with proper Content-Type and Content-Disposition headers
+ *  4. Increment the download count (single source of truth)
+ *  5. Try to serve the real file from StorageService
+ *  6. If no physical file exists, generate a descriptive placeholder
+ *  7. Return the file with proper Content-Type and Content-Disposition headers
  *
  * Supports range requests for resume/large file downloads.
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import { db } from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth/options";
@@ -23,14 +25,52 @@ interface Params {
   params: Promise<{ id: string }>;
 }
 
+/**
+ * Validate a HMAC-signed download token.
+ * Returns true if the token's signature matches and it hasn't expired.
+ */
+function validateToken(token: string, expectedDownloadId: string): boolean {
+  try {
+    const decoded = Buffer.from(token, "base64url").toString("utf-8");
+    const parts = decoded.split(":");
+    if (parts.length !== 3) return false;
+
+    const [downloadId, expiryStr, sig] = parts;
+
+    // Check token is for the correct download
+    if (downloadId !== expectedDownloadId) return false;
+
+    // Check expiry
+    const expiry = parseInt(expiryStr, 10);
+    if (isNaN(expiry) || Date.now() > expiry) return false;
+
+    // Verify HMAC signature
+    const secret = process.env.NEXTAUTH_SECRET || "download-token-secret";
+    const payload = `${downloadId}:${expiryStr}`;
+    const expectedSig = crypto
+      .createHmac("sha256", secret)
+      .update(payload)
+      .digest("hex")
+      .slice(0, 16);
+
+    return sig === expectedSig;
+  } catch {
+    return false;
+  }
+}
+
 export async function GET(req: NextRequest, { params }: Params) {
   const { id } = await params;
   const url = new URL(req.url);
   const token = url.searchParams.get("token");
 
-  // Validate token is present (basic check — production would verify JWT)
+  // Validate token is present and properly signed
   if (!token) {
     return NextResponse.json({ error: "Missing download token" }, { status: 401 });
+  }
+
+  if (!validateToken(token, id)) {
+    return NextResponse.json({ error: "Invalid or expired download token" }, { status: 401 });
   }
 
   try {
@@ -57,7 +97,7 @@ export async function GET(req: NextRequest, { params }: Params) {
       }
     }
 
-    // Increment download count
+    // Increment download count (single source of truth — only incremented here)
     await db.download.update({
       where: { id },
       data: { downloadCount: { increment: 1 } },
@@ -110,7 +150,6 @@ This placeholder was generated automatically. In production, this endpoint
 serves the actual binary file from cloud storage (Supabase, S3, etc.).
 
 Download ID: ${download.id}
-Storage Path: ${download.storagePath ?? "N/A"}
 `;
 
     return new NextResponse(fileContent, {

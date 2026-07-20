@@ -26,11 +26,11 @@ export async function GET(req: NextRequest) {
     const where: Record<string, unknown> = {};
     if (search.trim()) {
       where.OR = [
-        { serialNumber: { contains: search, mode: "insensitive" } },
-        { productName: { contains: search, mode: "insensitive" } },
-        { modelNumber: { contains: search, mode: "insensitive" } },
-        { invoiceNumber: { contains: search, mode: "insensitive" } },
-        { customer: { name: { contains: search, mode: "insensitive" } } },
+        { serialNumber: { contains: search } },
+        { productName: { contains: search } },
+        { modelNumber: { contains: search } },
+        { invoiceNumber: { contains: search } },
+        { customer: { name: { contains: search } } },
         { customer: { mobileNumber: { contains: search } } },
       ];
     }
@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
 
     // Serial Number uniqueness check
     const existing = await db.purchaseRecord.findFirst({
-      where: { serialNumber: { equals: body.serialNumber, mode: "insensitive" } },
+      where: { serialNumber: { equals: body.serialNumber } },
     });
     if (existing) {
       return NextResponse.json({ error: `Serial Number "${body.serialNumber}" already exists in the Device Registry.` }, { status: 409 });

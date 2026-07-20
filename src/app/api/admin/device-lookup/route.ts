@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
     // ===== Step 1: Search PurchaseRecord by serialNumber =====
     let purchase = await db.purchaseRecord.findFirst({
       where: {
-        serialNumber: { equals: serialNumber, mode: "insensitive" },
+        serialNumber: { equals: serialNumber },
       },
       include: {
         customer: true,
@@ -65,7 +65,7 @@ export async function GET(req: NextRequest) {
     if (!purchase) {
       asset = await db.fSMCustomerAsset.findFirst({
         where: {
-          serialNumber: { equals: serialNumber, mode: "insensitive" },
+          serialNumber: { equals: serialNumber },
         },
         include: {
           customer: true,

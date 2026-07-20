@@ -28,9 +28,9 @@ export async function GET(req: NextRequest) {
   if (typeFilter && VALID_TYPES.has(typeFilter)) where.type = typeFilter;
   if (search) {
     where.OR = [
-      { name: { contains: search, mode: "insensitive" } },
-      { description: { contains: search, mode: "insensitive" } },
-      { version: { contains: search, mode: "insensitive" } },
+      { name: { contains: search } },
+      { description: { contains: search } },
+      { version: { contains: search } },
     ];
   }
 
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
   // ===== Duplicate Protection =====
   // Check if a resource with the same name + version already exists
   const existing = await db.resource.findFirst({
-    where: { name: { equals: name, mode: "insensitive" }, version: version ?? null },
+    where: { name: { equals: name }, version: version ?? null },
   });
   if (existing) {
     return NextResponse.json({
