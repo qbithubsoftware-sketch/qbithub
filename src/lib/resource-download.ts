@@ -99,9 +99,30 @@ export function validateDownloadToken(
 
 export function detectUrlType(url: string): "storage_key" | "data_url" | "external" {
   if (url.startsWith("data:")) return "data_url";
+  // Vercel Blob URLs are storage keys (not external redirects)
+  // They look like: https://xxx.public.blob.vercel-storage.com/resources/...
+  if (isVercelBlobUrl(url)) return "storage_key";
   if (url.startsWith("http://") || url.startsWith("https://")) return "external";
   return "storage_key";
 }
+
+/**
+ * Check if a URL is a Vercel Blob storage URL.
+ * These are persistent CDN URLs that should be treated as storage keys,
+ * not external redirects, because we want to proxy the download
+ * (increment count, check visibility, add headers).
+ */
+function function_isVercelBlobUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.hostname.includes("blob.vercel-storage.com");
+  } catch {
+    return false;
+  }
+}
+
+// Export for use in other modules
+export const isVercelBlobUrl = function_isVercelBlobUrl;
 
 // ---------------------------------------------------------------------------
 // Core: serve a resource file
@@ -155,22 +176,6 @@ export async function serveResourceFile(
 
   // ---- 3. Storage key → StorageService ----
   try {
-    // Pre-check: does the file exist?
-    const exists = await StorageService.exists(resource.url);
-    if (!exists) {
-      console.error(
-        `[ResourceDownload] File missing in storage: key="${resource.url}" resource="${resource.name}" (id=${resource.id})`,
-      );
-      return NextResponse.json(
-        {
-          error: "File not found in storage.",
-          details: `The physical file for "${resource.name}" is missing. Please re-upload or contact an administrator.`,
-          resourceId: resource.id,
-        },
-        { status: 404 },
-      );
-    }
-
     const downloadResult = await StorageService.download(resource.url);
     const uint8Array = new Uint8Array(downloadResult.buffer);
     const fileName = sanitizeFileName(
