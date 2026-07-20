@@ -232,6 +232,10 @@ export const SCREEN_PERMISSIONS: Record<ScreenId, Role[]> = {
   "notification-history": ["super_administrator", "administrator"],
   "notification-reminders": ["super_administrator", "administrator"],
   "ai-diagnostic-center": ["super_administrator", "administrator"],
+  // Engineering Module — Super Admin + Administrator
+  "engineering-dashboard": ["super_administrator", "administrator"],
+  "engineering-installations": ["super_administrator", "administrator"],
+  "engineering-assign": ["super_administrator", "administrator"],
 };
 
 /**

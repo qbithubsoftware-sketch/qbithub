@@ -146,6 +146,7 @@ export const ADMIN_NAV: NavItem[] = [
   { label: "Users", icon: "group", screen: "user-role-management" },
   { label: "Analytics", icon: "monitoring", screen: "admin-dashboard" },
   { label: "AI Diagnostic", icon: "psychology", screen: "ai-diagnostic-center", badge: "AI" },
+  { label: "Engineering", icon: "engineering", screen: "engineering-dashboard", badge: "NEW" },
   { label: "Settings", icon: "settings", screen: "system-settings" },
 ];
 

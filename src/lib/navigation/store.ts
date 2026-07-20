@@ -85,7 +85,11 @@ export type ScreenId =
   | "notification-history"
   | "notification-reminders"
   // AI Diagnostic Center
-  | "ai-diagnostic-center";
+  | "ai-diagnostic-center"
+  // Engineering Module — Super Admin
+  | "engineering-dashboard"
+  | "engineering-installations"
+  | "engineering-assign";
 
 interface NavigationState {
   current: ScreenId;

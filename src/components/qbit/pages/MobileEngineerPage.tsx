@@ -151,6 +151,26 @@ export function MobileEngineerPage() {
     }
   };
 
+  /** Quick status update: Pending → In Progress → Completed */
+  const handleQuickStatus = async (wo: WorkOrderCardDTO, nextAction: string) => {
+    try {
+      const res = await fetch(`/api/fsm/work-orders/${wo.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: nextAction }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      const { workOrder } = await res.json();
+      toast({
+        title: "Status Updated",
+        description: `${wo.jobNumber} → ${WORK_ORDER_STATUS_LABELS[workOrder.status as WorkOrderStatus]}`,
+      });
+      void fetchOrders(); // Refresh list
+    } catch {
+      toast({ title: "Update Failed", description: "Could not update status.", variant: "destructive" });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-qbit-surface pb-20">
       {/* ---------- Offline banner ---------- */}
@@ -277,7 +297,7 @@ export function MobileEngineerPage() {
           </div>
         )}
 
-        {/* ---------- Job list ---------- */}
+        {/* ---------- Sectioned Job Lists ---------- */}
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
@@ -288,17 +308,92 @@ export function MobileEngineerPage() {
               </div>
             ))}
           </div>
-        ) : filtered.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-qbit-outline-variant px-4 py-12 text-center">
-            <Icon name="inbox" className="mx-auto text-[40px] text-qbit-on-surface-variant/40" />
-            <p className="mt-2 text-sm text-qbit-on-surface-variant">No jobs in this category.</p>
+        ) : filter === "all" ? (
+          /* When "All" filter is selected, show sectioned view */
+          <div className="space-y-5">
+            {/* Today's Installations */}
+            {buckets.today.length > 0 && (
+              <JobSection
+                title="Today's Installations"
+                icon="event_available"
+                count={buckets.today.length}
+                color="primary"
+              >
+                {buckets.today.map((wo) => (
+                  <MobileJobCard key={wo.id} workOrder={wo} onClick={() => handleOpenJob(wo.id, wo.jobNumber)}>
+                    <QuickStatusButton workOrder={wo} onAction={handleQuickStatus} />
+                  </MobileJobCard>
+                ))}
+              </JobSection>
+            )}
+
+            {/* Pending Installations */}
+            {buckets.pending.length > 0 && (
+              <JobSection
+                title="Pending Installations"
+                icon="pending_actions"
+                count={buckets.pending.length}
+                color="warning"
+              >
+                {buckets.pending.map((wo) => (
+                  <MobileJobCard key={wo.id} workOrder={wo} onClick={() => handleOpenJob(wo.id, wo.jobNumber)}>
+                    <QuickStatusButton workOrder={wo} onAction={handleQuickStatus} />
+                  </MobileJobCard>
+                ))}
+              </JobSection>
+            )}
+
+            {/* Completed Installations */}
+            {buckets.completed.length > 0 && (
+              <JobSection
+                title="Completed Installations"
+                icon="task_alt"
+                count={buckets.completed.length}
+                color="success"
+              >
+                {buckets.completed.map((wo) => (
+                  <MobileJobCard key={wo.id} workOrder={wo} onClick={() => handleOpenJob(wo.id, wo.jobNumber)} />
+                ))}
+              </JobSection>
+            )}
+
+            {/* Delayed */}
+            {buckets.delayed.length > 0 && (
+              <JobSection
+                title="Delayed"
+                icon="warning"
+                count={buckets.delayed.length}
+                color="error"
+              >
+                {buckets.delayed.map((wo) => (
+                  <MobileJobCard key={wo.id} workOrder={wo} onClick={() => handleOpenJob(wo.id, wo.jobNumber)}>
+                    <QuickStatusButton workOrder={wo} onAction={handleQuickStatus} />
+                  </MobileJobCard>
+                ))}
+              </JobSection>
+            )}
+
+            {orders.length === 0 && (
+              <div className="rounded-xl border border-dashed border-qbit-outline-variant px-4 py-12 text-center">
+                <Icon name="inbox" className="mx-auto text-[40px] text-qbit-on-surface-variant/40" />
+                <p className="mt-2 text-sm text-qbit-on-surface-variant">No jobs assigned yet.</p>
+              </div>
+            )}
           </div>
         ) : (
-          <div className="space-y-2">
-            {filtered.map((wo) => (
-              <MobileJobCard key={wo.id} workOrder={wo} onClick={() => handleOpenJob(wo.id, wo.jobNumber)} />
-            ))}
-          </div>
+          /* Filtered view */
+          filtered.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-qbit-outline-variant px-4 py-12 text-center">
+              <Icon name="inbox" className="mx-auto text-[40px] text-qbit-on-surface-variant/40" />
+              <p className="mt-2 text-sm text-qbit-on-surface-variant">No jobs in this category.</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {filtered.map((wo) => (
+                <MobileJobCard key={wo.id} workOrder={wo} onClick={() => handleOpenJob(wo.id, wo.jobNumber)} />
+              ))}
+            </div>
+          )
         )}
 
         {/* ---------- Recent customers ---------- */}
@@ -350,9 +445,11 @@ export function MobileEngineerPage() {
 function MobileJobCard({
   workOrder,
   onClick,
+  children,
 }: {
   workOrder: WorkOrderCardDTO;
   onClick: () => void;
+  children?: React.ReactNode;
 }) {
   const scheduled = new Date(workOrder.scheduledDate);
   const isToday = (() => {
@@ -415,9 +512,95 @@ function MobileJobCard({
               </span>
             )}
           </div>
+          {/* Quick status button slot */}
+          {children}
         </div>
         <Icon name="chevron_right" className="text-[18px] text-qbit-on-surface-variant" />
       </div>
+    </button>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Job Section (Today / Pending / Completed / Delayed)                */
+/* ------------------------------------------------------------------ */
+
+function JobSection({
+  title,
+  icon,
+  count,
+  color,
+  children,
+}: {
+  title: string;
+  icon: string;
+  count: number;
+  color: "primary" | "warning" | "success" | "error";
+  children: React.ReactNode;
+}) {
+  const colorMap = {
+    primary: "bg-qbit-primary/10 text-qbit-primary",
+    warning: "bg-amber-100 text-amber-700",
+    success: "bg-emerald-100 text-emerald-700",
+    error: "bg-red-100 text-red-700",
+  };
+
+  return (
+    <div>
+      <div className="mb-2 flex items-center gap-2">
+        <div className={`flex h-6 w-6 items-center justify-center rounded-full ${colorMap[color]}`}>
+          <Icon name={icon} className="text-[14px]" filled />
+        </div>
+        <p className="text-sm font-semibold text-qbit-on-surface">{title}</p>
+        <span className="rounded-full bg-qbit-surface-container-highest px-2 py-0.5 text-[10px] font-bold text-qbit-on-surface-variant">
+          {count}
+        </span>
+      </div>
+      <div className="space-y-2">{children}</div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Quick Status Button — simplified Pending → In Progress → Completed */
+/* ------------------------------------------------------------------ */
+
+function QuickStatusButton({
+  workOrder,
+  onAction,
+}: {
+  workOrder: WorkOrderCardDTO;
+  onAction: (wo: WorkOrderCardDTO, action: string) => void;
+}) {
+  const nextAction = (() => {
+    switch (workOrder.status) {
+      case "pending":
+      case "accepted":
+        return { action: "start", label: "Start", icon: "play_arrow", color: "bg-qbit-primary text-white" };
+      case "on_the_way":
+      case "arrived":
+      case "installing":
+        return { action: "testing", label: "Testing", icon: "science", color: "bg-blue-600 text-white" };
+      case "testing":
+        return { action: "complete", label: "Complete", icon: "check_circle", color: "bg-emerald-600 text-white" };
+      default:
+        return null;
+    }
+  })();
+
+  if (!nextAction) return null;
+
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        onAction(workOrder, nextAction.action);
+      }}
+      className={`mt-2 inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-[11px] font-semibold transition-all active:scale-95 ${nextAction.color}`}
+    >
+      <Icon name={nextAction.icon} className="text-[13px]" />
+      {nextAction.label}
     </button>
   );
 }

@@ -31,7 +31,7 @@ export const GET = apiHandler(async (req: NextRequest) => {
   // Build where clause
   const where: Record<string, unknown> = {};
 
-  // Installation engineers only see their assigned jobs; admins see all.
+  // Installation engineers only see their assigned jobs; admins/super_admins see all.
   if (role === "installation_engineer") {
     where.assignedEngineerId = engineerId;
   }

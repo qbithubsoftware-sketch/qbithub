@@ -34,7 +34,7 @@ export async function GET(req: NextRequest, { params }: Params) {
   });
   if (!wo) return notFound("Work order not found.");
 
-  // Engineers only see their own assignments
+  // Engineers only see their own assignments; admins/super_admins see all
   const role = session.user.role as string;
   if (role === "installation_engineer" && wo.assignedEngineerId !== session.user.id) {
     return forbidden("Not assigned to you.");
@@ -88,7 +88,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   const wo = await db.workOrder.findUnique({ where: { id } });
   if (!wo) return notFound("Work order not found.");
 
-  // Engineers only operate on their own assignments
+  // Engineers only operate on their own assignments; admins/super_admins can operate on all
   const role = session.user.role as string;
   if (role === "installation_engineer" && wo.assignedEngineerId !== session.user.id) {
     return forbidden("Not assigned to you.");

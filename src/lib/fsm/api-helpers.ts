@@ -12,7 +12,7 @@ export async function requireEngineer() {
   const session = await getServerSession(authOptions);
   if (!session?.user) return null;
   const role = session.user.role as Role;
-  if (role !== "installation_engineer" && role !== "administrator" && role !== "support_engineer") {
+  if (role !== "installation_engineer" && role !== "administrator" && role !== "support_engineer" && role !== "super_administrator") {
     return null;
   }
   return session;
@@ -23,16 +23,16 @@ export async function requireFieldEngineer() {
   const session = await getServerSession(authOptions);
   if (!session?.user) return null;
   const role = session.user.role as Role;
-  if (role !== "installation_engineer" && role !== "administrator") return null;
+  if (role !== "installation_engineer" && role !== "administrator" && role !== "super_administrator") return null;
   return session;
 }
 
-/** Administrator only. */
+/** Administrator only (includes super_administrator). */
 export async function requireAdmin() {
   const session = await getServerSession(authOptions);
   if (!session?.user) return null;
   const role = session.user.role as Role;
-  if (role !== "administrator") return null;
+  if (role !== "administrator" && role !== "super_administrator") return null;
   return session;
 }
 

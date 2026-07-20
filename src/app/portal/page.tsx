@@ -29,6 +29,7 @@ import { AIPurchaseImportCenterPage } from "@/components/qbit/pages/AIPurchaseIm
 import { DeviceRegisterPage } from "@/components/qbit/pages/DeviceRegisterPage";
 import { SystemSettingsPage } from "@/components/qbit/pages/SystemSettingsPage";
 import { AIDiagnosticCenterPage } from "@/components/qbit/pages/AIDiagnosticCenterPage";
+import { EngineeringModulePage } from "@/components/qbit/pages/EngineeringModulePage";
 import { UniversalSearchCommandCenterPage } from "@/components/qbit/pages/UniversalSearchCommandCenterPage";
 import { UniversalSearchMobilePage } from "@/components/qbit/pages/UniversalSearchMobilePage";
 import { QbitT800ProductOverviewPage } from "@/components/qbit/pages/QbitT800ProductOverviewPage";
@@ -176,6 +177,11 @@ export default function Home() {
       // AI Diagnostic Center
       case "ai-diagnostic-center":
         return <AIDiagnosticCenterPage />;
+      // Engineering Module — Super Admin
+      case "engineering-dashboard":
+      case "engineering-installations":
+      case "engineering-assign":
+        return <EngineeringModulePage />;
       default:
         return <LoginPage />;
     }

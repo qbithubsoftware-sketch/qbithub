@@ -169,3 +169,40 @@ Stage Summary:
 - ADDED: Post-upload head() verification catches key mismatches immediately
 - ADDED: Download-time HEAD+GET trace for full diagnosis
 - ADDED: Object lifecycle trace from upload to DB to download
+
+---
+Task ID: 6
+Agent: Main Agent
+Task: QBIT Engineer Portal Integration — Connect Engineer Portal with Super Admin Dashboard
+
+Work Log:
+- Explored full codebase architecture: Admin Dashboard, Engineer Portal, FSM APIs, Prisma models, RBAC, auth
+- Added new ScreenIds: engineering-dashboard, engineering-installations, engineering-assign to store.ts
+- Added Engineering nav item (badge: NEW) to ADMIN_NAV in nav-config.ts
+- Added screen permissions for engineering-* screens to roles.ts (super_administrator + administrator)
+- Created API: GET /api/admin/engineers — lists all engineers with job counts, status, activity
+- Created API: PATCH /api/admin/engineers/[id] — activate/deactivate engineer accounts
+- Created API: POST /api/admin/installations — create installation with find-or-create FSMCustomer
+- Created API: GET /api/admin/installations — list all installations with filters
+- Created EngineeringModulePage component with 3 tabs: Dashboard, Installations, Assign
+  - Dashboard: KPI cards, engineer list with job stats, activate/deactivate
+  - Installations: full work order list with status/engineer filters, KPI strip
+  - Assign: serial number lookup → auto-fetch customer data → select engineer → assign
+- Updated FSM api-helpers.ts: requireEngineer/requireAdmin now include super_administrator
+- Updated FSM work-orders API: super_admins can see all orders (not filtered by engineerId)
+- Updated MobileEngineerPage: sectioned view with Today/Pending/Completed/Delayed sections
+- Added QuickStatusButton: simplified Pending → In Progress → Completed on each job card
+- Added JobSection component for clearly labeled job groups
+- All changes reuse existing: AppShell, ADMIN_NAV, FSM models, WorkOrder API, QbitButton, StatusBadge, Icon
+- Build passes successfully with zero errors
+
+Stage Summary:
+- Engineering Module added to Super Admin sidebar (badge: NEW)
+- Super Admin can view all engineers, activate/deactivate, view job stats
+- Super Admin can create installations from Device Lookup data (serial number auto-fetch)
+- Engineer Portal shows sectioned view: Today/Pending/Completed/Delayed
+- Quick status buttons on each job: Start → Testing → Complete
+- Single source of truth: same WorkOrder + FSMCustomer models, same /api/fsm/work-orders
+- Super Admin sees all work orders; engineers only see their own assignments
+- Live synchronization: both dashboards read from the same database
+- No duplicate tables, no mock data, no new business modules
