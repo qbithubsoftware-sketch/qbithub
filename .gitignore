@@ -53,3 +53,11 @@ prompt
 server.log
 # Skills directory
 /skills/
+# Database files
+*.db
+*.db-journal
+prisma/dev.db
+prisma/custom.db
+
+# Tool results
+tool-results/
