@@ -331,8 +331,11 @@ function ResourceFormModal({ resource, onClose, onSaved }: { resource: GlobalRes
     description: resource?.description ?? "",
     supportedCategories: resource?.supportedCategories ?? "",
     url: resource?.url ?? "",
+    urlType: (resource as Record<string, unknown> | null)?.urlType as string ?? "storage_key",
     mimeType: resource?.mimeType ?? "",
     fileSize: resource?.fileSize ?? 0,
+    originalFileName: (resource as Record<string, unknown> | null)?.originalFileName as string ?? "",
+    checksum: (resource as Record<string, unknown> | null)?.checksum as string ?? "",
     thumbnailUrl: resource?.thumbnailUrl ?? "",
     releaseDate: resource?.releaseDate ? resource.releaseDate.split("T")[0] : "",
     status: resource?.status ?? "active",
@@ -417,7 +420,7 @@ function ResourceFormModal({ resource, onClose, onSaved }: { resource: GlobalRes
     setUploading(true);
     try {
       // ===== Upload via Storage Service API =====
-      // POST file to /api/admin/resources/upload — returns storageKey
+      // POST file to /api/admin/resources/upload — returns storageKey + checksum
       const formData = new FormData();
       formData.append("file", file);
       const res = await fetch("/api/admin/resources/upload", {
@@ -429,12 +432,15 @@ function ResourceFormModal({ resource, onClose, onSaved }: { resource: GlobalRes
         throw new Error(err.error ?? "Upload failed");
       }
       const data = await res.json();
-      // Store the storageKey in the form's url field
+      // Store the storageKey + metadata in the form
       setForm({
         ...form,
-        url: data.storageKey, // e.g. "/uploads/resources/1700000000-abc-driver.exe"
+        url: data.storageKey,
+        urlType: data.urlType || "storage_key",
         mimeType: data.mimeType,
         fileSize: data.fileSize,
+        originalFileName: data.originalFileName,
+        checksum: data.checksum,
       });
       toast({
         title: "File uploaded",
@@ -465,8 +471,11 @@ function ResourceFormModal({ resource, onClose, onSaved }: { resource: GlobalRes
         description: form.description || null,
         supportedCategories: form.supportedCategories || null,
         url: form.url,
+        urlType: form.urlType || "storage_key",
         mimeType: form.mimeType || null,
         fileSize: form.fileSize || null,
+        originalFileName: form.originalFileName || null,
+        checksum: form.checksum || null,
         thumbnailUrl: form.thumbnailUrl || null,
         releaseDate: form.releaseDate || null,
         status: form.status,

@@ -8,12 +8,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireSuperAdminOrAdmin } from "@/lib/notifications/auth";
+import { detectUrlType } from "@/lib/resource-download";
 
 const VALID_TYPES = new Set([
   "windows_driver", "windows_software", "android_software", "firmware",
   "sdk", "manual", "installation_guide", "troubleshooting", "video",
   "browser_utility", "maintenance_tool", "pos_utility", "other",
 ]);
+
+const VALID_URL_TYPES = new Set(["storage_key", "data_url", "external"]);
 
 export async function GET(req: NextRequest) {
   const session = await requireSuperAdminOrAdmin();
@@ -62,7 +65,11 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
 
-  const { name, type, version, description, supportedCategories, url, mimeType, fileSize, thumbnailUrl, releaseDate, visibility, createdBy } = body;
+  const {
+    name, type, version, description, supportedCategories,
+    url, urlType, mimeType, fileSize, originalFileName,
+    checksum, thumbnailUrl, releaseDate, visibility, createdBy,
+  } = body;
 
   if (!name || !type || !url) {
     return NextResponse.json({ error: "name, type, and url are required" }, { status: 400 });
@@ -71,8 +78,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `Invalid type. Valid: ${Array.from(VALID_TYPES).join(", ")}` }, { status: 400 });
   }
 
-  // ===== Duplicate Protection =====
-  // Check if a resource with the same name + version already exists
+  // Auto-detect urlType if not provided
+  const resolvedUrlType = urlType && VALID_URL_TYPES.has(urlType)
+    ? urlType
+    : detectUrlType(url);
+
+  // Duplicate Protection
   const existing = await db.resource.findFirst({
     where: { name: { equals: name }, version: version ?? null },
   });
@@ -91,8 +102,11 @@ export async function POST(req: NextRequest) {
       description: description || null,
       supportedCategories: supportedCategories || null,
       url,
+      urlType: resolvedUrlType,
       mimeType: mimeType || null,
       fileSize: fileSize || null,
+      originalFileName: originalFileName || null,
+      checksum: checksum || null,
       thumbnailUrl: thumbnailUrl || null,
       releaseDate: releaseDate ? new Date(releaseDate) : null,
       visibility: visibility ?? "public",

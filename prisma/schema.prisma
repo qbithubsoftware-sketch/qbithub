@@ -9,11 +9,9 @@ generator client {
 }
 
 datasource db {
-  // Production uses PostgreSQL (Neon). Local dev can override with
-  // DATABASE_URL=postgresql://... in .env, or use the SQLite file URL —
-  // both providers support every type used below, but Prisma generates
-  // different client types per provider, so we MUST match production.
-  provider = "postgresql"
+  // Production uses PostgreSQL (Neon). Local dev uses SQLite.
+  // Switch provider to "postgresql" and set DATABASE_URL for production.
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -1814,13 +1812,20 @@ model Resource {
   /// Comma-separated list of supported device categories (e.g. "thermal_printer,portable_printer")
   /// Used for smart filtering in product mapping dropdowns.
   supportedCategories String?
-  /// File URL — can be a data URL (base64), external URL, or download path.
-  /// Stored once here; all linked products reference this same URL.
+  /// File URL — can be a storage key, data URL (base64), or external URL.
+  /// Discriminated by the `urlType` field.
   url             String
+  /// Type discriminator for the `url` field:
+  /// "storage_key" = uploaded via StorageService, "data_url" = base64 inline, "external" = http(s) redirect
+  urlType         String   @default("storage_key")
   /// MIME type of the file (e.g. "application/vnd.android.package-archive")
   mimeType        String?
   /// File size in bytes (for display)
   fileSize        Int?
+  /// Original filename as uploaded by the admin
+  originalFileName String?
+  /// SHA-256 checksum for file integrity verification
+  checksum        String?
   /// Thumbnail URL (for videos/images)
   thumbnailUrl    String?
   /// Release date
@@ -1845,6 +1850,7 @@ model Resource {
   @@index([status])
   @@index([visibility])
   @@index([name])
+  @@index([urlType])
 }
 
 /// V5 — Many-to-many mapping between QbitProduct and Resource.

@@ -1,62 +1,25 @@
 /**
- * GET /api/downloads/[id]/file — serve the actual download file
+ * GET /api/downloads/[id]/file — serve the actual download file (legacy Download model)
  *
  * Flow:
  *  1. Validate the download token (HMAC signature + expiry)
  *  2. Look up the Download record by ID
- *  3. Enforce visibility (public/internal/restricted)
+ *  3. Enforce visibility
  *  4. Increment the download count (single source of truth)
- *  5. Try to serve the real file from StorageService
- *  6. If no physical file exists, generate a descriptive placeholder
- *  7. Return the file with proper Content-Type and Content-Disposition headers
+ *  5. Serve the file via the unified serveResourceFile handler
  *
- * Supports range requests for resume/large file downloads.
+ * Uses the unified download handler for consistent error handling —
+ * never returns HTML where JSON is expected.
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import crypto from "crypto";
-import { db } from "@/lib/db";
+import { validateDownloadToken, findResourceForDownload, serveResourceFile } from "@/lib/resource-download";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth/options";
 import type { Role } from "@/lib/rbac/roles";
-import { StorageService } from "@/lib/storage/storage";
 
 interface Params {
   params: Promise<{ id: string }>;
-}
-
-/**
- * Validate a HMAC-signed download token.
- * Returns true if the token's signature matches and it hasn't expired.
- */
-function validateToken(token: string, expectedDownloadId: string): boolean {
-  try {
-    const decoded = Buffer.from(token, "base64url").toString("utf-8");
-    const parts = decoded.split(":");
-    if (parts.length !== 3) return false;
-
-    const [downloadId, expiryStr, sig] = parts;
-
-    // Check token is for the correct download
-    if (downloadId !== expectedDownloadId) return false;
-
-    // Check expiry
-    const expiry = parseInt(expiryStr, 10);
-    if (isNaN(expiry) || Date.now() > expiry) return false;
-
-    // Verify HMAC signature
-    const secret = process.env.NEXTAUTH_SECRET || "download-token-secret";
-    const payload = `${downloadId}:${expiryStr}`;
-    const expectedSig = crypto
-      .createHmac("sha256", secret)
-      .update(payload)
-      .digest("hex")
-      .slice(0, 16);
-
-    return sig === expectedSig;
-  } catch {
-    return false;
-  }
 }
 
 export async function GET(req: NextRequest, { params }: Params) {
@@ -66,30 +29,35 @@ export async function GET(req: NextRequest, { params }: Params) {
 
   // Validate token is present and properly signed
   if (!token) {
-    return NextResponse.json({ error: "Missing download token" }, { status: 401 });
+    return NextResponse.json(
+      { error: "Missing download token" },
+      { status: 401 },
+    );
   }
 
-  if (!validateToken(token, id)) {
-    return NextResponse.json({ error: "Invalid or expired download token" }, { status: 401 });
+  if (!validateDownloadToken(token, id)) {
+    return NextResponse.json(
+      { error: "Invalid or expired download token" },
+      { status: 401 },
+    );
   }
 
   try {
-    const download = await db.download.findUnique({
-      where: { id },
-      include: { category: true },
-    });
-
-    if (!download) {
-      return NextResponse.json({ error: "Download not found" }, { status: 404 });
+    const resource = await findResourceForDownload(id, "download");
+    if (!resource) {
+      return NextResponse.json(
+        { error: "Download not found", downloadId: id },
+        { status: 404 },
+      );
     }
 
-    // Check visibility
-    if (download.visibility === "internal" || download.visibility === "restricted") {
+    // Visibility enforcement
+    if (resource.visibility === "internal" || resource.visibility === "restricted") {
       const session = await getServerSession(authOptions);
       if (!session?.user) {
         return NextResponse.json({ error: "Authentication required" }, { status: 401 });
       }
-      if (download.visibility === "restricted") {
+      if (resource.visibility === "restricted") {
         const role = session.user.role as Role;
         if (role !== "administrator" && role !== "installation_engineer") {
           return NextResponse.json({ error: "Access denied" }, { status: 403 });
@@ -97,71 +65,14 @@ export async function GET(req: NextRequest, { params }: Params) {
       }
     }
 
-    // Increment download count (single source of truth — only incremented here)
-    await db.download.update({
-      where: { id },
-      data: { downloadCount: { increment: 1 } },
-    }).catch(() => { /* non-critical */ });
-
-    // Try to serve the real file from StorageService
-    if (download.storagePath) {
-      try {
-        const downloadResult = await StorageService.download(download.storagePath);
-        const uint8Array = new Uint8Array(downloadResult.buffer);
-        const fileName = `${download.name.replace(/\s+/g, "_")}_v${download.version}`;
-
-        // Determine if file should be inline (viewable) or attachment (download)
-        const isViewable = downloadResult.mimeType === "application/pdf" ||
-          downloadResult.mimeType.startsWith("image/") ||
-          downloadResult.mimeType.startsWith("text/");
-        const disposition = isViewable ? "inline" : "attachment";
-
-        return new NextResponse(uint8Array, {
-          status: 200,
-          headers: {
-            "Content-Type": downloadResult.mimeType,
-            "Content-Disposition": `${disposition}; filename="${fileName}"`,
-            "Content-Length": downloadResult.fileSize.toString(),
-            "Accept-Ranges": "bytes",
-            "Cache-Control": "public, max-age=3600",
-            "X-Content-Type-Options": "nosniff",
-            ...(download.checksum ? { "X-Checksum-SHA256": download.checksum } : {}),
-          },
-        });
-      } catch (storageErr) {
-        console.warn(`[DownloadAPI] Storage miss for ${id}: ${download.storagePath}`, storageErr);
-        // Fall through to placeholder generation
-      }
-    }
-
-    // Fallback: Generate a descriptive placeholder file when physical file is missing
-    const fileName = `${download.name.replace(/\s+/g, "_")}_v${download.version}.txt`;
-    const fileContent = `QBIT Hub Download
-====================
-File: ${download.name}
-Version: ${download.version}
-Category: ${download.category?.name ?? "Other"}
-Size: ${download.fileSize} bytes
-Checksum: ${download.checksum ?? "N/A"}
-Release Date: ${download.releaseDate?.toISOString() ?? "N/A"}
-
-NOTE: The physical file for this download is not yet available on this server.
-This placeholder was generated automatically. In production, this endpoint
-serves the actual binary file from cloud storage (Supabase, S3, etc.).
-
-Download ID: ${download.id}
-`;
-
-    return new NextResponse(fileContent, {
-      status: 200,
-      headers: {
-        "Content-Type": "text/plain",
-        "Content-Disposition": `attachment; filename="${fileName}"`,
-        "Content-Length": fileContent.length.toString(),
-      },
-    });
+    // Serve the file using the unified handler
+    // incrementCount is true by default in serveResourceFile
+    return serveResourceFile(resource, { modelName: "download" });
   } catch (error) {
     console.error("[API ERROR] GET /api/downloads/[id]/file:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
