@@ -1,20 +1,27 @@
 /**
  * Vercel Blob Storage Provider — stores files in Vercel Blob Storage.
  *
- * This is the PRODUCTION storage provider for the Global Resources module.
+ * This is the production storage provider for Vercel deployments.
  * Local storage is ephemeral on Vercel's serverless functions — files written
- * to public/ are lost on cold starts. Vercel Blob provides persistent,
+ * to data/ are lost on cold starts. Vercel Blob provides persistent,
  * CDN-backed object storage.
  *
  * Configuration:
  *   STORAGE_PROVIDER="vercel-blob"
  *   BLOB_READ_WRITE_TOKEN="<vercel-blob-token>"  (auto-set by Vercel)
+ *   BLOB_STORE_ID="<store-id>" (optional — targets a specific Blob store)
+ *
+ * HOSTING NOTE:
+ *   This provider is Vercel-specific. It is NOT required — the app works
+ *   with STORAGE_PROVIDER="local" on any Node.js host. Use this provider
+ *   only when deploying to Vercel's serverless platform.
  *
  * Storage keys follow the format: resources/<timestamp>-<random6>-<sanitized-name>
  * The Vercel Blob URL is stored in the Resource.url field as an external URL.
  */
 
 import type { StorageProvider, UploadResult, DownloadResult } from "./types";
+import { MIME_FROM_EXT, sanitizeFileName, getExtension } from "./types";
 import { put, head, del } from "@vercel/blob";
 import path from "path";
 import crypto from "crypto";
@@ -70,7 +77,8 @@ export class VercelBlobStorageProvider implements StorageProvider {
     const urlPath = new URL(storageKey).pathname;
     const fileName = path.basename(urlPath);
 
-    const mimeType = MIME_FROM_EXT[path.extname(fileName).toLowerCase()] || contentType;
+    const ext = getExtension(fileName);
+    const mimeType = MIME_FROM_EXT[ext] || contentType;
 
     return {
       buffer,
@@ -98,57 +106,3 @@ export class VercelBlobStorageProvider implements StorageProvider {
     }
   }
 }
-
-/** Sanitize a filename to remove dangerous characters */
-function sanitizeFileName(name: string): string {
-  return name
-    .replace(/\0/g, "")
-    .replace(/\.\./g, "")
-    .replace(/[<>:"|?*\\\/]/g, "_")
-    .replace(/\s+/g, "_")
-    .replace(/_+/g, "_")
-    .replace(/^\.+/, "");
-}
-
-/** Extension → MIME type mapping */
-const MIME_FROM_EXT: Record<string, string> = {
-  ".exe": "application/vnd.microsoft.portable-executable",
-  ".msi": "application/x-msi",
-  ".apk": "application/vnd.android.package-archive",
-  ".dmg": "application/x-apple-diskimage",
-  ".deb": "application/x-debian-package",
-  ".rpm": "application/x-rpm",
-  ".zip": "application/zip",
-  ".rar": "application/x-rar-compressed",
-  ".7z": "application/x-7z-compressed",
-  ".tar": "application/x-tar",
-  ".gz": "application/gzip",
-  ".pdf": "application/pdf",
-  ".doc": "application/msword",
-  ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  ".xls": "application/vnd.ms-excel",
-  ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  ".txt": "text/plain",
-  ".csv": "text/csv",
-  ".md": "text/markdown",
-  ".bin": "application/octet-stream",
-  ".hex": "application/x-hex",
-  ".img": "application/x-img",
-  ".iso": "application/x-iso9660-image",
-  ".jpg": "image/jpeg",
-  ".jpeg": "image/jpeg",
-  ".png": "image/png",
-  ".webp": "image/webp",
-  ".gif": "image/gif",
-  ".svg": "image/svg+xml",
-  ".js": "application/javascript",
-  ".json": "application/json",
-  ".html": "text/html",
-  ".css": "text/css",
-  ".xml": "application/xml",
-  ".mp4": "video/mp4",
-  ".webm": "video/webm",
-  ".firmware": "application/octet-stream",
-  ".fls": "application/octet-stream",
-  ".fw": "application/octet-stream",
-};

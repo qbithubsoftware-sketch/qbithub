@@ -19,6 +19,7 @@ import { db } from "@/lib/db";
 import { requireSuperAdminOrAdmin } from "@/lib/notifications/auth";
 import { StorageService } from "@/lib/storage/storage";
 import { detectUrlType } from "@/lib/resource-download";
+import { getStorageProvider } from "@/lib/storage/provider";
 import fs from "fs/promises";
 import path from "path";
 
@@ -45,9 +46,14 @@ export async function GET(req: NextRequest) {
     warnings: 0,
     storageKeysChecked: 0,
     dataUrlsChecked: 0,
+    storageProvider: "unknown",
   };
 
   try {
+    // Report which storage provider is active
+    const provider = getStorageProvider();
+    stats.storageProvider = provider.name;
+
     const resources = await db.resource.findMany({
       select: {
         id: true,
@@ -141,31 +147,55 @@ export async function GET(req: NextRequest) {
       if (healthy) stats.healthyResources++;
     }
 
-    // Check 6: Orphan files in local storage
-    try {
-      const uploadDir = path.join(process.cwd(), "public", "uploads", "resources");
-      const files = await fs.readdir(uploadDir).catch(() => [] as string[]);
-      const storageKeys = new Set(
-        resources
-          .filter((r) => (r.urlType || detectUrlType(r.url)) === "storage_key")
-          .map((r) => r.url),
-      );
+    // Check 6: Orphan files in storage (local provider only)
+    if (provider.name === "local" && provider.list) {
+      try {
+        const storedFiles = await provider.list();
+        const storageKeys = new Set(
+          resources
+            .filter((r) => (r.urlType || detectUrlType(r.url)) === "storage_key")
+            .map((r) => r.url),
+        );
 
-      for (const file of files) {
+        for (const fileKey of storedFiles) {
+          if (!storageKeys.has(fileKey)) {
+            issues.push({
+              resourceId: "N/A",
+              resourceName: `Orphan file: ${fileKey}`,
+              issue: "ORPHAN_FILE_IN_STORAGE",
+              severity: "warning",
+              details: `File "${fileKey}" exists in storage but is not referenced by any resource.`,
+              autoFixable: true,
+            });
+          }
+        }
+      } catch {
+        // Storage directory doesn't exist — that's fine
+      }
+    }
+
+    // Check legacy public/uploads/resources/ directory for old files
+    try {
+      const legacyDir = path.join(process.cwd(), "public", "uploads", "resources");
+      const legacyFiles = await fs.readdir(legacyDir).catch(() => [] as string[]);
+      for (const file of legacyFiles) {
         const key = `/uploads/resources/${file}`;
-        if (!storageKeys.has(key)) {
+        const matchedResource = resources.find(
+          (r) => r.url === key || r.url === `resources/${file}`,
+        );
+        if (!matchedResource) {
           issues.push({
             resourceId: "N/A",
-            resourceName: `Orphan file: ${file}`,
-            issue: "ORPHAN_FILE_IN_STORAGE",
-            severity: "warning",
-            details: `File "${key}" exists in storage but is not referenced by any resource.`,
+            resourceName: `Legacy orphan file: ${file}`,
+            issue: "LEGACY_ORPHAN_FILE",
+            severity: "info",
+            details: `File "${key}" exists in legacy public/uploads/resources/ but is not referenced by any resource. Can be safely deleted.`,
             autoFixable: true,
           });
         }
       }
     } catch {
-      // Storage directory doesn't exist — that's fine
+      // Legacy directory doesn't exist — that's fine
     }
 
     stats.criticalIssues = issues.filter((i) => i.severity === "critical").length;

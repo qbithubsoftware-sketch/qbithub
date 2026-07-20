@@ -427,11 +427,14 @@ function ResourceFormModal({ resource, onClose, onSaved }: { resource: GlobalRes
         method: "POST",
         body: formData,
       });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error ?? "Upload failed");
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.success) {
+        // Enterprise error response: { success, code, message, stage, details }
+        const errorCode = data?.code ?? "UNKNOWN";
+        const errorMsg = data?.message ?? data?.error ?? "Upload failed";
+        const errorStage = data?.stage ?? "unknown";
+        throw new Error(`[${errorCode}] ${errorMsg} (at ${errorStage})`);
       }
-      const data = await res.json();
       // Store the storageKey + metadata in the form
       setForm({
         ...form,

@@ -14,11 +14,14 @@
  *  - Proper Content-Type / Content-Disposition headers
  *  - Graceful error responses (never HTML where JSON expected)
  *  - Signed URL generation for the legacy Download model
+ *  - Backward compatibility with files stored in public/uploads/resources/
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { StorageService } from "@/lib/storage/storage";
+import { sanitizeFileName, getExtension, MIME_FROM_EXT } from "@/lib/storage/types";
+import { createResourceLogger, createErrorResponse } from "@/lib/storage/resource-logger";
 import crypto from "crypto";
 
 // ---------------------------------------------------------------------------
@@ -103,6 +106,7 @@ export function detectUrlType(url: string): "storage_key" | "data_url" | "extern
   // They look like: https://xxx.public.blob.vercel-storage.com/resources/...
   if (isVercelBlobUrl(url)) return "storage_key";
   if (url.startsWith("http://") || url.startsWith("https://")) return "external";
+  // Local storage keys (new format): "resources/..." or legacy: "/uploads/resources/..."
   return "storage_key";
 }
 
@@ -112,7 +116,7 @@ export function detectUrlType(url: string): "storage_key" | "data_url" | "extern
  * not external redirects, because we want to proxy the download
  * (increment count, check visibility, add headers).
  */
-function function_isVercelBlobUrl(url: string): boolean {
+export function isVercelBlobUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
     return parsed.hostname.includes("blob.vercel-storage.com");
@@ -120,9 +124,6 @@ function function_isVercelBlobUrl(url: string): boolean {
     return false;
   }
 }
-
-// Export for use in other modules
-export const isVercelBlobUrl = function_isVercelBlobUrl;
 
 // ---------------------------------------------------------------------------
 // Core: serve a resource file
@@ -138,10 +139,12 @@ export async function serveResourceFile(
   resource: ResourceRecord,
   options: DownloadOptions = {},
 ): Promise<NextResponse> {
+  const logger = createResourceLogger("download");
   const urlType = resource.urlType || detectUrlType(resource.url);
 
   // ---- 1. External URL → redirect ----
   if (urlType === "external") {
+    logger.completed({ resourceId: resource.id, fileName: resource.originalFileName ?? undefined, mimeType: resource.mimeType ?? undefined });
     return NextResponse.redirect(resource.url, { status: 302 });
   }
 
@@ -149,8 +152,9 @@ export async function serveResourceFile(
   if (urlType === "data_url") {
     const base64Data = resource.url.split(",")[1];
     if (!base64Data) {
+      logger.failed("INVALID_DATA_URL", "Data URL has no base64 payload", { resourceId: resource.id });
       return NextResponse.json(
-        { error: "Invalid file data. The resource data URL is corrupted." },
+        createErrorResponse("INVALID_DATA_URL", "Invalid file data. The resource data URL is corrupted.", "download"),
         { status: 500 },
       );
     }
@@ -161,6 +165,8 @@ export async function serveResourceFile(
     if (options.incrementCount !== false) {
       await incrementDownloadCount(resource.id, options.modelName || "resource");
     }
+
+    logger.completed({ resourceId: resource.id, fileName, fileSize: buffer.length });
 
     return new NextResponse(new Uint8Array(buffer), {
       status: 200,
@@ -187,13 +193,23 @@ export async function serveResourceFile(
       const actualHash = computeSHA256(downloadResult.buffer);
       if (actualHash !== resource.checksum) {
         console.error(
-          `[ResourceDownload] Checksum MISMATCH: expected=${resource.checksum} actual=${actualHash} resource="${resource.name}" (id=${resource.id})`,
+          `[ResourceDownload] CHECKSUM MISMATCH: expected=${resource.checksum} actual=${actualHash} resource="${resource.name}" (id=${resource.id})`,
         );
-        // Still serve the file but add a warning header
+        // Still serve the file but add warning headers
+        if (options.incrementCount !== false) {
+          await incrementDownloadCount(resource.id, options.modelName || "resource");
+        }
+
+        const isViewable =
+          downloadResult.mimeType === "application/pdf" ||
+          downloadResult.mimeType.startsWith("image/") ||
+          downloadResult.mimeType.startsWith("text/");
+        const disposition = isViewable ? "inline" : "attachment";
+
         return new NextResponse(uint8Array, {
           status: 200,
           headers: {
-            "Content-Disposition": `attachment; filename="${fileName}"`,
+            "Content-Disposition": `${disposition}; filename="${fileName}"`,
             "Content-Type": downloadResult.mimeType,
             "Content-Length": downloadResult.fileSize.toString(),
             "X-Content-Type-Options": "nosniff",
@@ -218,6 +234,13 @@ export async function serveResourceFile(
       downloadResult.mimeType.startsWith("text/");
     const disposition = isViewable ? "inline" : "attachment";
 
+    logger.completed({
+      resourceId: resource.id,
+      fileName,
+      fileSize: downloadResult.fileSize,
+      mimeType: downloadResult.mimeType,
+    });
+
     return new NextResponse(uint8Array, {
       status: 200,
       headers: {
@@ -237,12 +260,19 @@ export async function serveResourceFile(
       `[ResourceDownload] Storage error for key="${resource.url}" resource="${resource.name}" (id=${resource.id}):`,
       storageErr,
     );
+    logger.failed("FILE_NOT_FOUND", `Physical file not found: ${resource.url}`, {
+      resourceId: resource.id,
+      storageKey: resource.url,
+      fileName: resource.originalFileName ?? undefined,
+    });
+
     return NextResponse.json(
-      {
-        error: "File not found in storage.",
-        details: `The physical file for "${resource.name}" could not be read. It may have been moved or deleted.`,
-        resourceId: resource.id,
-      },
+      createErrorResponse(
+        "FILE_NOT_FOUND",
+        `The physical file for "${resource.name}" could not be read. It may have been moved or deleted.`,
+        "download",
+        { resourceId: resource.id, storageKey: resource.url },
+      ),
       { status: 404 },
     );
   }
@@ -251,14 +281,6 @@ export async function serveResourceFile(
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-function sanitizeFileName(name: string): string {
-  return name
-    .replace(/[^a-zA-Z0-9\-_\.]/g, "_")
-    .replace(/_+/g, "_")
-    .replace(/^\.+/, "")
-    .slice(0, 200);
-}
 
 function computeSHA256(buffer: Buffer): string {
   return crypto.createHash("sha256").update(buffer).digest("hex");

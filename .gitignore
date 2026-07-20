@@ -59,5 +59,8 @@ server.log
 prisma/dev.db
 prisma/custom.db
 
+# Uploaded files (stored outside public/ for security)
+data/uploads/
+
 # Tool results
 tool-results/

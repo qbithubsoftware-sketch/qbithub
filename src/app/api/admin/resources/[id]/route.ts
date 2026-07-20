@@ -15,6 +15,7 @@ import { db } from "@/lib/db";
 import { requireSuperAdminOrAdmin } from "@/lib/notifications/auth";
 import { StorageService } from "@/lib/storage/storage";
 import { findResourceForDownload, serveResourceFile, detectUrlType } from "@/lib/resource-download";
+import { createResourceLogger, createErrorResponse } from "@/lib/storage/resource-logger";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -45,31 +46,49 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     // ---- Download mode ----
     const resource = await findResourceForDownload(id, "resource");
     if (!resource) {
-      return NextResponse.json({ error: "Resource not found." }, { status: 404 });
+      return NextResponse.json(
+        createErrorResponse("NOT_FOUND", "Resource not found.", "download", { resourceId: id }),
+        { status: 404 },
+      );
     }
 
     // Visibility enforcement
     if (resource.visibility !== "public") {
       const session = await requireSuperAdminOrAdmin();
       if (!session) {
-        return NextResponse.json({ error: "Access denied. This resource is not public." }, { status: 403 });
+        return NextResponse.json(
+          createErrorResponse("ACCESS_DENIED", "This resource is not public.", "authorization", { resourceId: id }),
+          { status: 403 },
+        );
       }
     }
 
     return serveResourceFile(resource, { modelName: "resource" });
   } catch (error) {
     console.error("[API ERROR] GET /api/admin/resources/[id]:", error);
-    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
+    return NextResponse.json(
+      createErrorResponse("INTERNAL_ERROR", "Internal server error.", "unknown"),
+      { status: 500 },
+    );
   }
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const logger = createResourceLogger("upload");
   const session = await requireSuperAdminOrAdmin();
-  if (!session) return NextResponse.json({ error: "Administrator access required" }, { status: 403 });
+  if (!session) {
+    return NextResponse.json(
+      createErrorResponse("AUTH_REQUIRED", "Administrator access required", "authentication"),
+      { status: 403 },
+    );
+  }
 
   const { id } = await params;
   const body = await req.json().catch(() => null);
-  if (!body) return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  if (!body) return NextResponse.json(
+    createErrorResponse("PARSE_ERROR", "Invalid JSON body", "parsing"),
+    { status: 400 },
+  );
 
   const existing = await db.resource.findUnique({ where: { id } });
   if (!existing) return NextResponse.json({ error: "Resource not found" }, { status: 404 });
@@ -84,6 +103,16 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const resolvedUrlType = url !== undefined
     ? (urlType || detectUrlType(url))
     : undefined;
+
+  // If the URL changed and the old file was a storage_key, clean up the old file
+  if (url !== undefined && existing.urlType === "storage_key" && existing.url !== url) {
+    try {
+      await StorageService.delete(existing.url);
+      logger.completed({ resourceId: id, details: { note: "Old storage file cleaned up", oldStorageKey: existing.url } });
+    } catch {
+      // Non-critical — old file might already be deleted
+    }
+  }
 
   const updated = await db.resource.update({
     where: { id },
@@ -112,7 +141,12 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await requireSuperAdminOrAdmin();
-  if (!session) return NextResponse.json({ error: "Administrator access required" }, { status: 403 });
+  if (!session) {
+    return NextResponse.json(
+      createErrorResponse("AUTH_REQUIRED", "Administrator access required", "authentication"),
+      { status: 403 },
+    );
+  }
 
   const { id } = await params;
   const existing = await db.resource.findUnique({ where: { id } });
