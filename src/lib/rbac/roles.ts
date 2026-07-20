@@ -231,6 +231,7 @@ export const SCREEN_PERMISSIONS: Record<ScreenId, Role[]> = {
   "notification-template-manager": ["super_administrator", "administrator"],
   "notification-history": ["super_administrator", "administrator"],
   "notification-reminders": ["super_administrator", "administrator"],
+  "ai-diagnostic-center": ["super_administrator", "administrator"],
 };
 
 /**

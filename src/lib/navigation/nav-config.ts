@@ -145,6 +145,7 @@ export const ADMIN_NAV: NavItem[] = [
   { label: "Device Lookup", icon: "search", screen: "ai-purchase-center", badge: "NEW" },
   { label: "Users", icon: "group", screen: "user-role-management" },
   { label: "Analytics", icon: "monitoring", screen: "admin-dashboard" },
+  { label: "AI Diagnostic", icon: "psychology", screen: "ai-diagnostic-center", badge: "AI" },
   { label: "Settings", icon: "settings", screen: "system-settings" },
 ];
 

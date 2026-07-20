@@ -28,6 +28,7 @@ import { GlobalResourceLibrary } from "@/components/qbit/pages/GlobalResourceLib
 import { AIPurchaseImportCenterPage } from "@/components/qbit/pages/AIPurchaseImportCenterPage";
 import { DeviceRegisterPage } from "@/components/qbit/pages/DeviceRegisterPage";
 import { SystemSettingsPage } from "@/components/qbit/pages/SystemSettingsPage";
+import { AIDiagnosticCenterPage } from "@/components/qbit/pages/AIDiagnosticCenterPage";
 import { UniversalSearchCommandCenterPage } from "@/components/qbit/pages/UniversalSearchCommandCenterPage";
 import { UniversalSearchMobilePage } from "@/components/qbit/pages/UniversalSearchMobilePage";
 import { QbitT800ProductOverviewPage } from "@/components/qbit/pages/QbitT800ProductOverviewPage";
@@ -172,6 +173,9 @@ export default function Home() {
         return <NotificationHistoryPage />;
       case "notification-reminders":
         return <NotificationRemindersPage />;
+      // AI Diagnostic Center
+      case "ai-diagnostic-center":
+        return <AIDiagnosticCenterPage />;
       default:
         return <LoginPage />;
     }

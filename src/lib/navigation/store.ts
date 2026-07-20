@@ -83,7 +83,9 @@ export type ScreenId =
   | "notification-center"
   | "notification-template-manager"
   | "notification-history"
-  | "notification-reminders";
+  | "notification-reminders"
+  // AI Diagnostic Center
+  | "ai-diagnostic-center";
 
 interface NavigationState {
   current: ScreenId;
