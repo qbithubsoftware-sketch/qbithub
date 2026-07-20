@@ -521,33 +521,16 @@ export function ProductDetailClient({ product }: { product: ProductDetail }) {
               </div>
             )}
 
-            {/* Primary actions — Send Inquiry + Get Best Price + WhatsApp + Call Now */}
-            <div className="flex flex-col gap-3 border-t border-qbit-outline-variant/50 pt-4 sm:flex-row sm:flex-wrap">
+            {/* Primary actions — Send Enquiry (WhatsApp) + Call Now */}
+            <div className="flex flex-col gap-3 border-t border-qbit-outline-variant/50 pt-4 sm:flex-row">
               <QbitButton
                 variant="primary"
                 icon="chat"
                 onClick={handleInquiry}
                 className="bg-[#25D366] hover:bg-[#1da851] text-white sm:flex-1"
               >
-                Send Inquiry
+                Send Enquiry
               </QbitButton>
-              <QbitButton
-                variant="primary"
-                icon="local_offer"
-                onClick={handleInquiry}
-                className="sm:flex-1"
-              >
-                Get Best Price
-              </QbitButton>
-              <a
-                href={`https://wa.me/${WHATSAPP_INQUIRY_NUMBER}?text=${encodeURIComponent(`Hi, I'm interested in ${product.name} (${product.model}). Please share details.`)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#25D366] px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#1da851] sm:flex-1"
-              >
-                <Icon name="chat" className="text-[18px]" />
-                WhatsApp
-              </a>
               <a
                 href={`tel:${COMPANY_PHONE_NUMBER}`}
                 className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-qbit-primary px-5 py-2.5 text-sm font-semibold text-qbit-primary transition-all hover:bg-qbit-primary/5 sm:flex-1"
