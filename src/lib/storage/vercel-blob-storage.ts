@@ -1,33 +1,44 @@
 /**
  * Vercel Blob Storage Provider — stores files in Vercel Blob Storage.
  *
- * AUTHENTICATION MIGRATION (SDK v2.6.1):
- *   The @vercel/blob SDK now supports multiple authentication methods.
- *   BLOB_READ_WRITE_TOKEN is the LEGACY method. The current recommended
- *   method on Vercel is OIDC authentication, which uses:
- *     - BLOB_STORE_ID (set automatically by the Vercel integration)
- *     - OIDC tokens (auto-provisioned by the Vercel runtime via @vercel/oidc)
+ * AUTHENTICATION (SDK v2.6.1):
+ *   Two auth methods supported:
+ *     1. OIDC + BLOB_STORE_ID (recommended) — auto on Vercel runtime
+ *     2. BLOB_READ_WRITE_TOKEN (legacy) — explicit token
  *
- *   The SDK's resolveBlobAuth() priority chain is:
- *     1. options.presignedUrlPayload — presigned/delegated access
- *     2. options.token — explicit read-write token (legacy)
- *     3. OIDC (auto from @vercel/oidc) + BLOB_STORE_ID — CURRENT recommended
- *     4. BLOB_READ_WRITE_TOKEN env var — legacy fallback
+ *   The SDK's resolveBlobAuth() chain:
+ *     presignedUrlPayload → options.token → OIDC + BLOB_STORE_ID → BLOB_READ_WRITE_TOKEN
  *
- *   Our code now lets the SDK handle auth resolution instead of
- *   demanding BLOB_READ_WRITE_TOKEN. We detect which auth method
- *   is available and pass the appropriate options to put()/head()/del().
+ * STORAGE KEY RESOLUTION:
+ *   The database may contain storageKeys in two formats:
+ *     A. Full Blob URL: https://store_xxx.public.blob.vercel-storage.com/resources/...
+ *     B. Relative path:  resources/1784559605570-abc123-driver.exe
  *
- * DIAGNOSTIC LOGGING:
- *   Every method logs before AND after each operation with the resolved
- *   auth method, token presence, SDK function calls, and full error details.
+ *   Format A is what VercelBlobStorageProvider.upload() returns (blob.url).
+ *   Format B occurs when:
+ *     - Files were uploaded with the local storage provider and the DB was
+ *       populated with the local-style key
+ *     - The provider was switched from local → vercel-blob after upload
  *
- * ERROR HANDLING:
- *   - No credentials at all → STORAGE_CONFIGURATION_ERROR with specific guidance
- *   - Vercel SDK errors (BlobAccessError, BlobStoreNotFoundError, etc.)
- *     are caught, their original class preserved, and re-thrown with
- *     full stack traces — NEVER wrapped as generic "Access denied"
- *   - Network errors are caught with their original class
+ *   This provider MUST handle both formats:
+ *     - Full URL → use directly for public blobs (no auth needed for public)
+ *     - Relative path → resolve to full Blob URL using store ID:
+ *       https://${storeId}.public.blob.vercel-storage.com/${pathname}
+ *
+ *   For private blobs, the SDK's head()/get() functions are used with
+ *   auth options so the SDK can authorize the request.
+ *
+ * NO FILESYSTEM API:
+ *   When STORAGE_PROVIDER=vercel-blob, this provider NEVER calls
+ *   fs.readFile(), fs.writeFile(), or any filesystem API.
+ *   All operations go through the Vercel Blob HTTP API.
+ *
+ * BACKWARD COMPATIBILITY:
+ *   - Full Blob URLs from any store version work for public blobs
+ *   - Relative paths are resolved using the current store ID
+ *   - Legacy BLOB_READ_WRITE_TOKEN still supported
+ *   - detectUrlType() in resource-download.ts correctly classifies
+ *     Blob URLs as "storage_key" (not "external")
  */
 
 import type { StorageProvider, UploadResult, DownloadResult } from "./types";
@@ -135,6 +146,64 @@ export function buildBlobCommandOptions(
   return options;
 }
 
+// ---------------------------------------------------------------------------
+// Storage key resolution — handle both full URLs and relative paths
+// ---------------------------------------------------------------------------
+
+/**
+ * Check if a storage key is a full Vercel Blob URL.
+ * Full URLs look like: https://store_xxx.public.blob.vercel-storage.com/resources/...
+ */
+function isBlobUrl(key: string): boolean {
+  try {
+    const parsed = new URL(key);
+    return parsed.hostname.includes("blob.vercel-storage.com");
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Resolve a storage key to a full Vercel Blob URL.
+ *
+ * Handles two formats:
+ *   A. Full URL: https://store_xxx.public.blob.vercel-storage.com/resources/...
+ *      → returned as-is
+ *   B. Relative path: resources/1784559605570-abc123-driver.exe
+ *      → resolved to: https://${storeId}.public.blob.vercel-storage.com/resources/...
+ *
+ * For format B, we need the storeId (from BLOB_STORE_ID or parsed from token).
+ * If no storeId is available, we cannot resolve the URL — this is a
+ * configuration error.
+ */
+function resolveBlobUrl(storageKey: string, auth: BlobAuthDetection): string {
+  // Already a full URL — return as-is
+  if (isBlobUrl(storageKey)) {
+    return storageKey;
+  }
+
+  // Relative path — construct URL from store ID
+  // Strip leading slash if present
+  const pathname = storageKey.replace(/^\//, "");
+
+  if (!auth.storeId) {
+    throw new StorageConfigurationError(
+      "STORAGE_CONFIGURATION_ERROR",
+      `Cannot resolve relative storage key "${storageKey}" to a Vercel Blob URL because no store ID is available. ` +
+      `Set BLOB_STORE_ID or BLOB_READ_WRITE_TOKEN (which contains the store ID) in your environment variables, ` +
+      `or re-upload the file with the current provider configuration so the full Blob URL is stored in the database.`,
+      { storageKey, hasStoreId: false, hasReadWriteToken: auth.hasReadWriteToken },
+    );
+  }
+
+  // Construct URL: https://${storeId}.public.blob.vercel-storage.com/${pathname}
+  // All our uploads use access: "public", so the URL uses the "public" subdomain.
+  const url = `https://${auth.storeId}.public.blob.vercel-storage.com/${pathname}`;
+
+  console.log(`[VercelBlob]   Resolved relative key: "${storageKey}" → "${url}"`);
+  return url;
+}
+
 /**
  * Read an env var, returning undefined if missing or empty.
  * Uses try/catch because process.env may not be accessible in some runtimes.
@@ -163,6 +232,21 @@ function parseStoreIdFromToken(token: string): string | null {
     return null;
   } catch {
     return null;
+  }
+}
+
+/**
+ * Extract a filename from a URL or relative path.
+ */
+function extractFileName(key: string): string {
+  try {
+    if (isBlobUrl(key) || key.startsWith("http://") || key.startsWith("https://")) {
+      const urlPath = new URL(key).pathname;
+      return path.basename(urlPath);
+    }
+    return path.basename(key);
+  } catch {
+    return path.basename(key);
   }
 }
 
@@ -301,7 +385,6 @@ export class VercelBlobStorageProvider implements StorageProvider {
       }
 
       // Re-throw the ORIGINAL error — do NOT wrap it
-      // The caller (StorageService) will handle it
       throw sdkError;
     }
 
@@ -314,17 +397,47 @@ export class VercelBlobStorageProvider implements StorageProvider {
     };
   }
 
+  /**
+   * Download a file from Vercel Blob.
+   *
+   * STORAGE KEY RESOLUTION:
+   *   - Full Blob URL → fetch directly (public blobs don't need auth)
+   *   - Relative path (resources/...) → resolve to full URL using store ID
+   *
+   * NO FILESYSTEM API — all reads go through HTTP to Vercel Blob.
+   */
   async download(storageKey: string): Promise<DownloadResult> {
     const auth = detectBlobAuth();
-    const blobOptions = buildBlobCommandOptions(auth);
+
+    // ---- Resolve storage key to a full Blob URL ----
+    let resolvedUrl: string;
+    try {
+      resolvedUrl = resolveBlobUrl(storageKey, auth);
+    } catch (resolveError) {
+      // Configuration error (no store ID to resolve relative path)
+      console.error(`[VercelBlob] === DOWNLOAD FAILED (key resolution) ===`);
+      console.error(`[VercelBlob]   Storage key: ${storageKey}`);
+      if (resolveError instanceof StorageConfigurationError) {
+        console.error(`[VercelBlob]   ${resolveError.message}`);
+      }
+      throw resolveError;
+    }
+
+    const keyType = isBlobUrl(storageKey) ? "full Blob URL" : "relative path (resolved)";
 
     console.log(`[VercelBlob] === DOWNLOAD START ===`);
     console.log(`[VercelBlob]   Auth method:      ${auth.method}`);
-    console.log(`[VercelBlob]   Storage key (URL): ${storageKey.slice(0, 80)}...`);
+    console.log(`[VercelBlob]   Key type:         ${keyType}`);
+    console.log(`[VercelBlob]   Original key:     ${storageKey.slice(0, 80)}${storageKey.length > 80 ? "..." : ""}`);
+    console.log(`[VercelBlob]   Resolved URL:     ${resolvedUrl.slice(0, 100)}...`);
 
+    // ---- Fetch the blob via HTTP ----
+    // Public blobs can be fetched without auth headers.
+    // Private blobs would need the SDK's get() method with auth.
+    // All our uploads use access: "public", so fetch() is sufficient.
     let response: Response;
     try {
-      response = await fetch(storageKey, { method: "GET" });
+      response = await fetch(resolvedUrl, { method: "GET" });
       console.log(`[VercelBlob]   Fetch response: ${response.status} ${response.statusText}`);
     } catch (fetchError) {
       const errorClass = fetchError instanceof Error ? fetchError.constructor.name : typeof fetchError;
@@ -340,20 +453,28 @@ export class VercelBlobStorageProvider implements StorageProvider {
       const errMsg = `Failed to download from Vercel Blob: HTTP ${response.status} ${response.statusText}`;
       console.error(`[VercelBlob] === DOWNLOAD FAILED (HTTP error) ===`);
       console.error(`[VercelBlob]   ${errMsg}`);
-      console.error(`[VercelBlob]   URL: ${storageKey.slice(0, 80)}...`);
+      console.error(`[VercelBlob]   URL: ${resolvedUrl.slice(0, 100)}...`);
+      console.error(`[VercelBlob]   Key type: ${keyType}`);
+      if (response.status === 404) {
+        console.error(`[VercelBlob] DIAGNOSIS: 404 — the blob does not exist at this URL.`);
+        console.error(`[VercelBlob]   Possible causes:`);
+        console.error(`[VercelBlob]   1. The file was uploaded with a DIFFERENT store and this URL doesn't point to it`);
+        console.error(`[VercelBlob]   2. The relative key was resolved to the WRONG store ID`);
+        console.error(`[VercelBlob]   3. The blob was deleted from Vercel Blob`);
+        console.error(`[VercelBlob]   4. The storage key in the DB is stale (uploaded with local provider, not migrated)`);
+      }
       throw new Error(errMsg);
     }
 
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     const contentType = response.headers.get("content-type") || "application/octet-stream";
-    const urlPath = new URL(storageKey).pathname;
-    const fileName = path.basename(urlPath);
+    const fileName = extractFileName(resolvedUrl);
     const ext = getExtension(fileName);
     const mimeType = MIME_FROM_EXT[ext] || contentType;
 
     console.log(`[VercelBlob] === DOWNLOAD SUCCESS ===`);
-    console.log(`[VercelBlob]   Bytes: ${buffer.length}, MIME: ${mimeType}`);
+    console.log(`[VercelBlob]   Bytes: ${buffer.length}, MIME: ${mimeType}, File: ${fileName}`);
 
     return { buffer, mimeType, fileSize: buffer.length, fileName };
   }
@@ -362,11 +483,23 @@ export class VercelBlobStorageProvider implements StorageProvider {
     const auth = detectBlobAuth();
     const blobOptions = buildBlobCommandOptions(auth);
 
+    // Resolve relative keys to full URLs for the SDK's del()
+    // The SDK's del() accepts full Blob URLs
+    let resolvedKey = storageKey;
+    if (!isBlobUrl(storageKey)) {
+      try {
+        resolvedKey = resolveBlobUrl(storageKey, auth);
+      } catch {
+        console.warn(`[VercelBlob] Cannot resolve relative key for delete: ${storageKey}`);
+        return false;
+      }
+    }
+
     console.log(`[VercelBlob] === DELETE START ===`);
     console.log(`[VercelBlob]   Auth method:      ${auth.method}`);
-    console.log(`[VercelBlob]   Storage key: ${storageKey.slice(0, 80)}...`);
+    console.log(`[VercelBlob]   Storage key: ${resolvedKey.slice(0, 100)}...`);
     try {
-      await del(storageKey, blobOptions as Parameters<typeof del>[1] | undefined);
+      await del(resolvedKey, blobOptions as Parameters<typeof del>[1] | undefined);
       console.log(`[VercelBlob] === DELETE SUCCESS ===`);
       return true;
     } catch (delError) {
@@ -384,11 +517,22 @@ export class VercelBlobStorageProvider implements StorageProvider {
     const auth = detectBlobAuth();
     const blobOptions = buildBlobCommandOptions(auth);
 
+    // Resolve relative keys to full URLs for the SDK's head()
+    let resolvedKey = storageKey;
+    if (!isBlobUrl(storageKey)) {
+      try {
+        resolvedKey = resolveBlobUrl(storageKey, auth);
+      } catch {
+        console.warn(`[VercelBlob] Cannot resolve relative key for exists check: ${storageKey}`);
+        return false;
+      }
+    }
+
     console.log(`[VercelBlob] === EXISTS CHECK ===`);
     console.log(`[VercelBlob]   Auth method:      ${auth.method}`);
-    console.log(`[VercelBlob]   Storage key: ${storageKey.slice(0, 80)}...`);
+    console.log(`[VercelBlob]   Storage key: ${resolvedKey.slice(0, 100)}...`);
     try {
-      const blobDetails = await head(storageKey, blobOptions as Parameters<typeof head>[1] | undefined);
+      const blobDetails = await head(resolvedKey, blobOptions as Parameters<typeof head>[1] | undefined);
       const exists = !!blobDetails;
       console.log(`[VercelBlob]   Result: ${exists}`);
       return exists;

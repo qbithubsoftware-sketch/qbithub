@@ -100,3 +100,37 @@ Stage Summary:
 - Legacy BLOB_READ_WRITE_TOKEN still supported as fallback
 - STORAGE_CONFIGURATION_ERROR now correctly identifies which credential is missing
 - Full diagnostic logging at every pipeline stage
+---
+Task ID: 4
+Agent: Main Agent
+Task: Fix download FILE_NOT_FOUND — VercelBlobStorageProvider cannot resolve relative storage keys
+
+Work Log:
+- Traced full download flow: route → findResourceForDownload() → serveResourceFile() → StorageService.download() → provider.download()
+- Identified ROOT CAUSE: VercelBlobStorageProvider.download() calls fetch(storageKey) directly
+- The database storageKey is "resources/1784559605570-4e5c68-Qbit_P80_Alfa_Printer_Driver.exe" (relative path)
+- fetch("resources/...") is NOT a valid URL — fails immediately
+- Relative paths occur when: files uploaded with local provider, provider switched to vercel-blob after upload
+- Full Blob URLs (https://store_xxx.public.blob.vercel-storage.com/resources/...) work fine
+- Added resolveBlobUrl() function that:
+  - Full Blob URL → returned as-is
+  - Relative path → resolved to https://${storeId}.public.blob.vercel-storage.com/${pathname}
+  - Uses storeId from BLOB_STORE_ID or parsed from BLOB_READ_WRITE_TOKEN
+  - Throws STORAGE_CONFIGURATION_ERROR if no storeId available for relative key
+- Added isBlobUrl() helper to classify storage keys
+- Added extractFileName() helper that works with both URLs and relative paths
+- Updated download(): resolves key → fetches blob → returns buffer (NO fs.readFile)
+- Updated delete(): resolves relative keys to full URLs before calling del()
+- Updated exists(): resolves relative keys to full URLs before calling head()
+- Added diagnostic logging: key type (full URL vs relative path), resolution result
+- Added 404-specific diagnosis: lists possible causes (wrong store, deleted blob, stale key)
+- StorageService.download() backward compat already gated on provider.name === "local" — no change needed
+- detectUrlType() already correctly classifies both formats as "storage_key" — no change needed
+- TypeScript compilation passes with zero storage/download errors
+
+Stage Summary:
+- FIXED: download() resolves relative storage keys to full Blob URLs using store ID
+- NO filesystem APIs used when STORAGE_PROVIDER=vercel-blob
+- Both full Blob URLs and relative paths work in download/delete/exists
+- Clear STORAGE_CONFIGURATION_ERROR when relative key cannot be resolved (no store ID)
+- Full diagnostic logging at every step
