@@ -32,12 +32,16 @@ import {
   createErrorResponse,
 } from "@/lib/storage/resource-logger";
 import {
-  BLOCKED_EXTENSIONS,
-  ALLOWED_EXTENSIONS,
-  ALLOWED_MIME_TYPES,
+  isExtensionBlocked,
+  isExtensionAllowed,
+  validateMimeForExtension,
+  verifyMagicBytes,
+  getFileTypeLabel,
+  getAllowedExtensions,
+  getBlockedExtensions,
   MAX_FILE_SIZE,
   getExtension,
-} from "@/lib/storage/types";
+} from "@/lib/storage/file-type-registry";
 
 // Route segment config for large file uploads.
 export const maxDuration = 300; // 5 minutes for large file uploads
@@ -255,20 +259,26 @@ export async function POST(req: NextRequest) {
 
     // Log all file metadata
     const ext = getExtension(file.name);
+    const reportedMime = file.type || "application/octet-stream";
+    const mimeResult = validateMimeForExtension(reportedMime, ext);
+
     console.log(`[UPLOAD-VALIDATE] === FILE METADATA ===`);
     console.log(`[UPLOAD-VALIDATE]   file.name:        "${file.name}"`);
     console.log(`[UPLOAD-VALIDATE]   file.type (MIME):  "${file.type}"`);
     console.log(`[UPLOAD-VALIDATE]   file.size:         ${file.size} bytes (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
     console.log(`[UPLOAD-VALIDATE]   file.lastModified: ${file.lastModified}`);
     console.log(`[UPLOAD-VALIDATE]   extension:         "${ext}"`);
-    console.log(`[UPLOAD-VALIDATE]   ALLOWED_EXTENSIONS has "${ext}": ${ext ? ALLOWED_EXTENSIONS.has(ext) : "N/A (no ext)"}`);
-    console.log(`[UPLOAD-VALIDATE]   BLOCKED_EXTENSIONS has "${ext}": ${ext ? BLOCKED_EXTENSIONS.has(ext) : "N/A (no ext)"}`);
-    console.log(`[UPLOAD-VALIDATE]   ALLOWED_MIME_TYPES has "${file.type}": ${!!ALLOWED_MIME_TYPES[file.type]}`);
+    console.log(`[UPLOAD-VALIDATE]   typeLabel:         ${ext ? getFileTypeLabel(ext) : "N/A"}`);
+    console.log(`[UPLOAD-VALIDATE]   extensionAllowed:  ${ext ? isExtensionAllowed(ext) : "N/A"}`);
+    console.log(`[UPLOAD-VALIDATE]   extensionBlocked:  ${ext ? isExtensionBlocked(ext) : "N/A"}`);
+    console.log(`[UPLOAD-VALIDATE]   mimeValid:         ${mimeResult.valid}`);
+    console.log(`[UPLOAD-VALIDATE]   mimeNote:          ${mimeResult.note ?? "MIME type is a known variant"}`);
+    console.log(`[UPLOAD-VALIDATE]   canonicalMime:     ${mimeResult.canonicalMime ?? reportedMime}`);
 
     // ================================================================
-    // 4. Extension blocklist check — field-level error
+    // 4. Extension blocklist check — security hard-stop
     // ================================================================
-    if (ext && BLOCKED_EXTENSIONS.has(ext)) {
+    if (ext && isExtensionBlocked(ext)) {
       console.error(`[UPLOAD-VALIDATE] BLOCKED extension: "${ext}" for file "${file.name}"`);
       logger.failed("BLOCKED_EXTENSION", `Blocked file extension: ${ext}`, {
         userId, fileName: file.name, extension: ext,
@@ -277,20 +287,20 @@ export async function POST(req: NextRequest) {
         validationError(
           "BLOCKED_EXTENSION",
           "file.name",
-          `Allowed extension (not in blocklist: ${[...BLOCKED_EXTENSIONS].join(", ")})`,
+          `Allowed extension (not in blocklist)`,
           `"${ext}"`,
-          `File extension "${ext}" is blocked for security reasons. Blocked extensions: ${[...BLOCKED_EXTENSIONS].join(", ")}.`,
+          `File extension "${ext}" is blocked for security reasons. Blocked extensions: ${getBlockedExtensions().join(", ")}.`,
           "validation",
-          { fileName: file.name, extension: ext, blockedList: [...BLOCKED_EXTENSIONS] },
+          { fileName: file.name, extension: ext },
         ),
         { status: 400 },
       );
     }
 
     // ================================================================
-    // 4b. Extension allowlist check — field-level error
+    // 4b. Extension allowlist check — must be in registry
     // ================================================================
-    if (ext && !ALLOWED_EXTENSIONS.has(ext)) {
+    if (ext && !isExtensionAllowed(ext)) {
       console.error(`[UPLOAD-VALIDATE] UNSUPPORTED extension: "${ext}" for file "${file.name}"`);
       logger.failed("UNSUPPORTED_EXTENSION", `Unsupported file extension: ${ext}`, {
         userId, fileName: file.name, extension: ext,
@@ -299,54 +309,30 @@ export async function POST(req: NextRequest) {
         validationError(
           "UNSUPPORTED_EXTENSION",
           "file.name",
-          `One of: ${[...ALLOWED_EXTENSIONS].join(", ")}`,
+          `One of: ${getAllowedExtensions().join(", ")}`,
           `"${ext}"`,
-          `File extension "${ext}" is not supported. Allowed extensions: ${[...ALLOWED_EXTENSIONS].join(", ")}.`,
+          `File extension "${ext}" is not supported. Allowed extensions: ${getAllowedExtensions().join(", ")}.`,
           "validation",
-          { fileName: file.name, extension: ext, allowedList: [...ALLOWED_EXTENSIONS] },
+          { fileName: file.name, extension: ext },
         ),
         { status: 400 },
       );
     }
 
     // ================================================================
-    // 4c. MIME type pre-check (before reading buffer)
+    // 4c. MIME type cross-check (informational — NEVER reject on MIME alone)
+    // Browsers report inconsistent MIME types. If the extension is
+    // registered, we accept the file regardless of MIME.
     // ================================================================
-    const reportedMime = file.type || "application/octet-stream";
-    const isAllowedMime = !!ALLOWED_MIME_TYPES[reportedMime] || reportedMime === "application/octet-stream";
-    if (!isAllowedMime) {
-      // Check alternate MIME mappings
-      const alternateMimes: Record<string, string> = {
-        "application/x-msdos-program": "application/vnd.microsoft.portable-executable",
-        "application/x-zip-compressed": "application/zip",
-        "application/vnd.rar": "application/x-rar-compressed",
-        "application/x-gzip": "application/gzip",
-        "text/xml": "application/xml",
-        "application/x-yaml": "text/yaml",
-        "video/quicktime": "video/quicktime",
-        "video/x-msvideo": "video/x-msvideo",
-        "application/x-cab": "application/x-cab",
-        "application/x-info": "application/x-info",
-      };
-      const hasAlternate = !!alternateMimes[reportedMime];
-      if (!hasAlternate) {
-        console.error(`[UPLOAD-VALIDATE] UNSUPPORTED MIME type: "${reportedMime}" for file "${file.name}"`);
-        logger.failed("UNSUPPORTED_MIME_TYPE", `Unsupported MIME type: ${reportedMime}`, {
-          userId, fileName: file.name, mimeType: reportedMime, extension: ext,
-        });
-        return NextResponse.json(
-          validationError(
-            "UNSUPPORTED_MIME_TYPE",
-            "file.type",
-            `One of: ${Object.keys(ALLOWED_MIME_TYPES).join(", ")}`,
-            `"${reportedMime}"`,
-            `MIME type "${reportedMime}" is not supported for file "${file.name}". If this is a valid file type, contact your administrator to add it to the allowlist.`,
-            "validation",
-            { fileName: file.name, mimeType: reportedMime, extension: ext },
-          ),
-          { status: 400 },
-        );
+    if (mimeResult.valid) {
+      console.log(`[UPLOAD-VALIDATE] MIME cross-check PASSED for "${reportedMime}" + "${ext}"`);
+      if (mimeResult.note) {
+        console.log(`[UPLOAD-VALIDATE] MIME note: ${mimeResult.note}`);
       }
+    } else {
+      // This shouldn't happen if the extension is in the registry
+      // But if it does, we still don't reject — just log a warning
+      console.warn(`[UPLOAD-VALIDATE] MIME cross-check WARNING: ${mimeResult.note}`);
     }
 
     // ================================================================

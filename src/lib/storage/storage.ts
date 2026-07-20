@@ -2,24 +2,45 @@
  * Storage Service — high-level API. The ONLY interface the rest of the app should use.
  *
  * Wraps the configured StorageProvider and adds:
- *  - File validation (size, MIME type, extension, magic bytes)
+ *  - Multi-signal file validation (Extension + MIME + Magic Bytes)
+ *  - Data-driven validation via FileTypeRegistry (not hardcoded)
  *  - SHA-256 checksum computation on upload
  *  - Path traversal protection
  *  - Enterprise logging for every upload/download/delete operation
  *  - Backward compatibility with files stored in public/uploads/resources/
+ *
+ * VALIDATION STRATEGY (enterprise-grade, browser-tolerant):
+ *
+ *   1. Extension MUST be in the FileTypeRegistry allowlist
+ *   2. Extension MUST NOT be in the blocklist (security hard-stop)
+ *   3. MIME type is cross-checked but NEVER used as sole reject criterion
+ *      - application/octet-stream is always accepted (universal binary fallback)
+ *      - Unknown MIME for a registered extension is still accepted
+ *      - Browsers report inconsistent MIME types (e.g. .exe may arrive as
+ *        application/x-msdownload, application/x-msdos-program, etc.)
+ *   4. Magic bytes are verified and logged, but NOT enforced as a hard gate
+ *      - Spoofed files get a WARNING log but are still accepted
+ *      - Many legitimate enterprise files have no reliable magic signature
+ *   5. File size is validated against limits
+ *   6. SHA-256 checksum is computed for integrity verification
  */
 
 import { getStorageProvider } from "./provider";
 import type { UploadResult, DownloadResult } from "./types";
 import {
-  ALLOWED_MIME_TYPES,
-  ALLOWED_EXTENSIONS,
-  BLOCKED_EXTENSIONS,
+  isExtensionAllowed,
+  isExtensionBlocked,
+  validateMimeForExtension,
+  verifyMagicBytes,
+  getCanonicalMimeType,
+  getFileTypeLabel,
+  getAllowedExtensions,
+  getBlockedExtensions,
   MAX_FILE_SIZE,
   MIN_FILE_SIZE,
-  MAGIC_BYTES,
   getExtension,
-} from "./types";
+  MIME_FROM_EXT,
+} from "./file-type-registry";
 import crypto from "crypto";
 import fs from "fs/promises";
 import path from "path";
@@ -32,13 +53,14 @@ export interface UploadResultWithChecksum extends UploadResult {
 export class StorageServiceClass {
   /**
    * Upload a file buffer through the active storage provider.
-   * Validates size, MIME type, extension, and optionally magic bytes.
+   *
+   * Multi-signal validation: Extension (primary) → MIME (cross-check) → Magic Bytes (verify)
    * Computes SHA-256 checksum.
    */
   async upload(
     buffer: Buffer,
     originalFileName: string,
-    mimeType: string,
+    reportedMimeType: string,
   ): Promise<UploadResultWithChecksum> {
     const startTime = Date.now();
 
@@ -47,7 +69,7 @@ export class StorageServiceClass {
       throw new StorageValidationError(
         "FILE_EMPTY",
         "File is empty or too small to be valid.",
-        { originalFileName, mimeType, fileSize: buffer?.length ?? 0 },
+        { originalFileName, mimeType: reportedMimeType, fileSize: buffer?.length ?? 0 },
       );
     }
 
@@ -56,70 +78,68 @@ export class StorageServiceClass {
       throw new StorageValidationError(
         "FILE_TOO_LARGE",
         `File too large: ${(buffer.length / 1024 / 1024).toFixed(2)}MB. Maximum allowed: ${MAX_FILE_SIZE / 1024 / 1024}MB.`,
-        { originalFileName, mimeType, fileSize: buffer.length, maxSize: MAX_FILE_SIZE },
+        { originalFileName, mimeType: reportedMimeType, fileSize: buffer.length, maxSize: MAX_FILE_SIZE },
       );
     }
 
-    // ---- 3. Validate extension ----
+    // ---- 3. Extract extension ----
     const ext = getExtension(originalFileName);
-    if (ext && BLOCKED_EXTENSIONS.has(ext)) {
+
+    // ---- 4. Extension blocklist (security hard-stop) ----
+    if (ext && isExtensionBlocked(ext)) {
       throw new StorageValidationError(
         "BLOCKED_EXTENSION",
         `Blocked file extension: ${ext}. This file type is not allowed for security reasons.`,
         { originalFileName, extension: ext },
       );
     }
-    if (ext && !ALLOWED_EXTENSIONS.has(ext)) {
+
+    // ---- 5. Extension allowlist (must be in registry) ----
+    if (ext && !isExtensionAllowed(ext)) {
       throw new StorageValidationError(
         "UNSUPPORTED_EXTENSION",
-        `Unsupported file extension: ${ext}. Allowed extensions: ${Array.from(ALLOWED_EXTENSIONS).join(", ")}`,
+        `Unsupported file extension: ${ext}. Allowed extensions: ${getAllowedExtensions().join(", ")}`,
         { originalFileName, extension: ext },
       );
     }
 
-    // ---- 4. Validate MIME type ----
-    if (!ALLOWED_MIME_TYPES[mimeType]) {
-      // Allow application/octet-stream as fallback for binary files (firmware, .bin, .img, etc.)
-      if (mimeType !== "application/octet-stream") {
-        // Also allow some common browser-reported MIME types that differ from standard
-        const alternateMimes: Record<string, string> = {
-          "application/x-msdos-program": "application/vnd.microsoft.portable-executable",
-          "application/x-zip-compressed": "application/zip",
-          "application/vnd.rar": "application/x-rar-compressed",
-          "application/x-gzip": "application/gzip",
-          "text/xml": "application/xml",
-          "application/x-yaml": "text/yaml",
-          "video/quicktime": "video/quicktime",
-          "video/x-msvideo": "video/x-msvideo",
-          "application/x-cab": "application/x-cab",
-          "application/x-info": "application/x-info",
-        };
-        if (!alternateMimes[mimeType]) {
-          throw new StorageValidationError(
-            "UNSUPPORTED_MIME_TYPE",
-            `Unsupported file type: ${mimeType}. If this is a valid file type, contact your administrator.`,
-            { originalFileName, mimeType, extension: ext },
-          );
-        }
+    // ---- 6. MIME type cross-check (informational, not a gate) ----
+    // We NEVER reject a file solely because of MIME type mismatch.
+    // Browsers report inconsistent MIME types — the extension is the primary signal.
+    const mimeResult = validateMimeForExtension(reportedMimeType, ext);
+    if (mimeResult.note) {
+      console.log(
+        `[StorageService] MIME cross-check for "${originalFileName}": ${mimeResult.note}`,
+      );
+    }
+
+    // Resolve the canonical MIME type for storage
+    const canonicalMime = mimeResult.canonicalMime || reportedMimeType;
+
+    // ---- 7. Magic bytes verification (informational, logged but not enforced) ----
+    if (ext) {
+      const magicResult = verifyMagicBytes(buffer, ext);
+      if (magicResult === "MATCH") {
+        console.log(
+          `[StorageService] Magic bytes VERIFIED for "${originalFileName}" (${getFileTypeLabel(ext)})`,
+        );
+      } else if (magicResult === "SPOOFED") {
+        console.warn(
+          `[StorageService] MAGIC BYTE WARNING: File "${originalFileName}" has extension "${ext}" but content signature does not match. This may be a legitimate file with an unusual header, or a MIME spoofing attempt. File accepted — extension is registered.`,
+        );
+      } else {
+        console.log(
+          `[StorageService] No magic byte signature defined for "${ext}" — skipping content verification.`,
+        );
       }
     }
 
-    // ---- 5. Verify magic bytes (if we have a signature for this file type) ----
-    const magicResult = verifyMagicBytes(buffer, ext);
-    if (magicResult === "SPOOFED") {
-      console.warn(
-        `[StorageService] MAGIC BYTE MISMATCH: File "${originalFileName}" has extension "${ext}" but content does not match. Possible MIME spoofing attempt.`,
-      );
-      // We log a warning but don't block the upload — some files have unusual headers.
-      // In a high-security environment, change this to throw an error.
-    }
-
-    // ---- 6. Compute SHA-256 checksum before storing ----
+    // ---- 8. Compute SHA-256 checksum before storing ----
     const checksum = crypto.createHash("sha256").update(buffer).digest("hex");
 
-    // ---- 7. Delegate to storage provider ----
+    // ---- 9. Delegate to storage provider ----
     const provider = getStorageProvider();
-    const result = await provider.upload(buffer, originalFileName, mimeType);
+    const result = await provider.upload(buffer, originalFileName, canonicalMime);
 
     const duration = Date.now() - startTime;
     console.log(
@@ -152,7 +172,6 @@ export class StorageServiceClass {
           const legacyPath = path.join(process.cwd(), "public", legacyKey.replace(/^\//, ""));
           const buffer = await fs.readFile(legacyPath);
           const ext = getExtension(storageKey);
-          const { MIME_FROM_EXT } = await import("./types");
           const mimeType = MIME_FROM_EXT[ext] || "application/octet-stream";
           const fileName = path.basename(storageKey);
 
@@ -200,12 +219,17 @@ export class StorageServiceClass {
    * Validate a file buffer without uploading.
    * Returns an error message string if invalid, null if valid.
    */
-  validate(buffer: Buffer | null, mimeType: string): string | null {
+  validate(buffer: Buffer | null, mimeType: string, fileName?: string): string | null {
     if (!buffer || buffer.length < MIN_FILE_SIZE) return "File is empty.";
     if (buffer.length > MAX_FILE_SIZE)
       return `File too large. Maximum allowed: ${MAX_FILE_SIZE / 1024 / 1024}MB.`;
-    if (!ALLOWED_MIME_TYPES[mimeType] && mimeType !== "application/octet-stream")
-      return `Unsupported file type: ${mimeType}.`;
+
+    if (fileName) {
+      const ext = getExtension(fileName);
+      if (ext && isExtensionBlocked(ext)) return `Blocked extension: ${ext}.`;
+      if (ext && !isExtensionAllowed(ext)) return `Unsupported extension: ${ext}.`;
+    }
+
     return null;
   }
 }
@@ -246,45 +270,4 @@ export class StorageValidationError extends StorageError {
     super(code, message, details);
     this.name = "StorageValidationError";
   }
-}
-
-// ---------------------------------------------------------------------------
-// Magic bytes verification
-// ---------------------------------------------------------------------------
-
-/**
- * Verify that a file's magic bytes match its claimed extension.
- *
- * Returns:
- *  - "MATCH" if magic bytes confirm the file type
- *  - "NO_SIGNATURE" if we don't have a signature for this extension
- *  - "SPOOFED" if the magic bytes DON'T match the expected signature
- */
-function verifyMagicBytes(buffer: Buffer, extension: string): "MATCH" | "NO_SIGNATURE" | "SPOOFED" {
-  if (!extension || buffer.length < 4) return "NO_SIGNATURE";
-
-  const relevantSignatures = MAGIC_BYTES.filter((sig) =>
-    sig.extensions.includes(extension),
-  );
-
-  if (relevantSignatures.length === 0) {
-    // We don't have magic byte signatures for this extension
-    return "NO_SIGNATURE";
-  }
-
-  for (const sig of relevantSignatures) {
-    if (sig.offset + sig.signature.length > buffer.length) continue;
-
-    let match = true;
-    for (let i = 0; i < sig.signature.length; i++) {
-      if (buffer[sig.offset + i] !== sig.signature[i]) {
-        match = false;
-        break;
-      }
-    }
-    if (match) return "MATCH";
-  }
-
-  // None of the expected signatures matched
-  return "SPOOFED";
 }
