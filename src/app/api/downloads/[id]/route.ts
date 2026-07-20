@@ -89,8 +89,12 @@ function session_user_id(_downloadId: string) {
   return null;
 }
 
-/** Generate a short-lived opaque token (placeholder for JWT/SignedURL). */
+/** Generate a short-lived opaque token (HMAC-signed for tamper resistance). */
 function generateToken(downloadId: string): string {
-  // In production, sign a JWT with the downloadId + expiry.
-  return Buffer.from(`${downloadId}:${Date.now()}`).toString("base64url");
+  const secret = process.env.NEXTAUTH_SECRET || "download-token-secret";
+  const expiry = Date.now() + 5 * 60 * 1000; // 5 minutes
+  const payload = `${downloadId}:${expiry}`;
+  const crypto = require("crypto");
+  const sig = crypto.createHmac("sha256", secret).update(payload).digest("hex").slice(0, 16);
+  return Buffer.from(`${payload}:${sig}`).toString("base64url");
 }
