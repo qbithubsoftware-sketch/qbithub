@@ -139,7 +139,45 @@ export class StorageServiceClass {
 
     // ---- 9. Delegate to storage provider ----
     const provider = getStorageProvider();
-    const result = await provider.upload(buffer, originalFileName, canonicalMime);
+    console.log(`[StorageService] Delegating to provider: ${provider.name} for "${originalFileName}"`);
+
+    let result: UploadResult;
+    try {
+      result = await provider.upload(buffer, originalFileName, canonicalMime);
+    } catch (providerError) {
+      // ---- Capture the EXACT error from the storage provider ----
+      const errorClass = providerError instanceof Error ? providerError.constructor.name : typeof providerError;
+      const errorMessage = providerError instanceof Error ? providerError.message : String(providerError);
+      const errorStack = providerError instanceof Error ? providerError.stack : "N/A";
+
+      console.error(`[StorageService] === STORAGE PROVIDER FAILED ===`);
+      console.error(`[StorageService]   Provider:          ${provider.name}`);
+      console.error(`[StorageService]   Error class:       ${errorClass}`);
+      console.error(`[StorageService]   Error message:     ${errorMessage}`);
+      console.error(`[StorageService]   Stack trace:`);
+      console.error(errorStack);
+
+      // Re-throw as StorageError with the ORIGINAL error class preserved
+      // Do NOT wrap as generic "Access denied"
+      if (providerError instanceof StorageError || providerError instanceof StorageValidationError) {
+        // Already a structured storage error — re-throw as-is
+        throw providerError;
+      }
+
+      // Wrap non-structured errors but preserve the original class name and message
+      throw new StorageError(
+        "PROVIDER_ERROR",
+        `${errorClass}: ${errorMessage}`,
+        {
+          provider: provider.name,
+          originalErrorClass: errorClass,
+          originalMessage: errorMessage,
+          stack: errorStack,
+          fileName: originalFileName,
+          fileSize: buffer.length,
+        },
+      );
+    }
 
     const duration = Date.now() - startTime;
     console.log(
@@ -271,3 +309,9 @@ export class StorageValidationError extends StorageError {
     this.name = "StorageValidationError";
   }
 }
+
+/**
+ * Storage Configuration Error — missing env vars, invalid setup.
+ * Import from vercel-blob-storage to avoid circular dependency.
+ */
+export { StorageConfigurationError } from "./vercel-blob-storage";

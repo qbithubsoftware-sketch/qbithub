@@ -26,7 +26,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { requireSuperAdminOrAdmin } from "@/lib/notifications/auth";
-import { StorageService, StorageError, StorageValidationError } from "@/lib/storage/storage";
+import { StorageService, StorageError, StorageValidationError, StorageConfigurationError } from "@/lib/storage/storage";
 import {
   createResourceLogger,
   createErrorResponse,
@@ -42,6 +42,7 @@ import {
   MAX_FILE_SIZE,
   getExtension,
 } from "@/lib/storage/file-type-registry";
+import { getStorageDiagnostics } from "@/lib/storage/provider";
 
 // Route segment config for large file uploads.
 export const maxDuration = 300; // 5 minutes for large file uploads
@@ -408,6 +409,11 @@ export async function POST(req: NextRequest) {
     // 6. Upload via Storage Service (validates MIME, size, magic bytes;
     //    computes SHA-256 checksum; delegates to storage provider)
     // ================================================================
+    console.log(`[UPLOAD-STORAGE] === STORAGE DIAGNOSTICS ===`);
+    const diag = getStorageDiagnostics();
+    for (const [key, value] of Object.entries(diag)) {
+      console.log(`[UPLOAD-STORAGE]   ${key}: ${value}`);
+    }
     console.log(`[UPLOAD-STORAGE] Calling StorageService.upload() for "${file.name}" (${buffer.length} bytes, MIME: ${reportedMime})`);
     let result;
     try {
@@ -418,6 +424,26 @@ export async function POST(req: NextRequest) {
       );
     } catch (uploadError) {
       // Structured error from StorageService validation
+      if (uploadError instanceof StorageConfigurationError) {
+        console.error(`[UPLOAD-STORAGE] CONFIGURATION ERROR: [${uploadError.code}] ${uploadError.message}`);
+        logger.failed(uploadError.code, uploadError.message, {
+          userId, fileName: file.name,
+          errorCode: uploadError.code, errorDetails: uploadError.details,
+        });
+        return NextResponse.json(
+          {
+            success: false,
+            code: uploadError.code,
+            field: "BLOB_READ_WRITE_TOKEN",
+            expected: "Valid Vercel Blob read-write token",
+            received: "Token is missing, invalid, or for a different store",
+            message: uploadError.message,
+            stage: "storage_configuration",
+            details: uploadError.details ?? {},
+          },
+          { status: 500 },
+        );
+      }
       if (uploadError instanceof StorageValidationError) {
         console.error(`[UPLOAD-STORAGE] Validation error: [${uploadError.code}] ${uploadError.message}`);
         logger.failed(uploadError.code, uploadError.message, {
