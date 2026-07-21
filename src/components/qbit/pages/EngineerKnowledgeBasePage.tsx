@@ -84,7 +84,7 @@ export function EngineerKnowledgeBasePage() {
   const userName = session?.user?.name ?? "Engineer";
   const userInitials = userName.split(" ").map(w => w[0]).join("").substring(0, 2).toUpperCase();
   const userRole = session?.user?.role as string | undefined;
-  const displayRole = userRole === "support_engineer" ? "Support" : "Installation Engineer";
+  const displayRole = "Installation Engineer";
 
   const fetchKb = useCallback(async () => {
     try {

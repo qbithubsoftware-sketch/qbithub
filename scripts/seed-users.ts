@@ -1,15 +1,13 @@
 /**
- * Seed script — creates the six demo accounts used to exercise RBAC.
+ * Seed script — creates the four demo accounts used to exercise RBAC.
  *
  * Run with: `bun run scripts/seed-users.ts`
  *
  * Demo credentials (all passwords are `<role>123`):
  *   admin@qbithub.com        / admin123        → administrator
  *   engineer@qbithub.com     / engineer123     → installation_engineer
- *   support@qbithub.com      / support123      → support_engineer
  *   sales@qbithub.com        / sales123        → sales_executive
  *   dealer@qbithub.com       / dealer123       → dealer
- *   viewer@qbithub.com       / viewer123       → viewer
  */
 
 import { PrismaClient } from "@prisma/client";
@@ -38,12 +36,6 @@ const SEED_USERS: SeedUser[] = [
     password: "engineer123",
   },
   {
-    email: "support@qbithub.com",
-    name: "Alex Mercer",
-    role: "support_engineer",
-    password: "support123",
-  },
-  {
     email: "sales@qbithub.com",
     name: "Sarah Jenkins",
     role: "sales_executive",
@@ -54,12 +46,6 @@ const SEED_USERS: SeedUser[] = [
     name: "James Wilson",
     role: "dealer",
     password: "dealer123",
-  },
-  {
-    email: "viewer@qbithub.com",
-    name: "Jordan Smythe",
-    role: "viewer",
-    password: "viewer123",
   },
 ];
 
@@ -77,10 +63,8 @@ async function main() {
   console.log("\nDone. Demo credentials:");
   console.log("  admin@qbithub.com / admin123");
   console.log("  engineer@qbithub.com / engineer123");
-  console.log("  support@qbithub.com / support123");
   console.log("  sales@qbithub.com / sales123");
   console.log("  dealer@qbithub.com / dealer123");
-  console.log("  viewer@qbithub.com / viewer123");
 }
 
 main()

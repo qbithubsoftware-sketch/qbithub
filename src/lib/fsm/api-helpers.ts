@@ -12,13 +12,13 @@ export async function requireEngineer() {
   const session = await getServerSession(authOptions);
   if (!session?.user) return null;
   const role = session.user.role as Role;
-  if (role !== "installation_engineer" && role !== "administrator" && role !== "support_engineer" && role !== "super_administrator") {
+  if (role !== "installation_engineer" && role !== "administrator" && role !== "super_administrator") {
     return null;
   }
   return session;
 }
 
-/** Strict: installation_engineer or administrator only (no support_engineer). */
+/** Strict: installation_engineer or administrator only. */
 export async function requireFieldEngineer() {
   const session = await getServerSession(authOptions);
   if (!session?.user) return null;

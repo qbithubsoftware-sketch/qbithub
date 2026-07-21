@@ -28,7 +28,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   // Verify the user exists and is an engineer
   const user = await db.user.findUnique({ where: { id } });
   if (!user) return notFound("User not found.");
-  if (user.role !== "installation_engineer" && user.role !== "support_engineer") {
+  if (user.role !== "installation_engineer") {
     return badRequest("User is not an engineer.");
   }
 

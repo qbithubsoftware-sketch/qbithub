@@ -1094,10 +1094,10 @@ export function SupportModulePage({ defaultTab = "tickets" }: SupportModulePageP
       navItems={ENGINEER_NAV}
       footerItems={ENGINEER_FOOTER}
       activeScreen={activeScreenMap[activeTab]}
-      user={{ name: userName, role: userRole === "support_engineer" ? "Support" : "Installation Engineer", initials: userInitials }}
+      user={{ name: userName, role: "Installation Engineer", initials: userInitials }}
       topBar={{
         searchPlaceholder: "Search tickets, customers, resources...",
-        user: { name: userName, role: userRole === "support_engineer" ? "Support" : "Installation Engineer", initials: userInitials },
+        user: { name: userName, role: "Installation Engineer", initials: userInitials },
       }}
     >
       <div className="space-y-6 lg:space-y-8">

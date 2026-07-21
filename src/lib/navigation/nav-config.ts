@@ -1,7 +1,7 @@
 import type { NavItem } from "@/components/qbit/shells/Sidebar";
 import type { ScreenId } from "@/lib/navigation/store";
 
-/** Engineer portal sidebar items — unified with Support module. */
+/** Engineer portal sidebar items — production-ready, minimal, clean. */
 export const ENGINEER_NAV: NavItem[] = [
   { label: "Dashboard", icon: "dashboard", screen: "engineer-portal" },
   { label: "Installations", icon: "engineering", screen: "engineer-jobs" },
@@ -20,14 +20,9 @@ export const ENGINEER_NAV: NavItem[] = [
       { label: "Customer Support", icon: "group", screen: "support-customer" },
       { label: "Knowledge Base", icon: "menu_book", screen: "support-kb" },
       { label: "Technical Resources", icon: "settings_input_component", screen: "support-resources" },
-      { label: "Troubleshooting", icon: "build", screen: "engineer-troubleshooting" },
-      { label: "Remote Support", icon: "remote_chat", screen: "support-remote" },
       { label: "Communication", icon: "forum", screen: "support-communication" },
-      { label: "Escalation", icon: "priority_high", screen: "support-escalation" },
-      { label: "Analytics", icon: "monitoring", screen: "support-analytics" },
     ],
   },
-  { label: "Settings", icon: "settings", screen: "system-settings" },
 ];
 
 export const ENGINEER_FOOTER: NavItem[] = [
@@ -93,7 +88,6 @@ export const INSTALCORE_NAV: NavItem[] = [
       { label: "Recent", icon: "history", screen: "driver-download-center" },
     ],
   },
-  { label: "Settings", icon: "settings", screen: "system-settings" },
 ];
 
 /** Field engineer sidebar items. */

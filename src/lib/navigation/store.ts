@@ -22,7 +22,6 @@ export type ScreenId =
   | "customer-handover-report"
   | "video-training-center"
   | "t800-installation-guide"
-  | "ai-support-center"
   // Field engineer
   | "field-engineer-workspace"
   | "job-details-inst-550-a"
@@ -96,13 +95,13 @@ export type ScreenId =
   | "engineer-knowledge"
   | "engineer-downloads"
   | "engineer-troubleshooting"
-  // Support Module — Unified (merged from Support Engineer Portal)
+  // Support Module — Built into Engineer Portal
   | "support-tickets"
   | "support-customer"
   | "support-kb"
   | "support-resources"
-  | "support-remote"
   | "support-communication"
+  | "support-remote"
   | "support-escalation"
   | "support-analytics";
 

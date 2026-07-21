@@ -21,7 +21,7 @@ model User {
   email        String   @unique
   name         String?
   image        String?
-  role         String   @default("viewer")
+  role         String   @default("dealer")
   passwordHash String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -704,7 +704,7 @@ model Permission {
 /// Many-to-many between Role (string on User) and Permission.
 model RolePermission {
   id           String     @id @default(cuid())
-  role         String // "administrator" | "support_engineer" | etc.
+  role         String // "administrator" | "installation_engineer" | etc.
   permissionId String
   permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
   createdAt    DateTime   @default(now())

@@ -1,22 +1,20 @@
 /**
  * RBAC — Role-Based Access Control for QBIT Hub.
  *
- * Seven roles are supported, each with a distinct set of permitted screens.
+ * Six roles are supported, each with a distinct set of permitted screens.
  * The permission map is the single source of truth: any new screen must be
  * added here, otherwise the AuthGuard will deny access by default.
  */
 
 import type { ScreenId } from "@/lib/navigation/store";
 
-/** The eight roles recognised by QBIT Hub V3. */
+/** The six roles recognised by QBIT Hub V3. */
 export type Role =
   | "super_administrator"
   | "administrator"
   | "installation_engineer"
-  | "support_engineer"
   | "sales_executive"
   | "dealer"
-  | "viewer"
   | "public_customer";
 
 /** Human-readable label for each role, used in profile menus and audit logs. */
@@ -24,10 +22,8 @@ export const ROLE_LABELS: Record<Role, string> = {
   super_administrator: "Super Administrator",
   administrator: "Administrator",
   installation_engineer: "Installation Engineer",
-  support_engineer: "Support",
   sales_executive: "Sales Executive",
   dealer: "Dealer",
-  viewer: "Viewer",
   public_customer: "Public Customer",
 };
 
@@ -37,11 +33,8 @@ export const ROLE_DESCRIPTIONS: Record<Role, string> = {
   administrator: "Full access to every module, user, and system setting.",
   installation_engineer:
     "Installation workflows, drivers, products, knowledge base, and support.",
-  support_engineer:
-    "Unified support center — ticket management, customer support, technical resources, and escalation.",
   sales_executive: "Product catalog and marketing pages (read-only).",
   dealer: "Products, drivers, manuals, and training videos.",
-  viewer: "Read-only access across all non-administrative modules.",
   public_customer: "Public product pages only.",
 };
 
@@ -50,10 +43,8 @@ export const ROLE_ICONS: Record<Role, string> = {
   super_administrator: "verified_user",
   administrator: "admin_panel_settings",
   installation_engineer: "engineering",
-  support_engineer: "contact_support",
   sales_executive: "storefront",
   dealer: "handshake",
-  viewer: "visibility",
   public_customer: "public",
 };
 
@@ -72,11 +63,8 @@ export function portalRouteForRole(role: Role): string {
       return "/admin";
     case "installation_engineer":
       return "/engineer";
-    case "support_engineer":
-      return "/engineer";
     case "sales_executive":
     case "dealer":
-    case "viewer":
       return "/portal";
     case "public_customer":
       return "/customer";
@@ -128,73 +116,31 @@ export const SCREEN_PERMISSIONS: Record<ScreenId, Role[]> = {
   "job-details-inst-550-a": ["administrator", "installation_engineer"],
   "job-completion-handover": ["administrator", "installation_engineer"],
 
-  // Products — engineer, dealer, sales, viewer (read), admin
-  "product-library": [
-    "administrator",
-    "installation_engineer",
-    "sales_executive",
-    "dealer",
-    "viewer",
-  ],
-  "product-details-t800": [
-    "administrator",
-    "installation_engineer",
-    "sales_executive",
-    "dealer",
-    "viewer",
-  ],
+  // Products — engineer, dealer, sales, admin
+  "product-library": ["administrator", "installation_engineer", "sales_executive", "dealer"],
+  "product-details-t800": ["administrator", "installation_engineer", "sales_executive", "dealer"],
 
   // Drivers — engineer, dealer, admin
-  "driver-download-center": [
-    "administrator",
-    "installation_engineer",
-    "dealer",
-    "viewer",
-  ],
+  "driver-download-center": ["administrator", "installation_engineer", "dealer"],
 
   // Knowledge base / support — all authenticated staff
-  "ai-support-center": [
-    "administrator",
-    "installation_engineer",
-    "support_engineer",
-    "dealer",
-    "viewer",
-  ],
-  "universal-search-command-center": [
-    "administrator",
-    "installation_engineer",
-    "support_engineer",
-    "dealer",
-    "viewer",
-  ],
+  "universal-search-command-center": ["administrator", "installation_engineer", "dealer"],
 
-  // Videos — engineer, dealer, admin, viewer
-  "video-training-center": [
-    "administrator",
-    "installation_engineer",
-    "dealer",
-    "viewer",
-  ],
+  // Videos — engineer, dealer, admin
+  "video-training-center": ["administrator", "installation_engineer", "dealer"],
 
   // Mobile search — all authenticated users
-  "universal-search-mobile": [
-    "administrator",
-    "installation_engineer",
-    "support_engineer",
-    "sales_executive",
-    "dealer",
-    "viewer",
-  ],
+  "universal-search-mobile": ["administrator", "installation_engineer", "sales_executive", "dealer"],
 
   // Public portal — no auth required
   "public-search": [],
 
-  // Field Service Management (FSM) — installation & service team only.
-  // NEVER accessible to sales_executive / dealer / viewer.
-  "fsm-dashboard": ["administrator", "installation_engineer", "support_engineer"],
-  "fsm-work-order-detail": ["administrator", "installation_engineer", "support_engineer"],
+  // Field Service Management (FSM) — installation team + admin only.
+  // NEVER accessible to sales_executive / dealer.
+  "fsm-dashboard": ["administrator", "installation_engineer"],
+  "fsm-work-order-detail": ["administrator", "installation_engineer"],
   "fsm-work-order-completion": ["administrator", "installation_engineer"],
-  "fsm-customer-asset-history": ["administrator", "installation_engineer", "support_engineer"],
+  "fsm-customer-asset-history": ["administrator", "installation_engineer"],
 
   // Public customer tracking — no auth required.
   "fsm-customer-tracking": [],
@@ -203,19 +149,19 @@ export const SCREEN_PERMISSIONS: Record<ScreenId, Role[]> = {
   "customer-tracking-portal": [],
 
   // Engineer Mobile Portal (PWA) — installation engineers + admin
-  "mobile-engineer": ["administrator", "installation_engineer", "support_engineer"],
+  "mobile-engineer": ["administrator", "installation_engineer"],
 
   // Dr. QBIT Device Detection Engine — engineers + admin (no sales access)
-  "dr-qbit-detection": ["administrator", "installation_engineer", "support_engineer"],
+  "dr-qbit-detection": ["administrator", "installation_engineer"],
 
   // Dr. QBIT Device Passport & Driver Intelligence — engineers + admin
-  "dr-qbit-passport": ["administrator", "installation_engineer", "support_engineer"],
+  "dr-qbit-passport": ["administrator", "installation_engineer"],
 
   // Dr. QBIT Firmware Intelligence — engineers + admin (no sales access)
-  "dr-qbit-firmware": ["administrator", "installation_engineer", "support_engineer"],
+  "dr-qbit-firmware": ["administrator", "installation_engineer"],
 
   // Dr. QBIT AI Diagnostics Engine — engineers + admin (no sales access)
-  "dr-qbit-diagnostics": ["administrator", "installation_engineer", "support_engineer"],
+  "dr-qbit-diagnostics": ["administrator", "installation_engineer"],
 
   // Dr. QBIT Test Center — engineers + admin only (no sales access)
   "dr-qbit-test-center": ["administrator", "installation_engineer"],
@@ -226,8 +172,8 @@ export const SCREEN_PERMISSIONS: Record<ScreenId, Role[]> = {
   // Enterprise Analytics — admin only (full business intelligence)
   "analytics": ["super_administrator", "administrator"],
 
-  // Notification Automation Engine — admin-only management screens.
-  "notification-center": ["super_administrator", "administrator", "installation_engineer", "support_engineer"],
+  // Notification Automation Engine
+  "notification-center": ["super_administrator", "administrator", "installation_engineer"],
   "notification-template-manager": ["super_administrator", "administrator"],
   "notification-history": ["super_administrator", "administrator"],
   "notification-reminders": ["super_administrator", "administrator"],
@@ -237,20 +183,20 @@ export const SCREEN_PERMISSIONS: Record<ScreenId, Role[]> = {
   "engineering-installations": ["super_administrator", "administrator"],
   "engineering-assign": ["super_administrator", "administrator"],
   // Engineer Portal — Simplified Desktop (V3)
-  "engineer-portal": ["administrator", "installation_engineer", "support_engineer"],
-  "engineer-jobs": ["administrator", "installation_engineer", "support_engineer"],
-  "engineer-knowledge": ["administrator", "installation_engineer", "support_engineer", "dealer", "viewer"],
-  "engineer-downloads": ["administrator", "installation_engineer", "support_engineer", "dealer", "viewer"],
-  "engineer-troubleshooting": ["administrator", "installation_engineer", "support_engineer"],
-  // Support Module — Unified (merged from Support Engineer Portal)
-  "support-tickets": ["administrator", "installation_engineer", "support_engineer"],
-  "support-customer": ["administrator", "installation_engineer", "support_engineer"],
-  "support-kb": ["administrator", "installation_engineer", "support_engineer", "dealer", "viewer"],
-  "support-resources": ["administrator", "installation_engineer", "support_engineer"],
-  "support-remote": ["administrator", "installation_engineer", "support_engineer"],
-  "support-communication": ["administrator", "installation_engineer", "support_engineer"],
-  "support-escalation": ["administrator", "support_engineer"],
-  "support-analytics": ["administrator", "support_engineer"],
+  "engineer-portal": ["administrator", "installation_engineer"],
+  "engineer-jobs": ["administrator", "installation_engineer"],
+  "engineer-knowledge": ["administrator", "installation_engineer", "dealer"],
+  "engineer-downloads": ["administrator", "installation_engineer", "dealer"],
+  "engineer-troubleshooting": ["administrator", "installation_engineer"],
+  // Support Module — Built into Engineer Portal
+  "support-tickets": ["administrator", "installation_engineer"],
+  "support-customer": ["administrator", "installation_engineer"],
+  "support-kb": ["administrator", "installation_engineer", "dealer"],
+  "support-resources": ["administrator", "installation_engineer"],
+  "support-remote": ["administrator", "installation_engineer"],
+  "support-communication": ["administrator", "installation_engineer"],
+  "support-escalation": ["administrator"],
+  "support-analytics": ["administrator"],
 };
 
 /**
@@ -283,13 +229,9 @@ export function homeScreenForRole(role: Role): ScreenId {
       return "home";
     case "installation_engineer":
       return "engineer-portal";
-    case "support_engineer":
-      return "engineer-portal";
     case "sales_executive":
       return "product-library";
     case "dealer":
-      return "product-library";
-    case "viewer":
       return "product-library";
     case "public_customer":
       return "product-overview";

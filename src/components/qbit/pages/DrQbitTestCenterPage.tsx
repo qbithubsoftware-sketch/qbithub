@@ -118,7 +118,7 @@ export function DrQbitTestCenterPage() {
     }
   };
 
-  const role = user?.role ?? "viewer";
+  const role = user?.role ?? "installation_engineer";
   const isAdmin = role === "administrator";
   const userName = user?.name ?? "User";
   const initials = userName.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();

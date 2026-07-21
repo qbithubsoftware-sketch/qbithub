@@ -274,7 +274,7 @@ export function EngineerPortalDesktopPage() {
 
   const userRole = session?.user?.role as string | undefined;
   const userName = session?.user?.name ?? "Engineer";
-  const displayRole = userRole === "support_engineer" ? "Support" : "Installation Engineer";
+  const displayRole = "Installation Engineer";
   const userInitials = userName.split(" ").map(w => w[0]).join("").substring(0, 2).toUpperCase();
 
   const fetchDashboardData = useCallback(async () => {
@@ -514,7 +514,6 @@ export function EngineerPortalDesktopPage() {
                   { label: "Product Library", icon: "inventory_2", screen: "product-library" as ScreenId },
                   { label: "Installation Guides", icon: "menu_book", screen: "installation-center" as ScreenId },
                   { label: "Video Training", icon: "play_circle", screen: "video-training-center" as ScreenId },
-                  { label: "System Settings", icon: "settings", screen: "system-settings" as ScreenId },
                 ].map(link => (
                   <button
                     key={link.label}

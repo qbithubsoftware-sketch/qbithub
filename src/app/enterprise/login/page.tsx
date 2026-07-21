@@ -13,9 +13,8 @@
  * which mounts the Zustand app shell. The AuthGuard in /portal then
  * routes the user to their role's home screen.
  *
- * Employees (super_admin, administrator, installation_engineer,
- * support_engineer) log in HERE. All roles now land on the unified
- * Engineer Portal (/engineer) where Support is a built-in module.
+ * Employees (super_admin, administrator, installation_engineer)
+ * log in HERE. Engineers land on the Engineer Portal (/engineer).
  * The two flows NEVER mix.
  */
 

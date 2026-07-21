@@ -83,8 +83,6 @@ export default function Home() {
         return <VideoTrainingCenterPage />;
       case "t800-installation-guide":
         return <T800InstallationGuidePage />;
-      case "ai-support-center":
-        return <SupportModulePage defaultTab="tickets" />;
       case "job-details-inst-550-a":
         return <JobDetailsInst550APage />;
       case "field-engineer-workspace":

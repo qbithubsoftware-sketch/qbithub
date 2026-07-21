@@ -1,9 +1,8 @@
 /**
  * /support-portal — DEPRECATED.
  *
- * This route now redirects all traffic to the unified Engineer Portal.
- * The Support Engineer Portal has been merged into the Engineer Portal's
- * Support module. All support_engineer users should use /engineer instead.
+ * This route redirects to the Engineer Portal.
+ * The Support module is built into the Engineer Portal.
  */
 
 import { redirect } from "next/navigation";

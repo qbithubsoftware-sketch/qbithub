@@ -1,7 +1,7 @@
 /**
  * GET /api/admin/engineers — list all engineers with status, job counts, and activity
  *
- * Returns installation_engineer + support_engineer users with:
+ * Returns installation_engineer users with:
  *   - Total assigned jobs, pending, in-progress, completed counts
  *   - Active/inactive status (based on recent activity)
  *   - Latest assignment date
@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
     // Fetch all engineer-role users
     const engineers = await db.user.findMany({
       where: {
-        role: { in: ["installation_engineer", "support_engineer"] },
+        role: { in: ["installation_engineer"] },
       },
       select: {
         id: true,

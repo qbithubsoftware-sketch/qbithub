@@ -94,8 +94,8 @@ export function DrQbitWorkflow() {
       return;
     }
     const role = (session.user?.role as string) ?? "guest";
-    if (role === "administrator") setMode("admin");
-    else if (role === "installation_engineer" || role === "support_engineer") setMode("engineer");
+    if (role === "administrator" || role === "super_administrator") setMode("admin");
+    else if (role === "installation_engineer") setMode("engineer");
     else setMode("customer");
   }, [session, status]);
 

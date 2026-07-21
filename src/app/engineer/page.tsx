@@ -1,9 +1,9 @@
 /**
  * /engineer — entry route for engineer portal.
  *
- * SECURITY: Checks auth + role. If unauthenticated → redirect to /accounts/login.
- * If authenticated but wrong role (customer/dealer/viewer/sales) → render 403.
- * If correct role (installation_engineer/support_engineer/administrator) → redirect to /portal.
+ * SECURITY: Checks auth + role. If unauthenticated → redirect to /enterprise/login.
+ * If authenticated but wrong role (customer/dealer/sales) → render 403.
+ * If correct role (installation_engineer/administrator) → redirect to /portal.
  */
 
 import { redirect } from "next/navigation";
@@ -12,7 +12,7 @@ import { authOptions } from "@/lib/auth/options";
 import { PublicLayout } from "@/components/qbit/public/PublicLayout";
 import { ForbiddenNotice } from "@/components/qbit/public/ForbiddenNotice";
 
-const ENGINEER_ROLES = ["installation_engineer", "support_engineer", "administrator"];
+const ENGINEER_ROLES = ["installation_engineer", "administrator"];
 
 export const dynamic = "force-dynamic";
 

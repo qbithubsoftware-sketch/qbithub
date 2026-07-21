@@ -51,8 +51,8 @@ export async function requireEngineerOrAdmin() {
   return session;
 }
 
-/** Staff only: administrator + installation_engineer + support_engineer.
- *  Blocks public_customer, sales_executive, dealer, viewer. */
+/** Staff only: administrator + installation_engineer.
+ *  Blocks public_customer, sales_executive, dealer. */
 export async function requireStaff() {
   const session = await requireAuth();
   if (!session) return null;
@@ -60,8 +60,7 @@ export async function requireStaff() {
   if (
     role !== "super_administrator" &&
     role !== "administrator" &&
-    role !== "installation_engineer" &&
-    role !== "support_engineer"
+    role !== "installation_engineer"
   ) {
     return null;
   }

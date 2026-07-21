@@ -120,8 +120,7 @@ export function LoginPage() {
                 //   super_administrator → /super-admin
                 //   administrator       → /admin
                 //   installation_engineer → /engineer
-                //   support_engineer    → /engineer (unified Support module)
-                //   sales/dealer/viewer → /portal
+                //   sales/dealer        → /portal
                 //   public_customer     → /customer (shouldn't happen here, but safe)
                 if (typeof window !== "undefined") {
                   if (role) {
