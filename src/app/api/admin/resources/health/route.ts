@@ -100,14 +100,14 @@ export async function GET(req: NextRequest) {
       // Check 3: Storage key — file missing
       if (urlType === "storage_key") {
         stats.storageKeysChecked++;
-        const exists = await StorageService.exists(r.url).catch(() => false);
+        const exists = await StorageService.exists(r.url ?? "").catch(() => false);
         if (!exists) {
           issues.push({
             resourceId: r.id,
             resourceName: r.name,
             issue: "FILE_MISSING_IN_STORAGE",
             severity: "critical",
-            details: `Physical file not found at storage key: "${r.url}". Re-upload required.`,
+            details: `Physical file not found at storage key: "${r.url ?? ""}". Re-upload required.`,
             autoFixable: false,
           });
           healthy = false;
@@ -117,7 +117,7 @@ export async function GET(req: NextRequest) {
       // Check 4: Data URL — no actual base64 data
       if (urlType === "data_url") {
         stats.dataUrlsChecked++;
-        const base64Data = r.url.split(",")[1];
+        const base64Data = (r.url ?? "").split(",")[1];
         if (!base64Data || base64Data.length < 10) {
           issues.push({
             resourceId: r.id,

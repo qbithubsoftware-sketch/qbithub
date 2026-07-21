@@ -105,7 +105,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     : undefined;
 
   // If the URL changed and the old file was a storage_key, clean up the old file
-  if (url !== undefined && existing.urlType === "storage_key" && existing.url !== url) {
+  if (url !== undefined && existing.urlType === "storage_key" && existing.url !== url && existing.url) {
     try {
       await StorageService.delete(existing.url);
       logger.completed({ resourceId: id, details: { note: "Old storage file cleaned up", oldStorageKey: existing.url } });
@@ -153,12 +153,12 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   if (!existing) return NextResponse.json({ error: "Resource not found" }, { status: 404 });
 
   // Delete physical file from Storage Service (only for storage_key type)
-  const urlType = existing.urlType || detectUrlType(existing.url);
+  const urlType = existing.urlType || detectUrlType(existing.url ?? "");
   if (urlType === "storage_key" && existing.url) {
     try {
       await StorageService.delete(existing.url);
     } catch (err) {
-      console.warn(`[ResourceDelete] Physical file deletion failed: ${existing.url}`, err);
+      console.warn(`[ResourceDelete] Physical file deletion failed: ${existing.url ?? ""}`, err);
     }
   }
 
