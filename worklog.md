@@ -255,3 +255,33 @@ Stage Summary:
 - SSO NOTE: The *.vercel.app domain has Vercel SSO protection (Pro plan feature)
   - my-project-two-chi-40.vercel.app works without SSO
   - Custom domain or SSO bypass needed for the main *.vercel.app domain
+
+---
+Task ID: 8
+Agent: Main Agent
+Task: Engineer Portal UI/UX Simplification & Desktop Responsive Redesign
+
+Work Log:
+- Analyzed existing Engineer Portal: 130+ nav items, 6-level nested menus, mobile-stretched-on-desktop layout
+- Created simplified ENGINEER_NAV: 7 flat items (Dashboard, Jobs, Dr. QBIT, Knowledge Base, Downloads, Troubleshooting, Support)
+- Added 5 new ScreenIds: engineer-portal, engineer-jobs, engineer-knowledge, engineer-downloads, engineer-troubleshooting
+- Created EngineerPortalDesktopPage: Desktop-first responsive layout with CSS Grid (8/4 split), real KPIs from FSM API, quick actions, job cards with customer/product/serial info, action buttons (Call, WhatsApp, Navigate, Start, Complete)
+- Created EngineerJobsPage: Full job management with status filter tabs, search, detailed job cards
+- Created EngineerKnowledgeBasePage: Merged Manuals/Guides/Videos/FAQs/Training into one page with tabbed filters
+- Created EngineerDownloadsPage: Unified Downloads with tabbed filters (Drivers/Firmware/SDK/Utilities/Tools)
+- Created EngineerTroubleshootingPage: Quick diagnostic tools + expandable issue categories + AI support CTA
+- Updated RBAC: New screen permissions for engineer-portal, engineer-jobs, engineer-knowledge, engineer-downloads, engineer-troubleshooting
+- Updated homeScreenForRole: installation_engineer → engineer-portal
+- Updated AuthGuard: engineer redirect → engineer-portal
+- Updated portal/page.tsx: routes for all 5 new screens
+- Build passes with zero errors
+- Pushed to GitHub and deployed to Vercel production
+
+Stage Summary:
+- 5 new page components created (1,515 lines added)
+- 131 lines removed (old bloated nav config)
+- Sidebar reduced from 130+ items to 7 clean items
+- Real KPIs from database (not dummy data)
+- Desktop-responsive grid layout with proper spacing
+- Mobile UI preserved (MobileEngineerPage untouched)
+- All removed menus are hidden only — backend functionality intact
