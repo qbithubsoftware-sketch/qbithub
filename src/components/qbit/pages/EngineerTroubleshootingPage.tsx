@@ -101,6 +101,8 @@ export function EngineerTroubleshootingPage() {
 
   const userName = session?.user?.name ?? "Engineer";
   const userInitials = userName.split(" ").map(w => w[0]).join("").substring(0, 2).toUpperCase();
+  const userRole = session?.user?.role as string | undefined;
+  const displayRole = userRole === "support_engineer" ? "Support" : "Installation Engineer";
 
   return (
     <AppShell
@@ -109,10 +111,10 @@ export function EngineerTroubleshootingPage() {
       navItems={ENGINEER_NAV}
       footerItems={ENGINEER_FOOTER}
       activeScreen="engineer-troubleshooting"
-      user={{ name: userName, role: "Installation Engineer", initials: userInitials }}
+      user={{ name: userName, role: displayRole, initials: userInitials }}
       topBar={{
         searchPlaceholder: "Search troubleshooting...",
-        user: { name: userName, role: "Installation Engineer", initials: userInitials },
+        user: { name: userName, role: displayRole, initials: userInitials },
       }}
     >
       <div className="space-y-6">
@@ -126,7 +128,7 @@ export function EngineerTroubleshootingPage() {
             <QbitButton variant="primary" icon="smart_toy" onClick={() => navigate("dr-qbit-detection")}>
               Dr. QBIT Diagnose
             </QbitButton>
-            <QbitButton variant="outline" icon="support_agent" onClick={() => navigate("ai-support-center")}>
+            <QbitButton variant="outline" icon="support_agent" onClick={() => navigate("support-tickets")}>
               AI Support
             </QbitButton>
           </div>
@@ -181,10 +183,10 @@ export function EngineerTroubleshootingPage() {
           <h3 className="text-lg font-semibold text-foreground">Still having issues?</h3>
           <p className="mt-1 text-sm text-muted-foreground">Our AI support center can help diagnose and resolve complex problems.</p>
           <div className="mt-4 flex justify-center gap-3">
-            <QbitButton variant="primary" icon="smart_toy" onClick={() => navigate("ai-support-center")}>
+            <QbitButton variant="primary" icon="smart_toy" onClick={() => navigate("support-tickets")}>
               AI Support Chat
             </QbitButton>
-            <QbitButton variant="outline" icon="contact_support" onClick={() => navigate("ai-support-center")}>
+            <QbitButton variant="outline" icon="contact_support" onClick={() => navigate("support-tickets")}>
               Contact Support
             </QbitButton>
           </div>

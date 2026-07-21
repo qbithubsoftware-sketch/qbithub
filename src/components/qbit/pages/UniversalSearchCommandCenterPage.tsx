@@ -273,28 +273,24 @@ export function UniversalSearchCommandCenterPage() {
 
   /* ----- Top bar / sidebar wiring ----- */
   const handleSearchFocus = useCallback(() => openModal(), [openModal]);
-  const handleAIAssistant = () => navigate("ai-support-center");
-  const handleCta = () => navigate("ai-support-center");
+  const handleAIAssistant = () => navigate("support-tickets");
+  const handleCta = () => navigate("support-tickets");
 
   return (
     <>
       <AppShell
-        variant="ai-support"
+        variant="engineer"
         brand={{
           title: "QBIT Hub",
-          tagline: "InstalCore Enterprise",
-          icon: "smart_toy",
+          tagline: "Engineer Portal",
+          icon: "engineering",
         }}
         navItems={COMMAND_CENTER_NAV}
         activeScreen="universal-search-command-center"
         user={{ name: "Alex Mercer", role: "Lead Engineer", initials: "AM" }}
-        cta={{ label: "New Support Case", icon: "add", onClick: handleCta }}
-        footerItems={[
-          { label: "Settings", icon: "settings", screen: "system-settings" },
-          { label: "Help Center", icon: "help", screen: "ai-support-center" },
-        ]}
+        cta={{ label: "New Ticket", icon: "add", onClick: handleCta }}
+        footerItems={[]}
         topBar={{
-          title: "Technical Installation Support",
           searchPlaceholder: "Search or command...",
           showSearchKbd: true,
           onSearchFocus: handleSearchFocus,
@@ -454,14 +450,14 @@ export function UniversalSearchCommandCenterPage() {
                 <div className="mt-8 flex flex-wrap justify-center gap-4">
                   <button
                     type="button"
-                    onClick={() => navigate("ai-support-center")}
+                    onClick={() => navigate("support-tickets")}
                     className="rounded-lg bg-qbit-primary px-5 py-2 text-sm font-semibold text-qbit-on-primary transition-all hover:bg-qbit-primary-container"
                   >
                     Contact Support
                   </button>
                   <button
                     type="button"
-                    onClick={() => navigate("ai-support-center")}
+                    onClick={() => navigate("support-tickets")}
                     className="rounded-lg border border-qbit-outline-variant bg-qbit-surface px-5 py-2 text-sm font-semibold text-qbit-on-surface-variant transition-all hover:border-qbit-primary"
                   >
                     View FAQ

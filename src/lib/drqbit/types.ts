@@ -251,7 +251,7 @@ export function getDeviceQuickActions(
   if (matchedProduct?.knowledgeBaseUrl) {
     actions.push({ label: "Knowledge Base", icon: "library_books", url: matchedProduct.knowledgeBaseUrl });
   } else {
-    actions.push({ label: "Knowledge Base", icon: "library_books", screen: "ai-support-center" });
+    actions.push({ label: "Knowledge Base", icon: "library_books", screen: "support-kb" });
   }
 
   return actions;

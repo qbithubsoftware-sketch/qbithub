@@ -95,7 +95,16 @@ export type ScreenId =
   | "engineer-jobs"
   | "engineer-knowledge"
   | "engineer-downloads"
-  | "engineer-troubleshooting";
+  | "engineer-troubleshooting"
+  // Support Module — Unified (merged from Support Engineer Portal)
+  | "support-tickets"
+  | "support-customer"
+  | "support-kb"
+  | "support-resources"
+  | "support-remote"
+  | "support-communication"
+  | "support-escalation"
+  | "support-analytics";
 
 interface NavigationState {
   current: ScreenId;

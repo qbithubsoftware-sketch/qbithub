@@ -285,3 +285,32 @@ Stage Summary:
 - Desktop-responsive grid layout with proper spacing
 - Mobile UI preserved (MobileEngineerPage untouched)
 - All removed menus are hidden only — backend functionality intact
+---
+Task ID: merge-support-portal
+Agent: Main Agent
+Task: Merge Support Engineer Portal into Engineer Portal
+
+Work Log:
+- Audited entire codebase structure: identified 83+ Prisma models, 105+ API routes, 25 page routes, 5 sidebar variants, 50+ ScreenIds
+- Added 8 new ScreenIds to navigation store (support-tickets, support-customer, support-kb, support-resources, support-remote, support-communication, support-escalation, support-analytics)
+- Updated RBAC: renamed support_engineer label to "Support", changed portal route from /support-portal to /engineer, changed home screen from ai-support-center to engineer-portal
+- Updated ENGINEER_NAV: expanded from 7 items to 10 items with Support as a collapsible section containing 9 sub-items
+- Built SupportModulePage: professional tabbed interface with 8 sub-sections (Tickets, Customer Support, KB, Resources, Remote, Communication, Escalation, Analytics)
+- Updated portal/page.tsx ScreenSwitcher: added 8 new support screen cases, redirected ai-support-center to SupportModulePage
+- Redirected /support-portal route to /engineer with deprecation notice
+- Updated AuthGuard: support_engineer now lands on engineer-portal instead of ai-support-center
+- Updated LoginPage: support_engineer routes to /engineer (unified portal)
+- Cleaned up: removed AISupportCenterPage.tsx (dead code), removed AI_SUPPORT_NAV export (zero consumers), renamed ai-support sidebar variant to support, updated 30+ files referencing ai-support-center
+- Updated all engineer pages (Portal, Jobs, Knowledge, Downloads, Troubleshooting) to dynamically display role based on session
+- Updated EngineeringModulePage: "Support Engineer" → "Support"
+- Updated notifications/auth.ts comment
+- Updated diagnostics/engine.ts and drqbit/types.ts screen references
+- Updated seed-dr-qbit.ts knowledgeBaseUrl
+- TypeScript compiles cleanly (only pre-existing seed-prod.ts error)
+
+Stage Summary:
+- Support Engineer Portal fully merged into Engineer Portal as "Support" module
+- Single entry point: /engineer for both installation_engineer and support_engineer roles
+- Navigation: Dashboard, Installations, Service Calls, Customers, Products, Downloads, Knowledge Base, Troubleshooting, Support (expandable with 9 sub-items), Settings
+- Zero broken imports, zero orphaned sidebar variants, zero "Support Engineer" in user-facing UI
+- All existing functionality preserved; /support-portal redirects to /engineer

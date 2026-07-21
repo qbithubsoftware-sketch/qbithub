@@ -305,7 +305,7 @@ export function DrQbitFirmwareIntelligencePage() {
                   {[
                     { label: "Firmware Guides", icon: "menu_book", screen: "installation-center" },
                     { label: "Release Notes", icon: "description", screen: "driver-download-center" },
-                    { label: "Troubleshooting", icon: "build", screen: "ai-support-center" },
+                    { label: "Troubleshooting", icon: "build", screen: "support-tickets" },
                     { label: "Video Tutorials", icon: "play_circle", screen: "video-training-center" },
                   ].map((r) => (
                     <button

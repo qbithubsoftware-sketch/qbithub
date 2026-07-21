@@ -556,7 +556,7 @@ function DashboardTab({
           <EmptyState
             icon="engineering"
             title="No Engineers Found"
-            description="No installation or support engineers have been registered yet. Add engineers through User Management."
+            description="No engineers have been registered yet. Add engineers through User Management."
           />
         ) : (
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -991,7 +991,7 @@ function EngineerCard({
             </StatusBadge>
           </div>
           <p className="text-xs text-qbit-on-surface-variant">
-            {engineer.role === "installation_engineer" ? "Installation Engineer" : "Support Engineer"} · {engineer.email}
+            {engineer.role === "installation_engineer" ? "Installation Engineer" : "Support"} · {engineer.email}
           </p>
 
           {/* Job Stats */}

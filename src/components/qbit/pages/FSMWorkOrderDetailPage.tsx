@@ -394,7 +394,7 @@ export function FSMWorkOrderDetailPage() {
                           size="sm"
                           variant="ghost"
                           icon="arrow_forward"
-                          onClick={() => navigate("ai-support-center", { workOrderId, step: String(s.step) })}
+                          onClick={() => navigate("support-tickets", { workOrderId, step: String(s.step) })}
                         >
                           Open
                         </QbitButton>
@@ -409,7 +409,7 @@ export function FSMWorkOrderDetailPage() {
                   className="mt-4"
                   icon="smart_toy"
                   iconRight="arrow_forward"
-                  onClick={() => navigate("ai-support-center", { workOrderId })}
+                  onClick={() => navigate("support-tickets", { workOrderId })}
                 >
                   Open Dr. QBIT Chat
                 </QbitButton>

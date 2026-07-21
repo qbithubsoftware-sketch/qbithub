@@ -57,7 +57,7 @@ export function PublicHeader({
       <nav className="ml-8 hidden items-center gap-6 text-sm font-medium text-qbit-on-surface-variant lg:flex">
         <button onClick={() => handleNav("product-overview")} className="hover:text-qbit-primary transition-colors">Products</button>
         <button onClick={() => handleNav("driver-download-center")} className="hover:text-qbit-primary transition-colors">Downloads</button>
-        <button onClick={() => handleNav("ai-support-center")} className="hover:text-qbit-primary transition-colors">Support</button>
+        <button onClick={() => handleNav("support-tickets")} className="hover:text-qbit-primary transition-colors">Support</button>
         <button onClick={() => handleNav("installation-center")} className="hover:text-qbit-primary transition-colors">Guides</button>
         <button onClick={() => handleNav("fsm-customer-tracking")} className="inline-flex items-center gap-1 text-qbit-primary hover:underline">
           <Icon name="track_changes" className="text-[16px]" />
@@ -107,7 +107,7 @@ export function PublicHeader({
             <button onClick={() => handleNav("driver-download-center")} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-qbit-on-surface-variant hover:bg-qbit-surface-container">
               <Icon name="download" className="text-[20px]" /> Downloads
             </button>
-            <button onClick={() => handleNav("ai-support-center")} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-qbit-on-surface-variant hover:bg-qbit-surface-container">
+            <button onClick={() => handleNav("support-tickets")} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-qbit-on-surface-variant hover:bg-qbit-surface-container">
               <Icon name="support_agent" className="text-[20px]" /> Support
             </button>
             <button onClick={() => handleNav("installation-center")} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-qbit-on-surface-variant hover:bg-qbit-surface-container">

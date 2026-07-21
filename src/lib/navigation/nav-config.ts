@@ -1,19 +1,36 @@
 import type { NavItem } from "@/components/qbit/shells/Sidebar";
 import type { ScreenId } from "@/lib/navigation/store";
 
-/** Engineer portal sidebar items — simplified for installation engineers. */
+/** Engineer portal sidebar items — unified with Support module. */
 export const ENGINEER_NAV: NavItem[] = [
   { label: "Dashboard", icon: "dashboard", screen: "engineer-portal" },
-  { label: "Jobs / Installations", icon: "engineering", screen: "engineer-jobs" },
-  { label: "Dr. QBIT", icon: "smart_toy", screen: "dr-qbit-detection" },
-  { label: "Knowledge Base", icon: "menu_book", screen: "engineer-knowledge" },
+  { label: "Installations", icon: "engineering", screen: "engineer-jobs" },
+  { label: "Service Calls", icon: "support_agent", screen: "fsm-dashboard" },
+  { label: "Customers", icon: "group", screen: "support-customer" },
+  { label: "Products", icon: "inventory_2", screen: "product-library" },
   { label: "Downloads", icon: "download", screen: "engineer-downloads" },
+  { label: "Knowledge Base", icon: "menu_book", screen: "engineer-knowledge" },
   { label: "Troubleshooting", icon: "build", screen: "engineer-troubleshooting" },
-  { label: "Support", icon: "contact_support", screen: "ai-support-center" },
+  {
+    label: "Support",
+    icon: "contact_support",
+    screen: "support-tickets",
+    children: [
+      { label: "Ticket Management", icon: "confirmation_number", screen: "support-tickets" },
+      { label: "Customer Support", icon: "group", screen: "support-customer" },
+      { label: "Knowledge Base", icon: "menu_book", screen: "support-kb" },
+      { label: "Technical Resources", icon: "settings_input_component", screen: "support-resources" },
+      { label: "Troubleshooting", icon: "build", screen: "engineer-troubleshooting" },
+      { label: "Remote Support", icon: "remote_chat", screen: "support-remote" },
+      { label: "Communication", icon: "forum", screen: "support-communication" },
+      { label: "Escalation", icon: "priority_high", screen: "support-escalation" },
+      { label: "Analytics", icon: "monitoring", screen: "support-analytics" },
+    ],
+  },
+  { label: "Settings", icon: "settings", screen: "system-settings" },
 ];
 
 export const ENGINEER_FOOTER: NavItem[] = [
-  { label: "Settings", icon: "settings", screen: "system-settings" },
   { label: "Collapse", icon: "menu_open" },
 ];
 
@@ -85,25 +102,16 @@ export const FIELD_NAV: NavItem[] = [
   { label: "My Jobs", icon: "engineering", screen: "job-details-inst-550-a" },
   { label: "Inventory", icon: "inventory_2", screen: "product-master" },
   { label: "Documents", icon: "description", screen: "customer-handover-report" },
-  { label: "Support", icon: "support_agent", screen: "ai-support-center" },
-];
-
-/** AI support sidebar items. */
-export const AI_SUPPORT_NAV: NavItem[] = [
-  { label: "Dashboard", icon: "dashboard", screen: "ai-support-center" },
-  { label: "Knowledge Base", icon: "menu_book", screen: "ai-support-center" },
-  { label: "Troubleshooting", icon: "build", screen: "ai-support-center" },
-  { label: "Support Tickets", icon: "confirmation_number", screen: "ai-support-center" },
-  { label: "Analytics", icon: "insights", screen: "admin-dashboard" },
+  { label: "Support", icon: "support_agent", screen: "support-tickets" },
 ];
 
 /** Universal search command center sidebar items. */
 export const COMMAND_CENTER_NAV: NavItem[] = [
   { label: "Dashboard", icon: "dashboard", screen: "universal-search-command-center" },
-  { label: "Knowledge Base", icon: "menu_book", screen: "ai-support-center" },
-  { label: "Troubleshooting", icon: "build", screen: "ai-support-center" },
-  { label: "Support Tickets", icon: "confirmation_number", screen: "ai-support-center" },
-  { label: "Analytics", icon: "insights", screen: "admin-dashboard" },
+  { label: "Knowledge Base", icon: "menu_book", screen: "support-kb" },
+  { label: "Troubleshooting", icon: "build", screen: "engineer-troubleshooting" },
+  { label: "Support Tickets", icon: "confirmation_number", screen: "support-tickets" },
+  { label: "Analytics", icon: "insights", screen: "support-analytics" },
 ];
 
 /** Field Service Management sidebar items — installation & service team only. */
@@ -112,9 +120,9 @@ export const FSM_NAV: NavItem[] = [
   { label: "Work Orders", icon: "assignment", screen: "fsm-dashboard" },
   { label: "Asset History", icon: "history", screen: "fsm-customer-asset-history" },
   { label: "Notifications", icon: "notifications", screen: "notification-center" },
-  { label: "Dr. QBIT", icon: "smart_toy", screen: "ai-support-center" },
-  { label: "Knowledge Base", icon: "library_books", screen: "ai-support-center" },
-  { label: "Support", icon: "contact_support", screen: "ai-support-center" },
+  { label: "Dr. QBIT", icon: "smart_toy", screen: "dr-qbit-detection" },
+  { label: "Knowledge Base", icon: "library_books", screen: "support-kb" },
+  { label: "Support", icon: "contact_support", screen: "support-tickets" },
 ];
 
 /** Notification Automation Engine sidebar items — admin only. */

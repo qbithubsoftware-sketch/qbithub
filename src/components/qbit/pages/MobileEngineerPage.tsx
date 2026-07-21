@@ -135,13 +135,13 @@ export function MobileEngineerPage() {
   const handleQuickAction = (action: string) => {
     switch (action) {
       case "drqbit":
-        navigate("ai-support-center");
+        navigate("support-tickets");
         break;
       case "history":
         navigate("fsm-customer-asset-history");
         break;
       case "knowledge":
-        navigate("ai-support-center");
+        navigate("support-tickets");
         break;
       case "notifications":
         navigate("notification-center");

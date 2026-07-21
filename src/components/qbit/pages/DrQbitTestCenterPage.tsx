@@ -225,7 +225,7 @@ export function DrQbitTestCenterPage() {
                   <QbitButton variant="outline" size="sm" icon="system_update" fullWidth onClick={() => navigate("dr-qbit-firmware")}>
                     Open Firmware Center
                   </QbitButton>
-                  <QbitButton variant="outline" size="sm" icon="support_agent" fullWidth onClick={() => navigate("ai-support-center")}>
+                  <QbitButton variant="outline" size="sm" icon="support_agent" fullWidth onClick={() => navigate("support-tickets")}>
                     Contact Support
                   </QbitButton>
                 </div>

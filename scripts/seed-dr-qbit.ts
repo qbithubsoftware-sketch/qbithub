@@ -32,7 +32,7 @@ async function main() {
       driverDownloadUrl: "https://qbithub.vercel.app/?screen=driver-download-center&category=driver&model=T-800",
       manualUrl: "https://qbithub.vercel.app/?screen=driver-download-center&category=manual&model=T-800",
       installationGuideUrl: "https://qbithub.vercel.app/?screen=installation-center&model=T-800",
-      knowledgeBaseUrl: "https://qbithub.vercel.app/?screen=ai-support-center",
+      knowledgeBaseUrl: "https://qbithub.vercel.app/?screen=support-kb",
     },
     {
       id: "prod_bs550",

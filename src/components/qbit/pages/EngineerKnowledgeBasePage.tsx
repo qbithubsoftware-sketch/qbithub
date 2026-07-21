@@ -83,6 +83,8 @@ export function EngineerKnowledgeBasePage() {
 
   const userName = session?.user?.name ?? "Engineer";
   const userInitials = userName.split(" ").map(w => w[0]).join("").substring(0, 2).toUpperCase();
+  const userRole = session?.user?.role as string | undefined;
+  const displayRole = userRole === "support_engineer" ? "Support" : "Installation Engineer";
 
   const fetchKb = useCallback(async () => {
     try {
@@ -131,10 +133,10 @@ export function EngineerKnowledgeBasePage() {
       navItems={ENGINEER_NAV}
       footerItems={ENGINEER_FOOTER}
       activeScreen="engineer-knowledge"
-      user={{ name: userName, role: "Installation Engineer", initials: userInitials }}
+      user={{ name: userName, role: displayRole, initials: userInitials }}
       topBar={{
         searchPlaceholder: "Search knowledge base...",
-        user: { name: userName, role: "Installation Engineer", initials: userInitials },
+        user: { name: userName, role: displayRole, initials: userInitials },
       }}
     >
       <div className="space-y-6">

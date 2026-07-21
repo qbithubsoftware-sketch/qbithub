@@ -347,7 +347,7 @@ export function DriverDownloadCenterPage() {
                 </p>
                 <button
                   type="button"
-                  onClick={() => useNavigation.getState().navigate("ai-support-center")}
+                  onClick={() => useNavigation.getState().navigate("support-tickets")}
                   className="inline-flex items-center gap-2 text-white text-sm font-medium group"
                 >
                   Contact Support

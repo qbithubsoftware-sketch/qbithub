@@ -418,7 +418,7 @@ export function EngineerDashboardPage() {
               fullWidth
               className="mt-5"
               iconRight="arrow_forward"
-              onClick={() => navigate("ai-support-center")}
+              onClick={() => navigate("support-tickets")}
             >
               Check All Updates
             </QbitButton>

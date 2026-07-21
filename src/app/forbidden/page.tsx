@@ -38,7 +38,7 @@ export default function ForbiddenPage() {
         <QbitButton
           variant="outline"
           icon="support_agent"
-          onClick={() => navigate("ai-support-center")}
+          onClick={() => navigate("support-tickets")}
         >
           Contact Support
         </QbitButton>

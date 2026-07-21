@@ -4,7 +4,7 @@
  * V3 RBAC layers:
  *   - requireAuth()              → any logged-in user
  *   - requireCustomer()          → public_customer role only
- *   - requireStaff()             → admin + installation + support engineers
+ *   - requireStaff()             → admin + installation + support roles
  *   - requireEngineerOrAdmin()   → admin + installation_engineer
  *   - requireAdmin()             → administrator only
  *   - requireRoles(...roles)     → explicit role whitelist

@@ -14,7 +14,8 @@
  * routes the user to their role's home screen.
  *
  * Employees (super_admin, administrator, installation_engineer,
- * support_engineer) log in HERE. Customers log in at /accounts/login.
+ * support_engineer) log in HERE. All roles now land on the unified
+ * Engineer Portal (/engineer) where Support is a built-in module.
  * The two flows NEVER mix.
  */
 

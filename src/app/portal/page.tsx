@@ -12,7 +12,6 @@ import { InstallationCenterPage } from "@/components/qbit/pages/InstallationCent
 import { CustomerHandoverReportPage } from "@/components/qbit/pages/CustomerHandoverReportPage";
 import { VideoTrainingCenterPage } from "@/components/qbit/pages/VideoTrainingCenterPage";
 import { T800InstallationGuidePage } from "@/components/qbit/pages/T800InstallationGuidePage";
-import { AISupportCenterPage } from "@/components/qbit/pages/AISupportCenterPage";
 import { JobDetailsInst550APage } from "@/components/qbit/pages/JobDetailsInst550APage";
 import { FieldEngineerWorkspacePage } from "@/components/qbit/pages/FieldEngineerWorkspacePage";
 import { JobCompletionHandoverPage } from "@/components/qbit/pages/JobCompletionHandoverPage";
@@ -57,6 +56,7 @@ import { EngineerJobsPage } from "@/components/qbit/pages/EngineerJobsPage";
 import { EngineerKnowledgeBasePage } from "@/components/qbit/pages/EngineerKnowledgeBasePage";
 import { EngineerDownloadsPage } from "@/components/qbit/pages/EngineerDownloadsPage";
 import { EngineerTroubleshootingPage } from "@/components/qbit/pages/EngineerTroubleshootingPage";
+import { SupportModulePage } from "@/components/qbit/pages/SupportModulePage";
 
 export default function Home() {
   const current = useNavigation((s) => s.current);
@@ -84,7 +84,7 @@ export default function Home() {
       case "t800-installation-guide":
         return <T800InstallationGuidePage />;
       case "ai-support-center":
-        return <AISupportCenterPage />;
+        return <SupportModulePage defaultTab="tickets" />;
       case "job-details-inst-550-a":
         return <JobDetailsInst550APage />;
       case "field-engineer-workspace":
@@ -198,6 +198,23 @@ export default function Home() {
         return <EngineerDownloadsPage />;
       case "engineer-troubleshooting":
         return <EngineerTroubleshootingPage />;
+      // Support Module — Unified (merged from Support Engineer Portal)
+      case "support-tickets":
+        return <SupportModulePage defaultTab="tickets" />;
+      case "support-customer":
+        return <SupportModulePage defaultTab="customer" />;
+      case "support-kb":
+        return <SupportModulePage defaultTab="knowledge" />;
+      case "support-resources":
+        return <SupportModulePage defaultTab="resources" />;
+      case "support-remote":
+        return <SupportModulePage defaultTab="remote" />;
+      case "support-communication":
+        return <SupportModulePage defaultTab="communication" />;
+      case "support-escalation":
+        return <SupportModulePage defaultTab="escalation" />;
+      case "support-analytics":
+        return <SupportModulePage defaultTab="analytics" />;
       default:
         return <LoginPage />;
     }

@@ -128,7 +128,7 @@ export function ProfileMenu({
             Recent Activity
           </DropdownMenuItem>
           <DropdownMenuItem
-            onSelect={() => navigate("ai-support-center")}
+            onSelect={() => navigate("support-tickets")}
             className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-qbit-on-surface cursor-pointer hover:bg-qbit-surface-container-low"
           >
             <Icon name="contact_support" className="text-[18px] text-qbit-on-surface-variant" />

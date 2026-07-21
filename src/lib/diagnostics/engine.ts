@@ -647,7 +647,7 @@ function analyzeDevice(passport: {
       title: "Open Troubleshooting",
       description: "Browse the QBIT Knowledge Base for troubleshooting articles",
       actionType: "open_troubleshooting",
-      resourceScreen: "ai-support-center",
+      resourceScreen: "support-tickets",
       priority: "low",
     });
     recommendations.push({

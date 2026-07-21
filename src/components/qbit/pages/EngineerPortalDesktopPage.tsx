@@ -272,7 +272,9 @@ export function EngineerPortalDesktopPage() {
   const [upcomingJobs, setUpcomingJobs] = useState<WorkOrderItem[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const userRole = session?.user?.role as string | undefined;
   const userName = session?.user?.name ?? "Engineer";
+  const displayRole = userRole === "support_engineer" ? "Support" : "Installation Engineer";
   const userInitials = userName.split(" ").map(w => w[0]).join("").substring(0, 2).toUpperCase();
 
   const fetchDashboardData = useCallback(async () => {
@@ -317,10 +319,10 @@ export function EngineerPortalDesktopPage() {
       navItems={ENGINEER_NAV}
       footerItems={ENGINEER_FOOTER}
       activeScreen="engineer-portal"
-      user={{ name: userName, role: "Installation Engineer", initials: userInitials }}
+      user={{ name: userName, role: displayRole, initials: userInitials }}
       topBar={{
         searchPlaceholder: "Search serial numbers, drivers, manuals...",
-        user: { name: userName, role: "Installation Engineer", initials: userInitials },
+        user: { name: userName, role: displayRole, initials: userInitials },
       }}
     >
       <div className="space-y-6 lg:space-y-8">
@@ -397,7 +399,7 @@ export function EngineerPortalDesktopPage() {
                 <QuickAction
                   label="Raise Support Ticket"
                   icon="confirmation_number"
-                  screen="ai-support-center"
+                  screen="support-tickets"
                   description="Contact support team"
                 />
                 <QuickAction

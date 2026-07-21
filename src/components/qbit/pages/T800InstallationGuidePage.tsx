@@ -231,7 +231,7 @@ export function T800InstallationGuidePage() {
                   size="md"
                   icon="support_agent"
                   fullWidth
-                  onClick={() => navigate("ai-support-center")}
+                  onClick={() => navigate("support-tickets")}
                 >
                   Live Support Chat
                 </QbitButton>

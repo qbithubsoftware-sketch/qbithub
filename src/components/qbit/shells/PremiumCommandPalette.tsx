@@ -42,7 +42,7 @@ const COMMANDS: CommandEntry[] = [
   { id: "dl-search", label: "Public Product Search", icon: "manage_search", group: "Downloads", screen: "public-search", keywords: "public search catalog" },
 
   // Knowledge
-  { id: "kb-ai", label: "AI Support Center", icon: "smart_toy", group: "Knowledge", screen: "ai-support-center", keywords: "ai assistant chat support" },
+  { id: "kb-ai", label: "AI Support Center", icon: "smart_toy", group: "Knowledge", screen: "support-tickets", keywords: "ai assistant chat support" },
   { id: "kb-install", label: "Installation Center", icon: "menu_book", group: "Knowledge", screen: "installation-center", keywords: "guide setup wiring" },
   { id: "kb-t800-guide", label: "T-800 Installation Guide", icon: "build", group: "Knowledge", screen: "t800-installation-guide", keywords: "step by step" },
   { id: "kb-videos", label: "Video Training Center", icon: "play_circle", group: "Knowledge", screen: "video-training-center", keywords: "video training youtube" },

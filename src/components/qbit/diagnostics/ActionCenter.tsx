@@ -25,7 +25,7 @@ export function ActionCenter({ hardwareId }: ActionCenterProps) {
     { label: "Download Firmware", icon: "system_update", screen: "dr-qbit-firmware" },
     { label: "Open Manual", icon: "menu_book", screen: "driver-download-center" },
     { label: "Watch Video", icon: "play_circle", screen: "video-training-center" },
-    { label: "Open Troubleshooting", icon: "build", screen: "ai-support-center" },
+    { label: "Open Troubleshooting", icon: "build", screen: "support-tickets" },
     { label: "Run Test Print", icon: "print", action: () => toast({ title: "Test Print", description: "In production, sends test print via Desktop Agent." }) },
     { label: "Generate Report", icon: "picture_as_pdf", action: () => toast({ title: "Diagnostic Report", description: "In production, generates a PDF diagnostic report." }) },
     {

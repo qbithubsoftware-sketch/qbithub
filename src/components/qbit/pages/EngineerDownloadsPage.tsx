@@ -102,6 +102,8 @@ export function EngineerDownloadsPage() {
 
   const userName = session?.user?.name ?? "Engineer";
   const userInitials = userName.split(" ").map(w => w[0]).join("").substring(0, 2).toUpperCase();
+  const userRole = session?.user?.role as string | undefined;
+  const displayRole = userRole === "support_engineer" ? "Support" : "Installation Engineer";
 
   const fetchResources = useCallback(async () => {
     try {
@@ -151,10 +153,10 @@ export function EngineerDownloadsPage() {
       navItems={ENGINEER_NAV}
       footerItems={ENGINEER_FOOTER}
       activeScreen="engineer-downloads"
-      user={{ name: userName, role: "Installation Engineer", initials: userInitials }}
+      user={{ name: userName, role: displayRole, initials: userInitials }}
       topBar={{
         searchPlaceholder: "Search drivers, firmware, tools...",
-        user: { name: userName, role: "Installation Engineer", initials: userInitials },
+        user: { name: userName, role: displayRole, initials: userInitials },
       }}
     >
       <div className="space-y-6">

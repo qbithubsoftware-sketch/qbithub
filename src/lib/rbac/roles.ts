@@ -24,7 +24,7 @@ export const ROLE_LABELS: Record<Role, string> = {
   super_administrator: "Super Administrator",
   administrator: "Administrator",
   installation_engineer: "Installation Engineer",
-  support_engineer: "Support Engineer",
+  support_engineer: "Support",
   sales_executive: "Sales Executive",
   dealer: "Dealer",
   viewer: "Viewer",
@@ -38,7 +38,7 @@ export const ROLE_DESCRIPTIONS: Record<Role, string> = {
   installation_engineer:
     "Installation workflows, drivers, products, knowledge base, and support.",
   support_engineer:
-    "AI support center, knowledge base, troubleshooting, and support tickets.",
+    "Unified support center — ticket management, customer support, technical resources, and escalation.",
   sales_executive: "Product catalog and marketing pages (read-only).",
   dealer: "Products, drivers, manuals, and training videos.",
   viewer: "Read-only access across all non-administrative modules.",
@@ -50,7 +50,7 @@ export const ROLE_ICONS: Record<Role, string> = {
   super_administrator: "verified_user",
   administrator: "admin_panel_settings",
   installation_engineer: "engineering",
-  support_engineer: "support_agent",
+  support_engineer: "contact_support",
   sales_executive: "storefront",
   dealer: "handshake",
   viewer: "visibility",
@@ -73,7 +73,7 @@ export function portalRouteForRole(role: Role): string {
     case "installation_engineer":
       return "/engineer";
     case "support_engineer":
-      return "/support-portal";
+      return "/engineer";
     case "sales_executive":
     case "dealer":
     case "viewer":
@@ -242,6 +242,15 @@ export const SCREEN_PERMISSIONS: Record<ScreenId, Role[]> = {
   "engineer-knowledge": ["administrator", "installation_engineer", "support_engineer", "dealer", "viewer"],
   "engineer-downloads": ["administrator", "installation_engineer", "support_engineer", "dealer", "viewer"],
   "engineer-troubleshooting": ["administrator", "installation_engineer", "support_engineer"],
+  // Support Module — Unified (merged from Support Engineer Portal)
+  "support-tickets": ["administrator", "installation_engineer", "support_engineer"],
+  "support-customer": ["administrator", "installation_engineer", "support_engineer"],
+  "support-kb": ["administrator", "installation_engineer", "support_engineer", "dealer", "viewer"],
+  "support-resources": ["administrator", "installation_engineer", "support_engineer"],
+  "support-remote": ["administrator", "installation_engineer", "support_engineer"],
+  "support-communication": ["administrator", "installation_engineer", "support_engineer"],
+  "support-escalation": ["administrator", "support_engineer"],
+  "support-analytics": ["administrator", "support_engineer"],
 };
 
 /**
@@ -275,7 +284,7 @@ export function homeScreenForRole(role: Role): ScreenId {
     case "installation_engineer":
       return "engineer-portal";
     case "support_engineer":
-      return "ai-support-center";
+      return "engineer-portal";
     case "sales_executive":
       return "product-library";
     case "dealer":

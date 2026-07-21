@@ -72,7 +72,7 @@ export function FSMDashboardPage() {
   };
 
   const handleOpenDrQbit = () => {
-    navigate("ai-support-center");
+    navigate("support-tickets");
     toast({
       title: "Dr. QBIT ready",
       description: "Scan a device or ask a diagnostic question.",
@@ -168,7 +168,7 @@ export function FSMDashboardPage() {
               </button>
               <button
                 type="button"
-                onClick={() => navigate("ai-support-center")}
+                onClick={() => navigate("support-tickets")}
                 className="group flex flex-col items-center justify-center gap-2 rounded-xl bg-qbit-primary/5 p-4 text-center transition-all hover:-translate-y-0.5 hover:bg-qbit-primary-container hover:text-qbit-on-primary-container"
               >
                 <Icon name="support_agent" className="text-[28px] text-qbit-primary transition-transform group-hover:scale-110" />

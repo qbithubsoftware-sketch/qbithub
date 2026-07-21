@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { Icon } from "../primitives/Icon";
 import { useNavigation, type ScreenId } from "@/lib/navigation/store";
 
-export type SidebarVariant = "engineer" | "admin" | "field" | "ai-support" | "instalcore";
+export type SidebarVariant = "engineer" | "admin" | "field" | "support" | "instalcore";
 
 export interface NavChild {
   label: string;

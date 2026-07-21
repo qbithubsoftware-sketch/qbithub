@@ -149,8 +149,8 @@ export function DrQbitDevicePassportPage() {
                     { label: "Installation Guide", icon: "fact_check", screen: "installation-center" },
                     { label: "Quick Start Guide", icon: "rocket_launch", screen: "installation-center" },
                     { label: "Video Tutorials", icon: "play_circle", screen: "video-training-center" },
-                    { label: "Knowledge Base", icon: "library_books", screen: "ai-support-center" },
-                    { label: "FAQs", icon: "help", screen: "ai-support-center" },
+                    { label: "Knowledge Base", icon: "library_books", screen: "support-tickets" },
+                    { label: "FAQs", icon: "help", screen: "support-tickets" },
                     { label: "Driver Center", icon: "settings_input_component", screen: "driver-download-center" },
                   ].map((r) => (
                     <button
@@ -210,7 +210,7 @@ export function DrQbitDevicePassportPage() {
                   <h3 className="text-sm font-semibold text-qbit-on-surface">Quick Actions</h3>
                 </div>
                 <div className="space-y-2">
-                  <QbitButton variant="primary" size="sm" icon="smart_toy" fullWidth onClick={() => navigate("ai-support-center")}>
+                  <QbitButton variant="primary" size="sm" icon="smart_toy" fullWidth onClick={() => navigate("support-tickets")}>
                     Run AI Diagnostics
                   </QbitButton>
                   <QbitButton variant="outline" size="sm" icon="print" fullWidth onClick={() => toast({ title: "Test Print", description: "In production, this sends a test print command via Desktop Agent." })}>

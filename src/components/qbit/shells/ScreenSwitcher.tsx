@@ -27,7 +27,7 @@ const SCREENS: ScreenEntry[] = [
   { id: "customer-handover-report", label: "Customer Handover Report", group: "Engineer", icon: "fact_check" },
   { id: "video-training-center", label: "Video Training Center", group: "Engineer", icon: "play_circle" },
   { id: "t800-installation-guide", label: "T-800 Installation Guide", group: "Engineer", icon: "build" },
-  { id: "ai-support-center", label: "AI Support Center", group: "Engineer", icon: "smart_toy" },
+  { id: "support-tickets", label: "AI Support Center", group: "Engineer", icon: "smart_toy" },
   // Field engineer
   { id: "field-engineer-workspace", label: "Field Engineer Workspace", group: "Field Ops", icon: "engineering" },
   { id: "job-details-inst-550-a", label: "Job Details: INST-550-A", group: "Field Ops", icon: "task_alt" },

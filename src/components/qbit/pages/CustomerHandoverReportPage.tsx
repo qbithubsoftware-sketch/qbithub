@@ -43,7 +43,7 @@ interface QuickLink {
   description: string;
   icon: string;
   screen:
-    | "ai-support-center"
+    | "support-tickets"
     | "installation-center"
     | "system-settings";
 }
@@ -112,7 +112,7 @@ const QUICK_LINKS: QuickLink[] = [
     title: "Network Connectivity",
     description: "Issues with local DNS or IP lease.",
     icon: "wifi_off",
-    screen: "ai-support-center",
+    screen: "support-tickets",
   },
   {
     title: "Admin Credentials",
@@ -124,13 +124,13 @@ const QUICK_LINKS: QuickLink[] = [
     title: "Data Sync Delay",
     description: "Forcing a manual cloud handshake.",
     icon: "sync",
-    screen: "ai-support-center",
+    screen: "support-tickets",
   },
   {
     title: "Level 2 Support",
     description: "Direct escalation for hardware failure.",
     icon: "support_agent",
-    screen: "ai-support-center",
+    screen: "support-tickets",
   },
 ];
 
@@ -411,7 +411,7 @@ export function CustomerHandoverReportPage() {
                           ) : (
                             <button
                               type="button"
-                              onClick={() => navigate("ai-support-center")}
+                              onClick={() => navigate("support-tickets")}
                               className="text-sm font-semibold text-qbit-primary hover:underline"
                             >
                               Troubleshoot
