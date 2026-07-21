@@ -68,7 +68,7 @@ export async function GET(req: NextRequest) {
 
     for (const r of resources) {
       let healthy = true;
-      const urlType = r.urlType || detectUrlType(r.url);
+      const urlType = r.urlType || detectUrlType(r.url ?? "");
 
       // Check 1: Empty/null URL
       if (!r.url || r.url.trim() === "") {
@@ -153,8 +153,8 @@ export async function GET(req: NextRequest) {
         const storedFiles = await provider.list();
         const storageKeys = new Set(
           resources
-            .filter((r) => (r.urlType || detectUrlType(r.url)) === "storage_key")
-            .map((r) => r.url),
+            .filter((r) => (r.urlType || detectUrlType(r.url ?? "")) === "storage_key")
+            .map((r) => r.url ?? ""),
         );
 
         for (const fileKey of storedFiles) {
@@ -181,7 +181,7 @@ export async function GET(req: NextRequest) {
       for (const file of legacyFiles) {
         const key = `/uploads/resources/${file}`;
         const matchedResource = resources.find(
-          (r) => r.url === key || r.url === `resources/${file}`,
+          (r) => (r.url ?? "") === key || (r.url ?? "") === `resources/${file}`,
         );
         if (!matchedResource) {
           issues.push({

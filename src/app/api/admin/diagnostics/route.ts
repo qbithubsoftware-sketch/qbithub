@@ -183,8 +183,8 @@ async function checkResourceModule(issues: DiagnosticIssue[]): Promise<ModuleSta
 
   let missingFiles = 0;
   for (const r of storageKeyResources) {
-    const urlType = r.urlType || detectUrlType(r.url);
-    if (urlType === "storage_key") {
+    const urlType = r.urlType || detectUrlType(r.url ?? "");
+    if (urlType === "storage_key" && r.url) {
       const exists = await StorageService.exists(r.url).catch(() => false);
       if (!exists) {
         missingFiles++;
@@ -234,7 +234,7 @@ async function checkResourceModule(issues: DiagnosticIssue[]): Promise<ModuleSta
   });
   let mismatches = 0;
   for (const r of mismatched) {
-    const detected = detectUrlType(r.url);
+    const detected = detectUrlType(r.url ?? "");
     if (r.urlType && r.urlType !== detected) {
       mismatches++;
       if (mismatches <= 5) {
@@ -805,7 +805,7 @@ export async function POST(req: NextRequest) {
         });
         let fixed = 0;
         for (const r of resources) {
-          const detected = detectUrlType(r.url);
+          const detected = detectUrlType(r.url ?? "");
           if (r.urlType && r.urlType !== detected) {
             await db.resource.update({ where: { id: r.id }, data: { urlType: detected } });
             fixed++;

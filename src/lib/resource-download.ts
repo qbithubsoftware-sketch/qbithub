@@ -140,17 +140,17 @@ export async function serveResourceFile(
   options: DownloadOptions = {},
 ): Promise<NextResponse> {
   const logger = createResourceLogger("download");
-  const urlType = resource.urlType || detectUrlType(resource.url);
+  const urlType = resource.urlType || detectUrlType(resource.url ?? "");
 
   // ---- 1. External URL → redirect ----
   if (urlType === "external") {
     logger.completed({ resourceId: resource.id, fileName: resource.originalFileName ?? undefined, mimeType: resource.mimeType ?? undefined });
-    return NextResponse.redirect(resource.url, { status: 302 });
+    return NextResponse.redirect(resource.url ?? "", { status: 302 });
   }
 
   // ---- 2. Data URL → base64 decode ----
   if (urlType === "data_url") {
-    const base64Data = resource.url.split(",")[1];
+    const base64Data = (resource.url ?? "").split(",")[1];
     if (!base64Data) {
       logger.failed("INVALID_DATA_URL", "Data URL has no base64 payload", { resourceId: resource.id });
       return NextResponse.json(
@@ -183,12 +183,12 @@ export async function serveResourceFile(
   // ---- 3. Storage key → StorageService ----
   console.log(`[ResourceDownload] === OBJECT LIFECYCLE: DB → Download ===`);
   console.log(`[ResourceDownload]   resource.id:       ${resource.id}`);
-  console.log(`[ResourceDownload]   resource.url:      ${resource.url}`);
+  console.log(`[ResourceDownload]   resource.url:      ${resource.url ?? "(null)"}`);
   console.log(`[ResourceDownload]   resource.urlType:  ${urlType}`);
-  console.log(`[ResourceDownload]   Calling StorageService.download("${resource.url.slice(0, 60)}...")`);
+  console.log(`[ResourceDownload]   Calling StorageService.download("${(resource.url ?? "").slice(0, 60)}...")`);
 
   try {
-    const downloadResult = await StorageService.download(resource.url);
+    const downloadResult = await StorageService.download(resource.url ?? "");
     const uint8Array = new Uint8Array(downloadResult.buffer);
     const fileName = sanitizeFileName(
       resource.originalFileName || resource.name,
@@ -263,12 +263,12 @@ export async function serveResourceFile(
     });
   } catch (storageErr) {
     console.error(
-      `[ResourceDownload] Storage error for key="${resource.url}" resource="${resource.name}" (id=${resource.id}):`,
+      `[ResourceDownload] Storage error for key="${resource.url ?? ""}" resource="${resource.name}" (id=${resource.id}):`,
       storageErr,
     );
-    logger.failed("FILE_NOT_FOUND", `Physical file not found: ${resource.url}`, {
+    logger.failed("FILE_NOT_FOUND", `Physical file not found: ${resource.url ?? ""}`, {
       resourceId: resource.id,
-      storageKey: resource.url,
+      storageKey: resource.url ?? "",
       fileName: resource.originalFileName ?? undefined,
     });
 
