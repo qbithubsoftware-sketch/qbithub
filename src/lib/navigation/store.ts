@@ -89,7 +89,13 @@ export type ScreenId =
   // Engineering Module — Super Admin
   | "engineering-dashboard"
   | "engineering-installations"
-  | "engineering-assign";
+  | "engineering-assign"
+  // Engineer Portal — Simplified Desktop (V3)
+  | "engineer-portal"
+  | "engineer-jobs"
+  | "engineer-knowledge"
+  | "engineer-downloads"
+  | "engineer-troubleshooting";
 
 interface NavigationState {
   current: ScreenId;

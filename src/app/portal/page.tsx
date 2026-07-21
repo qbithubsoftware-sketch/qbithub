@@ -52,6 +52,11 @@ import { NotificationCenterPage } from "@/components/qbit/pages/NotificationCent
 import { NotificationTemplateManagerPage } from "@/components/qbit/pages/NotificationTemplateManagerPage";
 import { NotificationHistoryPage } from "@/components/qbit/pages/NotificationHistoryPage";
 import { NotificationRemindersPage } from "@/components/qbit/pages/NotificationRemindersPage";
+import { EngineerPortalDesktopPage } from "@/components/qbit/pages/EngineerPortalDesktopPage";
+import { EngineerJobsPage } from "@/components/qbit/pages/EngineerJobsPage";
+import { EngineerKnowledgeBasePage } from "@/components/qbit/pages/EngineerKnowledgeBasePage";
+import { EngineerDownloadsPage } from "@/components/qbit/pages/EngineerDownloadsPage";
+import { EngineerTroubleshootingPage } from "@/components/qbit/pages/EngineerTroubleshootingPage";
 
 export default function Home() {
   const current = useNavigation((s) => s.current);
@@ -182,6 +187,17 @@ export default function Home() {
       case "engineering-installations":
       case "engineering-assign":
         return <EngineeringModulePage />;
+      // Engineer Portal — Simplified Desktop (V3)
+      case "engineer-portal":
+        return <EngineerPortalDesktopPage />;
+      case "engineer-jobs":
+        return <EngineerJobsPage />;
+      case "engineer-knowledge":
+        return <EngineerKnowledgeBasePage />;
+      case "engineer-downloads":
+        return <EngineerDownloadsPage />;
+      case "engineer-troubleshooting":
+        return <EngineerTroubleshootingPage />;
       default:
         return <LoginPage />;
     }

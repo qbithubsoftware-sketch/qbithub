@@ -236,6 +236,12 @@ export const SCREEN_PERMISSIONS: Record<ScreenId, Role[]> = {
   "engineering-dashboard": ["super_administrator", "administrator"],
   "engineering-installations": ["super_administrator", "administrator"],
   "engineering-assign": ["super_administrator", "administrator"],
+  // Engineer Portal — Simplified Desktop (V3)
+  "engineer-portal": ["administrator", "installation_engineer", "support_engineer"],
+  "engineer-jobs": ["administrator", "installation_engineer", "support_engineer"],
+  "engineer-knowledge": ["administrator", "installation_engineer", "support_engineer", "dealer", "viewer"],
+  "engineer-downloads": ["administrator", "installation_engineer", "support_engineer", "dealer", "viewer"],
+  "engineer-troubleshooting": ["administrator", "installation_engineer", "support_engineer"],
 };
 
 /**
@@ -267,7 +273,7 @@ export function homeScreenForRole(role: Role): ScreenId {
     case "administrator":
       return "home";
     case "installation_engineer":
-      return "mobile-engineer";
+      return "engineer-portal";
     case "support_engineer":
       return "ai-support-center";
     case "sales_executive":

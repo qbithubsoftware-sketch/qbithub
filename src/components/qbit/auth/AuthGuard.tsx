@@ -140,7 +140,7 @@ function roleHomeScreen(role: Role): import("@/lib/navigation/store").ScreenId {
     case "administrator":
       return "home";
     case "installation_engineer":
-      return "mobile-engineer";
+      return "engineer-portal";
     case "support_engineer":
       return "ai-support-center";
     case "sales_executive":
