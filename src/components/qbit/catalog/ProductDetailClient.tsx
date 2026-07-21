@@ -107,7 +107,7 @@ export interface ProductDetail {
     name: string;
     version: string | null;
     description: string | null;
-    url: string;
+    url: string | null;
     mimeType: string | null;
     fileSize: number | null;
     thumbnailUrl: string | null;
@@ -773,7 +773,7 @@ export function ProductDetailClient({ product }: { product: ProductDetail }) {
                           </div>
                           {r.type === "video" ? (
                             <a
-                              href={r.url.startsWith("http") ? r.url : `/api/admin/resources/${r.resourceId}?download=true`}
+                              href={(r.url ?? "").startsWith("http") ? r.url ?? "#" : `/api/admin/resources/${r.resourceId}?download=true`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-qbit-primary hover:underline"
