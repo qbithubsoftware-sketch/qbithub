@@ -31,7 +31,7 @@ import crypto from "crypto";
 interface ResourceRecord {
   id: string;
   name: string;
-  url: string;
+  url: string | null;
   urlType?: string | null;
   mimeType?: string | null;
   fileSize?: number | null;
