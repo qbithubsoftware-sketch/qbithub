@@ -1815,7 +1815,8 @@ model Resource {
   supportedCategories String?
   /// File URL — can be a storage key, data URL (base64), or external URL.
   /// Discriminated by the `urlType` field.
-  url             String
+  /// Optional to allow safe migration on existing databases.
+  url             String?
   /// Type discriminator for the `url` field:
   /// "storage_key" = uploaded via StorageService, "data_url" = base64 inline, "external" = http(s) redirect
   urlType         String   @default("storage_key")
