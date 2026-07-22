@@ -2188,6 +2188,7 @@ model DevicePassport {
   firmwareHistory    FirmwareHistory[]
   diagnosticSessions DiagnosticSession[]
   testSessions       DeviceTestSession[]
+  configuration      DeviceConfiguration?
 
   @@index([productId])
   @@index([serialNumber])
@@ -3009,4 +3010,106 @@ model PurchaseInvoice {
   @@index([purchaseId])
   @@index([documentType])
   @@index([extractionStatus])
+}
+
+// =====================================================
+// Dr. QBIT Phase 4 — Configuration & Device Provisioning
+// =====================================================
+//
+// After Phase 3 (Cloud Lookup) returns the enriched profile, Phase 4
+// configures the connected device for its supported connection types,
+// tests communication, sends a test print, and saves the configuration
+// to the database.
+//
+// Architecture:
+//   - DeviceConfiguration: the applied configuration profile per device
+//   - ConfigurationEvent: audit trail of every configuration action
+//
+// SAFETY: Configuration is NEVER saved unless:
+//   - Device is verified (from Phase 2)
+//   - Communication is verified (from Configuration Engine)
+//   - Configuration validation is complete
+//
+// Extensible: New connection types and device types can be added
+// without changing the core engine — only the adapter for that type.
+
+/// Applied device configuration — one per device passport.
+/// Created when a device is successfully configured via Dr. QBIT.
+/// Updated on subsequent configuration changes (Wi-Fi update, LAN change, etc.)
+model DeviceConfiguration {
+  id                    String          @id @default(cuid())
+  configurationNumber   String          @unique // "CONF-2026-00001"
+  // Link to device passport
+  passportId            String          @unique
+  passport              DevicePassport  @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  // Serial number (denormalized for search)
+  serialNumber          String?
+  // Active connection type — the PRIMARY connection this device uses
+  activeConnectionType  String? // "usb" | "lan" | "wifi" | "bluetooth"
+  // ===== Per-connection configuration (JSON blobs) =====
+  // Each is populated ONLY if the device supports that connection type.
+  // Null means "device does not support this connection type" or "not yet configured".
+  /// USB configuration details (port, driver name, VID/PID, status)
+  usbConfig             String? // JSON: { port, driverName, driverInstalled, driverVersion, vendorId, productIdCode, communicationActive }
+  /// LAN configuration details (IP, gateway, DNS, DHCP/static, status)
+  lanConfig             String? // JSON: { ipAddress, gateway, dns, dhcpEnabled, subnetMask, macAddress, connectionStatus }
+  /// Wi-Fi configuration details (SSID, password, IP, signal, status)
+  wifiConfig            String? // JSON: { ssid, ipAddress, signalQuality, authentication, gateway, dns, securityType, connectionStatus }
+  /// Bluetooth configuration details (paired name, MAC, status)
+  bluetoothConfig       String? // JSON: { pairedDeviceName, pairedMacAddress, pairingStatus, communicationReady, comPort }
+  // ===== Overall configuration status =====
+  configurationStatus   String          @default("pending") // "pending" | "successful" | "failed" | "partial"
+  /// Whether communication was verified for the active connection type
+  communicationVerified Boolean          @default(false)
+  /// Whether a test print was performed and passed
+  testPrintStatus       String          @default("pending") // "pending" | "passed" | "failed" | "not_supported" | "skipped"
+  /// Firmware version at the time of configuration
+  firmwareVersionAtConfig String?
+  // ===== Timestamps =====
+  lastConfiguredAt      DateTime?
+  lastConfiguredBy      String? // User.id of engineer, or "desktop-agent", or "system"
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  // Relations
+  configurationEvents ConfigurationEvent[]
+
+  @@index([passportId])
+  @@index([serialNumber])
+  @@index([configurationStatus])
+  @@index([activeConnectionType])
+  @@index([lastConfiguredAt])
+}
+
+/// Configuration event — audit trail of every configuration action.
+/// One row per event (Wi-Fi update, LAN change, USB connect, test print, etc.)
+/// Engineers and admins can review the full configuration history for any device.
+model ConfigurationEvent {
+  id                  String              @id @default(cuid())
+  configurationId     String
+  configuration       DeviceConfiguration @relation(fields: [configurationId], references: [id], onDelete: Cascade)
+  // Event identification
+  eventType           String // "configuration_started" | "usb_connected" | "wifi_updated" | "wifi_connected" |
+                           // "lan_updated" | "lan_connected" | "bluetooth_connected" | "bluetooth_paired" |
+                           // "communication_verified" | "test_print" | "configuration_completed" | "configuration_failed"
+  connectionType      String? // "usb" | "lan" | "wifi" | "bluetooth" — null for overall events
+  // Event details (JSON — varies by eventType)
+  eventDetails        String? // JSON: { ssid, ipAddress, port, driverName, errorCode, etc. }
+  // Actor
+  performedBy         String? // User.id, "desktop-agent", or "system"
+  performedByName     String? // Human-readable name
+  // Result
+  result              String  @default("success") // "success" | "failure" | "warning" | "info"
+  errorMessage        String? // Human-readable error if result=failure
+  errorCode           String? // Machine-readable error code (e.g. "wifi_auth_failed", "lan_timeout")
+  // Duration
+  durationMs          Int? // How long this configuration step took
+  // Timestamp
+  occurredAt          DateTime @default(now())
+
+  @@index([configurationId])
+  @@index([eventType])
+  @@index([connectionType])
+  @@index([result])
+  @@index([occurredAt])
 }
