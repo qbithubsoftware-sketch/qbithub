@@ -1,5 +1,5 @@
 /**
- * POST /api/dr-qbit/discovery — Unified Discovery Endpoint (Phase 1 + Phase 2)
+ * POST /api/dr-qbit/discovery — Unified Discovery Endpoint (Phase 1 + Phase 2 + Phase 3)
  *
  * Receives browser-discovered devices from the DiscoveryScanner component.
  * Handles ALL connection types: USB, Bluetooth, and LAN (via Desktop Agent).
@@ -10,7 +10,8 @@
  *   3. Creates DetectedDevice (matched) or UnknownDevice (unmatched) rows
  *   4. For matched devices, creates/updates DevicePassport + DriverInfo + FirmwareInfo
  *   5. Enriches device data with Phase 2 identification (firmware, hardware revision, capabilities)
- *   6. Returns full device info with match status, driver/firmware suggestions, + DeviceProfile
+ *   6. For matched devices WITH serial number, runs Phase 3 Cloud Lookup (product, customer, warranty, resources)
+ *   7. Returns full device info with match status, driver/firmware suggestions, + DeviceProfile + CloudLookupResult
  *
  * NO dummy data, NO simulated devices, NO fake serial numbers.
  * Only processes real devices discovered by the browser/agent.
@@ -22,6 +23,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/notifications/auth";
 import { matchDevice } from "@/lib/drqbit/device-matcher";
+import { runCloudLookup } from "@/lib/drqbit/cloud-lookup-engine";
+import type { CloudLookupInput, CloudLookupResult } from "@/lib/drqbit/cloud-lookup-types";
 import {
   type RawDetectedDevice,
   type DeviceConnection,
@@ -105,6 +108,8 @@ export async function POST(req: NextRequest) {
         fingerprintHash: string | null;
         identificationErrors: Array<{ step: string; message: string; recoverable: boolean }>;
       } | null;
+      /** Phase 3: Cloud Lookup result (serial validation, customer, warranty, resources) */
+      cloudLookup: CloudLookupResult | null;
     }> = [];
 
     let matchedCount = 0;
@@ -222,6 +227,8 @@ export async function POST(req: NextRequest) {
             fingerprintHash: clientProfile.fingerprintHash ?? null,
             identificationErrors: clientProfile.identificationErrors ?? [],
           } : null,
+          // Phase 3: No cloud lookup for unknown devices (no product match)
+          cloudLookup: null,
         });
       } else {
         // MATCHED — product identified
@@ -378,6 +385,75 @@ export async function POST(req: NextRequest) {
           }
         }
 
+        // ===== Phase 3: Cloud Lookup for matched devices with serial number =====
+        // If the matched device has a serial number, run Phase 3 Cloud Lookup
+        // to fetch customer, warranty, resources, and timeline data.
+        let cloudLookupResult: CloudLookupResult | null = null;
+        if (rawDevice.serialNumber) {
+          try {
+            const cloudLookupInput: CloudLookupInput = {
+              serialNumber: rawDevice.serialNumber,
+              model: match.matchedProductModel ?? rawDevice.model ?? null,
+              deviceType: (match.matchedProductType as DeviceType) ?? "unknown",
+              connectionType,
+              firmwareVersion: rawDevice.firmwareVersion ?? null,
+              capabilities: (clientProfile?.capabilities as DeviceCapability[]) ?? [],
+              identificationStatus: rawDevice.serialNumber && match.matchedProductModel
+                ? "verified"
+                : match.matchedProductModel ? "partial" : "unknown",
+              vendorId: rawDevice.vendorId ?? null,
+              productId: rawDevice.productIdCode ?? null,
+              deviceName: rawDevice.deviceName ?? null,
+              manufacturer: rawDevice.manufacturer ?? null,
+            };
+
+            // Determine user role from session for resource visibility filtering
+            const userRole = session.user.role === "administrator" || session.user.role === "super_administrator"
+              ? "admin"
+              : session.user.role === "installation_engineer"
+                ? "engineer"
+                : "guest";
+
+            cloudLookupResult = await runCloudLookup(cloudLookupInput, {
+              engineerId: session.user.id,
+              userRole,
+            });
+
+            // If Cloud Lookup found a warranty record, link it to the passport
+            if (cloudLookupResult.success && passportNumber && cloudLookupResult.warranty) {
+              // Upsert DeviceWarranty record with cloud data
+              const existingPassport = await db.devicePassport.findFirst({
+                where: { passportNumber },
+              });
+              if (existingPassport) {
+                await db.deviceWarranty.upsert({
+                  where: { passportId: existingPassport.id },
+                  update: {
+                    warrantyStartDate: cloudLookupResult.warranty.startDate ? new Date(cloudLookupResult.warranty.startDate) : null,
+                    warrantyExpiryDate: cloudLookupResult.warranty.endDate ? new Date(cloudLookupResult.warranty.endDate) : null,
+                    warrantyStatus: cloudLookupResult.warranty.status,
+                    warrantyDaysRemaining: cloudLookupResult.warranty.remainingDays,
+                    warrantyProvider: cloudLookupResult.warranty.provider,
+                  },
+                  create: {
+                    passportId: existingPassport.id,
+                    purchaseDate: cloudLookupResult.warranty.startDate ? new Date(cloudLookupResult.warranty.startDate) : null,
+                    warrantyStartDate: cloudLookupResult.warranty.startDate ? new Date(cloudLookupResult.warranty.startDate) : null,
+                    warrantyExpiryDate: cloudLookupResult.warranty.endDate ? new Date(cloudLookupResult.warranty.endDate) : null,
+                    warrantyStatus: cloudLookupResult.warranty.status,
+                    warrantyDaysRemaining: cloudLookupResult.warranty.remainingDays,
+                    warrantyProvider: cloudLookupResult.warranty.provider,
+                  },
+                });
+              }
+            }
+          } catch (cloudError) {
+            // Phase 3 Cloud Lookup failure is NOT fatal — Phase 1+2 data is still valid
+            console.warn("[DISCOVERY] Phase 3 Cloud Lookup failed for device:", cloudError);
+            cloudLookupResult = null;
+          }
+        }
+
         results.push({
           id: detected.id,
           passportNumber,
@@ -418,6 +494,8 @@ export async function POST(req: NextRequest) {
             fingerprintHash: clientProfile?.fingerprintHash ?? null,
             identificationErrors: clientProfile?.identificationErrors ?? [],
           },
+          // Phase 3: Cloud Lookup result (serial validation, customer, warranty, resources)
+          cloudLookup: cloudLookupResult,
         });
       }
     }
