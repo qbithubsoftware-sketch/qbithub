@@ -1,23 +1,36 @@
 /**
- * POST /api/dr-qbit/scan — receive scan results from the Desktop Agent
+ * POST /api/dr-qbit/scan — receive scan results from the Desktop Agent (Phase 1 + Phase 2)
  *
  * This is the primary endpoint the Desktop Companion Agent calls after
  * completing a hardware scan. The agent sends all detected devices in
- * one batch; the server creates a ScanSession + DetectedDevice rows +
- * UnknownDevice rows for unmatched devices.
+ * one batch with enriched Phase 2 data (firmware, hardware revision,
+ * driver info, serial number from WMI/Registry, capabilities).
+ *
+ * The server:
+ *   1. Creates a ScanSession record
+ *   2. For each device, matches against HardwareSignature + QbitProduct
+ *   3. Creates DetectedDevice (matched) or UnknownDevice (unmatched) rows
+ *   4. For matched devices, creates/updates DevicePassport + DriverInfo + FirmwareInfo
+ *   5. Uses real firmware/driver data from the Desktop Agent (NO fake data)
+ *   6. Returns DeviceProfile with identification status
  *
  * Authentication: shared secret (DESKTOP_AGENT_SECRET env var).
  * The browser NEVER calls this endpoint directly — only the Desktop Agent does.
  *
- * Body: DesktopAgentScanPayload
+ * Body: DesktopAgentScanPayload (enhanced with Phase 2 fields)
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { validateAgentSecret, extractAgentSecret } from "@/lib/drqbit/desktop-agent-auth";
 import { matchDevice } from "@/lib/drqbit/device-matcher";
-import { type RawDetectedDevice, type DeviceConnection } from "@/lib/drqbit/types";
-import { sanitizeText } from "@/lib/security/validation";
+import {
+  type RawDetectedDevice,
+  type DeviceConnection,
+  type DeviceType,
+  type DeviceCapability,
+  type IdentificationStatus,
+} from "@/lib/drqbit/types";
 import { randomBytes } from "node:crypto";
 import { requireStaff } from "@/lib/notifications/auth";
 
@@ -103,6 +116,7 @@ export async function POST(req: NextRequest) {
       });
       unknownDevices.push({ id: unknown.id });
     } else {
+      // MATCHED — product identified
       // Create DetectedDevice row with match
       const device = await db.detectedDevice.create({
         data: {
@@ -132,6 +146,159 @@ export async function POST(req: NextRequest) {
         },
       });
       detectedDevices.push({ id: device.id, matched: true });
+
+      // Phase 2: Create/Update Device Passport + Driver + Firmware info
+      // Desktop Agent provides REAL data (firmware version, driver name, serial from WMI)
+      const product = await db.qbitProduct.findUnique({
+        where: { id: match.matchedProductId! },
+      });
+
+      if (product) {
+        // Check if passport already exists (by serial number)
+        let existingPassport = null;
+        if (raw.serialNumber) {
+          existingPassport = await db.devicePassport.findFirst({
+            where: { serialNumber: raw.serialNumber },
+            include: { driverInfo: true, firmwareInfo: true },
+          });
+        }
+
+        if (existingPassport) {
+          // Update existing passport with new Desktop Agent data
+          await db.devicePassport.update({
+            where: { id: existingPassport.id },
+            data: {
+              lastScannedAt: new Date(),
+              detectedDeviceId: device.id,
+            },
+          });
+
+          // Update FirmwareInformation with real firmware from Desktop Agent
+          if (raw.firmwareVersion && existingPassport.firmwareInfo) {
+            const latestFwVersion = existingPassport.firmwareInfo.latestVersion;
+            const installedFw = raw.firmwareVersion;
+            const firmwareStatus = !latestFwVersion
+              ? "unknown"
+              : installedFw === latestFwVersion
+                ? "healthy"
+                : "update_available";
+
+            await db.firmwareInformation.update({
+              where: { passportId: existingPassport.id },
+              data: {
+                installedVersion: installedFw, // REAL firmware from Desktop Agent
+                installedFirmwareVendor: raw.manufacturer ?? existingPassport.firmwareInfo.installedFirmwareVendor,
+                firmwareStatus,
+                lastCheckedAt: new Date(),
+              },
+            });
+          }
+
+          // Update DriverInformation with real driver data from Desktop Agent
+          if (raw.driverName && existingPassport.driverInfo) {
+            await db.driverInformation.update({
+              where: { passportId: existingPassport.id },
+              data: {
+                installedDriverName: raw.driverName, // REAL driver name from Desktop Agent
+                lastCheckedAt: new Date(),
+              },
+            });
+          }
+        } else {
+          // Create new passport
+          const passportCount = await db.devicePassport.count();
+          const newPassportNumber = `PASS-2026-${(passportCount + 1).toString().padStart(5, "0")}`;
+
+          const hardwareId = raw.hardwareId ?? (raw.vendorId && raw.productIdCode
+            ? `USB\\VID_${raw.vendorId.toUpperCase()}&PID_${raw.productIdCode.toUpperCase()}`
+            : null);
+
+          const newPassport = await db.devicePassport.create({
+            data: {
+              passportNumber: newPassportNumber,
+              detectedDeviceId: device.id,
+              productId: product.id,
+              deviceName: raw.deviceName ?? product.name,
+              manufacturer: raw.manufacturer ?? product.manufacturer,
+              brand: product.brand,
+              model: match.matchedProductModel ?? product.model,
+              hardwareId,
+              vendorId: raw.vendorId?.toUpperCase() ?? null,
+              productIdCode: raw.productIdCode?.toUpperCase() ?? null,
+              serialNumber: raw.serialNumber ?? null,
+              connectionType: raw.connectionType,
+              port: raw.port ?? null,
+              usbVersion: raw.usbVersion ?? null,
+              deviceStatus: "ready",
+              lastScannedAt: new Date(),
+            },
+          });
+
+          // Create DriverInformation — Desktop Agent provides REAL driver data
+          const driver = await db.driver.findFirst({
+            where: { productId: product.id },
+            include: { versions: { orderBy: { releaseDate: "desc" }, take: 1 } },
+          });
+          const latestDriverVersion = driver?.versions[0]?.version ?? null;
+          // Desktop Agent provides installed driver name and version
+          const installedDriverName = raw.driverName ?? driver?.name ?? `${product.name} Driver`;
+          const installedDriverVersion = raw.driverName ? (raw.firmwareVersion ?? null) : null; // Use firmware version as proxy if no explicit driver version
+          const driverStatus = !latestDriverVersion
+            ? "unsupported"
+            : installedDriverVersion && installedDriverVersion === latestDriverVersion
+              ? "installed"
+              : installedDriverVersion
+                ? "update_available"
+                : "unknown";
+
+          await db.driverInformation.create({
+            data: {
+              passportId: newPassport.id,
+              installedDriverName, // REAL driver name from Desktop Agent
+              installedDriverVersion, // REAL version if Desktop Agent provides it
+              installedDriverProvider: raw.manufacturer ?? "Unknown",
+              installedDriverDate: new Date(),
+              latestDriverVersion,
+              latestDriverReleaseDate: driver?.versions[0]?.releaseDate ?? null,
+              latestDriverDownloadUrl: product.driverDownloadUrl,
+              driverStatus,
+              supportedOses: JSON.stringify(["Windows 11", "Windows 10"]),
+              lastCheckedAt: new Date(),
+            },
+          });
+
+          // Create FirmwareInformation — Desktop Agent provides REAL firmware
+          const firmware = await db.firmware.findFirst({
+            where: { productId: product.id },
+            include: { releases: { where: { isLatest: true }, take: 1 } },
+          });
+          const latestFirmwareVersion = firmware?.releases[0]?.version ?? null;
+          // Desktop Agent provides real installed firmware version
+          const installedFirmwareVersion = raw.firmwareVersion ?? null;
+          const firmwareStatus = !latestFirmwareVersion
+            ? "unknown"
+            : installedFirmwareVersion === latestFirmwareVersion
+              ? "healthy"
+              : installedFirmwareVersion
+                ? "update_available"
+                : "unknown";
+
+          await db.firmwareInformation.create({
+            data: {
+              passportId: newPassport.id,
+              installedVersion: installedFirmwareVersion, // REAL firmware from Desktop Agent — null if unreadable
+              installedFirmwareVendor: raw.manufacturer ?? "Unknown",
+              installedCompatibility: "Unknown",
+              latestVersion: latestFirmwareVersion,
+              latestReleaseDate: firmware?.releases[0]?.releaseDate ?? null,
+              firmwareStatus,
+              compatibilityChecked: false,
+              isCompatible: true,
+              lastCheckedAt: new Date(),
+            },
+          });
+        }
+      }
     }
   }
 

@@ -1,5 +1,5 @@
 /**
- * POST /api/dr-qbit/discovery — Unified Discovery Endpoint
+ * POST /api/dr-qbit/discovery — Unified Discovery Endpoint (Phase 1 + Phase 2)
  *
  * Receives browser-discovered devices from the DiscoveryScanner component.
  * Handles ALL connection types: USB, Bluetooth, and LAN (via Desktop Agent).
@@ -9,7 +9,8 @@
  *   2. For each device, attempts matching against HardwareSignature + QbitProduct
  *   3. Creates DetectedDevice (matched) or UnknownDevice (unmatched) rows
  *   4. For matched devices, creates/updates DevicePassport + DriverInfo + FirmwareInfo
- *   5. Returns full device info with match status, driver/firmware suggestions
+ *   5. Enriches device data with Phase 2 identification (firmware, hardware revision, capabilities)
+ *   6. Returns full device info with match status, driver/firmware suggestions, + DeviceProfile
  *
  * NO dummy data, NO simulated devices, NO fake serial numbers.
  * Only processes real devices discovered by the browser/agent.
@@ -21,7 +22,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/notifications/auth";
 import { matchDevice } from "@/lib/drqbit/device-matcher";
-import { type RawDetectedDevice, type DeviceConnection } from "@/lib/drqbit/types";
+import {
+  type RawDetectedDevice,
+  type DeviceConnection,
+  type DeviceType,
+  type DeviceCapability,
+  type IdentificationStatus,
+} from "@/lib/drqbit/types";
 import { randomBytes } from "node:crypto";
 
 export async function POST(req: NextRequest) {
@@ -85,6 +92,19 @@ export async function POST(req: NextRequest) {
       driverDownloadUrl: string | null;
       manualUrl: string | null;
       knowledgeBaseUrl: string | null;
+      /** Phase 2: Device Profile with full identification data */
+      deviceProfile: {
+        deviceType: DeviceType | null;
+        identificationStatus: IdentificationStatus;
+        model: string | null;
+        firmwareVersion: string | null;
+        hardwareRevision: string | null;
+        capabilities: DeviceCapability[];
+        serialSource: string | null;
+        modelSource: string | null;
+        fingerprintHash: string | null;
+        identificationErrors: Array<{ step: string; message: string; recoverable: boolean }>;
+      } | null;
     }> = [];
 
     let matchedCount = 0;
@@ -103,6 +123,8 @@ export async function POST(req: NextRequest) {
       // Convert to RawDetectedDevice for matching
       // Note: RawDetectedDevice uses optional fields (string | undefined),
       // not nullable (string | null). Convert null → undefined.
+      // Phase 2 enrichment fields (firmwareVersion, hardwareRevision, etc.)
+      // come from the client-side Identification Engine.
       const rawDevice: RawDetectedDevice = {
         connectionType,
         port: raw.port ?? undefined,
@@ -117,7 +139,29 @@ export async function POST(req: NextRequest) {
         usbVersion: raw.usbVersion ?? undefined,
         ipAddress: raw.ipAddress ?? undefined,
         macAddress: raw.macAddress?.toUpperCase() ?? undefined,
+        // Phase 2 enrichment fields from client
+        firmwareVersion: raw.firmwareVersion ?? undefined,
+        hardwareRevision: raw.hardwareRevision ?? undefined,
+        softwareRevision: raw.softwareRevision ?? undefined,
+        interfaceClass: raw.interfaceClass ?? undefined,
+        interfaceClasses: raw.interfaceClasses ?? undefined,
+        driverName: raw.driverName ?? undefined,
+        productName: raw.productName ?? undefined,
       };
+
+      // Phase 2 data from client-side identification (passed as deviceProfile in payload)
+      const clientProfile = raw.deviceProfile as {
+        deviceType?: string;
+        identificationStatus?: string;
+        model?: string | null;
+        firmwareVersion?: string | null;
+        hardwareRevision?: string | null;
+        capabilities?: string[];
+        serialSource?: string | null;
+        modelSource?: string | null;
+        fingerprintHash?: string | null;
+        identificationErrors?: Array<{ step: string; message: string; recoverable: boolean }>;
+      } | undefined;
 
       // Match against Product Library
       const match = await matchDevice(rawDevice);
@@ -165,6 +209,19 @@ export async function POST(req: NextRequest) {
           driverDownloadUrl: null,
           manualUrl: null,
           knowledgeBaseUrl: null,
+          // Phase 2: Device Profile from client-side identification
+          deviceProfile: clientProfile ? {
+            deviceType: (clientProfile.deviceType as DeviceType) ?? "unknown",
+            identificationStatus: (clientProfile.identificationStatus as IdentificationStatus) ?? "unknown",
+            model: clientProfile.model ?? null,
+            firmwareVersion: clientProfile.firmwareVersion ?? null,
+            hardwareRevision: clientProfile.hardwareRevision ?? null,
+            capabilities: (clientProfile.capabilities as DeviceCapability[]) ?? [],
+            serialSource: clientProfile.serialSource ?? null,
+            modelSource: clientProfile.modelSource ?? null,
+            fingerprintHash: clientProfile.fingerprintHash ?? null,
+            identificationErrors: clientProfile.identificationErrors ?? [],
+          } : null,
         });
       } else {
         // MATCHED — product identified
@@ -285,21 +342,30 @@ export async function POST(req: NextRequest) {
             });
 
             // Create FirmwareInformation
+            // Phase 2: Use client-provided firmware version if available
             const firmware = await db.firmware.findFirst({
               where: { productId: product.id },
               include: { releases: { where: { isLatest: true }, take: 1 } },
             });
             const latestFirmwareVersion = firmware?.releases[0]?.version ?? null;
 
-            // Browser can't read installed firmware version
-            firmwareStatus = !latestFirmwareVersion ? "unknown" : "unknown";
-            firmwareUpdateAvailable = false;
+            // Use real firmware version from Phase 2 client data (Bluetooth GATT / USB)
+            // If not available, leave as null — NO fake firmware version
+            const installedFirmwareVersion = rawDevice.firmwareVersion ?? null;
+            firmwareStatus = !latestFirmwareVersion
+              ? "unknown"
+              : installedFirmwareVersion
+                ? (installedFirmwareVersion === latestFirmwareVersion ? "healthy" : "update_available")
+                : "unknown";
+            firmwareUpdateAvailable = installedFirmwareVersion
+              ? installedFirmwareVersion !== latestFirmwareVersion
+              : false;
 
             await db.firmwareInformation.create({
               data: {
                 passportId: newPassport.id,
-                installedVersion: null, // Unknown until Desktop Agent reports
-                installedFirmwareVendor: "Unknown",
+                installedVersion: installedFirmwareVersion, // Real firmware from Phase 2, null if unreadable
+                installedFirmwareVendor: rawDevice.manufacturer ?? "Unknown",
                 installedCompatibility: "Unknown",
                 latestVersion: latestFirmwareVersion,
                 latestReleaseDate: firmware?.releases[0]?.releaseDate ?? null,
@@ -335,6 +401,23 @@ export async function POST(req: NextRequest) {
           driverDownloadUrl: product?.driverDownloadUrl ?? null,
           manualUrl: product?.manualUrl ?? null,
           knowledgeBaseUrl: product?.knowledgeBaseUrl ?? null,
+          // Phase 2: Device Profile from client-side identification, enriched with server match
+          deviceProfile: {
+            deviceType: (match.matchedProductType as DeviceType) ?? (clientProfile?.deviceType as DeviceType) ?? "unknown",
+            identificationStatus: rawDevice.serialNumber && (match.matchedProductModel || clientProfile?.model)
+              ? "verified"
+              : match.matchedProductModel
+                ? "partial"
+                : (clientProfile?.identificationStatus as IdentificationStatus) ?? "unknown",
+            model: match.matchedProductModel ?? clientProfile?.model ?? null,
+            firmwareVersion: rawDevice.firmwareVersion ?? clientProfile?.firmwareVersion ?? null,
+            hardwareRevision: rawDevice.hardwareRevision ?? clientProfile?.hardwareRevision ?? null,
+            capabilities: (clientProfile?.capabilities as DeviceCapability[]) ?? [],
+            serialSource: clientProfile?.serialSource ?? (rawDevice.serialNumber ? (connectionType === "usb" ? "usb_descriptor" : connectionType === "bluetooth" ? "bluetooth_gatt" : null) : null),
+            modelSource: match.matchedProductModel ? "device_database" : (clientProfile?.modelSource ?? null),
+            fingerprintHash: clientProfile?.fingerprintHash ?? null,
+            identificationErrors: clientProfile?.identificationErrors ?? [],
+          },
         });
       }
     }

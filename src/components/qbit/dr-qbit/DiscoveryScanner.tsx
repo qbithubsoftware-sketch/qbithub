@@ -1,30 +1,29 @@
 "use client";
 
 /**
- * DiscoveryScanner — Unified device discovery component.
+ * DiscoveryScanner — Unified device discovery + identification component.
  *
- * Replaces both WebUsbScanner and ScanButton with a single component
- * that runs the Discovery Engine's scanAllPorts() sequentially:
- *   1. USB Scan (WebUSB API)
- *   2. Bluetooth Scan (Web Bluetooth API)
- *   3. LAN/Network Scan (Desktop Agent — placeholder)
+ * Runs the full Phase 1 (Discovery) + Phase 2 (Identification) pipeline:
+ *   Phase 1: USB Scan → Bluetooth Scan → LAN Scan (Discovery Engine)
+ *   Phase 2: Verify → Fingerprint → Serial Extraction → Model ID → Capabilities (Identification Engine)
  *
  * PRODUCTION RULES:
  *   - NO dummy devices, NO fake data, NO simulated serial numbers
  *   - If no device is connected → show real status only
  *   - If detection fails → show clear error message
  *   - All scan types run automatically, no manual commands needed
+ *   - Phase 2 identification enriches each device with real hardware data
  *
  * Flow:
  *   1. User clicks "Launch Hardware Scanner"
- *   2. scanAllPorts() runs USB → Bluetooth → LAN sequentially
- *   3. Each scanner shows permission dialog (browser security)
- *   4. Discovered devices are POSTed to /api/dr-qbit/discovery
- *   5. Server matches against QbitProduct + HardwareSignature
+ *   2. scanAllPorts() runs USB → Bluetooth → LAN sequentially (Phase 1)
+ *   3. identifyAllDevices() runs verification + identification on each device (Phase 2)
+ *   4. Enriched devices POSTed to /api/dr-qbit/discovery
+ *   5. Server matches against QbitProduct + HardwareSignature + enriches further
  *   6. Results displayed with Device Name, Connection Type, Port, VID/PID
  *
  * Extensible: Adding Barcode Printer, POS, Scanner, Label Printer, etc.
- * only requires registering a new scanner in the Discovery Engine.
+ * only requires registering a new scanner/verifier — no engine changes.
  */
 
 import { useState, useCallback } from "react";
@@ -41,9 +40,13 @@ import {
   type DiscoveryResult,
   type DiscoveryConnection,
 } from "@/lib/drqbit/device-discovery";
+import {
+  identifyAllDevices,
+} from "@/lib/drqbit/device-identification";
+import type { DeviceCapability, IdentificationStatus, DeviceType } from "@/lib/drqbit/types";
 
 /** Scanner status for progress display */
-type ScannerPhase = "idle" | "usb" | "bluetooth" | "lan" | "matching" | "complete" | "error";
+type ScannerPhase = "idle" | "usb" | "bluetooth" | "lan" | "identifying" | "matching" | "complete" | "error";
 
 /** Matched device info returned from server */
 interface MatchedDeviceInfo {
@@ -69,6 +72,19 @@ interface MatchedDeviceInfo {
   driverDownloadUrl: string | null;
   manualUrl: string | null;
   knowledgeBaseUrl: string | null;
+  /** Phase 2: Device Profile with identification data (available for Phase 3, not rendered) */
+  deviceProfile: {
+    deviceType: DeviceType | null;
+    identificationStatus: IdentificationStatus;
+    model: string | null;
+    firmwareVersion: string | null;
+    hardwareRevision: string | null;
+    capabilities: DeviceCapability[];
+    serialSource: string | null;
+    modelSource: string | null;
+    fingerprintHash: string | null;
+    identificationErrors: Array<{ step: string; message: string; recoverable: boolean }>;
+  } | null;
 }
 
 interface DiscoveryScannerProps {
@@ -117,6 +133,7 @@ export function DiscoveryScanner({ onScanComplete, onNoDevices }: DiscoveryScann
     usb: "Scanning USB devices…",
     bluetooth: "Scanning Bluetooth devices…",
     lan: "Scanning Network devices…",
+    identifying: "Identifying devices (verification, fingerprint, serial, model)…",
     matching: "Matching devices with product library…",
     complete: "Scan Complete",
     error: "Scan Failed",
@@ -127,6 +144,7 @@ export function DiscoveryScanner({ onScanComplete, onNoDevices }: DiscoveryScann
     usb: "usb",
     bluetooth: "bluetooth",
     lan: "lan",
+    identifying: "fingerprint",
     matching: "inventory_2",
     complete: "check_circle",
     error: "error",
@@ -138,7 +156,7 @@ export function DiscoveryScanner({ onScanComplete, onNoDevices }: DiscoveryScann
     setMatchedDevices(null);
 
     try {
-      // ===== Step 1: Run Discovery Engine — USB → BT → LAN sequentially =====
+      // ===== Step 1: Run Discovery Engine — USB → BT → LAN sequentially (Phase 1) =====
 
       // Phase: USB
       setPhase("usb");
@@ -186,7 +204,19 @@ export function DiscoveryScanner({ onScanComplete, onNoDevices }: DiscoveryScann
         return;
       }
 
-      // ===== Step 4: Send discovered devices to server for matching =====
+      // ===== Step 4: Run Identification Engine on each device (Phase 2) =====
+
+      setPhase("identifying");
+      toast({
+        title: "Identifying devices",
+        description: "Verifying device type, extracting serial number, identifying model, detecting capabilities…",
+      });
+
+      // Run Phase 2 identification on ALL discovered devices
+      // This enriches each device with: verification, fingerprint, serial, model, capabilities
+      const identificationResults = identifyAllDevices(discovery);
+
+      // ===== Step 5: Send discovered + identified devices to server for matching =====
 
       setPhase("matching");
       toast({
@@ -194,25 +224,41 @@ export function DiscoveryScanner({ onScanComplete, onNoDevices }: DiscoveryScann
         description: `${printerDevices.length} printer-like device(s) found. Matching with product library…`,
       });
 
-      // Convert DiscoveredDevice to API payload format
+      // Convert DiscoveredDevice + DeviceProfile to API payload format
+      // Include Phase 2 identification data alongside Phase 1 discovery data
       const payload = {
-        devices: discovery.devices.map((d: DiscoveredDevice) => ({
-          connectionType: d.connectionType,
-          deviceName: d.deviceName,
-          manufacturer: d.manufacturer,
-          vendorId: d.vendorId,
-          productIdCode: d.productId,
-          serialNumber: d.serialNumber,
-          usbVersion: d.usbVersion,
-          port: d.port,
-          hardwareId: d.vendorId && d.productId
-            ? `USB\\VID_${d.vendorId.replace("0x", "").toUpperCase()}&PID_${d.productId.replace("0x", "").toUpperCase()}`
-            : null,
-          bluetoothDeviceId: d.bluetoothDeviceId,
-          ipAddress: d.ipAddress,
-          macAddress: d.macAddress,
-          isPrinterLike: d.isPrinterLike,
-        })),
+        devices: discovery.devices.map((d: DiscoveredDevice, idx: number) => {
+          // Find the matching identification result for this device
+          const identResult = identificationResults[idx];
+
+          return {
+            connectionType: d.connectionType,
+            deviceName: d.deviceName,
+            manufacturer: d.manufacturer,
+            vendorId: d.vendorId,
+            productIdCode: d.productId,
+            serialNumber: d.serialNumber,
+            usbVersion: d.usbVersion,
+            port: d.port,
+            hardwareId: d.vendorId && d.productId
+              ? `USB\\VID_${d.vendorId.replace("0x", "").toUpperCase()}&PID_${d.productId.replace("0x", "").toUpperCase()}`
+              : null,
+            bluetoothDeviceId: d.bluetoothDeviceId,
+            ipAddress: d.ipAddress,
+            macAddress: d.macAddress,
+            isPrinterLike: d.isPrinterLike,
+            // Phase 2 enrichment fields from client-side Identification Engine
+            firmwareVersion: d.firmwareVersion ?? undefined,
+            hardwareRevision: d.hardwareRevision ?? undefined,
+            softwareRevision: d.softwareRevision ?? undefined,
+            interfaceClass: d.interfaceClass ?? undefined,
+            interfaceClasses: d.interfaceClasses ?? undefined,
+            modelNumber: d.modelNumber ?? undefined,
+            // Phase 2 Device Profile from client-side identification
+            // This is the full verified identity data for the server to enrich
+            deviceProfile: identResult?.profile ?? undefined,
+          };
+        }),
         scannersUsed: discovery.scannersUsed,
         scannersSkipped: discovery.scannersSkipped,
         scanErrors: discovery.errors,
@@ -437,6 +483,12 @@ export function DiscoveryScanner({ onScanComplete, onNoDevices }: DiscoveryScann
             <div className="flex items-center gap-2">
               <Icon name="inventory_2" className="text-[18px] text-qbit-primary" filled />
               <span className="text-xs font-medium text-qbit-primary">Matching with product library…</span>
+            </div>
+          )}
+          {phase === "identifying" && (
+            <div className="flex items-center gap-2">
+              <Icon name="fingerprint" className="text-[18px] text-qbit-primary" filled />
+              <span className="text-xs font-medium text-qbit-primary">Identifying devices…</span>
             </div>
           )}
         </div>

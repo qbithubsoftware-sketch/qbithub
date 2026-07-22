@@ -54,6 +54,19 @@ export interface DiscoveredDevice {
   macAddress: string | null;
   /** Whether this device appears to be a printer/POS/scanner. */
   isPrinterLike: boolean;
+  // ===== Phase 2 enrichment fields =====
+  /** Firmware version read from GATT Device Information Service or Desktop Agent. Null if unreadable. */
+  firmwareVersion: string | null;
+  /** Hardware revision read from GATT Device Information Service. Null if unreadable. */
+  hardwareRevision: string | null;
+  /** Software revision read from GATT Device Information Service. Null if unreadable. */
+  softwareRevision: string | null;
+  /** Primary USB interface class code (e.g. 0x07 = Printer). Null for non-USB. */
+  interfaceClass: number | null;
+  /** All USB interface class codes detected. Empty for non-USB devices. */
+  interfaceClasses: number[];
+  /** Model number read from GATT Device Information Service. Null if unreadable. */
+  modelNumber: string | null;
 }
 
 /** Overall discovery result from scanning all ports. */
@@ -174,6 +187,22 @@ class UsbScanner implements DeviceScanner {
       // We also accept unknown devices so admins can map them later.
       const isPrinterLike = this.isPrinterOrPosDevice(d, name, manufacturer);
 
+      // Phase 2 enrichment: Extract USB interface class codes for fingerprinting
+      const interfaceClasses: number[] = [];
+      let primaryInterfaceClass: number | null = null;
+      for (const config of d.configurations) {
+        for (const iface of config.interfaces) {
+          for (const alt of iface.alternates) {
+            const cls = alt.interfaceClass;
+            interfaceClasses.push(cls);
+            // First non-HID, non-storage class is the primary interface
+            if (primaryInterfaceClass === null && cls !== 0x03 && cls !== 0x08) {
+              primaryInterfaceClass = cls;
+            }
+          }
+        }
+      }
+
       devices.push({
         connectionType: "usb",
         deviceName: name,
@@ -187,6 +216,13 @@ class UsbScanner implements DeviceScanner {
         ipAddress: null,
         macAddress: null,
         isPrinterLike,
+        // Phase 2 enrichment fields
+        firmwareVersion: null, // Not available via standard USB descriptors — needs ESC/POS or Desktop Agent
+        hardwareRevision: null, // Not available via standard USB descriptors
+        softwareRevision: null, // Not available via standard USB descriptors
+        interfaceClass: primaryInterfaceClass,
+        interfaceClasses,
+        modelNumber: null, // Not available via USB — productName is the closest equivalent
       });
     }
 
@@ -317,10 +353,14 @@ class BluetoothScanner implements DeviceScanner {
         const id = device.id;
 
         // Try to read Device Information Service (0x180A)
-        // This may contain manufacturer name, model number, serial number
+        // This may contain manufacturer name, model number, serial number,
+        // firmware revision, hardware revision, software revision
         let manufacturer: string | null = null;
         let serialNumber: string | null = null;
         let modelNumber: string | null = null;
+        let firmwareVersion: string | null = null;
+        let hardwareRevision: string | null = null;
+        let softwareRevision: string | null = null;
 
         try {
           // Connect to GATT server to read device info
@@ -349,6 +389,27 @@ class BluetoothScanner implements DeviceScanner {
                   const modelValue = await modelChar.readValue();
                   modelNumber = new TextDecoder().decode(modelValue);
                 } catch { /* Characteristic not available */ }
+
+                // Phase 2 enrichment: Read firmware revision (0x2A26)
+                try {
+                  const fwChar = await infoService.getCharacteristic("firmware_revision_string");
+                  const fwValue = await fwChar.readValue();
+                  firmwareVersion = new TextDecoder().decode(fwValue);
+                } catch { /* Characteristic not available */ }
+
+                // Phase 2 enrichment: Read hardware revision (0x2A27)
+                try {
+                  const hwChar = await infoService.getCharacteristic("hardware_revision_string");
+                  const hwValue = await hwChar.readValue();
+                  hardwareRevision = new TextDecoder().decode(hwValue);
+                } catch { /* Characteristic not available */ }
+
+                // Phase 2 enrichment: Read software revision (0x2A28)
+                try {
+                  const swChar = await infoService.getCharacteristic("software_revision_string");
+                  const swValue = await swChar.readValue();
+                  softwareRevision = new TextDecoder().decode(swValue);
+                } catch { /* Characteristic not available */ }
               }
             } catch {
               // Device Information Service not available on this device
@@ -374,6 +435,13 @@ class BluetoothScanner implements DeviceScanner {
           ipAddress: null,
           macAddress: null,
           isPrinterLike: true, // User selected it via printer service filter
+          // Phase 2 enrichment fields
+          firmwareVersion,
+          hardwareRevision,
+          softwareRevision,
+          interfaceClass: null, // Bluetooth doesn't have USB class codes
+          interfaceClasses: [],
+          modelNumber,
         });
       }
 
