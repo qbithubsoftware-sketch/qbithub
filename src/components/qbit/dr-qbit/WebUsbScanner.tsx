@@ -132,23 +132,15 @@ export function WebUsbScanner({ onScanComplete }: WebUsbScannerProps) {
           return;
         }
       } else {
-        // WebUSB not supported — fallback to manual scan simulation
+        // WebUSB not supported — NO dummy data, NO simulation
         toast({
           title: "WebUSB not supported",
-          description: "Use Chrome or Edge browser for hardware scanning. Showing demo devices instead.",
+          description: "Use Chrome or Edge browser (over HTTPS) for hardware scanning. No devices can be detected without WebUSB support.",
+          variant: "destructive",
+          duration: 8000,
         });
-
-        // Simulate finding a thermal printer (for demo/testing)
-        devices = [
-          {
-            vendorId: "0x1E90",
-            productId: "0x8001",
-            productName: "QBIT T-800 Thermal Printer",
-            manufacturerName: "QBIT Technologies",
-            serialNumber: "T800-SN-001",
-            usbVersion: "2.0",
-          },
-        ];
+        setScanning(false);
+        return;
       }
 
       // Step 2: Send scan results to server for matching

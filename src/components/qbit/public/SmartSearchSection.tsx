@@ -15,7 +15,7 @@
  *   page responsible for displaying device information.
  *
  * ROUTING BEHAVIOUR:
- *   Case 1 — Serial Number (SNQBT*, DEMO-*, W55-250700152, etc.)
+ *   Case 1 — Serial Number (SNQBT*, W55-250700152, etc.)
  *     → router.push('/dr-qbit?serial=XXX')
  *     → Dr. QBIT page reads the ?serial= query param, auto-fills the input,
  *       auto-calls the existing Device Lookup API, and displays the result.
@@ -87,9 +87,9 @@ interface ProductPreview {
 }
 
 // Serial patterns — kept in sync with backend
+// DEMO pattern removed — no fake serial numbers in production
 const SERIAL_PATTERNS = [
   /^SNQBT\d+/i,
-  /^DEMO[-_]/i,
   /^SN[-_]/i,
   /^SE[-_]/i,
   /^[A-Z0-9]{1,5}[-_]\d{4,}/i,

@@ -2,6 +2,7 @@
  * Barrel export for Dr. QBIT components.
  */
 
+export { DiscoveryScanner } from "./DiscoveryScanner";
 export { ScanButton } from "./ScanButton";
 export { WebUsbScanner } from "./WebUsbScanner";
 export { DeviceCard } from "./DeviceCard";

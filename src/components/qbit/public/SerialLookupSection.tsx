@@ -102,7 +102,7 @@ export interface LookupResponse {
 
 type State = "idle" | "searching" | "found" | "not-found" | "invalid" | "error";
 
-const EXAMPLE_SERIALS = ["DEMO-T800-001", "DEMO-CD410-002", "DEMO-SME1-003"];
+const EXAMPLE_SERIALS = ["SNQBT000001", "SNQBT000002", "SNQBT000003"];
 
 // ====================== Component ======================
 export function SerialLookupSection() {

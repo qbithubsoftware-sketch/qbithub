@@ -24,6 +24,7 @@ import { KpiCard } from "@/components/qbit/primitives/KpiCard";
 import { SurfaceCard } from "@/components/qbit/primitives/GlassCard";
 import { QbitButton } from "@/components/qbit/primitives/QbitButton";
 import {
+  DiscoveryScanner,
   ScanButton,
   WebUsbScanner,
   DeviceCard,
@@ -182,29 +183,11 @@ export function DrQbitDeviceDetectionPage() {
             <div className="flex-1 text-center md:text-left">
               <h3 className="text-lg font-semibold text-qbit-on-surface">Hardware Discovery</h3>
               <p className="mt-1 text-sm text-qbit-on-surface-variant">
-                Tap the scan button to detect all connected POS devices. The Desktop Companion Agent
-                will scan USB, COM, LAN, and WiFi ports — results appear here automatically.
+                Click "Launch Hardware Scanner" to automatically detect all connected POS devices.
+                The system scans USB, Bluetooth, and Network ports sequentially — no manual commands needed.
               </p>
-              <div className="mt-3 flex flex-wrap items-center justify-center gap-2 md:justify-start">
-                <QbitButton
-                  variant="outline"
-                  size="sm"
-                  icon="download"
-                  onClick={() => {
-                    toast({
-                      title: "Desktop Agent Download",
-                      description: "In production, this downloads the QBIT Desktop Agent installer (.exe).",
-                    });
-                  }}
-                >
-                  Download Desktop Agent
-                </QbitButton>
-                <span className="text-xs text-qbit-on-surface-variant">
-                  Agent v2.0 · Windows 10/11
-                </span>
-              </div>
             </div>
-            <WebUsbScanner onScanComplete={() => void fetchDevices()} />
+            <DiscoveryScanner onScanComplete={() => void fetchDevices()} />
           </div>
         </SurfaceCard>
 

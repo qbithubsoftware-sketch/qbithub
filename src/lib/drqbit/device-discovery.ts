@@ -141,14 +141,14 @@ class UsbScanner implements DeviceScanner {
     // The browser shows a permission dialog listing available devices.
     // User must select a device (or cancel). This is required by WebUSB spec.
     try {
-      await navigator.usb.requestDevice({ filters: [] }).catch(() => null);
+      await navigator.usb!.requestDevice({ filters: [] }).catch(() => null);
     } catch {
       // User cancelled the permission dialog — no devices to scan
       throw new Error("USB permission denied. Please click Scan again and approve the browser permission dialog.");
     }
 
     // Step 2: Get all authorized USB devices
-    const authorizedDevices = await navigator.usb.getDevices();
+    const authorizedDevices = await navigator.usb!.getDevices();
 
     if (authorizedDevices.length === 0) {
       // Permission was granted but no devices were selected/found
@@ -300,7 +300,7 @@ class BluetoothScanner implements DeviceScanner {
       // - 0x18F0 (Binary Output — some POS printers)
       // - 0x18F1 (Immediate Output)
       // We use a broad filter to catch most printers
-      const device = await navigator.bluetooth.requestDevice({
+      const device = await navigator.bluetooth!.requestDevice({
         filters: [
           { services: ["binary_output"] },
           { services: ["immediate_output"] },

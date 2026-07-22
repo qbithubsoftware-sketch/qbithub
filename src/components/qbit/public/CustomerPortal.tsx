@@ -211,23 +211,67 @@ export function CustomerPortal() {
     await performLookup(serial);
   }
 
-  // Hardware Scanner flow: simulate USB detection → read serial → call
+  // Hardware Scanner flow: REAL USB detection → read serial → call
   // the SAME performLookup → render the SAME result page.
   // Flow: Detect USB Device → Read Serial Number → Call Device Lookup API →
   //       Open Existing Result Screen.
   async function handleLaunchScanner() {
     setScanning(true);
-    // Simulate USB detection sequence (3 seconds total in demo mode).
-    // In production, this would use WebUSB / a desktop agent to detect
-    // the connected QBIT device and read its serial number.
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-    setScanning(false);
-    // Auto-fill serial number (in production this comes from the USB
-    // device; for demo we use SNQBT000003).
-    const detectedSerial = "SNQBT000003";
-    setSerial(detectedSerial);
-    // Trigger existing lookup flow — same API, same result page.
-    await performLookup(detectedSerial);
+
+    // Check if WebUSB is available
+    if (typeof navigator !== "undefined" && navigator.usb) {
+      try {
+        // Request USB device access (browser permission dialog)
+        await navigator.usb.requestDevice({ filters: [] }).catch(() => null);
+
+        // Get authorized devices
+        const authorizedDevices = await navigator.usb.getDevices();
+
+        if (authorizedDevices.length === 0) {
+          // No USB devices found or user cancelled permission dialog
+          setScanning(false);
+          return;
+        }
+
+        // Find a device with a serial number (best candidate for lookup)
+        // Prefer devices that look like printers (by keyword in name)
+        const printerDevice = authorizedDevices.find((d) => {
+          const name = (d.productName ?? "").toLowerCase();
+          const mf = (d.manufacturerName ?? "").toLowerCase();
+          const combined = `${name} ${mf}`;
+          // Printer keyword heuristic
+          return combined.includes("printer") || combined.includes("print") ||
+                 combined.includes("thermal") || combined.includes("pos") ||
+                 combined.includes("scanner") || combined.includes("label") ||
+                 combined.includes("barcode") || combined.includes("receipt");
+        });
+
+        const targetDevice = printerDevice ?? authorizedDevices[0];
+
+        // Read serial number from the USB device
+        const detectedSerial = targetDevice.serialNumber;
+
+        setScanning(false);
+
+        if (detectedSerial && detectedSerial.length >= 4) {
+          // We got a real serial number from the USB device
+          setSerial(detectedSerial);
+          await performLookup(detectedSerial);
+        } else {
+          // Device doesn't expose a serial number via WebUSB
+          // The user needs to enter it manually or use the Desktop Agent
+          return;
+        }
+      } catch {
+        // User cancelled permission dialog or WebUSB failed
+        setScanning(false);
+        return;
+      }
+    } else {
+      // WebUSB not supported in this browser
+      setScanning(false);
+      return;
+    }
   }
 
   function handleReset() {
@@ -266,7 +310,11 @@ export function CustomerPortal() {
 
         {/* RIGHT: Wi-Fi Setup (for supported QBIT Wi-Fi printers) */}
         {wifiSetupOpen ? (
-          <WifiSetupCardActive onClose={() => setWifiSetupOpen(false)} />
+          <WifiSetupCardActive
+            onClose={() => setWifiSetupOpen(false)}
+            deviceInfo={result?.device ?? null}
+            capabilitiesInfo={result?.resources?.capabilities ?? null}
+          />
         ) : (
           <WifiSetupCard onLaunch={() => setWifiSetupOpen(true)} disabled={state === "searching"} />
         )}
@@ -647,29 +695,71 @@ function SmartDeviceSetupSection({
   const supportsWifi = capabilities?.supportsWifi ?? false;
   const autoDriverInstall = capabilities?.autoDriverInstall ?? false;
 
-  // ===== Driver Installation flow (simulated for demo) =====
+  // ===== Driver Installation flow (requires Desktop Agent) =====
+  // The browser cannot install drivers directly. This flow attempts to
+  // use the Desktop Agent for real driver installation. If the agent is
+  // not available, it redirects to manual download.
   async function handleInstallDriver() {
     setDriverInstallLog([]);
     setDriverInstallState("detecting");
     setDriverInstallLog((l) => [...l, `Detecting OS: ${osInfo.os} ${osInfo.arch}`]);
-
-    await new Promise((r) => setTimeout(r, 800));
     setDriverInstallLog((l) => [...l, `Device Model: ${device.productName} (${device.modelNumber})`]);
 
-    setDriverInstallState("downloading");
-    await new Promise((r) => setTimeout(r, 800));
-    setDriverInstallLog((l) => [...l, `Downloading driver: ${resources?.latestDriverVersion ?? "latest"} for ${osInfo.os}`]);
+    // Try to connect to the Desktop Agent for driver installation
+    try {
+      const DESKTOP_AGENT_PORT = 53742;
+      const healthCheck = await fetch(`http://localhost:${DESKTOP_AGENT_PORT}/health`, {
+        method: "GET",
+        signal: AbortSignal.timeout(3000),
+      }).catch(() => null);
 
-    setDriverInstallState("installing");
-    await new Promise((r) => setTimeout(r, 1000));
-    setDriverInstallLog((l) => [...l, "Launching installer…"]);
+      if (!healthCheck?.ok) {
+        // Desktop Agent not available — redirect to manual download
+        setDriverInstallLog((l) => [...l, "Desktop Agent not found. Switching to manual download."]);
+        setDriverInstallState("manual");
+        if (resources?.driverDownloadUrl) {
+          window.open(resources.driverDownloadUrl, "_blank", "noopener,noreferrer");
+        }
+        return;
+      }
 
-    setDriverInstallState("verifying");
-    await new Promise((r) => setTimeout(r, 800));
-    setDriverInstallLog((l) => [...l, "Verifying installation…"]);
+      // Desktop Agent is running — send driver install command
+      setDriverInstallState("downloading");
+      setDriverInstallLog((l) => [...l, `Requesting driver: ${resources?.latestDriverVersion ?? "latest"} for ${osInfo.os}`]);
 
-    setDriverInstallState("done");
-    setDriverInstallLog((l) => [...l, "✓ Driver installed successfully!"]);
+      const installRes = await fetch(`http://localhost:${DESKTOP_AGENT_PORT}/install-driver`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          modelNumber: device.modelNumber,
+          serialNumber: device.serialNumber,
+          productName: device.productName,
+          os: osInfo.os,
+          arch: osInfo.arch,
+          driverVersion: resources?.latestDriverVersion ?? null,
+        }),
+        signal: AbortSignal.timeout(120000), // 2-minute timeout for full install
+      });
+
+      if (installRes.ok) {
+        const result = await installRes.json();
+        setDriverInstallState("done");
+        setDriverInstallLog((l) => [...l, result.message ?? "Driver installation completed."]);
+      } else {
+        setDriverInstallLog((l) => [...l, "Driver installation failed. Switching to manual download."]);
+        setDriverInstallState("manual");
+        if (resources?.driverDownloadUrl) {
+          window.open(resources.driverDownloadUrl, "_blank", "noopener,noreferrer");
+        }
+      }
+    } catch {
+      // Desktop Agent not reachable — redirect to manual download
+      setDriverInstallLog((l) => [...l, "Desktop Agent not reachable. Switching to manual download."]);
+      setDriverInstallState("manual");
+      if (resources?.driverDownloadUrl) {
+        window.open(resources.driverDownloadUrl, "_blank", "noopener,noreferrer");
+      }
+    }
   }
 
   function handleManualDownload() {
@@ -1313,7 +1403,7 @@ function WifiSetupCard({
  * The full wizard (WifiSetupWizard component) opens in a modal overlay when
  * the user clicks "Start Detection" inside this card.
  */
-function WifiSetupCardActive({ onClose }: { onClose: () => void }) {
+function WifiSetupCardActive({ onClose, deviceInfo, capabilitiesInfo }: { onClose: () => void; deviceInfo: DeviceInfo | null; capabilitiesInfo: DeviceCapabilities | null }) {
   const [showFullWizard, setShowFullWizard] = useState(false);
 
   return (
@@ -1366,19 +1456,19 @@ function WifiSetupCardActive({ onClose }: { onClose: () => void }) {
           <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto">
             <WifiSetupWizard
               device={{
-                productName: "QBIT Thermal Printer P80UE",
-                model: "P80UE",
-                serial: "DEMO-WIFI-001",
+                productName: deviceInfo?.productName ?? "QBIT Device",
+                model: deviceInfo?.modelNumber ?? "",
+                serial: deviceInfo?.serialNumber ?? "",
                 usbVendorId: "",
                 usbProductId: "",
-                firmwareVersion: "v1.8.0",
+                firmwareVersion: null,
               }}
               capabilities={{
-                supportsWifi: true,
-                autoDriverInstall: true,
-                sdkAvailable: true,
-                firmwareConfigSupported: true,
-                connectionTypes: ["usb", "wifi"],
+                supportsWifi: capabilitiesInfo?.supportsWifi ?? false,
+                autoDriverInstall: capabilitiesInfo?.autoDriverInstall ?? false,
+                sdkAvailable: capabilitiesInfo?.sdkAvailable ?? false,
+                firmwareConfigSupported: capabilitiesInfo?.firmwareConfigSupported ?? false,
+                connectionTypes: capabilitiesInfo?.connectionTypes ?? ["usb"],
               }}
               onComplete={() => {
                 setShowFullWizard(false);

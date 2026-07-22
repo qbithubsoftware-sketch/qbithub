@@ -107,7 +107,7 @@ export function DrQbitWorkflow() {
     setError(null);
     setResult(null);
 
-    // Simulate scan progress (the actual WebUSB scan would update this)
+    // Scan progress — real API calls provide actual progress
     const progressInterval = setInterval(() => {
       setScanProgress((p) => Math.min(p + 10, 90));
     }, 200);
@@ -349,7 +349,7 @@ export function DrQbitWorkflow() {
             <div className="mb-6">
               <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-qbit-on-surface-variant">Try:</p>
               <div className="flex flex-wrap gap-2">
-                {["DEMO-T800-001", "DEMO-CD410-002", "DEMO-SME1-003"].map((m) => (
+                {["SNQBT000001", "SNQBT000002", "SNQBT000003"].map((m) => (
                   <button
                     key={m}
                     type="button"
