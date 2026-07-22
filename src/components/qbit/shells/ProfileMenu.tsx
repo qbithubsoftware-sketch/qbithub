@@ -111,21 +111,25 @@ export function ProfileMenu({
         </DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-qbit-outline-variant/60" />
 
-        {/* Menu items */}
+        {/* Menu items — role-aware */}
         <div className="p-1.5">
+          {/* Account Settings — only for admin roles */}
+          {role === "super_administrator" || role === "administrator" ? (
+            <DropdownMenuItem
+              onSelect={() => navigate("system-settings")}
+              className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-qbit-on-surface cursor-pointer hover:bg-qbit-surface-container-low"
+            >
+              <Icon name="manage_accounts" className="text-[18px] text-qbit-on-surface-variant" />
+              Account Settings
+            </DropdownMenuItem>
+          ) : null}
+          {/* My Dashboard — navigate to role home screen */}
           <DropdownMenuItem
-            onSelect={() => navigate("system-settings")}
+            onSelect={() => navigate(role === "installation_engineer" ? "engineer-portal" : role === "super_administrator" || role === "administrator" ? "home" : "product-library")}
             className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-qbit-on-surface cursor-pointer hover:bg-qbit-surface-container-low"
           >
-            <Icon name="manage_accounts" className="text-[18px] text-qbit-on-surface-variant" />
-            Account Settings
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onSelect={() => navigate("universal-search-command-center")}
-            className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-qbit-on-surface cursor-pointer hover:bg-qbit-surface-container-low"
-          >
-            <Icon name="history" className="text-[18px] text-qbit-on-surface-variant" />
-            Recent Activity
+            <Icon name="dashboard" className="text-[18px] text-qbit-on-surface-variant" />
+            My Dashboard
           </DropdownMenuItem>
           <DropdownMenuItem
             onSelect={() => navigate("support-tickets")}

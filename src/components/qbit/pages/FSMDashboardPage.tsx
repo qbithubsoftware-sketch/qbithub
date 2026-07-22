@@ -23,7 +23,7 @@ import { KpiCard } from "@/components/qbit/primitives/KpiCard";
 import { SurfaceCard } from "@/components/qbit/primitives/GlassCard";
 import { QbitButton } from "@/components/qbit/primitives/QbitButton";
 import { JobCard, bucketWorkOrders } from "@/components/qbit/fsm";
-import { FSM_NAV } from "@/lib/navigation/nav-config";
+import { FSM_NAV, ENGINEER_NAV } from "@/lib/navigation/nav-config";
 import { useAuth } from "@/lib/auth/use-auth";
 import { useNavigation } from "@/lib/navigation/store";
 import { useToast } from "@/hooks/use-toast";
@@ -81,12 +81,11 @@ export function FSMDashboardPage() {
 
   return (
     <AppShell
-      variant="field"
-      brand={{ title: "QBIT FSM", tagline: "Field Service", icon: "engineering" }}
-      navItems={FSM_NAV}
+      variant="engineer"
+      brand={{ title: "QBIT Hub", tagline: "Engineer Portal", icon: "engineering" }}
+      navItems={ENGINEER_NAV}
       activeScreen="fsm-dashboard"
       user={{ name: engineerName, role: "Installation Engineer", initials }}
-      cta={{ label: "Refresh", icon: "refresh", onClick: () => void fetchOrders() }}
       topBar={{
         searchPlaceholder: "Search work orders, customers, assets…",
         user: { name: engineerName, role: "Installation Engineer", initials },

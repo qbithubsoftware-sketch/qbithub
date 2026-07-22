@@ -15,7 +15,7 @@ import { SurfaceCard } from "@/components/qbit/primitives/GlassCard";
 import { QbitButton } from "@/components/qbit/primitives/QbitButton";
 import { StatusBadge, TagBadge } from "@/components/qbit/primitives/StatusBadge";
 import { TimelineStep } from "@/components/qbit/primitives/TimelineStep";
-import { FSM_NAV } from "@/lib/navigation/nav-config";
+import { FSM_NAV, ENGINEER_NAV } from "@/lib/navigation/nav-config";
 import { useAuth } from "@/lib/auth/use-auth";
 import { useNavigation } from "@/lib/navigation/store";
 import {
@@ -77,42 +77,46 @@ export function FSMCustomerAssetHistoryPage() {
       void items;
       // For simplicity, we'll fetch customers via a separate admin endpoint
       // — but since engineers aren't admins, we approximate by reading from work orders.
-      // For demo, we hard-code the known customers from seed data.
-      const demoCustomers: CustomerWithAssets[] = [
-        {
-          id: "cust_retailx",
-          name: "Vikram Patel",
-          companyName: "RetailX Mart Pvt Ltd",
-          phone: "+919876543210",
-          addressLine: "Shop 14, Brigade Road, Bengaluru",
-          assets: [
-            {
-              id: "asset_t800_001",
-              productName: "QBIT T-800 Thermal Printer",
-              model: "T-800",
-              serialNumber: "T800-SN-001",
-              purchaseDate: "2025-08-12",
-              warrantyStatus: "active",
-              warrantyExpiry: "2027-08-12",
-              firmwareVersion: "4.0.2",
-              driverVersion: "2.4.1",
-              history: items
-                .filter((i) => i.customerName === "Vikram Patel")
-                .map((i) => ({
-                  workOrderId: i.id,
-                  jobNumber: i.jobNumber,
-                  type: i.type as WorkOrderType,
-                  status: i.status as WorkOrderStatus,
-                  scheduledDate: i.scheduledDate,
-                  completedAt: null,
-                  description: null,
-                  engineerName: "Alex Chen",
-                })),
-            },
-          ],
-        },
-      ];
-      setCustomers(demoCustomers);
+      // Build customer list from real work order data
+      const customerMap = new Map<string, CustomerWithAssets>();
+      for (const item of items) {
+        const key = item.customerName;
+        if (!customerMap.has(key)) {
+          customerMap.set(key, {
+            id: `cust_${key.replace(/\s/g, "_").toLowerCase()}`,
+            name: item.customerName,
+            companyName: null,
+            phone: "",
+            addressLine: "",
+            assets: [],
+          });
+        }
+        const customer = customerMap.get(key)!;
+        if (item.productName) {
+          customer.assets.push({
+            id: `asset_${item.id}`,
+            productName: item.productName ?? "Unknown Product",
+            model: item.model ?? "—",
+            serialNumber: `SN-${item.id.slice(0, 8)}`,
+            purchaseDate: null,
+            warrantyStatus: "active",
+            warrantyExpiry: null,
+            firmwareVersion: null,
+            driverVersion: null,
+            history: [{
+              workOrderId: item.id,
+              jobNumber: item.jobNumber,
+              type: item.type as WorkOrderType,
+              status: item.status as WorkOrderStatus,
+              scheduledDate: item.scheduledDate,
+              completedAt: null,
+              description: null,
+              engineerName: user?.name ?? "Engineer",
+            }],
+          });
+        }
+      }
+      setCustomers(Array.from(customerMap.values()));
     } catch {
       setCustomers([]);
     } finally {
@@ -144,13 +148,12 @@ export function FSMCustomerAssetHistoryPage() {
 
   return (
     <AppShell
-      variant="field"
-      brand={{ title: "QBIT FSM", tagline: "Field Service", icon: "engineering" }}
-      navItems={FSM_NAV}
+      variant="engineer"
+      brand={{ title: "QBIT Hub", tagline: "Engineer Portal", icon: "engineering" }}
+      navItems={ENGINEER_NAV}
       activeScreen="fsm-customer-asset-history"
       user={{ name: engineerName, role: "Installation Engineer", initials }}
-      cta={{ label: "Back", icon: "arrow_back", onClick: () => navigate("fsm-dashboard") }}
-      topBar={{ searchPlaceholder: "Search…", user: { name: engineerName, role: "Installation Engineer", initials } }}
+      topBar={{ searchPlaceholder: "Search customers, assets…", user: { name: engineerName, role: "Installation Engineer", initials } }}
     >
       <div className="space-y-5">
         <div>
