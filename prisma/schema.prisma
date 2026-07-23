@@ -1791,6 +1791,13 @@ model QbitProduct {
 
   /// V5: Shared Resource Library mappings (many-to-many with Resource)
   resourceMappings ProductResourceMapping[]
+  /// V6 — Extensible Architecture: Device Category (formal taxonomy)
+  categoryId     String?
+  category       DeviceCategory?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  /// V6 — Extensible Architecture: Product Capabilities (many-to-many)
+  productCapabilities ProductCapability[]
+  /// V6 — Extensible Architecture: Product Connection Types (many-to-many)
+  productConnectionTypes ProductConnectionType[]
 }
 
 /// V5 — Global Shared Resource Library.
@@ -3500,4 +3507,408 @@ model DeviceLifecycleCounter {
   @@index([isRegistered])
   @@index([lifecycleStage])
   @@index([lastScanAt])
+}
+
+// =====================================================
+// Dr. QBIT — Future Compatibility & Extensible Device Architecture
+// =====================================================
+//
+// Universal Enterprise Hardware Platform architecture that makes
+// Dr. QBIT extensible for ANY future QBIT hardware without
+// modifying the core engine.
+//
+// Architecture Principle:
+//   - Capability-Driven, NOT Device-Type-Specific
+//   - Core Engine is Immutable — new devices only need:
+//     1. DeviceCategory entry (or use existing)
+//     2. QbitProduct entry (Device Profile)
+//     3. CapabilityDefinition + ProductCapability (Capability Profile)
+//     4. ConnectionTypeDefinition + ProductConnectionType (Connection Profile)
+//     5. Resource + ProductResourceMapping (Resource Mapping)
+//     6. CommunicationAdapterDefinition (if new protocol needed)
+//     7. HardwareSignature (VID/PID/MAC for auto-detection)
+//   - After these entries, Dr. QBIT automatically supports the device
+//   - NO code changes, NO hardcoded product logic
+//
+// SAFETY:
+//   - DeviceCategory, CapabilityDefinition, ConnectionTypeDefinition
+//     are all database-driven — never hardcoded in TypeScript
+//   - Admin adds new categories/capabilities via API, not code changes
+//   - The Architecture Engine loads definitions from DB at runtime
+//
+// Creates new:
+//   - DeviceCategory — formal product category taxonomy
+//   - CapabilityDefinition — master list of all device capabilities
+//   - ProductCapability — many-to-many: QbitProduct ↔ CapabilityDefinition
+//   - ConnectionTypeDefinition — master list of connection types
+//   - ProductConnectionType — many-to-many: QbitProduct ↔ ConnectionTypeDefinition
+//   - CommunicationAdapterDefinition — adapter registry for protocol handling
+
+/// Device Category — formal taxonomy for product categorization.
+/// Replaces the ad-hoc string fields on QbitProduct (deviceType, category).
+/// New categories can be added by admin without code changes.
+/// Each category defines: what type of device it is, what icon to use,
+/// what default capabilities it has, and what adapters apply.
+model DeviceCategory {
+  id            String   @id @default(cuid())
+  /// URL-friendly slug (e.g. "thermal-printer", "barcode-scanner", "android-pos")
+  slug          String   @unique
+  /// Human-readable name (e.g. "Thermal Receipt Printer", "Barcode Scanner")
+  name          String   @unique
+  /// Brief description of this device category
+  description   String?
+  /// Material Symbol icon name for UI display
+  icon          String? // e.g. "print", "barcode_scanner", "phone_android"
+  /// Product family grouping (e.g. "Printers", "POS Systems", "Scanners", "Peripherals")
+  productFamily String? // "Printers" | "POS Systems" | "Scanners" | "Peripherals" | "Future"
+  /// Supported interfaces (JSON array) — default connection types for this category
+  /// e.g. ["usb", "lan", "wifi", "bluetooth"] for thermal printers
+  supportedInterfaces String? // JSON array of connection type slugs
+  /// Communication protocol hint (e.g. "ESC/POS", "ZPL", "XML", "HID")
+  defaultProtocol String?
+  /// Supported OS (JSON array) — default OS compatibility for this category
+  /// e.g. ["windows", "android", "linux"]
+  supportedOS  String? // JSON array of OS slugs
+  /// Sort order for UI display (lower = first)
+  sortIndex     Int      @default(0)
+  /// Whether this category is actively supported in Dr. QBIT
+  isActive      Boolean  @default(true)
+  /// Whether this category is visible in public product listings
+  isPublic      Boolean  @default(true)
+  /// Lifecycle status: "active" | "coming_soon" | "deprecated" | "discontinued"
+  status        String   @default("active")
+  /// Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  /// Products in this category
+  products      QbitProduct[]
+  /// Default capabilities for this category
+  categoryCapabilities CategoryCapability[]
+  /// Default connection types for this category
+  categoryConnectionTypes CategoryConnectionType[]
+  /// Applicable communication adapters
+  categoryAdapters CategoryAdapterMapping[]
+
+  @@index([slug])
+  @@index([productFamily])
+  @@index([sortIndex])
+  @@index([isActive])
+  @@index([status])
+}
+
+/// Capability Definition — master list of all possible device capabilities.
+/// These are the features a device CAN support (e.g. USB printing,
+/// Wi-Fi printing, auto cutter, firmware upgrade, etc.).
+/// Capabilities are database-driven — NEVER hardcoded.
+/// Admin can add new capabilities via API without code changes.
+model CapabilityDefinition {
+  id            String   @id @default(cuid())
+  /// URL-friendly slug (e.g. "usb-printing", "wifi-printing", "auto-cutter")
+  slug          String   @unique
+  /// Human-readable name (e.g. "USB Printing", "Wi-Fi Printing", "Auto Cutter")
+  name          String   @unique
+  /// Brief description
+  description   String?
+  /// Material Symbol icon name
+  icon          String? // e.g. "usb", "wifi", "content_cut"
+  /// Category this capability belongs to (for grouping)
+  /// e.g. "connection" for usb/wifi/bluetooth, "hardware" for auto_cutter/cash_drawer,
+  /// "software" for firmware_upgrade/configuration_tool
+  capabilityGroup String? // "connection" | "hardware" | "software" | "printing" | "diagnostic" | "display" | "scanning"
+  /// Whether this capability is relevant for Dr. QBIT (affects what features appear)
+  isQbitRelevant Boolean @default(true)
+  /// Whether this capability affects device discovery/identification
+  affectsDiscovery Boolean @default(false)
+  /// Whether this capability affects device configuration
+  affectsConfiguration Boolean @default(false)
+  /// Whether this capability affects diagnostics
+  affectsDiagnostics Boolean @default(false)
+  /// Whether this capability affects lifecycle management
+  affectsLifecycle Boolean @default(false)
+  /// Sort order within its group
+  sortIndex     Int      @default(0)
+  /// Whether this capability is currently active
+  isActive      Boolean  @default(true)
+  /// Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  /// Products that have this capability
+  productCapabilities ProductCapability[]
+  /// Categories that include this capability as default
+  categoryCapabilities CategoryCapability[]
+
+  @@index([slug])
+  @@index([capabilityGroup])
+  @@index([sortIndex])
+  @@index([isActive])
+  @@index([isQbitRelevant])
+}
+
+/// Product Capability — many-to-many linking QbitProduct to CapabilityDefinition.
+/// Each product can have multiple capabilities. When admin creates a
+/// new product, they select which capabilities it supports.
+/// Dr. QBIT reads these to determine what features to show/enable.
+model ProductCapability {
+  id            String   @id @default(cuid())
+  /// The product that has this capability
+  productId     String
+  product       QbitProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  /// The capability definition
+  capabilityId  String
+  capability    CapabilityDefinition @relation(fields: [capabilityId], references: [id], onDelete: Cascade)
+  /// Whether this capability is enabled by default for this product
+  isEnabled     Boolean  @default(true)
+  /// Per-product override for the capability name (null = use definition name)
+  overrideName  String?
+  /// Per-product override for the capability icon (null = use definition icon)
+  overrideIcon  String?
+  /// Sort order for this capability within this product's feature list
+  sortIndex     Int      @default(0)
+  /// Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([productId, capabilityId])
+  @@index([productId])
+  @@index([capabilityId])
+  @@index([isEnabled])
+  @@index([sortIndex])
+}
+
+/// Category Capability — many-to-many linking DeviceCategory to CapabilityDefinition.
+/// Defines which capabilities are DEFAULT for a category. When a new
+/// product is added to a category, these capabilities are auto-assigned.
+/// Admin can override per-product via ProductCapability.
+model CategoryCapability {
+  id            String   @id @default(cuid())
+  /// The category
+  categoryId    String
+  category      DeviceCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  /// The capability definition
+  capabilityId  String
+  capability    CapabilityDefinition @relation(fields: [capabilityId], references: [id], onDelete: Cascade)
+  /// Whether this capability is default-on for new products in this category
+  isDefault     Boolean  @default(true)
+  /// Sort order within this category's default capability list
+  sortIndex     Int      @default(0)
+  /// Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([categoryId, capabilityId])
+  @@index([categoryId])
+  @@index([capabilityId])
+  @@index([isDefault])
+}
+
+/// Connection Type Definition — master list of all possible connection types.
+/// Replaces the hardcoded DeviceConnection union type in TypeScript.
+/// New connection types (Serial, NFC, Zigbee, etc.) can be added by admin
+/// without code changes. The Discovery Engine uses these to know which
+/// scanners to register and which adapters to apply.
+model ConnectionTypeDefinition {
+  id            String   @id @default(cuid())
+  /// URL-friendly slug (e.g. "usb", "lan", "wifi", "bluetooth", "serial", "virtual-port")
+  slug          String   @unique
+  /// Human-readable name (e.g. "USB", "Ethernet (LAN)", "Wi-Fi", "Bluetooth", "Serial (COM)")
+  name          String   @unique
+  /// Brief description
+  description   String?
+  /// Material Symbol icon name
+  icon          String? // e.g. "usb", "lan", "wifi", "bluetooth", "cable"
+  /// The protocol this connection type uses
+  protocol      String? // "USB" | "TCP/IP" | "802.11" | "BLE" | "RS-232" | "Virtual"
+  /// Whether Dr. QBIT Discovery Engine supports scanning this connection type
+  supportsDiscovery Boolean @default(false)
+  /// Whether this connection type requires Desktop Agent for scanning
+  requiresDesktopAgent Boolean @default(false)
+  /// Whether this connection type supports configuration
+  supportsConfiguration Boolean @default(true)
+  /// Whether this connection type supports diagnostics
+  supportsDiagnostics Boolean @default(true)
+  /// Sort order for UI display
+  sortIndex     Int      @default(0)
+  /// Whether this connection type is currently active
+  isActive      Boolean  @default(true)
+  /// Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  /// Products that support this connection type
+  productConnectionTypes ProductConnectionType[]
+  /// Categories that include this connection type as default
+  categoryConnectionTypes CategoryConnectionType[]
+  /// Adapters that handle this connection type
+  adapterConnectionTypes AdapterConnectionType[]
+
+  @@index([slug])
+  @@index([sortIndex])
+  @@index([isActive])
+  @@index([supportsDiscovery])
+}
+
+/// Product Connection Type — many-to-many linking QbitProduct to ConnectionTypeDefinition.
+/// Each product can support multiple connection types. Dr. QBIT reads these
+/// to determine what connection options to show for a device.
+model ProductConnectionType {
+  id            String   @id @default(cuid())
+  /// The product that supports this connection type
+  productId     String
+  product       QbitProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  /// The connection type definition
+  connectionTypeId String
+  connectionType   ConnectionTypeDefinition @relation(fields: [connectionTypeId], references: [id], onDelete: Cascade)
+  /// Whether this connection is the PRIMARY (default) for this product
+  isPrimary     Boolean  @default(false)
+  /// Whether auto-configuration is supported for this connection type
+  supportsAutoConfig Boolean @default(false)
+  /// Sort order within this product's connection type list
+  sortIndex     Int      @default(0)
+  /// Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([productId, connectionTypeId])
+  @@index([productId])
+  @@index([connectionTypeId])
+  @@index([isPrimary])
+}
+
+/// Category Connection Type — many-to-many linking DeviceCategory to ConnectionTypeDefinition.
+/// Defines which connection types are DEFAULT for a category. When a new
+/// product is added to a category, these connection types are auto-assigned.
+model CategoryConnectionType {
+  id            String   @id @default(cuid())
+  /// The category
+  categoryId    String
+  category      DeviceCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  /// The connection type definition
+  connectionTypeId String
+  connectionType   ConnectionTypeDefinition @relation(fields: [connectionTypeId], references: [id], onDelete: Cascade)
+  /// Whether this connection type is default-on for new products in this category
+  isDefault     Boolean  @default(true)
+  /// Sort order within this category's default connection type list
+  sortIndex     Int      @default(0)
+  /// Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([categoryId, connectionTypeId])
+  @@index([categoryId])
+  @@index([connectionTypeId])
+  @@index([isDefault])
+}
+
+/// Communication Adapter Definition — the adapter registry for protocol handling.
+/// Each adapter handles a specific device category's communication protocol.
+/// The Configuration Engine and Diagnostic Engine use adapters to interact
+/// with devices. New adapters can be registered without core engine changes.
+///
+/// Adapter Pattern:
+///   - ThermalPrinterAdapter → handles ESC/POS, USB/serial/LAN communication
+///   - BarcodePrinterAdapter → handles ZPL/EPL, label printing commands
+///   - PortablePrinterAdapter → handles BLE + ESC/POS mobile commands
+///   - AndroidPosAdapter → handles Android SDK + POS application commands
+///   - WindowsPosAdapter → handles Windows POS SDK commands
+///   - BarcodeScannerAdapter → handles scanner HID/serial commands
+///   - CustomerDisplayAdapter → handles display command protocols
+///   - CashDrawerAdapter → handles drawer kick commands
+///   - RfidAdapter → handles RFID read/write commands
+///   - Future adapters → just add a new entry + adapter class
+model CommunicationAdapterDefinition {
+  id            String   @id @default(cuid())
+  /// URL-friendly slug (e.g. "thermal-printer-adapter", "barcode-printer-adapter")
+  slug          String   @unique
+  /// Human-readable name (e.g. "Thermal Printer Adapter", "Barcode Printer Adapter")
+  name          String   @unique
+  /// Brief description
+  description   String?
+  /// The TypeScript adapter class name (for runtime resolution)
+  /// e.g. "ThermalPrinterDiagnosticAdapter", "UsbConfigurationAdapter"
+  /// The engine resolves this to the actual class at runtime.
+  adapterClass  String
+  /// Communication protocol this adapter handles
+  /// e.g. "ESC/POS", "ZPL", "BLE+ESC/POS", "HID", "RS-232"
+  protocol      String?
+  /// Supported device categories (via CategoryAdapterMapping)
+  categoryAdapters CategoryAdapterMapping[]
+  /// Supported connection types (via AdapterConnectionType)
+  adapterConnectionTypes AdapterConnectionType[]
+  /// Whether this adapter requires Desktop Agent for communication
+  requiresDesktopAgent Boolean @default(false)
+  /// Whether this adapter supports live diagnostics
+  supportsLiveDiagnostics Boolean @default(true)
+  /// Whether this adapter supports device configuration
+  supportsConfiguration Boolean @default(true)
+  /// Whether this adapter supports firmware operations
+  supportsFirmwareOps Boolean @default(false)
+  /// Whether this adapter is currently active
+  isActive      Boolean  @default(true)
+  /// Sort order
+  sortIndex     Int      @default(0)
+  /// Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([slug])
+  @@index([adapterClass])
+  @@index([protocol])
+  @@index([isActive])
+  @@index([sortIndex])
+}
+
+/// Category Adapter Mapping — many-to-many linking DeviceCategory to CommunicationAdapterDefinition.
+/// Defines which adapters are applicable for a device category.
+/// When a device is detected, the engine looks up its category → finds adapters.
+model CategoryAdapterMapping {
+  id            String   @id @default(cuid())
+  /// The category
+  categoryId    String
+  category      DeviceCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  /// The adapter definition
+  adapterId     String
+  adapter       CommunicationAdapterDefinition @relation(fields: [adapterId], references: [id], onDelete: Cascade)
+  /// Whether this is the PRIMARY adapter for this category
+  isPrimary     Boolean  @default(false)
+  /// Sort order
+  sortIndex     Int      @default(0)
+  /// Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([categoryId, adapterId])
+  @@index([categoryId])
+  @@index([adapterId])
+  @@index([isPrimary])
+}
+
+/// Adapter Connection Type — many-to-many linking CommunicationAdapterDefinition to ConnectionTypeDefinition.
+/// Defines which connection types each adapter can handle.
+/// An adapter may support multiple connection types (e.g. ThermalPrinterAdapter
+/// supports USB, LAN, Wi-Fi, Bluetooth).
+model AdapterConnectionType {
+  id            String   @id @default(cuid())
+  /// The adapter definition
+  adapterId     String
+  adapter       CommunicationAdapterDefinition @relation(fields: [adapterId], references: [id], onDelete: Cascade)
+  /// The connection type definition
+  connectionTypeId String
+  connectionType   ConnectionTypeDefinition @relation(fields: [connectionTypeId], references: [id], onDelete: Cascade)
+  /// Whether this adapter+connection combo supports discovery
+  supportsDiscovery Boolean @default(false)
+  /// Whether this adapter+connection combo supports configuration
+  supportsConfiguration Boolean @default(true)
+  /// Whether this adapter+connection combo supports diagnostics
+  supportsDiagnostics Boolean @default(true)
+  /// Sort order
+  sortIndex     Int      @default(0)
+  /// Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([adapterId, connectionTypeId])
+  @@index([adapterId])
+  @@index([connectionTypeId])
 }
