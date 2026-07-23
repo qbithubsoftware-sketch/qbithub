@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "This screenshot shows a **web browser** (Google Chrome) displaying a raw JSON error response from an API endpoint.\n\n## Application & Context\nThe application is the **QBIT Hub — Enterprise Portal**, which appears to be hosted on **Vercel** (as indicated by the `qithub.vercel.app` domain). The user has navigated to an administrative API endpoint intended to download a resource file (specifically, the \"QBIT SDK\").\n\n## The Error/Issue\nThe visible error is a **`FILE_NOT_FOUND`** error. The API attempted to serve a downloadable file but failed because the physical file does not exist at the expected location or cannot be accessed.\n\n## Complete Visible Text\n\n**Browser Tabs:**\n- Vercel\n- qithub.vercel.app/api/admin/r...\n- QBIT Hub — Enterprise Portal\n- Ask Gemini\n\n**Address Bar:**\n`qithub.vercel.app/api/admin/resources/cmruhx71a000asi56j20hyin4?download=true`\n\n**Page Content:**\n```\nPretty-print ☐\n\n{\"success\":false,\"code\":\"FILE_NOT_FOUND\",\"message\":\"The physical file for \\\"QBIT SDK\\\" could not be read. It may have been moved or deleted.\",\"stage\":\"download\",\"details\":\n{\"resourceId\":\"cmruhx71a000asi56j20hyin4\",\"storageKey\":\"https://qithub.vercel.app/downloads/sdk/qbit-sdk-v3.0.zip\"}}\n```\n\n**System Tray (Windows):**\n- Weather: 29°C Mostly clear\n- Time: 01:07\n- Date: 24-07-2026\n- Language: ENG IN\n\n## Technical Summary\nThe JSON response indicates:\n- **Success:** `false`\n- **Error Code:** `FILE_NOT_FOUND`\n- **Message:** The system could not read the physical file for \"QBIT SDK\" (likely moved or deleted)\n- **Stage:** `download` (the error occurred during the file download process)\n- **Resource ID:** `cmruhx71a000asi56j20hyin4`\n- **Missing File URL:** `https://qithub.vercel.app/downloads/sdk/qbit-sdk-v3.0.zip`\n\nThe \"Pretty-print\" checkbox suggests this might be a browser extension or developer tool view for formatting JSON responses.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1784835541,
+  "id": "202607240338513df0c208b5264598",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202607240338513df0c208b5264598",
+  "usage": {
+    "completion_tokens": 475,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2758,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 3233
+  }
+}
