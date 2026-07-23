@@ -2190,6 +2190,13 @@ model DevicePassport {
   liveDiagnosticSessions LiveDiagnosticSession[]
   testSessions       DeviceTestSession[]
   configuration      DeviceConfiguration?
+  // Phase 6 — Enterprise Device Lifecycle relations
+  installationRecords    InstallationRecord[]
+  serviceHistory         ServiceHistoryEntry[]
+  engineerActivityLogs   EngineerActivityLog[]
+  timelineEvents         DeviceTimelineEvent[]
+  smartNotifications     SmartNotification[]
+  lifecycleCounter       DeviceLifecycleCounter?
 
   @@index([productId])
   @@index([serialNumber])
@@ -3205,4 +3212,292 @@ model LiveDiagnosticSession {
   @@index([healthGrade])
   @@index([engineerId])
   @@index([startedAt])
+}
+
+// =====================================================
+// Dr. QBIT Phase 6 — Enterprise Device Lifecycle, Auto Sync & Smart Management Engine
+// =====================================================
+//
+// After Phase 5 (Live Diagnostics) completes, Phase 6 manages the
+// complete device lifecycle: registration verification, auto synchronization,
+// lifecycle tracking, installation history, service history, warranty
+// intelligence, resource synchronization, firmware intelligence,
+// device analytics, engineer activity tracking, enterprise dashboard
+// integration, smart notifications, security, device timeline, and
+// enterprise-ready architecture.
+//
+// SAFETY: NO dummy data. NO fake status. NO simulated events.
+// All data comes from real database records and device events.
+// Warranty colors are calculated from real expiry dates.
+// Notifications are generated only from real conditions.
+//
+// Reuses existing:
+//   - DevicePassport (device identity + lifecycle dates)
+//   - DriverInformation + FirmwareInformation (driver/firmware intelligence)
+//   - DeviceWarranty (warranty data)
+//   - DeviceConfiguration + ConfigurationEvent (configuration history)
+//   - LiveDiagnosticSession (diagnostic history)
+//   - DriverHistory + FirmwareHistory (driver/firmware change audit trail)
+//   - QbitProduct (product catalog)
+//   - PurchaseRecord + CustomerAccount (customer/purchase data)
+//   - FSMCustomerAsset (customer asset data)
+//   - AuditLog (enterprise audit trail)
+//   - ActivityFeed (dashboard timeline)
+//   - Notification + NotificationTemplate (notification system)
+//   - ProductResourceMapping + Resource (resource synchronization)
+//
+// Creates new:
+//   - InstallationRecord — each installation event (supports multiple installations)
+//   - ServiceHistoryEntry — unified service log for all engineer activities
+//   - EngineerActivityLog — per-device engineer activity audit trail
+//   - DeviceTimelineEvent — complete device lifecycle timeline
+//   - SmartNotification — device-condition-driven notifications
+//   - DeviceLifecycleCounter — persistent analytics counters per device
+
+/// Installation record — tracks each installation event for a device.
+/// Supports multiple installations (old entries are never deleted).
+/// Created automatically when a device is first configured or re-installed.
+model InstallationRecord {
+  id                String         @id @default(cuid())
+  passportId        String
+  passport          DevicePassport @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  // Installation details
+  installNumber     String         @unique // "INST-2026-00001"
+  installationDate  DateTime       @default(now())
+  // Engineer who performed the installation
+  engineerId        String?
+  engineerName      String?
+  // Customer and location
+  customerId        String? // FSMCustomer.id or CustomerAccount.id
+  customerName      String?
+  customerLocation  String? // address/branch
+  // Device state at installation
+  connectionType    String? // "usb" | "lan" | "wifi" | "bluetooth"
+  initialFirmware   String? // firmware version at install time
+  initialDriver     String? // driver version at install time
+  deviceConfig      String? // JSON: configuration snapshot at install time
+  // Installation status
+  status            String         @default("completed") // "completed" | "pending" | "failed" | "reinstall"
+  // Metadata
+  notes             String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@index([passportId])
+  @@index([engineerId])
+  @@index([customerId])
+  @@index([installationDate])
+  @@index([status])
+}
+
+/// Service history entry — unified service log for all engineer activities
+/// on a device. Auto-created when engineer runs diagnostics, installs driver,
+/// updates firmware, changes configuration, or performs troubleshooting.
+/// This is the PERMANENT service record — entries are never deleted.
+model ServiceHistoryEntry {
+  id              String         @id @default(cuid())
+  passportId      String
+  passport        DevicePassport @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  // Service event identification
+  serviceNumber   String         @unique // "SRV-2026-00001"
+  // Date of service
+  serviceDate     DateTime       @default(now())
+  // Engineer who performed the service
+  engineerId      String?
+  engineerName    String?
+  // Activity type
+  activityType    String // "diagnostic" | "driver_install" | "driver_update" | "firmware_update" |
+                         // "configuration_change" | "troubleshooting" | "repair" | "maintenance" |
+                         // "warranty_renewal" | "reinstallation"
+  // Activity details
+  previousValue   String? // e.g. previous firmware version "V2.10"
+  currentValue    String? // e.g. current firmware version "V2.12"
+  details         String? // JSON: detailed activity context
+  // Customer context
+  customerId      String?
+  customerName    String?
+  // Result
+  result          String         @default("successful") // "successful" | "failed" | "partial" | "pending"
+  resultDetails   String? // JSON: what happened, any errors
+  // Related records
+  diagnosticSessionId String? // LiveDiagnosticSession.id if this was a diagnostic run
+  configurationId     String? // DeviceConfiguration.id if this was a config change
+  // Metadata
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([passportId])
+  @@index([engineerId])
+  @@index([activityType])
+  @@index([serviceDate])
+  @@index([result])
+}
+
+/// Engineer activity log — tracks every engineer action on a device.
+/// Provides a complete audit trail of who did what, when, on which device.
+model EngineerActivityLog {
+  id            String   @id @default(cuid())
+  // Engineer identity
+  engineerId    String   // User.id
+  engineerName  String?
+  engineerEmail String? // login ID
+  // Device context
+  passportId    String
+  passport      DevicePassport @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  // Customer context
+  customerId    String?
+  customerName  String?
+  // Activity details
+  activity      String // "scan" | "diagnostic" | "driver_install" | "driver_update" |
+                        // "firmware_update" | "configuration" | "troubleshooting" | "test_print" |
+                        // "resource_download" | "warranty_check" | "registration"
+  // Result
+  result        String   @default("successful") // "successful" | "failed" | "partial"
+  resultData    String? // JSON: detailed result context
+  // Timestamp
+  activityTime  DateTime @default(now())
+  // Metadata
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime @default(now())
+
+  @@index([engineerId])
+  @@index([passportId])
+  @@index([activity])
+  @@index([activityTime])
+  @@index([result])
+}
+
+/// Device timeline event — a unified timeline of the complete device lifecycle.
+/// Aggregates events from all phases into a single chronological timeline.
+/// Events include: manufactured, purchased, registered, installed, configured,
+/// diagnosed, firmware updated, service visit, warranty renewal, etc.
+model DeviceTimelineEvent {
+  id            String         @id @default(cuid())
+  passportId    String
+  passport      DevicePassport @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  // Event identification
+  eventType     String // "manufactured" | "purchased" | "registered" | "installed" | "configured" |
+                        // "diagnosed" | "firmware_updated" | "driver_installed" | "driver_updated" |
+                        // "service_visit" | "warranty_renewal" | "warranty_expired" |
+                        // "configuration_changed" | "device_offline" | "device_online" |
+                        // "scan" | "test_print" | "resource_download" | "repair" | "maintenance"
+  // Event details
+  title         String // Human-readable title, e.g. "Firmware Updated to V2.12"
+  description   String? // Detailed description
+  // Actor
+  actorId       String? // User.id, "system", "desktop-agent", or null for auto events
+  actorName     String?
+  // Related data
+  previousValue String? // e.g. previous firmware version
+  newValue      String? // e.g. new firmware version
+  relatedId     String? // ID of related record (e.g. ServiceHistoryEntry.id)
+  relatedType   String? // "service" | "diagnostic" | "configuration" | "installation" | "warranty" | "resource"
+  metadata      String? // JSON: additional event context
+  // Timestamp
+  occurredAt    DateTime @default(now())
+  createdAt     DateTime @default(now())
+
+  @@index([passportId])
+  @@index([eventType])
+  @@index([occurredAt])
+  @@index([actorId])
+}
+
+/// Smart notification — generated automatically based on real device conditions.
+/// NOT for admin notifications (those use AdminNotification).
+/// NOT for FSM notifications (those use Notification/NotificationLog).
+/// This is specifically for device lifecycle conditions:
+/// warranty expiring, firmware update available, driver missing, etc.
+model SmartNotification {
+  id              String   @id @default(cuid())
+  // Device context
+  passportId      String
+  passport        DevicePassport @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  serialNumber    String?
+  deviceModel     String?
+  // Notification type — based on REAL conditions only
+  notificationType String // "warranty_expiring" | "warranty_expired" |
+                           // "firmware_update_available" | "driver_missing" |
+                           // "driver_update_available" | "device_not_registered" |
+                           // "repeated_communication_failure" | "frequent_offline" |
+                           // "service_reminder" | "health_attention" | "health_critical"
+  // Notification content
+  title           String
+  message         String
+  severity        String   @default("warning") // "info" | "warning" | "critical"
+  // Condition data (what triggered this notification)
+  conditionData   String? // JSON: the specific data that triggered this notification
+  // Recommended action
+  actionUrl       String? // deep link to relevant page
+  actionLabel     String? // "Update Firmware" | "View Warranty" | etc.
+  // Target audience
+  targetRole      String   @default("engineer") // "admin" | "engineer" | "customer" | "all"
+  targetUserId    String? // Specific user ID, or null for role-based broadcast
+  // Delivery status
+  deliveryStatus  String   @default("pending") // "pending" | "delivered" | "read" | "dismissed" | "expired"
+  deliveredAt     DateTime?
+  readAt          DateTime?
+  dismissedAt     DateTime?
+  // Deduplication — prevents sending the same notification repeatedly
+  dedupKey        String? // unique key for dedup (e.g. "warranty_expiring_PASS-2026-00001")
+  // Expiry — notification is auto-expired when condition resolves
+  expiresAt       DateTime?
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([passportId])
+  @@index([notificationType])
+  @@index([severity])
+  @@index([targetRole])
+  @@index([targetUserId])
+  @@index([deliveryStatus])
+  @@index([dedupKey])
+  @@index([createdAt])
+  @@index([expiresAt])
+}
+
+/// Device lifecycle counter — persistent analytics counters per device.
+/// Unlike DeviceMetric (which is snapshot-based), these counters are
+/// continuously updated on every event. Used for enterprise reporting.
+model DeviceLifecycleCounter {
+  id                    String         @id @default(cuid())
+  passportId            String         @unique
+  passport              DevicePassport @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  // Scan counters
+  totalScans            Int            @default(0)
+  lastScanAt            DateTime?
+  // Diagnostic counters
+  totalDiagnostics      Int            @default(0)
+  successfulDiagnostics Int            @default(0)
+  failedDiagnostics     Int            @default(0)
+  // Driver counters
+  driverInstallCount    Int            @default(0)
+  driverUpdateCount     Int            @default(0)
+  // Firmware counters
+  firmwareUpdateCount   Int            @default(0)
+  // Service counters
+  serviceCount          Int            @default(0)
+  repairCount           Int            @default(0)
+  maintenanceCount      Int            @default(0)
+  // Configuration counters
+  configurationCount    Int            @default(0)
+  // Test counters
+  testPrintCount        Int            @default(0)
+  // Registration status
+  isRegistered          Boolean        @default(false)
+  registeredAt          DateTime?
+  // Lifecycle status
+  lifecycleStage        String         @default("discovered") // "discovered" | "registered" | "installed" |
+                                                              // "configured" | "operational" | "maintenance" |
+                                                              // "decommissioned"
+  // Timestamps
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  @@index([passportId])
+  @@index([isRegistered])
+  @@index([lifecycleStage])
+  @@index([lastScanAt])
 }

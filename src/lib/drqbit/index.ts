@@ -7,6 +7,7 @@
  *   - Phase 3: Cloud Lookup Engine (cloud-lookup-engine.ts, resource-engine.ts, cloud-lookup-types.ts)
  *   - Phase 4: Configuration & Provisioning Engine (configuration-engine.ts, configuration-adapters.ts, configuration-types.ts)
  *   - Phase 5: Intelligent Diagnostics, Predictive Health & Troubleshooting Engine (diagnostic-engine.ts, diagnostic-adapters.ts, diagnostic-types.ts)
+ *   - Phase 6: Enterprise Device Lifecycle, Auto Sync & Smart Management Engine (lifecycle-engine.ts, lifecycle-types.ts)
  *   - Device Matcher (device-matcher.ts)
  *   - Desktop Agent Auth (desktop-agent-auth.ts)
  */
@@ -250,3 +251,68 @@ export {
   gradeFromScore as diagGradeFromScore,
   statusFromGrade as diagStatusFromGrade,
 } from "./diagnostic-types";
+
+// Phase 6 — Enterprise Device Lifecycle, Auto Sync & Smart Management
+export { runLifecycleEngine, runSingleLifecycleStep } from "./lifecycle-engine";
+
+// Phase 6 — Types
+export type {
+  LifecycleAction,
+  LifecycleRequest,
+  RegistrationVerificationResult,
+  DeviceSyncResult,
+  DeviceLifecycleData,
+  InstallationHistoryResult,
+  ServiceHistoryResult,
+  ServiceHistoryEntry as LifecycleServiceHistoryEntry,
+  WarrantyIntelligenceResult,
+  WarrantyColor as LifecycleWarrantyColor,
+  ResourceSyncResult,
+  ResourceAvailabilityStatus,
+  FirmwareIntelligenceResult,
+  DeviceAnalyticsResult,
+  EngineerActivityResult,
+  EngineerActivityEntry,
+  DashboardIntegrationResult,
+  DashboardEvent as LifecycleDashboardEvent,
+  DashboardEventType,
+  SmartNotificationResult,
+  SmartNotification as LifecycleSmartNotification,
+  NotificationType as LifecycleNotificationType,
+  SecurityVerificationResult,
+  DeviceTimelineResult,
+  DeviceTimelineEvent as LifecycleDeviceTimelineEvent,
+  EnterpriseArchitectureInfo,
+  LifecycleStepStatus,
+  LifecycleStepTracking,
+  LifecycleError,
+  LifecycleErrorCode,
+  LifecycleResult,
+  LifecycleResponse,
+  LifecycleStage,
+  ServiceActivityType,
+  TimelineEventType as LifecycleTimelineEventType,
+} from "./lifecycle-types";
+export {
+  LIFECYCLE_STAGE_LABELS,
+  LIFECYCLE_STAGE_ICONS,
+  LIFECYCLE_STAGE_VARIANTS,
+  WARRANTY_COLOR_LABELS,
+  WARRANTY_COLOR_ICONS,
+  WARRANTY_COLOR_VARIANTS,
+  SERVICE_ACTIVITY_LABELS,
+  SERVICE_ACTIVITY_ICONS,
+  TIMELINE_EVENT_LABELS as LifecycleTimelineEventLabels,
+  TIMELINE_EVENT_ICONS as LifecycleTimelineEventIcons,
+  NOTIFICATION_TYPE_LABELS,
+  NOTIFICATION_TYPE_ICONS,
+  NOTIFICATION_SEVERITY_VARIANTS,
+  DASHBOARD_EVENT_LABELS,
+  DASHBOARD_EVENT_ICONS,
+  LIFECYCLE_STEP_STATUS_LABELS,
+  LIFECYCLE_STEP_STATUS_VARIANTS,
+  LIFECYCLE_ERROR_LABELS,
+  LIFECYCLE_STEP_LABELS,
+  warrantyColorFromDays,
+  stageFromData,
+} from "./lifecycle-types";
