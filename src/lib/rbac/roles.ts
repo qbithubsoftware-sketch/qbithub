@@ -197,6 +197,9 @@ export const SCREEN_PERMISSIONS: Record<ScreenId, Role[]> = {
   "support-communication": ["administrator", "installation_engineer"],
   "support-escalation": ["administrator"],
   "support-analytics": ["administrator"],
+  // QBIT Universal Device Identity Architecture
+  "device-uuid-register": ["super_administrator", "administrator"],
+  "device-uuid-profile": ["super_administrator", "administrator", "installation_engineer"],
 };
 
 /**

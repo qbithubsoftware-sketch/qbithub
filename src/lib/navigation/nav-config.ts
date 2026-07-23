@@ -36,6 +36,7 @@ export const ADMIN_NAV: NavItem[] = [
   { label: "Global Resource Library", icon: "library_books", screen: "resource-library", badge: "V5" },
   { label: "Product Master", icon: "database", screen: "product-master" },
   { label: "Device Lookup", icon: "search", screen: "ai-purchase-center", badge: "NEW" },
+  { label: "Device Register (UUID)", icon: "fingerprint", screen: "device-uuid-register", badge: "UUID" },
   { label: "Users", icon: "group", screen: "user-role-management" },
   { label: "Analytics", icon: "monitoring", screen: "admin-dashboard" },
   { label: "AI Diagnostic", icon: "psychology", screen: "ai-diagnostic-center", badge: "AI" },
@@ -115,6 +116,7 @@ export const FSM_NAV: NavItem[] = [
   { label: "Asset History", icon: "history", screen: "fsm-customer-asset-history" },
   { label: "Notifications", icon: "notifications", screen: "notification-center" },
   { label: "Dr. QBIT", icon: "smart_toy", screen: "dr-qbit-detection" },
+  { label: "UUID Profile", icon: "fingerprint", screen: "device-uuid-profile" },
   { label: "Knowledge Base", icon: "library_books", screen: "support-kb" },
   { label: "Support", icon: "contact_support", screen: "support-tickets" },
 ];

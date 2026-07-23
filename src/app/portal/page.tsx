@@ -57,6 +57,8 @@ import { EngineerKnowledgeBasePage } from "@/components/qbit/pages/EngineerKnowl
 import { EngineerDownloadsPage } from "@/components/qbit/pages/EngineerDownloadsPage";
 import { EngineerTroubleshootingPage } from "@/components/qbit/pages/EngineerTroubleshootingPage";
 import { SupportModulePage } from "@/components/qbit/pages/SupportModulePage";
+import { DeviceUuidRegistrationPage } from "@/components/qbit/pages/DeviceUuidRegistrationPage";
+import { QbitDeviceProfilePage } from "@/components/qbit/pages/QbitDeviceProfilePage";
 
 export default function Home() {
   const current = useNavigation((s) => s.current);
@@ -213,6 +215,11 @@ export default function Home() {
         return <SupportModulePage defaultTab="escalation" />;
       case "support-analytics":
         return <SupportModulePage defaultTab="analytics" />;
+      // QBIT Universal Device Identity Architecture
+      case "device-uuid-register":
+        return <DeviceUuidRegistrationPage />;
+      case "device-uuid-profile":
+        return <QbitDeviceProfilePage />;
       default:
         return <LoginPage />;
     }

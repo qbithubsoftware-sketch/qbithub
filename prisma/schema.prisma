@@ -33,6 +33,8 @@ model User {
   installationRatings InstallationRating[]
   /// V3 — Customer account linked to this user (for public_customer role).
   customerAccount     CustomerAccount?
+  /// V4 — Dealer relation: devices sold by this dealer user.
+  registeredDevices   DevicePassport[]  @relation("DeviceDealer")
 }
 
 model Post {
@@ -2218,7 +2220,7 @@ model DevicePassport {
   manufacturingBatch   String?        // Manufacturing batch code
   manufacturingDate    String?        // Manufacturing date string
   // === Universal Hardware Fingerprint ===
-  deviceUuid           String?        @unique  // Internal device UUID (generated on first detection)
+  deviceUuid           String?        @unique  // Internal device UUID (QBIT format: QBT-XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX)
   hardwareFingerprint  String?        @unique  // SHA-256 fingerprint of all collected identifiers
   duplicateSerialFlag  Boolean        @default(false) // True when another device shares same serial
   fingerprintQuality   String?        // "high" | "medium" | "low" — quality of available identifiers
@@ -2228,7 +2230,22 @@ model DevicePassport {
   lastConnectedAt      DateTime?      @default(now()) // Last time detected
   connectionCount      Int            @default(1)     // How many times this device was seen
   // Device status (computed from driver intelligence + scan data)
-  deviceStatus         String          @default("ready") // "ready" | "driver_missing" | "driver_outdated" | "unsupported" | "unknown"
+  deviceStatus         String          @default("ready") // "ready" | "driver_missing" | "driver_outdated" | "unsupported" | "unknown" | "active" | "inactive" | "registered" | "decommissioned"
+  // === QBIT Universal Device Identity Architecture ===
+  // Business & Registration fields (Master Prompt requirements)
+  customerId           String?        // Customer ID — linked to CustomerAccount
+  customer             CustomerAccount? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  dealerId             String?        // Dealer ID — linked to User with dealer role
+  dealer               User?          @relation("DeviceDealer", fields: [dealerId], references: [id], onDelete: SetNull)
+  invoiceNumber        String?        // Invoice number from purchase record
+  purchaseDate         DateTime?      // Purchase date from invoice
+  warrantyStartDate    DateTime?      // Warranty start date
+  warrantyEndDate      DateTime?      // Warranty end date
+  registrationDate     DateTime?      // Date when device was first registered in QBIT system
+  activationDate       DateTime?      // Date when device was activated by customer
+  qrCode               String?        // QR Code content — contains QBT://DEVICE/QBT-XXXX format
+  productImage         String?        // Product image URL for device profile display
+  productCategory      String?        // Device category for future device types
   // Customer link (optional — set when device is associated with a customer asset)
   customerAssetId      String?
   // Branch link (optional — for fleet grouping by physical location)
@@ -2282,6 +2299,11 @@ model DevicePassport {
   @@index([assignedEngineerId])
   @@index([deviceStatus])
   @@index([fingerprintQuality])
+  @@index([customerId])
+  @@index([dealerId])
+  @@index([invoiceNumber])
+  @@index([qrCode])
+  @@index([registrationDate])
 }
 
 /// Driver intelligence — installed vs latest driver comparison.
@@ -3002,6 +3024,7 @@ model CustomerAccount {
   updatedAt       DateTime @updatedAt
 
   purchases PurchaseRecord[]
+  devices   DevicePassport[]
 
   @@index([mobileNumber])
   @@index([email])

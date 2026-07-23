@@ -103,7 +103,10 @@ export type ScreenId =
   | "support-communication"
   | "support-remote"
   | "support-escalation"
-  | "support-analytics";
+  | "support-analytics"
+  // QBIT Universal Device Identity Architecture
+  | "device-uuid-register"
+  | "device-uuid-profile";
 
 interface NavigationState {
   current: ScreenId;
