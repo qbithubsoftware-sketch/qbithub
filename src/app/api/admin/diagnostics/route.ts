@@ -466,7 +466,7 @@ async function checkUploadDownloadModule(issues: DiagnosticIssue[]): Promise<Mod
     const recentFailures = await db.auditLog.findMany({
       where: {
         action: { contains: "upload" },
-        description: { contains: "fail", mode: "insensitive" },
+        description: { contains: "fail" },
         createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
       },
       take: 10,

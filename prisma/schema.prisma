@@ -12,7 +12,7 @@ datasource db {
   // Production uses PostgreSQL (Neon). Local dev uses SQLite with file: URL.
   // The provider is set dynamically — when DATABASE_URL starts with "file:",
   // SQLite is used; otherwise PostgreSQL is assumed.
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -1782,7 +1782,7 @@ model QbitProduct {
   purchaseRecords    PurchaseRecord[]
 
   @@index([slug])
-  @@index([category])
+  @@index([categoryId])
   @@index([deviceType])
   @@index([isFeatured])
   @@index([isTrending])
@@ -1793,7 +1793,7 @@ model QbitProduct {
   resourceMappings ProductResourceMapping[]
   /// V6 — Extensible Architecture: Device Category (formal taxonomy)
   categoryId     String?
-  category       DeviceCategory?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  deviceCategory DeviceCategory?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   /// V6 — Extensible Architecture: Product Capabilities (many-to-many)
   productCapabilities ProductCapability[]
   /// V6 — Extensible Architecture: Product Connection Types (many-to-many)

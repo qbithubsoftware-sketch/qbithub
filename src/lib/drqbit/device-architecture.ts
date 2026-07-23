@@ -374,10 +374,10 @@ export async function getProductCapabilityProfile(productId: string): Promise<Pr
     const product = await db.qbitProduct.findUnique({
       where: { id: productId },
       include: {
-        category: true,
+        deviceCategory: true,
         productCapabilities: {
           where: { isEnabled: true },
-          include: { capability: { where: { isActive: true } } },
+          include: { capability: true },
           orderBy: { sortIndex: "asc" },
         },
       },
@@ -387,30 +387,32 @@ export async function getProductCapabilityProfile(productId: string): Promise<Pr
       return createEmptyCapabilityProfile(productId, "");
     }
 
-    const capabilities: ArchitectureCapability[] = product.productCapabilities.map((pc) => ({
-      id: pc.capability.id,
-      slug: pc.capability.slug,
-      name: pc.overrideName || pc.capability.name,
-      description: pc.capability.description,
-      icon: pc.overrideIcon || pc.capability.icon,
-      capabilityGroup: pc.capability.capabilityGroup,
-      isQbitRelevant: pc.capability.isQbitRelevant,
-      affectsDiscovery: pc.capability.affectsDiscovery,
-      affectsConfiguration: pc.capability.affectsConfiguration,
-      affectsDiagnostics: pc.capability.affectsDiagnostics,
-      affectsLifecycle: pc.capability.affectsLifecycle,
-      sortIndex: pc.sortIndex,
-      isActive: pc.capability.isActive,
-    }));
+    const capabilities: ArchitectureCapability[] = product.productCapabilities
+      .filter((pc) => pc.capability?.isActive === true)
+      .map((pc) => ({
+        id: pc.capability.id,
+        slug: pc.capability.slug,
+        name: pc.overrideName || pc.capability.name,
+        description: pc.capability.description,
+        icon: pc.overrideIcon || pc.capability.icon,
+        capabilityGroup: pc.capability.capabilityGroup,
+        isQbitRelevant: pc.capability.isQbitRelevant,
+        affectsDiscovery: pc.capability.affectsDiscovery,
+        affectsConfiguration: pc.capability.affectsConfiguration,
+        affectsDiagnostics: pc.capability.affectsDiagnostics,
+        affectsLifecycle: pc.capability.affectsLifecycle,
+        sortIndex: pc.sortIndex,
+        isActive: pc.capability.isActive,
+      }));
 
     const capabilitySlugs = capabilities.map((c) => c.slug);
 
     return {
       productId: product.id,
       productModel: product.model,
-      categorySlug: product.category?.slug ?? null,
-      categoryName: product.category?.name ?? null,
-      categoryIcon: product.category?.icon ?? null,
+      categorySlug: product.deviceCategory?.slug ?? null,
+      categoryName: product.deviceCategory?.name ?? null,
+      categoryIcon: product.deviceCategory?.icon ?? null,
       capabilities,
       capabilitySlugs,
       hasCapability: (slug: string) => capabilitySlugs.includes(slug),
@@ -439,7 +441,7 @@ export async function getProductConnectionProfile(productId: string): Promise<Pr
       where: { id: productId },
       include: {
         productConnectionTypes: {
-          include: { connectionType: { where: { isActive: true } } },
+          include: { connectionType: true },
           orderBy: { sortIndex: "asc" },
         },
       },
@@ -449,7 +451,9 @@ export async function getProductConnectionProfile(productId: string): Promise<Pr
       return createEmptyConnectionProfile(productId, "");
     }
 
-    const connectionTypes: ArchitectureConnectionType[] = product.productConnectionTypes.map((pct) => ({
+    const connectionTypes: ArchitectureConnectionType[] = product.productConnectionTypes
+      .filter((pct) => pct.connectionType?.isActive === true)
+      .map((pct) => ({
       id: pct.connectionType.id,
       slug: pct.connectionType.slug,
       name: pct.connectionType.name,
@@ -495,16 +499,16 @@ export async function getCategoryDefaults(categorySlug: string): Promise<Categor
       include: {
         categoryCapabilities: {
           where: { isDefault: true },
-          include: { capability: { where: { isActive: true } } },
+          include: { capability: true },
           orderBy: { sortIndex: "asc" },
         },
         categoryConnectionTypes: {
           where: { isDefault: true },
-          include: { connectionType: { where: { isActive: true } } },
+          include: { connectionType: true },
           orderBy: { sortIndex: "asc" },
         },
         categoryAdapters: {
-          include: { adapter: { where: { isActive: true } } },
+          include: { adapter: true },
           orderBy: { sortIndex: "asc" },
         },
       },
@@ -512,7 +516,9 @@ export async function getCategoryDefaults(categorySlug: string): Promise<Categor
 
     if (!category) return null;
 
-    const defaultCapabilities: ArchitectureCapability[] = category.categoryCapabilities.map((cc) => ({
+    const defaultCapabilities: ArchitectureCapability[] = category.categoryCapabilities
+      .filter((cc) => cc.capability?.isActive === true)
+      .map((cc) => ({
       id: cc.capability.id,
       slug: cc.capability.slug,
       name: cc.capability.name,
@@ -528,7 +534,9 @@ export async function getCategoryDefaults(categorySlug: string): Promise<Categor
       isActive: cc.capability.isActive,
     }));
 
-    const defaultConnectionTypes: ArchitectureConnectionType[] = category.categoryConnectionTypes.map((cct) => ({
+    const defaultConnectionTypes: ArchitectureConnectionType[] = category.categoryConnectionTypes
+      .filter((cct) => cct.connectionType?.isActive === true)
+      .map((cct) => ({
       id: cct.connectionType.id,
       slug: cct.connectionType.slug,
       name: cct.connectionType.name,
@@ -543,7 +551,9 @@ export async function getCategoryDefaults(categorySlug: string): Promise<Categor
       isActive: cct.connectionType.isActive,
     }));
 
-    const defaultAdapters: ArchitectureAdapter[] = category.categoryAdapters.map((ca) => ({
+    const defaultAdapters: ArchitectureAdapter[] = category.categoryAdapters
+      .filter((ca) => ca.adapter?.isActive === true)
+      .map((ca) => ({
       id: ca.adapter.id,
       slug: ca.adapter.slug,
       name: ca.adapter.name,
@@ -586,12 +596,11 @@ export async function getApplicableAdaptersForProduct(productId: string): Promis
     const product = await db.qbitProduct.findUnique({
       where: { id: productId },
       include: {
-        category: {
+        deviceCategory: {
           include: {
             categoryAdapters: {
               include: {
                 adapter: {
-                  where: { isActive: true },
                   include: {
                     adapterConnectionTypes: { include: { connectionType: true } },
                   },
@@ -604,7 +613,7 @@ export async function getApplicableAdaptersForProduct(productId: string): Promis
       },
     });
 
-    if (!product || !product.category) {
+    if (!product || !product.deviceCategory) {
       return {
         productId,
         categorySlug: null,
@@ -614,7 +623,9 @@ export async function getApplicableAdaptersForProduct(productId: string): Promis
       };
     }
 
-    const applicableAdapters: ArchitectureAdapter[] = product.category.categoryAdapters.map((ca) => ({
+    const applicableAdapters: ArchitectureAdapter[] = product.deviceCategory.categoryAdapters
+      .filter((ca) => ca.adapter?.isActive === true)
+      .map((ca) => ({
       id: ca.adapter.id,
       slug: ca.adapter.slug,
       name: ca.adapter.name,
@@ -627,11 +638,11 @@ export async function getApplicableAdaptersForProduct(productId: string): Promis
       supportsFirmwareOps: ca.adapter.supportsFirmwareOps,
       isActive: ca.adapter.isActive,
       sortIndex: ca.sortIndex,
-      applicableCategories: [product.category!.slug],
+      applicableCategories: [product.deviceCategory!.slug],
       applicableConnectionTypes: ca.adapter.adapterConnectionTypes.map((act) => act.connectionType.slug),
     }));
 
-    const primaryMapping = product.category.categoryAdapters.find((ca) => ca.isPrimary);
+    const primaryMapping = product.deviceCategory.categoryAdapters.find((ca) => ca.isPrimary);
     const primaryAdapter = primaryMapping
       ? applicableAdapters.find((a) => a.id === primaryMapping.adapterId) ?? null
       : null;
@@ -640,7 +651,7 @@ export async function getApplicableAdaptersForProduct(productId: string): Promis
 
     return {
       productId,
-      categorySlug: product.category.slug,
+      categorySlug: product.deviceCategory.slug,
       applicableAdapters,
       primaryAdapter,
       adapterClasses,
@@ -669,7 +680,6 @@ export async function getApplicableAdaptersForCategory(categorySlug: string): Pr
         categoryAdapters: {
           include: {
             adapter: {
-              where: { isActive: true },
               include: {
                 adapterConnectionTypes: { include: { connectionType: true } },
               },
@@ -690,7 +700,9 @@ export async function getApplicableAdaptersForCategory(categorySlug: string): Pr
       };
     }
 
-    const applicableAdapters: ArchitectureAdapter[] = category.categoryAdapters.map((ca) => ({
+    const applicableAdapters: ArchitectureAdapter[] = category.categoryAdapters
+      .filter((ca) => ca.adapter?.isActive === true)
+      .map((ca) => ({
       id: ca.adapter.id,
       slug: ca.adapter.slug,
       name: ca.adapter.name,
@@ -799,22 +811,29 @@ export function resolveAdapterClass(adapterClass: string): unknown | null {
   // This resolver is the ONLY place that knows about specific adapter class names.
   // When a new adapter is created, just add it here.
   const adapterClassMap: Record<string, string> = {
-    // Diagnostic Adapters
+    // Diagnostic Adapters — existing implementations
     ThermalPrinterDiagnosticAdapter: "diagnostic-adapters",
     BarcodePrinterDiagnosticAdapter: "diagnostic-adapters",
     WindowsPosDiagnosticAdapter: "diagnostic-adapters",
     AndroidPosDiagnosticAdapter: "diagnostic-adapters",
     BarcodeScannerDiagnosticAdapter: "diagnostic-adapters",
-    // Configuration Adapters
+    // Diagnostic Adapters — extensible for future QBIT hardware
+    PortablePrinterDiagnosticAdapter: "diagnostic-adapters",
+    LabelPrinterDiagnosticAdapter: "diagnostic-adapters",
+    CustomerDisplayDiagnosticAdapter: "diagnostic-adapters",
+    CashDrawerDiagnosticAdapter: "diagnostic-adapters",
+    RfidDeviceDiagnosticAdapter: "diagnostic-adapters",
+    KitchenPrinterDiagnosticAdapter: "diagnostic-adapters",
+    KioskDiagnosticAdapter: "diagnostic-adapters",
+    WeighingScaleDiagnosticAdapter: "diagnostic-adapters",
+    // Configuration Adapters — existing implementations
     UsbConfigurationAdapter: "configuration-adapters",
     LanConfigurationAdapter: "configuration-adapters",
     WifiConfigurationAdapter: "configuration-adapters",
     BluetoothConfigurationAdapter: "configuration-adapters",
     // Future adapters will be added here as they're created
-    // e.g. PortablePrinterDiagnosticAdapter: "diagnostic-adapters",
-    // e.g. CustomerDisplayDiagnosticAdapter: "diagnostic-adapters",
-    // e.g. CashDrawerDiagnosticAdapter: "diagnostic-adapters",
-    // e.g. RfidDiagnosticAdapter: "diagnostic-adapters",
+    // e.g. SerialConfigurationAdapter: "configuration-adapters",
+    // e.g. VirtualPortConfigurationAdapter: "configuration-adapters",
   };
 
   return adapterClassMap[adapterClass] ?? null;
@@ -1140,7 +1159,6 @@ export async function onboardNewDevice(params: {
             hardwareId: sig.hardwareId,
             macPrefix: sig.macPrefix,
             connectionType: sig.connectionType,
-            isActive: true,
           },
         });
       }
@@ -1171,7 +1189,6 @@ export async function onboardNewDevice(params: {
 export async function loadKnownVendorIds(): Promise<string[]> {
   try {
     const signatures = await db.hardwareSignature.findMany({
-      where: { isActive: true },
       select: { vendorId: true },
       distinct: ["vendorId"],
     });

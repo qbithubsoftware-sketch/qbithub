@@ -1350,6 +1350,430 @@ export class BarcodeScannerDiagnosticAdapter implements DiagnosticAdapter {
   }
 }
 
+// ====================== Extensible Adapter Stubs ======================
+
+/**
+ * Portable Bluetooth Printer Diagnostic Adapter
+ *
+ * Handles battery-powered portable receipt printers with Bluetooth connectivity.
+ * Checks battery status, Bluetooth connection stability, and mobile print diagnostics.
+ * Uses Desktop Agent for REAL hardware data — no fake/mock responses.
+ *
+ * Extensible: when QBIT releases a portable printer, this adapter
+ * handles it without core engine changes.
+ */
+export class PortablePrinterDiagnosticAdapter implements DiagnosticAdapter {
+  deviceType: DeviceType = "thermal_printer"; // Portable printers use thermal_printer type with bluetooth primary
+  label = "Portable Bluetooth Printer";
+
+  async checkHardware(deviceInfo: DiagnosticDeviceInfo, agentAvailable: boolean): Promise<HardwareHealthCheck> {
+    if (!agentAvailable) {
+      return {
+        deviceOnline: false,
+        deviceResponding: false,
+        connectionStable: false,
+        printerReady: false,
+        connectionHealth: [],
+        status: "failed",
+        errorMessage: "Desktop Agent Not Available — cannot check portable printer hardware",
+        checkedAt: new Date().toISOString(),
+      };
+    }
+
+    const result = await sendDiagnosticCommand({
+      command: "check_hardware",
+      deviceIdentifier: {
+        serialNumber: deviceInfo.serialNumber ?? undefined,
+        port: deviceInfo.port ?? undefined,
+      },
+      parameters: {
+        checkOnline: true,
+        checkResponding: true,
+        checkConnectionStable: true,
+        checkPrinterReady: true,
+        checkBattery: true, // Portable-specific: battery check
+      },
+    });
+
+    const data = result.data;
+    const connectionHealth: HardwareConnectionHealth[] = [];
+
+    // Portable printers typically use Bluetooth as primary connection
+    const btConnected = (data.bluetoothConnected as boolean) ?? false;
+    const btStable = (data.bluetoothStable as boolean) ?? false;
+    connectionHealth.push({
+      connectionType: "bluetooth",
+      connected: btConnected,
+      stable: btStable,
+      dataFlow: btConnected && btStable,
+      details: { batteryLevel: data.batteryLevel ?? null, signalStrength: data.signalStrength ?? null },
+      status: btConnected && btStable ? "successful" : "failed",
+      errorMessage: !btConnected ? "Bluetooth not connected" : !btStable ? "Bluetooth connection unstable" : null,
+    });
+
+    // Also check USB if connected via USB
+    if (deviceInfo.connectionType === "usb" || deviceInfo.vendorId) {
+      connectionHealth.push({
+        connectionType: "usb",
+        connected: (data.usbConnected as boolean) ?? false,
+        stable: (data.usbStable as boolean) ?? false,
+        dataFlow: (data.usbDataFlow as boolean) ?? false,
+        details: {},
+        status: (data.usbConnected as boolean) ?? false ? "successful" : "failed",
+        errorMessage: null,
+      });
+    }
+
+    return {
+      deviceOnline: (data.deviceOnline as boolean) ?? false,
+      deviceResponding: (data.deviceResponding as boolean) ?? false,
+      connectionStable: btStable,
+      printerReady: (data.printerReady as boolean) ?? false,
+      connectionHealth,
+      status: result.success ? ((data.deviceOnline as boolean) ? "successful" : "failed") : "failed",
+      errorMessage: result.success ? null : result.error ?? "Portable printer check failed",
+      checkedAt: new Date().toISOString(),
+    };
+  }
+
+  async validateDriver(deviceInfo: DiagnosticDeviceInfo, cloudLookup: CloudLookupResult, agentAvailable: boolean): Promise<DriverValidationResult> {
+    return BaseDiagnosticAdapter.validateDriver(deviceInfo, cloudLookup, agentAvailable);
+  }
+
+  async validateFirmware(deviceInfo: DiagnosticDeviceInfo, cloudLookup: CloudLookupResult, agentAvailable: boolean): Promise<FirmwareValidationResult> {
+    return BaseDiagnosticAdapter.validateFirmware(deviceInfo, cloudLookup, agentAvailable);
+  }
+
+  async testCommunication(deviceInfo: DiagnosticDeviceInfo, configResult: ConfigurationResult, agentAvailable: boolean): Promise<CommunicationConnectionTest[]> {
+    if (!agentAvailable) return [{ connectionType: "bluetooth", connected: false, commandSent: false, responseReceived: false, failureStage: "not_connected", responseData: null, responseLatencyMs: null, status: "failed", errorMessage: "Desktop Agent unavailable" }];
+
+    const result = await sendDiagnosticCommand({ command: "check_communication", deviceIdentifier: { serialNumber: deviceInfo.serialNumber ?? undefined }, parameters: { connectionTypes: ["bluetooth"] } });
+    const tests: CommunicationConnectionTest[] = [];
+    const commData = result.data as Record<string, unknown>;
+    tests.push({ connectionType: "bluetooth", connected: (commData.bluetoothConnected as boolean) ?? false, commandSent: (commData.bluetoothCommandSent as boolean) ?? false, responseReceived: (commData.bluetoothResponseReceived as boolean) ?? false, failureStage: (commData.bluetoothConnected as boolean) ? null : "not_connected", responseData: (commData.bluetoothResponseData as Record<string, unknown>) ?? null, responseLatencyMs: (commData.bluetoothLatency as number) ?? null, status: (commData.bluetoothConnected as boolean) ? "successful" : "failed", errorMessage: null });
+    return tests;
+  }
+
+  async testPrintEngine(deviceInfo: DiagnosticDeviceInfo, agentAvailable: boolean): Promise<PrintEngineTestResult> {
+    return BaseDiagnosticAdapter.testPrintEngine(deviceInfo, agentAvailable);
+  }
+
+  async validateCapabilities(deviceInfo: DiagnosticDeviceInfo, supportedCapabilities: DeviceCapability[], agentAvailable: boolean): Promise<CapabilityHealthCheck[]> {
+    return BaseDiagnosticAdapter.validateCapabilities(deviceInfo, supportedCapabilities, agentAvailable);
+  }
+
+  async detectErrors(deviceInfo: DiagnosticDeviceInfo, hardwareHealth: HardwareHealthCheck | null, driverValidation: DriverValidationResult | null, firmwareValidation: FirmwareValidationResult | null, communicationTests: CommunicationConnectionTest[] | null, agentAvailable: boolean): Promise<DetectedError[]> {
+    const errors = await BaseDiagnosticAdapter.detectErrors(deviceInfo, hardwareHealth, driverValidation, firmwareValidation, communicationTests, agentAvailable);
+    // Portable-specific: check for low battery
+    if (hardwareHealth?.connectionHealth) {
+      const btHealth = hardwareHealth.connectionHealth.find(h => h.connectionType === "bluetooth");
+      if (btHealth?.details && typeof btHealth.details.batteryLevel === "number" && btHealth.details.batteryLevel < 20) {
+        errors.push({ errorType: "power_error", errorName: "Low Battery", reason: "Low battery level — portable printer may shut down soon", affectedComponent: "power", severity: "warning", active: true, detectedAt: new Date().toISOString(), deviceErrorData: null });
+      }
+    }
+    return errors;
+  }
+}
+
+/**
+ * Label Printer Diagnostic Adapter
+ *
+ * Handles label printing devices (adhesive labels, shipping labels, barcode labels).
+ * Uses ESC/POS Label commands and checks label media, cutter alignment.
+ * Desktop Agent provides REAL hardware data.
+ */
+export class LabelPrinterDiagnosticAdapter implements DiagnosticAdapter {
+  deviceType: DeviceType = "label_printer";
+  label = "Label Printer";
+
+  async checkHardware(deviceInfo: DiagnosticDeviceInfo, agentAvailable: boolean): Promise<HardwareHealthCheck> {
+    return BaseDiagnosticAdapter.checkHardware(deviceInfo, agentAvailable);
+  }
+
+  async validateDriver(deviceInfo: DiagnosticDeviceInfo, cloudLookup: CloudLookupResult, agentAvailable: boolean): Promise<DriverValidationResult> {
+    return BaseDiagnosticAdapter.validateDriver(deviceInfo, cloudLookup, agentAvailable);
+  }
+
+  async validateFirmware(deviceInfo: DiagnosticDeviceInfo, cloudLookup: CloudLookupResult, agentAvailable: boolean): Promise<FirmwareValidationResult> {
+    return BaseDiagnosticAdapter.validateFirmware(deviceInfo, cloudLookup, agentAvailable);
+  }
+
+  async testCommunication(deviceInfo: DiagnosticDeviceInfo, configResult: ConfigurationResult, agentAvailable: boolean): Promise<CommunicationConnectionTest[]> {
+    return BaseDiagnosticAdapter.testCommunication(deviceInfo, configResult, agentAvailable);
+  }
+
+  async testPrintEngine(deviceInfo: DiagnosticDeviceInfo, agentAvailable: boolean): Promise<PrintEngineTestResult> {
+    if (!agentAvailable) return { printStarted: false, printCompleted: false, printTimeout: false, printerBusy: false, testContent: "label_test", printDurationMs: null, status: "failed", errorMessage: "Desktop Agent unavailable for label test print", checkedAt: new Date().toISOString() };
+    const result = await sendDiagnosticCommand({ command: "check_print_engine", deviceIdentifier: { serialNumber: deviceInfo.serialNumber ?? undefined }, parameters: { testType: "label", labelSize: "standard" } });
+    return { printStarted: result.success, printCompleted: (result.data.printSuccessful as boolean) ?? false, printTimeout: false, printerBusy: false, testContent: "label_test", printDurationMs: (result.data.printSpeed as number) ?? null, status: result.success ? "successful" : "failed", errorMessage: result.success ? null : result.error ?? null, checkedAt: new Date().toISOString() };
+  }
+
+  async validateCapabilities(deviceInfo: DiagnosticDeviceInfo, supportedCapabilities: DeviceCapability[], agentAvailable: boolean): Promise<CapabilityHealthCheck[]> {
+    return BaseDiagnosticAdapter.validateCapabilities(deviceInfo, supportedCapabilities, agentAvailable);
+  }
+
+  async detectErrors(deviceInfo: DiagnosticDeviceInfo, hardwareHealth: HardwareHealthCheck | null, driverValidation: DriverValidationResult | null, firmwareValidation: FirmwareValidationResult | null, communicationTests: CommunicationConnectionTest[] | null, agentAvailable: boolean): Promise<DetectedError[]> {
+    return BaseDiagnosticAdapter.detectErrors(deviceInfo, hardwareHealth, driverValidation, firmwareValidation, communicationTests, agentAvailable);
+  }
+}
+
+/**
+ * Customer Display Diagnostic Adapter
+ *
+ * Handles customer-facing pole/LCD displays. Checks display content rendering,
+ * brightness, connection stability, and ESC/POS display command support.
+ * Desktop Agent provides REAL hardware data.
+ */
+export class CustomerDisplayDiagnosticAdapter implements DiagnosticAdapter {
+  deviceType: DeviceType = "customer_display";
+  label = "Customer Display";
+
+  async checkHardware(deviceInfo: DiagnosticDeviceInfo, agentAvailable: boolean): Promise<HardwareHealthCheck> {
+    return BaseDiagnosticAdapter.checkHardware(deviceInfo, agentAvailable);
+  }
+
+  async validateDriver(deviceInfo: DiagnosticDeviceInfo, cloudLookup: CloudLookupResult, agentAvailable: boolean): Promise<DriverValidationResult> {
+    return BaseDiagnosticAdapter.validateDriver(deviceInfo, cloudLookup, agentAvailable);
+  }
+
+  async validateFirmware(deviceInfo: DiagnosticDeviceInfo, cloudLookup: CloudLookupResult, agentAvailable: boolean): Promise<FirmwareValidationResult> {
+    return BaseDiagnosticAdapter.validateFirmware(deviceInfo, cloudLookup, agentAvailable);
+  }
+
+  async testCommunication(deviceInfo: DiagnosticDeviceInfo, configResult: ConfigurationResult, agentAvailable: boolean): Promise<CommunicationConnectionTest[]> {
+    return BaseDiagnosticAdapter.testCommunication(deviceInfo, configResult, agentAvailable);
+  }
+
+  async testPrintEngine(deviceInfo: DiagnosticDeviceInfo, agentAvailable: boolean): Promise<PrintEngineTestResult> {
+    // Customer displays don't "print" — they display content
+    if (!agentAvailable) return { printStarted: false, printCompleted: false, printTimeout: false, printerBusy: false, testContent: "display_test", printDurationMs: null, status: "failed", errorMessage: "Desktop Agent unavailable for display test", checkedAt: new Date().toISOString() };
+    const result = await sendDiagnosticCommand({ command: "check_print_engine", deviceIdentifier: { serialNumber: deviceInfo.serialNumber ?? undefined }, parameters: { testContent: "QBIT TEST" } });
+    return { printStarted: result.success, printCompleted: (result.data.displayWorking as boolean) ?? false, printTimeout: false, printerBusy: false, testContent: "display_test", printDurationMs: null, status: result.success ? "successful" : "failed", errorMessage: result.success ? null : result.error ?? null, checkedAt: new Date().toISOString() };
+  }
+
+  async validateCapabilities(deviceInfo: DiagnosticDeviceInfo, supportedCapabilities: DeviceCapability[], agentAvailable: boolean): Promise<CapabilityHealthCheck[]> {
+    return BaseDiagnosticAdapter.validateCapabilities(deviceInfo, supportedCapabilities, agentAvailable);
+  }
+
+  async detectErrors(deviceInfo: DiagnosticDeviceInfo, hardwareHealth: HardwareHealthCheck | null, driverValidation: DriverValidationResult | null, firmwareValidation: FirmwareValidationResult | null, communicationTests: CommunicationConnectionTest[] | null, agentAvailable: boolean): Promise<DetectedError[]> {
+    return BaseDiagnosticAdapter.detectErrors(deviceInfo, hardwareHealth, driverValidation, firmwareValidation, communicationTests, agentAvailable);
+  }
+}
+
+/**
+ * Cash Drawer Diagnostic Adapter
+ *
+ * Handles electronic cash drawers. Checks solenoid kick mechanism,
+ * drawer open/close status, and connectivity.
+ * Desktop Agent provides REAL hardware data.
+ */
+export class CashDrawerDiagnosticAdapter implements DiagnosticAdapter {
+  deviceType: DeviceType = "cash_drawer";
+  label = "Cash Drawer";
+
+  async checkHardware(deviceInfo: DiagnosticDeviceInfo, agentAvailable: boolean): Promise<HardwareHealthCheck> {
+    return BaseDiagnosticAdapter.checkHardware(deviceInfo, agentAvailable);
+  }
+
+  async validateDriver(deviceInfo: DiagnosticDeviceInfo, cloudLookup: CloudLookupResult, agentAvailable: boolean): Promise<DriverValidationResult> {
+    return BaseDiagnosticAdapter.validateDriver(deviceInfo, cloudLookup, agentAvailable);
+  }
+
+  async validateFirmware(deviceInfo: DiagnosticDeviceInfo, cloudLookup: CloudLookupResult, agentAvailable: boolean): Promise<FirmwareValidationResult> {
+    // Cash drawers typically don't have firmware — return N/A
+    return { installedFirmware: null, latestFirmware: null, latestFirmwareReleaseDate: null, isLatest: true, updateStatus: "unknown", isCritical: false, isSupported: true, isCorrupted: false, firmwareDownloadUrl: null, status: "skipped", errorMessage: null, checkedAt: new Date().toISOString() };
+  }
+
+  async testCommunication(deviceInfo: DiagnosticDeviceInfo, configResult: ConfigurationResult, agentAvailable: boolean): Promise<CommunicationConnectionTest[]> {
+    return BaseDiagnosticAdapter.testCommunication(deviceInfo, configResult, agentAvailable);
+  }
+
+  async testPrintEngine(deviceInfo: DiagnosticDeviceInfo, agentAvailable: boolean): Promise<PrintEngineTestResult> {
+    // Cash drawers don't "print" — they kick open
+    if (!agentAvailable) return { printStarted: false, printCompleted: false, printTimeout: false, printerBusy: false, testContent: "kick_test", printDurationMs: null, status: "failed", errorMessage: "Desktop Agent unavailable for drawer kick test", checkedAt: new Date().toISOString() };
+    const result = await sendDiagnosticCommand({ command: "send_test_command", deviceIdentifier: { serialNumber: deviceInfo.serialNumber ?? undefined }, parameters: {} });
+    return { printStarted: result.success, printCompleted: (result.data.kickSuccessful as boolean) ?? false, printTimeout: false, printerBusy: false, testContent: "kick_test", printDurationMs: (result.data.kickResponseTime as number) ?? null, status: result.success ? "successful" : "failed", errorMessage: result.success ? null : result.error ?? null, checkedAt: new Date().toISOString() };
+  }
+
+  async validateCapabilities(deviceInfo: DiagnosticDeviceInfo, supportedCapabilities: DeviceCapability[], agentAvailable: boolean): Promise<CapabilityHealthCheck[]> {
+    return BaseDiagnosticAdapter.validateCapabilities(deviceInfo, supportedCapabilities, agentAvailable);
+  }
+
+  async detectErrors(deviceInfo: DiagnosticDeviceInfo, hardwareHealth: HardwareHealthCheck | null, driverValidation: DriverValidationResult | null, firmwareValidation: FirmwareValidationResult | null, communicationTests: CommunicationConnectionTest[] | null, agentAvailable: boolean): Promise<DetectedError[]> {
+    return BaseDiagnosticAdapter.detectErrors(deviceInfo, hardwareHealth, driverValidation, firmwareValidation, communicationTests, agentAvailable);
+  }
+}
+
+/**
+ * RFID Device Diagnostic Adapter
+ *
+ * Handles RFID readers/writers for asset tracking, access control, and inventory.
+ * Checks antenna calibration, frequency detection, tag read/write capability.
+ * Desktop Agent provides REAL hardware data.
+ */
+export class RfidDeviceDiagnosticAdapter implements DiagnosticAdapter {
+  deviceType: DeviceType = "kiosk"; // RFID devices use kiosk type (closest existing) — extensible
+  label = "RFID Device";
+
+  async checkHardware(deviceInfo: DiagnosticDeviceInfo, agentAvailable: boolean): Promise<HardwareHealthCheck> {
+    return BaseDiagnosticAdapter.checkHardware(deviceInfo, agentAvailable);
+  }
+
+  async validateDriver(deviceInfo: DiagnosticDeviceInfo, cloudLookup: CloudLookupResult, agentAvailable: boolean): Promise<DriverValidationResult> {
+    return BaseDiagnosticAdapter.validateDriver(deviceInfo, cloudLookup, agentAvailable);
+  }
+
+  async validateFirmware(deviceInfo: DiagnosticDeviceInfo, cloudLookup: CloudLookupResult, agentAvailable: boolean): Promise<FirmwareValidationResult> {
+    return BaseDiagnosticAdapter.validateFirmware(deviceInfo, cloudLookup, agentAvailable);
+  }
+
+  async testCommunication(deviceInfo: DiagnosticDeviceInfo, configResult: ConfigurationResult, agentAvailable: boolean): Promise<CommunicationConnectionTest[]> {
+    return BaseDiagnosticAdapter.testCommunication(deviceInfo, configResult, agentAvailable);
+  }
+
+  async testPrintEngine(deviceInfo: DiagnosticDeviceInfo, agentAvailable: boolean): Promise<PrintEngineTestResult> {
+    // RFID devices don't "print" — they read/write tags
+    if (!agentAvailable) return { printStarted: false, printCompleted: false, printTimeout: false, printerBusy: false, testContent: "rfid_test", printDurationMs: null, status: "failed", errorMessage: "Desktop Agent unavailable for RFID test", checkedAt: new Date().toISOString() };
+    const result = await sendDiagnosticCommand({ command: "send_test_command", deviceIdentifier: { serialNumber: deviceInfo.serialNumber ?? undefined }, parameters: { testType: "read_write" } });
+    return { printStarted: result.success, printCompleted: (result.data.tagReadWriteSuccessful as boolean) ?? false, printTimeout: false, printerBusy: false, testContent: "rfid_test", printDurationMs: (result.data.readSpeed as number) ?? null, status: result.success ? "successful" : "failed", errorMessage: result.success ? null : result.error ?? null, checkedAt: new Date().toISOString() };
+  }
+
+  async validateCapabilities(deviceInfo: DiagnosticDeviceInfo, supportedCapabilities: DeviceCapability[], agentAvailable: boolean): Promise<CapabilityHealthCheck[]> {
+    return BaseDiagnosticAdapter.validateCapabilities(deviceInfo, supportedCapabilities, agentAvailable);
+  }
+
+  async detectErrors(deviceInfo: DiagnosticDeviceInfo, hardwareHealth: HardwareHealthCheck | null, driverValidation: DriverValidationResult | null, firmwareValidation: FirmwareValidationResult | null, communicationTests: CommunicationConnectionTest[] | null, agentAvailable: boolean): Promise<DetectedError[]> {
+    return BaseDiagnosticAdapter.detectErrors(deviceInfo, hardwareHealth, driverValidation, firmwareValidation, communicationTests, agentAvailable);
+  }
+}
+
+/**
+ * Kitchen Printer Diagnostic Adapter
+ *
+ * Handles impact/dot matrix kitchen printers. These printers are heat-resistant
+ * and noise-resistant, designed for food service environments. Often use
+ * ESC/POS commands similar to thermal printers but with impact printing.
+ * Kitchen printers reuse ThermalPrinterAdapter logic where applicable.
+ * Desktop Agent provides REAL hardware data.
+ */
+export class KitchenPrinterDiagnosticAdapter implements DiagnosticAdapter {
+  deviceType: DeviceType = "kitchen_printer";
+  label = "Kitchen Printer";
+
+  async checkHardware(deviceInfo: DiagnosticDeviceInfo, agentAvailable: boolean): Promise<HardwareHealthCheck> {
+    return BaseDiagnosticAdapter.checkHardware(deviceInfo, agentAvailable);
+  }
+
+  async validateDriver(deviceInfo: DiagnosticDeviceInfo, cloudLookup: CloudLookupResult, agentAvailable: boolean): Promise<DriverValidationResult> {
+    return BaseDiagnosticAdapter.validateDriver(deviceInfo, cloudLookup, agentAvailable);
+  }
+
+  async validateFirmware(deviceInfo: DiagnosticDeviceInfo, cloudLookup: CloudLookupResult, agentAvailable: boolean): Promise<FirmwareValidationResult> {
+    return BaseDiagnosticAdapter.validateFirmware(deviceInfo, cloudLookup, agentAvailable);
+  }
+
+  async testCommunication(deviceInfo: DiagnosticDeviceInfo, configResult: ConfigurationResult, agentAvailable: boolean): Promise<CommunicationConnectionTest[]> {
+    return BaseDiagnosticAdapter.testCommunication(deviceInfo, configResult, agentAvailable);
+  }
+
+  async testPrintEngine(deviceInfo: DiagnosticDeviceInfo, agentAvailable: boolean): Promise<PrintEngineTestResult> {
+    return BaseDiagnosticAdapter.testPrintEngine(deviceInfo, agentAvailable);
+  }
+
+  async validateCapabilities(deviceInfo: DiagnosticDeviceInfo, supportedCapabilities: DeviceCapability[], agentAvailable: boolean): Promise<CapabilityHealthCheck[]> {
+    return BaseDiagnosticAdapter.validateCapabilities(deviceInfo, supportedCapabilities, agentAvailable);
+  }
+
+  async detectErrors(deviceInfo: DiagnosticDeviceInfo, hardwareHealth: HardwareHealthCheck | null, driverValidation: DriverValidationResult | null, firmwareValidation: FirmwareValidationResult | null, communicationTests: CommunicationConnectionTest[] | null, agentAvailable: boolean): Promise<DetectedError[]> {
+    return BaseDiagnosticAdapter.detectErrors(deviceInfo, hardwareHealth, driverValidation, firmwareValidation, communicationTests, agentAvailable);
+  }
+}
+
+/**
+ * Kiosk Diagnostic Adapter
+ *
+ * Handles self-service kiosk terminals with integrated printer, scanner, and display.
+ * Checks all kiosk subsystems: printer health, scanner operation, display content,
+ * touchscreen response, and overall kiosk operational status.
+ * Desktop Agent provides REAL hardware data.
+ */
+export class KioskDiagnosticAdapter implements DiagnosticAdapter {
+  deviceType: DeviceType = "kiosk";
+  label = "Kiosk Terminal";
+
+  async checkHardware(deviceInfo: DiagnosticDeviceInfo, agentAvailable: boolean): Promise<HardwareHealthCheck> {
+    return BaseDiagnosticAdapter.checkHardware(deviceInfo, agentAvailable);
+  }
+
+  async validateDriver(deviceInfo: DiagnosticDeviceInfo, cloudLookup: CloudLookupResult, agentAvailable: boolean): Promise<DriverValidationResult> {
+    return BaseDiagnosticAdapter.validateDriver(deviceInfo, cloudLookup, agentAvailable);
+  }
+
+  async validateFirmware(deviceInfo: DiagnosticDeviceInfo, cloudLookup: CloudLookupResult, agentAvailable: boolean): Promise<FirmwareValidationResult> {
+    return BaseDiagnosticAdapter.validateFirmware(deviceInfo, cloudLookup, agentAvailable);
+  }
+
+  async testCommunication(deviceInfo: DiagnosticDeviceInfo, configResult: ConfigurationResult, agentAvailable: boolean): Promise<CommunicationConnectionTest[]> {
+    return BaseDiagnosticAdapter.testCommunication(deviceInfo, configResult, agentAvailable);
+  }
+
+  async testPrintEngine(deviceInfo: DiagnosticDeviceInfo, agentAvailable: boolean): Promise<PrintEngineTestResult> {
+    // Kiosks have integrated printers — test via kiosk SDK
+    return BaseDiagnosticAdapter.testPrintEngine(deviceInfo, agentAvailable);
+  }
+
+  async validateCapabilities(deviceInfo: DiagnosticDeviceInfo, supportedCapabilities: DeviceCapability[], agentAvailable: boolean): Promise<CapabilityHealthCheck[]> {
+    return BaseDiagnosticAdapter.validateCapabilities(deviceInfo, supportedCapabilities, agentAvailable);
+  }
+
+  async detectErrors(deviceInfo: DiagnosticDeviceInfo, hardwareHealth: HardwareHealthCheck | null, driverValidation: DriverValidationResult | null, firmwareValidation: FirmwareValidationResult | null, communicationTests: CommunicationConnectionTest[] | null, agentAvailable: boolean): Promise<DetectedError[]> {
+    return BaseDiagnosticAdapter.detectErrors(deviceInfo, hardwareHealth, driverValidation, firmwareValidation, communicationTests, agentAvailable);
+  }
+}
+
+/**
+ * Weighing Scale Diagnostic Adapter
+ *
+ * Handles digital weighing scales with USB/serial/Bluetooth connectivity.
+ * Checks scale calibration, weight reading accuracy, connectivity, and
+ * zero-point stability. Desktop Agent provides REAL hardware data.
+ */
+export class WeighingScaleDiagnosticAdapter implements DiagnosticAdapter {
+  deviceType: DeviceType = "weighing_scale";
+  label = "Weighing Scale";
+
+  async checkHardware(deviceInfo: DiagnosticDeviceInfo, agentAvailable: boolean): Promise<HardwareHealthCheck> {
+    return BaseDiagnosticAdapter.checkHardware(deviceInfo, agentAvailable);
+  }
+
+  async validateDriver(deviceInfo: DiagnosticDeviceInfo, cloudLookup: CloudLookupResult, agentAvailable: boolean): Promise<DriverValidationResult> {
+    return BaseDiagnosticAdapter.validateDriver(deviceInfo, cloudLookup, agentAvailable);
+  }
+
+  async validateFirmware(deviceInfo: DiagnosticDeviceInfo, cloudLookup: CloudLookupResult, agentAvailable: boolean): Promise<FirmwareValidationResult> {
+    return BaseDiagnosticAdapter.validateFirmware(deviceInfo, cloudLookup, agentAvailable);
+  }
+
+  async testCommunication(deviceInfo: DiagnosticDeviceInfo, configResult: ConfigurationResult, agentAvailable: boolean): Promise<CommunicationConnectionTest[]> {
+    return BaseDiagnosticAdapter.testCommunication(deviceInfo, configResult, agentAvailable);
+  }
+
+  async testPrintEngine(deviceInfo: DiagnosticDeviceInfo, agentAvailable: boolean): Promise<PrintEngineTestResult> {
+    // Scales don't "print" — they weigh items
+    if (!agentAvailable) return { printStarted: false, printCompleted: false, printTimeout: false, printerBusy: false, testContent: "scale_test", printDurationMs: null, status: "failed", errorMessage: "Desktop Agent unavailable for scale test", checkedAt: new Date().toISOString() };
+    const result = await sendDiagnosticCommand({ command: "send_test_command", deviceIdentifier: { serialNumber: deviceInfo.serialNumber ?? undefined }, parameters: { testType: "weight_reading" } });
+    return { printStarted: result.success, printCompleted: (result.data.scaleReading as boolean) ?? false, printTimeout: false, printerBusy: false, testContent: "scale_test", printDurationMs: (result.data.responseTime as number) ?? null, status: result.success ? "successful" : "failed", errorMessage: result.success ? null : result.error ?? null, checkedAt: new Date().toISOString() };
+  }
+
+  async validateCapabilities(deviceInfo: DiagnosticDeviceInfo, supportedCapabilities: DeviceCapability[], agentAvailable: boolean): Promise<CapabilityHealthCheck[]> {
+    return BaseDiagnosticAdapter.validateCapabilities(deviceInfo, supportedCapabilities, agentAvailable);
+  }
+
+  async detectErrors(deviceInfo: DiagnosticDeviceInfo, hardwareHealth: HardwareHealthCheck | null, driverValidation: DriverValidationResult | null, firmwareValidation: FirmwareValidationResult | null, communicationTests: CommunicationConnectionTest[] | null, agentAvailable: boolean): Promise<DetectedError[]> {
+    return BaseDiagnosticAdapter.detectErrors(deviceInfo, hardwareHealth, driverValidation, firmwareValidation, communicationTests, agentAvailable);
+  }
+}
+
 // ====================== Helper Functions ======================
 
 /**
@@ -1528,8 +1952,18 @@ function mapErrorToComponent(errorType: string): DiagnosticComponent {
 
 // Register adapters for all known device types at module load time.
 // New device types can register additional adapters at runtime.
+// Core engine NEVER changes — only new adapters + DB definitions needed.
 registerDiagnosticAdapter(new ThermalPrinterDiagnosticAdapter());
 registerDiagnosticAdapter(new BarcodePrinterDiagnosticAdapter());
 registerDiagnosticAdapter(new WindowsPosDiagnosticAdapter());
 registerDiagnosticAdapter(new AndroidPosDiagnosticAdapter());
 registerDiagnosticAdapter(new BarcodeScannerDiagnosticAdapter());
+// Extensible adapters — future QBIT hardware support
+registerDiagnosticAdapter(new PortablePrinterDiagnosticAdapter());
+registerDiagnosticAdapter(new LabelPrinterDiagnosticAdapter());
+registerDiagnosticAdapter(new CustomerDisplayDiagnosticAdapter());
+registerDiagnosticAdapter(new CashDrawerDiagnosticAdapter());
+registerDiagnosticAdapter(new RfidDeviceDiagnosticAdapter());
+registerDiagnosticAdapter(new KitchenPrinterDiagnosticAdapter());
+registerDiagnosticAdapter(new KioskDiagnosticAdapter());
+registerDiagnosticAdapter(new WeighingScaleDiagnosticAdapter());

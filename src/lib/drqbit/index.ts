@@ -176,6 +176,14 @@ export {
   WindowsPosDiagnosticAdapter,
   AndroidPosDiagnosticAdapter,
   BarcodeScannerDiagnosticAdapter,
+  PortablePrinterDiagnosticAdapter,
+  LabelPrinterDiagnosticAdapter,
+  CustomerDisplayDiagnosticAdapter,
+  CashDrawerDiagnosticAdapter,
+  RfidDeviceDiagnosticAdapter,
+  KitchenPrinterDiagnosticAdapter,
+  KioskDiagnosticAdapter,
+  WeighingScaleDiagnosticAdapter,
 } from "./diagnostic-adapters";
 export type { DiagnosticAdapter, DiagnosticDeviceInfo } from "./diagnostic-adapters";
 
