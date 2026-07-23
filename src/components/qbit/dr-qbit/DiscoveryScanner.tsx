@@ -39,6 +39,8 @@ import {
   type DiscoveredDevice,
   type DiscoveryResult,
   type DiscoveryConnection,
+  type UsbConnectionStep,
+  type UsbConnectionResult,
 } from "@/lib/drqbit/device-discovery";
 import {
   identifyAllDevices,
@@ -178,8 +180,47 @@ export function DiscoveryScanner({ onScanComplete, onNoDevices }: DiscoveryScann
       const discovery = await scanAllPorts();
       setDiscoveryResult(discovery);
 
-      // ===== Step 2: Filter for printer-like devices =====
+      // ===== Check USB connection status for each device =====
+      // After scanAllPorts(), USB devices now have a usbConnection field
+      // with the 7-step connection result. If any device has a failed
+      // connection, show the exact error in the UI.
+      const usbConnectionErrors: Array<{ deviceName: string; result: UsbConnectionResult }> = [];
+      const usbConnectionSuccesses: Array<{ deviceName: string; result: UsbConnectionResult }> = [];
 
+      for (const d of discovery.devices) {
+        if (d.connectionType === "usb" && d.usbConnection) {
+          if (!d.usbConnection.connected) {
+            usbConnectionErrors.push({ deviceName: d.deviceName, result: d.usbConnection });
+          } else {
+            usbConnectionSuccesses.push({ deviceName: d.deviceName, result: d.usbConnection });
+          }
+        }
+      }
+
+      // Show toast for USB connection failures with EXACT step + error
+      for (const err of usbConnectionErrors) {
+        const failedStep = err.result.failedStep ?? "unknown";
+        const stepLabel = formatStepName(failedStep);
+        const errName = err.result.errorName ?? "UnknownError";
+        const errMessage = err.result.errorMessage ?? "Unknown error";
+
+        toast({
+          title: `USB ${stepLabel} Failed: ${err.deviceName}`,
+          description: `${errName}: ${errMessage}${err.result.interfacePossiblyInUse ? " — Another app (likely printer driver) may be using the device." : ""}`,
+          variant: "destructive",
+          duration: 10000,
+        });
+      }
+
+      // Show toast for USB connection successes
+      for (const suc of usbConnectionSuccesses) {
+        toast({
+          title: `USB Connected: ${suc.deviceName}`,
+          description: `Interface #${suc.result.claimedInterfaceNumber ?? "N/A"} claimed. Bulk OUT: #${suc.result.bulkOutEndpoint ?? "N/A"}, Bulk IN: #${suc.result.bulkInEndpoint ?? "N/A"}.`,
+        });
+      }
+
+      // ===== Step 2: Filter for printer-like devices =====
       const printerDevices = filterPrinterDevices(discovery.devices);
 
       // ===== Step 3: Check if any devices were found =====
@@ -305,9 +346,101 @@ export function DiscoveryScanner({ onScanComplete, onNoDevices }: DiscoveryScann
     }
   };
 
+  // Format USB connection step name for display
+  const formatStepName = (step: string): string => {
+    const stepNames: Record<string, string> = {
+      step1_requestDevice: "STEP 1: requestDevice()",
+      step2_open: "STEP 2: device.open()",
+      step3_selectConfiguration: "STEP 3: selectConfiguration()",
+      step4_claimInterface: "STEP 4: claimInterface()",
+      step5_readInterfaces: "STEP 5: Read Interfaces",
+      step6_readEndpoints: "STEP 6: Read Endpoints",
+      step7_createDeviceObject: "STEP 7: Create Device Object",
+    };
+    return stepNames[step] ?? step;
+  };
+
+  // Render USB connection status for discovered devices
+  const renderUsbConnectionStatus = () => {
+    if (!discoveryResult) return null;
+
+    const usbDevices = discoveryResult.devices.filter(
+      (d) => d.connectionType === "usb" && d.usbConnection
+    );
+
+    if (usbDevices.length === 0) return null;
+
+    return (
+      <div className="space-y-3">
+        {usbDevices.map((d, idx) => {
+          const conn = d.usbConnection!;
+          return (
+            <div
+              key={idx}
+              className={`rounded-xl border p-4 ${
+                conn.connected
+                  ? "border-qbit-success/30 bg-qbit-success/5"
+                  : "border-qbit-error/30 bg-qbit-error/5"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
+                  conn.connected ? "bg-qbit-success/10 text-qbit-success" : "bg-qbit-error/10 text-qbit-error"
+                }`}>
+                  <Icon name={conn.connected ? "usb" : "error"} className="text-[20px]" filled />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-qbit-on-surface">
+                    {conn.connected ? "USB Connected" : "USB Connection Failed"}: {d.deviceName}
+                  </p>
+                  {conn.connected && (
+                    <p className="text-xs text-qbit-on-surface-variant">
+                      Interface #{conn.claimedInterfaceNumber ?? "N/A"} ·
+                      Bulk OUT: #{conn.bulkOutEndpoint ?? "N/A"} ·
+                      Bulk IN: #{conn.bulkInEndpoint ?? "N/A"}
+                    </p>
+                  )}
+                  {!conn.connected && conn.failedStep && (
+                    <p className="text-xs font-medium text-qbit-error">
+                      {formatStepName(conn.failedStep)}: {conn.errorName ?? "Error"} — {conn.errorMessage ?? "Unknown error"}
+                    </p>
+                  )}
+                  {!conn.connected && conn.interfacePossiblyInUse && (
+                    <p className="text-xs text-qbit-warning mt-1">
+                      Another application (likely printer driver) may be using this device.
+                      Try disabling the driver, reconnecting, and scanning again.
+                    </p>
+                  )}
+                </div>
+              </div>
+              {/* Step-by-step connection log */}
+              <details className="mt-3">
+                <summary className="text-xs font-semibold cursor-pointer text-qbit-on-surface-variant">
+                  Connection Steps ({conn.stepLog.length} steps)
+                </summary>
+                <div className="mt-2 space-y-1">
+                  {conn.stepLog.map((logEntry, logIdx) => (
+                    <div key={logIdx} className={`rounded px-2 py-1 text-xs ${
+                      logEntry.status === "success" ? "bg-qbit-success/10 text-qbit-success"
+                      : logEntry.status === "failed" ? "bg-qbit-error/10 text-qbit-error"
+                      : "bg-qbit-warning/10 text-qbit-warning"
+                    }`}>
+                      <span className="font-semibold">{formatStepName(logEntry.step)}</span>
+                      <span className="ml-1">{logEntry.status === "success" ? "OK" : logEntry.status === "failed" ? "FAIL" : "SKIP"}</span>
+                      <span className="ml-1 text-qbit-on-surface-variant">— {logEntry.message}</span>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   const isScanning = phase !== "idle" && phase !== "complete" && phase !== "error";
 
-  // Render matched device cards
   const renderDeviceCards = () => {
     if (!matchedDevices || matchedDevices.length === 0) return null;
 
@@ -569,6 +702,9 @@ export function DiscoveryScanner({ onScanComplete, onNoDevices }: DiscoveryScann
 
       {/* Scan progress */}
       {renderScanProgress()}
+
+      {/* USB Connection Status — shows exact 7-step connection result */}
+      {renderUsbConnectionStatus()}
 
       {/* No devices found */}
       {renderNoDevices()}

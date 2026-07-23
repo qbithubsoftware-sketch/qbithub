@@ -13,8 +13,8 @@
  */
 
 // Phase 1 — Discovery
-export { scanAllPorts } from "./device-discovery";
-export type { DiscoveryResult, ScannerAvailability, DiscoveredDevice, DiscoveryConnection } from "./device-discovery";
+export { scanAllPorts, connectUsbDevice, releaseUsbDevice, isWebUsbAvailable, isBluetoothAvailable, isLanAvailable, filterPrinterDevices, findDeviceWithSerial } from "./device-discovery";
+export type { DiscoveryResult, ScannerAvailability, DiscoveredDevice, DiscoveryConnection, DeviceScanner, UsbConnectionStep, UsbConnectionResult } from "./device-discovery";
 
 // Phase 2 — Identification
 export { identifyAllDevices, identifyDevice, identifyModel, extractSerialNumber } from "./device-identification";

@@ -41,7 +41,11 @@ interface USBDevice {
   usbVersionMajor: number;
   usbVersionMinor: number;
   usbVersionSubminor: number;
+  /** All configurations supported by the device (descriptor-level, available without opening). */
   configurations: USBConfiguration[];
+  /** Currently selected configuration — null until selectConfiguration() is called. */
+  configuration: USBConfiguration | null;
+  /** Whether the device is currently opened by this application. */
   opened: boolean;
   open(): Promise<void>;
   close(): Promise<void>;

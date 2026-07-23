@@ -4,14 +4,19 @@
  * Uses the WebUSB API (navigator.usb) to detect connected USB devices.
  * No Desktop Agent required. Works on Chrome, Edge, Opera (HTTPS required).
  *
- * Flow:
- *   1. User clicks "Scan Hardware"
- *   2. Browser requests USB permission (one-time)
- *   3. WebUSB enumerates all connected USB devices
- *   4. Each device's VID/PID/serial/manufacturer is read
- *   5. Results are POSTed to /api/dr-qbit/web-scan
- *   6. Server matches against QbitProduct + HardwareSignature
- *   7. Device Passport + Driver/Firmware suggestions are returned
+ * 7-step USB Connection Flow:
+ *   STEP 1: navigator.usb.requestDevice() — user selects device in Chrome picker
+ *   STEP 2: device.open() — open for I/O
+ *   STEP 3: device.selectConfiguration() — select active configuration
+ *   STEP 4: device.claimInterface() — claim printer/data interface
+ *   STEP 5: Read USB interfaces — enumerate all interface class codes
+ *   STEP 6: Read endpoints — enumerate bulk IN/OUT endpoints
+ *   STEP 7: Create connected device object — build full device profile
+ *
+ * If any step throws, the exact exception is logged and shown in the UI.
+ * NO errors are swallowed. NO generic "Connection Failed" messages.
+ * Do not continue to Serial Number, Cloud Lookup or Diagnostics until
+ * a stable USB connection is established.
  *
  * Limitations (browser security):
  *   - USB only (COM/LAN/WiFi need Desktop Agent)
@@ -25,6 +30,7 @@ import { useState, useCallback } from "react";
 import { Icon } from "@/components/qbit/primitives/Icon";
 import { QbitButton } from "@/components/qbit/primitives/QbitButton";
 import { useToast } from "@/hooks/use-toast";
+import { connectUsbDevice, releaseUsbDevice, type UsbConnectionResult } from "@/lib/drqbit/device-discovery";
 
 interface ScannedDevice {
   vendorId: string;
@@ -73,6 +79,7 @@ export function WebUsbScanner({ onScanComplete }: WebUsbScannerProps) {
   const [scanning, setScanning] = useState(false);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const [webUsbSupported, setWebUsbSupported] = useState(true);
+  const [connectionResult, setConnectionResult] = useState<UsbConnectionResult | null>(null);
 
   // Check WebUSB support on mount
   useCallback(() => {
@@ -84,52 +91,153 @@ export function WebUsbScanner({ onScanComplete }: WebUsbScannerProps) {
   const handleScan = async () => {
     setScanning(true);
     setScanResult(null);
+    setConnectionResult(null);
+
+    const TAG = "[DrQBIT WebUsbScanner]";
 
     try {
-      // Step 1: Request USB device access (browser will show permission dialog)
       let devices: ScannedDevice[] = [];
 
       if (typeof navigator !== "undefined" && navigator.usb) {
+        // ===== STEP 1: Request USB device access =====
+        // CRITICAL FIX: We KEEP the device reference from requestDevice().
+        // Previously: .catch(() => null) silently swallowed ALL errors
+        // and discarded the selected device. Now we properly handle errors.
+        let selectedDevice: USBDevice;
         try {
-          // Request permission to access USB devices
-          await navigator.usb.requestDevice({ filters: [] }).catch(() => null);
+          console.log(`${TAG} STEP 1: Calling navigator.usb.requestDevice({ filters: [] })...`);
+          selectedDevice = await navigator.usb.requestDevice({ filters: [] });
+          console.log(`${TAG} STEP 1: SUCCESS — User selected: "${selectedDevice.productName ?? "Unknown"}" (VID=${selectedDevice.vendorId}, PID=${selectedDevice.productId})`);
+        } catch (e) {
+          const errName = e instanceof DOMException ? e.name : (e instanceof Error ? e.name : "UnknownError");
+          const errMessage = e instanceof Error ? e.message : String(e);
 
-          // Get all authorized devices
-          const authorizedDevices = await navigator.usb.getDevices();
-
-          if (authorizedDevices.length === 0) {
+          if (errName === "NotFoundError") {
+            // User cancelled the Chrome picker — not an error, just no selection
+            console.log(`${TAG} STEP 1: User cancelled the browser permission dialog.`);
             toast({
-              title: "No USB devices found",
-              description: "Connect a USB device and click Scan again. Make sure to approve the browser permission dialog.",
+              title: "No device selected",
+              description: "Please click Scan again and select a device in the browser permission dialog.",
               variant: "destructive",
             });
             setScanning(false);
             return;
           }
 
-          // Convert WebUSB devices to our format
-          devices = authorizedDevices.map((d: USBDevice) => ({
-            vendorId: "0x" + d.vendorId.toString(16).toUpperCase().padStart(4, "0"),
-            productId: "0x" + d.productId.toString(16).toUpperCase().padStart(4, "0"),
-            productName: d.productName || "USB Device",
-            manufacturerName: d.manufacturerName || "Unknown",
-            serialNumber: d.serialNumber || "",
-            usbVersion: `${d.usbVersionMajor}.${d.usbVersionMinor}.${d.usbVersionSubminor}`,
-          }));
+          // Real error — show the EXACT error in the UI (no generic "Connection Failed")
+          console.error(`${TAG} STEP 1: FAILED — requestDevice() threw: ${errName}: ${errMessage}`);
+          toast({
+            title: `STEP 1 Failed: ${errName}`,
+            description: errMessage,
+            variant: "destructive",
+            duration: 10000,
+          });
+          setScanning(false);
+          return;
+        }
+
+        // ===== Steps 2–7: Run the 7-step USB connection flow =====
+        console.log(`${TAG} Running 7-step USB connection flow on selected device...`);
+        const usbConnResult = await connectUsbDevice(selectedDevice);
+        setConnectionResult(usbConnResult);
+
+        if (!usbConnResult.connected) {
+          // Connection failed at a specific step — show the EXACT error
+          const failedStep = usbConnResult.failedStep ?? "unknown";
+          const errName = usbConnResult.errorName ?? "UnknownError";
+          const errMessage = usbConnResult.errorMessage ?? "Unknown error";
+
+          console.error(`${TAG} USB connection failed at ${failedStep}: ${errName}: ${errMessage}`);
+
+          // Build a user-friendly message based on which step failed
+          let userTitle = `USB ${failedStep} Failed`;
+          let userDescription = errMessage;
+
+          if (failedStep === "step2_open") {
+            userTitle = "STEP 2 Failed: Cannot Open Device";
+            userDescription = `device.open() failed: ${errName}: ${errMessage}. ${usbConnResult.interfacePossiblyInUse ? "Another application (likely the printer driver) may be using this device. Try disconnecting the printer, disabling the auto-installed driver, and scanning again." : "The device may not support WebUSB I/O operations. Descriptor data (VID/PID/serial) is still available."}`;
+          } else if (failedStep === "step3_selectConfiguration") {
+            userTitle = "STEP 3 Failed: Cannot Select Configuration";
+            userDescription = `selectConfiguration() failed: ${errName}: ${errMessage}. The device may have rejected the configuration selection.`;
+          } else if (failedStep === "step4_claimInterface") {
+            userTitle = "STEP 4 Failed: Cannot Claim Interface";
+            userDescription = `claimInterface() failed: ${errName}: ${errMessage}. ${usbConnResult.interfacePossiblyInUse ? "Another application (likely the printer driver) is probably using the interface. The OS may have auto-installed a driver that claimed the interface. Try: (1) Disable the printer driver in Device Manager, (2) Disconnect and reconnect the printer, (3) Scan again." : "The interface could not be claimed. The device may require a specific protocol."}`;
+          }
 
           toast({
-            title: `Found ${devices.length} USB device${devices.length === 1 ? "" : "s"}`,
-            description: "Analyzing hardware signatures and matching with product library…",
+            title: userTitle,
+            description: userDescription,
+            variant: "destructive",
+            duration: 12000,
           });
-        } catch (usbError) {
-          // User cancelled permission dialog or WebUSB failed
+
+          // Still convert the device to ScannedDevice format (descriptor data is available
+          // even without I/O connection), so the user can at least see VID/PID/serial
+          devices = [{
+            vendorId: "0x" + selectedDevice.vendorId.toString(16).toUpperCase().padStart(4, "0"),
+            productId: "0x" + selectedDevice.productId.toString(16).toUpperCase().padStart(4, "0"),
+            productName: selectedDevice.productName || "USB Device",
+            manufacturerName: selectedDevice.manufacturerName || "Unknown",
+            serialNumber: selectedDevice.serialNumber || "",
+            usbVersion: `${selectedDevice.usbVersionMajor}.${selectedDevice.usbVersionMinor}.${selectedDevice.usbVersionSubminor}`,
+          }];
+
+          // Continue to server matching with descriptor data only
+          // (but UI will show the connection error separately)
+        } else {
+          // Connection succeeded! Show success toast
+          console.log(`${TAG} USB connection established successfully.`);
           toast({
-            title: "USB permission needed",
-            description: "Please click 'Scan' again and approve the USB device permission dialog in your browser.",
+            title: "USB Connected",
+            description: `Device "${selectedDevice.productName ?? "Unknown"}" connected. Interface #${usbConnResult.claimedInterfaceNumber ?? "N/A"} claimed. Bulk OUT: #${usbConnResult.bulkOutEndpoint ?? "N/A"}, Bulk IN: #${usbConnResult.bulkInEndpoint ?? "N/A"}.`,
+          });
+
+          // Convert the connected device to ScannedDevice format
+          devices = [{
+            vendorId: "0x" + selectedDevice.vendorId.toString(16).toUpperCase().padStart(4, "0"),
+            productId: "0x" + selectedDevice.productId.toString(16).toUpperCase().padStart(4, "0"),
+            productName: selectedDevice.productName || "USB Device",
+            manufacturerName: selectedDevice.manufacturerName || "Unknown",
+            serialNumber: selectedDevice.serialNumber || "",
+            usbVersion: `${selectedDevice.usbVersionMajor}.${selectedDevice.usbVersionMinor}.${selectedDevice.usbVersionSubminor}`,
+          }];
+
+          // Also check for other authorized devices
+          try {
+            const allAuthorized = await navigator.usb.getDevices();
+            for (const d of allAuthorized) {
+              // Skip the device we already connected
+              if (d.vendorId === selectedDevice.vendorId && d.productId === selectedDevice.productId && d.serialNumber === selectedDevice.serialNumber) {
+                continue;
+              }
+              devices.push({
+                vendorId: "0x" + d.vendorId.toString(16).toUpperCase().padStart(4, "0"),
+                productId: "0x" + d.productId.toString(16).toUpperCase().padStart(4, "0"),
+                productName: d.productName || "USB Device",
+                manufacturerName: d.manufacturerName || "Unknown",
+                serialNumber: d.serialNumber || "",
+                usbVersion: `${d.usbVersionMajor}.${d.usbVersionMinor}.${d.usbVersionSubminor}`,
+              });
+            }
+          } catch { /* getDevices() failed for secondary devices — ignore */ }
+        }
+
+        if (devices.length === 0) {
+          toast({
+            title: "No USB devices found",
+            description: "Connect a USB device and click Scan again. Make sure to approve the browser permission dialog.",
             variant: "destructive",
           });
           setScanning(false);
           return;
+        }
+
+        if (!connectionResult?.connected) {
+          // Connection failed — still show descriptor data toast but note the connection failure
+          toast({
+            title: `Found ${devices.length} USB device${devices.length === 1 ? "" : "s"}`,
+            description: "Descriptor data (VID/PID/serial) available, but USB I/O connection failed. See connection details below.",
+          });
         }
       } else {
         // WebUSB not supported — NO dummy data, NO simulation
@@ -144,6 +252,7 @@ export function WebUsbScanner({ onScanComplete }: WebUsbScannerProps) {
       }
 
       // Step 2: Send scan results to server for matching
+      // Only proceed if we have descriptor data (connection failure doesn't prevent this)
       const res = await fetch("/api/dr-qbit/web-scan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -151,7 +260,7 @@ export function WebUsbScanner({ onScanComplete }: WebUsbScannerProps) {
       });
 
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
+        const err = await res.json().catch(() => ({ error: "Server error" }));
         throw new Error(err.error ?? "Scan failed on server");
       }
 
@@ -173,6 +282,20 @@ export function WebUsbScanner({ onScanComplete }: WebUsbScannerProps) {
     } finally {
       setScanning(false);
     }
+  };
+
+  // Format connection step for display
+  const formatStepName = (step: string): string => {
+    const stepNames: Record<string, string> = {
+      step1_requestDevice: "STEP 1: requestDevice()",
+      step2_open: "STEP 2: device.open()",
+      step3_selectConfiguration: "STEP 3: selectConfiguration()",
+      step4_claimInterface: "STEP 4: claimInterface()",
+      step5_readInterfaces: "STEP 5: Read Interfaces",
+      step6_readEndpoints: "STEP 6: Read Endpoints",
+      step7_createDeviceObject: "STEP 7: Create Device Object",
+    };
+    return stepNames[step] ?? step;
   };
 
   return (
@@ -200,13 +323,73 @@ export function WebUsbScanner({ onScanComplete }: WebUsbScannerProps) {
           </p>
           <p className="text-xs text-qbit-on-surface-variant">
             {scanning
-              ? "Reading USB device information…"
+              ? "Establishing USB connection…"
               : webUsbSupported
                 ? "Click to detect connected USB devices"
                 : "Use Chrome/Edge for USB scanning"}
           </p>
         </div>
       </div>
+
+      {/* USB Connection Result — shows exact step-by-step status */}
+      {connectionResult && (
+        <div className={`rounded-xl border p-4 ${
+          connectionResult.connected
+            ? "border-qbit-success/30 bg-qbit-success/5"
+            : "border-qbit-error/30 bg-qbit-error/5"
+        }`}>
+          <div className="flex items-center gap-3">
+            <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${
+              connectionResult.connected ? "bg-qbit-success/10 text-qbit-success" : "bg-qbit-error/10 text-qbit-error"
+            }`}>
+              <Icon name={connectionResult.connected ? "check_circle" : "error"} className="text-[20px]" filled />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-qbit-on-surface">
+                {connectionResult.connected ? "USB Connection Established" : "USB Connection Failed"}
+              </p>
+              {connectionResult.connected && (
+                <p className="text-xs text-qbit-on-surface-variant">
+                  Interface #{connectionResult.claimedInterfaceNumber ?? "N/A"} claimed ·
+                  Bulk OUT: #{connectionResult.bulkOutEndpoint ?? "N/A"} ·
+                  Bulk IN: #{connectionResult.bulkInEndpoint ?? "N/A"}
+                </p>
+              )}
+              {!connectionResult.connected && connectionResult.failedStep && (
+                <p className="text-xs font-medium text-qbit-error">
+                  {formatStepName(connectionResult.failedStep)}: {connectionResult.errorName ?? "Error"} — {connectionResult.errorMessage ?? "Unknown error"}
+                </p>
+              )}
+              {!connectionResult.connected && connectionResult.interfacePossiblyInUse && (
+                <p className="text-xs text-qbit-warning mt-1">
+                  Another application (likely the printer driver) may be using this device.
+                  Try: (1) Disable the printer driver in Device Manager, (2) Disconnect/reconnect, (3) Scan again.
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Step-by-step log (collapsible) */}
+          <details className="mt-3">
+            <summary className="text-xs font-semibold cursor-pointer text-qbit-on-surface-variant">
+              Connection Step Details ({connectionResult.stepLog.length} steps)
+            </summary>
+            <div className="mt-2 space-y-1">
+              {connectionResult.stepLog.map((logEntry, idx) => (
+                <div key={idx} className={`rounded px-2 py-1 text-xs ${
+                  logEntry.status === "success" ? "bg-qbit-success/10 text-qbit-success"
+                  : logEntry.status === "failed" ? "bg-qbit-error/10 text-qbit-error"
+                  : "bg-qbit-warning/10 text-qbit-warning"
+                }`}>
+                  <span className="font-semibold">{formatStepName(logEntry.step)}</span>
+                  <span className="ml-2">{logEntry.status === "success" ? "✓" : logEntry.status === "failed" ? "✗" : "⏭"}</span>
+                  <span className="ml-1 text-qbit-on-surface-variant">{logEntry.message}</span>
+                </div>
+              ))}
+            </div>
+          </details>
+        </div>
+      )}
 
       {/* Scan Results */}
       {scanResult && scanResult.devices.length > 0 && (

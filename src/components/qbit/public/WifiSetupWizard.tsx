@@ -81,6 +81,30 @@ interface WifiSetupWizardProps {
 type Step = "detect" | "compatibility" | "sdk-check" | "auto-setup" | "guided-setup" | "connected";
 
 // ====================== Component ======================
+
+/** Helper: Find a printer-like device from authorized USB devices */
+function findPrinterDevice(devices: USBDevice[], knownDevice: ConnectedDeviceInfo): USBDevice | null {
+  return devices.find((d) => {
+    const vid = "0x" + d.vendorId.toString(16).toUpperCase().padStart(4, "0");
+    const pid = "0x" + d.productId.toString(16).toUpperCase().padStart(4, "0");
+
+    // Match by VID/PID from serial lookup (if provided)
+    if (knownDevice.usbVendorId && vid === knownDevice.usbVendorId.toUpperCase() &&
+        knownDevice.usbProductId && pid === knownDevice.usbProductId.toUpperCase()) {
+      return true;
+    }
+
+    // Keyword heuristic: check if device name/manufacturer contains printer keywords
+    const name = (d.productName ?? "").toLowerCase();
+    const mf = (d.manufacturerName ?? "").toLowerCase();
+    const combined = `${name} ${mf}`;
+    return combined.includes("printer") || combined.includes("print") ||
+           combined.includes("thermal") || combined.includes("pos") ||
+           combined.includes("scanner") || combined.includes("label") ||
+           combined.includes("barcode") || combined.includes("receipt");
+  }) ?? null;
+}
+
 export function WifiSetupWizard({
   device,
   capabilities,
@@ -128,14 +152,34 @@ export function WifiSetupWizard({
       try {
         setDetectionProgress(33);
         // Request USB device access (browser permission dialog)
-        await navigator.usb.requestDevice({ filters: [] }).catch(() => null);
+        // CRITICAL FIX: Previously .catch(() => null) silently swallowed ALL errors
+        // and discarded the selected device. Now we properly handle errors.
+        let selectedUsbDevice: USBDevice | null = null;
+        try {
+          selectedUsbDevice = await navigator.usb.requestDevice({ filters: [] });
+          console.log("[DrQBIT WiFi] requestDevice() succeeded:", selectedUsbDevice.productName ?? "Unknown");
+        } catch (reqErr) {
+          const errName = reqErr instanceof DOMException ? reqErr.name : (reqErr instanceof Error ? reqErr.name : "UnknownError");
+          if (errName === "NotFoundError") {
+            // User cancelled the Chrome picker — fall back to props data
+            console.log("[DrQBIT WiFi] User cancelled USB picker. Using device info from serial lookup.");
+          } else {
+            // Real error — log it but don't throw (fall back to props data)
+            console.error("[DrQBIT WiFi] requestDevice() error:", errName, reqErr instanceof Error ? reqErr.message : String(reqErr));
+          }
+          selectedUsbDevice = null;
+        }
         setDetectionProgress(66);
 
-        // Get authorized devices
+        // Get authorized devices (may include devices from previous sessions)
         const authorized = await navigator.usb.getDevices();
 
-        if (authorized.length === 0) {
-          // No USB devices found or user cancelled permission dialog
+        // If requestDevice gave us a device, prefer that one
+        // Otherwise, check authorized devices from previous sessions
+        const targetUsbDevice = selectedUsbDevice ?? (authorized.length > 0 ? findPrinterDevice(authorized, device) ?? authorized[0] : null);
+
+        if (!targetUsbDevice) {
+          // No USB device found or user cancelled permission dialog
           // Fall back to device info from props (serial lookup)
           setDetectionProgress(100);
           setDetectedInfo({
@@ -148,41 +192,16 @@ export function WifiSetupWizard({
           return;
         }
 
-        // Find a printer-like device
-        // Look for a device whose VID/PID matches the known device from serial lookup,
-        // or any printer-like device by keyword heuristic
-        const printerDevice = authorized.find((d) => {
-          const vid = "0x" + d.vendorId.toString(16).toUpperCase().padStart(4, "0");
-          const pid = "0x" + d.productId.toString(16).toUpperCase().padStart(4, "0");
-
-          // Match by VID/PID from serial lookup (if provided)
-          if (device.usbVendorId && vid === device.usbVendorId.toUpperCase() &&
-              device.usbProductId && pid === device.usbProductId.toUpperCase()) {
-            return true;
-          }
-
-          // Keyword heuristic: check if device name/manufacturer contains printer keywords
-          const name = (d.productName ?? "").toLowerCase();
-          const mf = (d.manufacturerName ?? "").toLowerCase();
-          const combined = `${name} ${mf}`;
-          return combined.includes("printer") || combined.includes("print") ||
-                 combined.includes("thermal") || combined.includes("pos") ||
-                 combined.includes("scanner") || combined.includes("label") ||
-                 combined.includes("barcode") || combined.includes("receipt");
-        });
-
-        const foundDevice = printerDevice ?? authorized[0];
-
         setDetectionProgress(100);
 
         // Use real device data from WebUSB — NO dummy data
-        const vid = "0x" + foundDevice.vendorId.toString(16).toUpperCase().padStart(4, "0");
-        const pid = "0x" + foundDevice.productId.toString(16).toUpperCase().padStart(4, "0");
+        const vid = "0x" + targetUsbDevice.vendorId.toString(16).toUpperCase().padStart(4, "0");
+        const pid = "0x" + targetUsbDevice.productId.toString(16).toUpperCase().padStart(4, "0");
 
         setDetectedInfo({
-          productName: foundDevice.productName || device.productName || "USB Device",
+          productName: targetUsbDevice.productName || device.productName || "USB Device",
           model: device.model, // Model comes from serial lookup, not from USB
-          serial: foundDevice.serialNumber || device.serial || "",
+          serial: targetUsbDevice.serialNumber || device.serial || "",
           usbVendorId: vid,
           usbProductId: pid,
           firmwareVersion: device.firmwareVersion, // Firmware comes from serial lookup

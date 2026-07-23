@@ -221,32 +221,53 @@ export function CustomerPortal() {
     // Check if WebUSB is available
     if (typeof navigator !== "undefined" && navigator.usb) {
       try {
-        // Request USB device access (browser permission dialog)
-        await navigator.usb.requestDevice({ filters: [] }).catch(() => null);
+        // CRITICAL FIX: Previously .catch(() => null) silently swallowed ALL errors
+        // and discarded the selected device. Now we properly handle errors.
+        let selectedUsbDevice: USBDevice | null = null;
+        try {
+          selectedUsbDevice = await navigator.usb.requestDevice({ filters: [] });
+          console.log("[DrQBIT Portal] requestDevice() succeeded:", selectedUsbDevice.productName ?? "Unknown");
+        } catch (reqErr) {
+          const errName = reqErr instanceof DOMException ? reqErr.name : (reqErr instanceof Error ? reqErr.name : "UnknownError");
+          if (errName === "NotFoundError") {
+            // User cancelled the Chrome picker — not an error, just no selection
+            console.log("[DrQBIT Portal] User cancelled USB picker.");
+          } else {
+            // Real error — log it
+            console.error("[DrQBIT Portal] requestDevice() error:", errName, reqErr instanceof Error ? reqErr.message : String(reqErr));
+          }
+          selectedUsbDevice = null;
+        }
 
-        // Get authorized devices
+        // Get authorized devices (may include devices from previous sessions)
         const authorizedDevices = await navigator.usb.getDevices();
 
-        if (authorizedDevices.length === 0) {
+        // If requestDevice gave us a device, prefer that one
+        // Otherwise, find a printer-like device from authorized list
+        let targetDevice: USBDevice | null = null;
+        if (selectedUsbDevice) {
+          targetDevice = selectedUsbDevice;
+        } else if (authorizedDevices.length > 0) {
+          // Find a device with a serial number (best candidate for lookup)
+          // Prefer devices that look like printers (by keyword in name)
+          const printerDevice = authorizedDevices.find((d) => {
+            const name = (d.productName ?? "").toLowerCase();
+            const mf = (d.manufacturerName ?? "").toLowerCase();
+            const combined = `${name} ${mf}`;
+            // Printer keyword heuristic
+            return combined.includes("printer") || combined.includes("print") ||
+                   combined.includes("thermal") || combined.includes("pos") ||
+                   combined.includes("scanner") || combined.includes("label") ||
+                   combined.includes("barcode") || combined.includes("receipt");
+          });
+          targetDevice = printerDevice ?? authorizedDevices[0];
+        }
+
+        if (!targetDevice) {
           // No USB devices found or user cancelled permission dialog
           setScanning(false);
           return;
         }
-
-        // Find a device with a serial number (best candidate for lookup)
-        // Prefer devices that look like printers (by keyword in name)
-        const printerDevice = authorizedDevices.find((d) => {
-          const name = (d.productName ?? "").toLowerCase();
-          const mf = (d.manufacturerName ?? "").toLowerCase();
-          const combined = `${name} ${mf}`;
-          // Printer keyword heuristic
-          return combined.includes("printer") || combined.includes("print") ||
-                 combined.includes("thermal") || combined.includes("pos") ||
-                 combined.includes("scanner") || combined.includes("label") ||
-                 combined.includes("barcode") || combined.includes("receipt");
-        });
-
-        const targetDevice = printerDevice ?? authorizedDevices[0];
 
         // Read serial number from the USB device
         const detectedSerial = targetDevice.serialNumber;
@@ -262,8 +283,9 @@ export function CustomerPortal() {
           // The user needs to enter it manually or use the Desktop Agent
           return;
         }
-      } catch {
-        // User cancelled permission dialog or WebUSB failed
+      } catch (e) {
+        // USB scan error — log the exact error instead of silently swallowing
+        console.error("[DrQBIT Portal] USB scan error:", e instanceof Error ? `${e.name}: ${e.message}` : String(e));
         setScanning(false);
         return;
       }
