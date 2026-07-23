@@ -2187,6 +2187,7 @@ model DevicePassport {
   firmwareInfo       FirmwareInformation?
   firmwareHistory    FirmwareHistory[]
   diagnosticSessions DiagnosticSession[]
+  liveDiagnosticSessions LiveDiagnosticSession[]
   testSessions       DeviceTestSession[]
   configuration      DeviceConfiguration?
 
@@ -3073,6 +3074,7 @@ model DeviceConfiguration {
 
   // Relations
   configurationEvents ConfigurationEvent[]
+  liveDiagnosticSessions LiveDiagnosticSession[]
 
   @@index([passportId])
   @@index([serialNumber])
@@ -3112,4 +3114,95 @@ model ConfigurationEvent {
   @@index([connectionType])
   @@index([result])
   @@index([occurredAt])
+}
+
+// =====================================================
+// Dr. QBIT Phase 5 — Live Diagnostic Engine
+// =====================================================
+//
+// Live diagnostic sessions for REAL hardware health checks.
+// Phase 5 runs LIVE diagnostics on connected devices after
+// Phase 4 configuration. This model stores the complete
+// diagnostic history for each device.
+//
+// SAFETY: Health scores are ONLY based on real test results.
+// No fake/dummy/mock/simulated data. If Desktop Agent is
+// unavailable → "Not Tested" status (not fake success).
+//
+// Reuses existing: DiagnosticSession, DiagnosticFinding,
+// DiagnosticRecommendation, HealthScore (from the passport-based
+// diagnostic engine). Phase 5 saves its live diagnostic data
+// into the same models for consistency.
+
+/// Live Diagnostic Session — Phase 5 live hardware diagnostics result.
+/// Stored alongside the existing DiagnosticSession (passport-based).
+/// The sessionToken links this to the existing session for unified history.
+model LiveDiagnosticSession {
+  id                String   @id @default(cuid())
+  sessionToken      String   @unique // Links to the DiagnosticSession created during this run
+  // Link to device passport
+  passportId        String
+  passport          DevicePassport @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  // Link to configuration (Phase 4 output — the device that was configured before this diagnostic)
+  configurationId   String?
+  configuration     DeviceConfiguration? @relation(fields: [configurationId], references: [id], onDelete: SetNull)
+  // Serial number (denormalized for search)
+  serialNumber      String?
+  // Device info at time of diagnostic
+  deviceModel       String?
+  deviceType        String? // "thermal_printer" | "barcode_scanner" | "windows_pos" | etc.
+  connectionType    String? // "usb" | "lan" | "wifi" | "bluetooth"
+  // Engineer who ran the diagnostics
+  engineerId        String?
+  engineerName      String?
+  // Desktop Agent context
+  agentAvailable    Boolean  @default(false) // Whether Desktop Agent was available for live checks
+  agentVersion      String?
+  osInfo            String?
+  hostname          String?
+  // ===== Live Diagnostic Results =====
+  // Overall status
+  overallStatus     String   @default("Unknown") // "Healthy" | "Attention Required" | "Critical" | "Unknown"
+  healthScore       Int      @default(0) // 0-100, based on REAL test results
+  healthGrade       String   @default("unknown") // "excellent" | "good" | "attention" | "critical" | "unknown"
+  // Per-category scores (0-100 each — ONLY from real test results)
+  hardwareScore     Int      @default(0)
+  communicationScore Int     @default(0)
+  driverScore       Int      @default(0)
+  firmwareScore     Int      @default(0)
+  networkScore      Int      @default(0)
+  printingScore     Int      @default(0)
+  // ===== Step Results (JSON — stores full step output) =====
+  hardwareHealthResult     String? // JSON: HardwareHealthCheck
+  driverValidationResult   String? // JSON: DriverValidationResult
+  firmwareValidationResult String? // JSON: FirmwareValidationResult
+  communicationResult      String? // JSON: CommunicationDiagnosticResult
+  printEngineResult        String? // JSON: PrintEngineTestResult
+  capabilityResult         String? // JSON: CapabilityValidationResult
+  errorDetectionResult     String? // JSON: ErrorDetectionResult
+  troubleshootingResult    String? // JSON: TroubleshootingResult
+  predictiveHealthResult   String? // JSON: PredictiveHealthResult
+  healthScoreBreakdown     String? // JSON: LiveHealthScore
+  diagnosticReportResult   String? // JSON: DiagnosticReport
+  resourceRecommendations  String? // JSON: AutoResourceRecommendation[]
+  // ===== Summary =====
+  issuesCount       Int      @default(0)
+  warningsCount     Int      @default(0)
+  errorsCount       Int      @default(0) // Engine errors (not device errors)
+  requiresMaintenance Boolean @default(false) // Predictive: device may need preventive maintenance
+  // ===== Status =====
+  status            String   @default("completed") // "running" | "completed" | "failed"
+  diagnosticDurationMs Int? // How long the full 15-step pipeline took
+  startedAt         DateTime @default(now())
+  completedAt       DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([passportId])
+  @@index([configurationId])
+  @@index([serialNumber])
+  @@index([overallStatus])
+  @@index([healthGrade])
+  @@index([engineerId])
+  @@index([startedAt])
 }

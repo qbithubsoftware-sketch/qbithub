@@ -6,6 +6,7 @@
  *   - Phase 2: Device Identification Engine (device-identification.ts)
  *   - Phase 3: Cloud Lookup Engine (cloud-lookup-engine.ts, resource-engine.ts, cloud-lookup-types.ts)
  *   - Phase 4: Configuration & Provisioning Engine (configuration-engine.ts, configuration-adapters.ts, configuration-types.ts)
+ *   - Phase 5: Intelligent Diagnostics, Predictive Health & Troubleshooting Engine (diagnostic-engine.ts, diagnostic-adapters.ts, diagnostic-types.ts)
  *   - Device Matcher (device-matcher.ts)
  *   - Desktop Agent Auth (desktop-agent-auth.ts)
  */
@@ -156,3 +157,96 @@ export type { MatchResult } from "./device-matcher";
 
 // Desktop Agent Auth
 export { validateAgentSecret, extractAgentSecret, isAgentSecretConfigured } from "./desktop-agent-auth";
+
+// Phase 5 — Intelligent Diagnostics, Predictive Health & Troubleshooting
+export { runLiveDiagnostics, runSingleDiagnosticStep } from "./diagnostic-engine";
+export {
+  sendDiagnosticCommand,
+  isDesktopAgentAvailable as isDiagAgentAvailable,
+  getApplicableDiagnosticAdapter,
+  getDiagnosticAdapter,
+  getAllDiagnosticAdapters,
+  registerDiagnosticAdapter,
+  buildDiagnosticDeviceInfo,
+  getSupportedConnectionTypes,
+  BaseDiagnosticAdapter,
+  ThermalPrinterDiagnosticAdapter,
+  BarcodePrinterDiagnosticAdapter,
+  WindowsPosDiagnosticAdapter,
+  AndroidPosDiagnosticAdapter,
+  BarcodeScannerDiagnosticAdapter,
+} from "./diagnostic-adapters";
+export type { DiagnosticAdapter, DiagnosticDeviceInfo } from "./diagnostic-adapters";
+
+// Phase 5 — Types
+export type {
+  DiagnosticAction,
+  DiagnosticRequest,
+  DiagnosticResult,
+  DiagnosticResponse,
+  DiagnosticStep,
+  DiagnosticStepStatus,
+  DiagnosticError,
+  DiagnosticErrorCode,
+  DiagnosticOverallStatus,
+  DiagnosticHealthGrade,
+  DiagnosticCategory,
+  DiagnosticConnectionType,
+  HardwareHealthCheck,
+  HardwareConnectionHealth,
+  DriverValidationResult,
+  FirmwareValidationResult,
+  FirmwareUpdateStatus,
+  CommunicationDiagnosticResult,
+  CommunicationConnectionTest,
+  CommunicationFailureStage,
+  PrintEngineTestResult,
+  CapabilityValidationResult,
+  CapabilityHealthCheck,
+  CapabilityHealthStatus,
+  ErrorDetectionResult,
+  DetectedError,
+  DiagnosticErrorType,
+  DiagnosticErrorSeverity,
+  DiagnosticComponent,
+  TroubleshootingResult,
+  TroubleshootingSuggestion,
+  TroubleshootingFix,
+  RecommendationAction as DiagnosticRecommendationAction,
+  RecommendationPriority as DiagnosticRecommendationPriority,
+  PredictiveHealthResult,
+  PredictiveWarning,
+  PredictivePattern,
+  PredictivePatternType,
+  PredictionConfidence,
+  LiveHealthScore,
+  CategoryHealthScore,
+  DiagnosticReport,
+  DiagnosticIssue,
+  DiagnosticReportDeviceInfo,
+  DiagnosticHistoryEntry,
+  AutoResourceRecommendation,
+  DiagnosticResourceItem,
+  DiagnosticResourceType,
+  DesktopAgentDiagnosticCommand,
+  DesktopAgentDiagnosticResponse,
+  DiagnosticAgentCommandType,
+} from "./diagnostic-types";
+export {
+  DIAG_STEP_STATUS_LABELS,
+  DIAG_CATEGORY_LABELS,
+  DIAG_CATEGORY_ICONS,
+  DIAG_OVERALL_STATUS_LABELS,
+  DIAG_HEALTH_GRADE_LABELS,
+  DIAG_HEALTH_GRADE_VARIANTS,
+  DIAG_HEALTH_GRADE_ICONS,
+  DIAG_ERROR_TYPE_LABELS,
+  DIAG_ERROR_CODE_LABELS,
+  DIAG_CONNECTION_LABELS,
+  DIAG_CONNECTION_ICONS,
+  FIRMWARE_UPDATE_STATUS_LABELS,
+  DIAG_RESOURCE_TYPE_LABELS,
+  PREDICTIVE_PATTERN_LABELS,
+  gradeFromScore as diagGradeFromScore,
+  statusFromGrade as diagStatusFromGrade,
+} from "./diagnostic-types";
