@@ -136,6 +136,70 @@ export interface DiscoveredDevice {
   // ===== USB Connection Flow (7-step) =====
   /** Result of the 7-step USB connection attempt. Null for non-USB devices or if flow was not run. */
   usbConnection: UsbConnectionResult | null;
+  // ===== Universal Hardware Fingerprint — extended identifiers =====
+  /** USB Device Instance ID (from WebUSB device object). Null if not available. */
+  usbDeviceInstanceId: string | null;
+  /** USB Container ID (from WebUSB). Null if not available. */
+  usbContainerId: string | null;
+  /** USB Device Path (constructed from bus/address). Null if not available. */
+  usbDevicePath: string | null;
+  /** USB Port Path (physical connector location). Null if not available. */
+  usbPortPath: string | null;
+  /** USB Location Path. Null if not available. */
+  usbLocationPath: string | null;
+  /** USB Interface Number claimed. Null if not available. */
+  usbInterfaceNumber: number | null;
+  /** USB Bus Number. Null if not available. */
+  usbBusNumber: number | null;
+  /** USB Address on bus. Null if not available. */
+  usbAddress: number | null;
+  /** USB Device Class code. Null if not available. */
+  usbDeviceClass: string | null;
+  /** USB Device Subclass code. Null if not available. */
+  usbDeviceSubclass: string | null;
+  /** Product Code (distinct from USB PID). Null if not available. */
+  productCode: string | null;
+  /** Ethernet MAC address. Null for non-network devices. */
+  ethernetMacAddress: string | null;
+  /** Wi-Fi MAC address. Null for non-network devices. */
+  wifiMacAddress: string | null;
+  /** Bluetooth MAC address (distinct from bluetoothDeviceId). Null if not available. */
+  bluetoothMacAddress: string | null;
+  /** Bluetooth Device Address. Null if not available. */
+  bluetoothDeviceAddress: string | null;
+  /** Bluetooth friendly name. Null if not available. */
+  bluetoothName: string | null;
+  /** Chip UID (MCU unique ID). Null if not available (requires Desktop Agent). */
+  chipUid: string | null;
+  /** Flash ID. Null if not available (requires Desktop Agent). */
+  flashId: string | null;
+  /** Factory-programmed device UUID. Null if not available (requires Desktop Agent). */
+  factoryDeviceUuid: string | null;
+  /** Manufacturing batch code. Null if not available. */
+  manufacturingBatch: string | null;
+  /** Manufacturing date string. Null if not available. */
+  manufacturingDate: string | null;
+  // PNP / Windows fields (from Desktop Agent)
+  /** PNP Device ID. Null if not available (Desktop Agent only). */
+  pnpDeviceId: string | null;
+  /** Windows Container GUID. Null if not available. */
+  containerGuid: string | null;
+  /** Parent Device Instance ID. Null if not available. */
+  parentDevice: string | null;
+  /** Driver version. Null if not available. */
+  driverVersion: string | null;
+  /** Driver provider name. Null if not available. */
+  driverProvider: string | null;
+  /** Driver date. Null if not available. */
+  driverDate: string | null;
+  /** Windows device class GUID. Null if not available. */
+  deviceClassGuid: string | null;
+  /** Hardware IDs array (from Windows). Null if not available. */
+  hardwareIds: string[] | null;
+  /** Compatible IDs array (from Windows). Null if not available. */
+  compatibleIds: string[] | null;
+  /** Hostname. Null if not available. */
+  hostname: string | null;
 }
 
 /** Overall discovery result from scanning all ports. */
@@ -969,6 +1033,38 @@ class UsbScanner implements DeviceScanner {
       interfaceClasses,
       modelNumber: null,
       usbConnection: connectionResult,
+      // Universal Hardware Fingerprint — extended identifiers from WebUSB
+      usbDeviceInstanceId: this.buildDeviceInstanceId(selectedDevice),
+      usbContainerId: null, // Not available via WebUSB (Windows Desktop Agent provides this)
+      usbDevicePath: connectionResult.connected ? `USB_${vid}_${pid}_${serial ?? "noserial"}` : null,
+      usbPortPath: null, // Not available via WebUSB
+      usbLocationPath: null, // Not available via WebUSB
+      usbInterfaceNumber: connectionResult.claimedInterfaceNumber ?? null,
+      usbBusNumber: null, // Not available via WebUSB (Desktop Agent provides this)
+      usbAddress: null, // Not available via WebUSB
+      usbDeviceClass: primaryInterfaceClass ? `0x${primaryInterfaceClass.toString(16).toUpperCase().padStart(2, "0")}` : null,
+      usbDeviceSubclass: null,
+      productCode: null,
+      ethernetMacAddress: null,
+      wifiMacAddress: null,
+      bluetoothMacAddress: null,
+      bluetoothDeviceAddress: null,
+      bluetoothName: null,
+      chipUid: null, // Requires Desktop Agent
+      flashId: null, // Requires Desktop Agent
+      factoryDeviceUuid: null, // Requires Desktop Agent
+      manufacturingBatch: null,
+      manufacturingDate: null,
+      pnpDeviceId: null, // Requires Desktop Agent
+      containerGuid: null,
+      parentDevice: null,
+      driverVersion: null,
+      driverProvider: null,
+      driverDate: null,
+      deviceClassGuid: null,
+      hardwareIds: null,
+      compatibleIds: null,
+      hostname: null,
     };
 
     // If connection failed, log a summary but still return the device
@@ -1034,6 +1130,38 @@ class UsbScanner implements DeviceScanner {
           interfaceClasses: otherInterfaceClasses,
           modelNumber: null,
           usbConnection: null, // No connection attempted for secondary devices
+          // Universal Hardware Fingerprint — descriptor-only for secondary devices
+          usbDeviceInstanceId: this.buildDeviceInstanceId(d),
+          usbContainerId: null,
+          usbDevicePath: `USB_${otherVid}_${otherPid}_${otherSerial ?? "noserial"}`,
+          usbPortPath: null,
+          usbLocationPath: null,
+          usbInterfaceNumber: null,
+          usbBusNumber: null,
+          usbAddress: null,
+          usbDeviceClass: otherPrimaryInterfaceClass ? `0x${otherPrimaryInterfaceClass.toString(16).toUpperCase().padStart(2, "0")}` : null,
+          usbDeviceSubclass: null,
+          productCode: null,
+          ethernetMacAddress: null,
+          wifiMacAddress: null,
+          bluetoothMacAddress: null,
+          bluetoothDeviceAddress: null,
+          bluetoothName: null,
+          chipUid: null,
+          flashId: null,
+          factoryDeviceUuid: null,
+          manufacturingBatch: null,
+          manufacturingDate: null,
+          pnpDeviceId: null,
+          containerGuid: null,
+          parentDevice: null,
+          driverVersion: null,
+          driverProvider: null,
+          driverDate: null,
+          deviceClassGuid: null,
+          hardwareIds: null,
+          compatibleIds: null,
+          hostname: null,
         });
       }
     } catch (e) {
@@ -1050,6 +1178,32 @@ class UsbScanner implements DeviceScanner {
    * is considered "printer-like" so we don't miss unusual hardware.
    * The final identification happens in Phase 2 (Identification Engine).
    */
+  /**
+   * Builds a USB Device Instance ID from WebUSB device properties.
+   *
+   * In Windows, the Device Instance ID format is:
+   *   USB\VID_xxxx&PID_yyyy\serial_or_port_path
+   *
+   * From WebUSB we can construct a simplified version using VID, PID,
+   * and Serial Number. This is used as a fingerprint identifier.
+   *
+   * NOTE: The full Windows Device Instance ID (with port path) is only
+   * available from the Desktop Agent. This simplified version is still
+   * useful for fingerprint matching when Desktop Agent data is unavailable.
+   */
+  private buildDeviceInstanceId(d: USBDevice): string | null {
+    const vid = d.vendorId.toString(16).toUpperCase().padStart(4, "0");
+    const pid = d.productId.toString(16).toUpperCase().padStart(4, "0");
+    const serial = d.serialNumber;
+
+    if (serial) {
+      // Device with serial: "USB\VID_xxxx&PID_yyyy\serial"
+      return `USB\\VID_${vid}&PID_${pid}\\${serial}`;
+    }
+    // Device without serial: less unique, but still useful for matching
+    return null;
+  }
+
   private isPrinterOrPosDevice(d: USBDevice, name: string, manufacturer: string | null): boolean {
     // USB Class codes that indicate printer/POS:
     // 0x07 = Printer class
@@ -1257,6 +1411,38 @@ class BluetoothScanner implements DeviceScanner {
           interfaceClasses: [],
           modelNumber,
           usbConnection: null, // Not applicable for Bluetooth devices
+          // Universal Hardware Fingerprint — Bluetooth identifiers
+          usbDeviceInstanceId: null,
+          usbContainerId: null,
+          usbDevicePath: null,
+          usbPortPath: null,
+          usbLocationPath: null,
+          usbInterfaceNumber: null,
+          usbBusNumber: null,
+          usbAddress: null,
+          usbDeviceClass: null,
+          usbDeviceSubclass: null,
+          productCode: null,
+          ethernetMacAddress: null,
+          wifiMacAddress: null,
+          bluetoothMacAddress: id, // BT device ID serves as MAC-like unique identifier
+          bluetoothDeviceAddress: id, // Same as bluetoothDeviceId for BT devices
+          bluetoothName: name, // Friendly name
+          chipUid: null,
+          flashId: null,
+          factoryDeviceUuid: null,
+          manufacturingBatch: null,
+          manufacturingDate: null,
+          pnpDeviceId: null,
+          containerGuid: null,
+          parentDevice: null,
+          driverVersion: null,
+          driverProvider: null,
+          driverDate: null,
+          deviceClassGuid: null,
+          hardwareIds: null,
+          compatibleIds: null,
+          hostname: null,
         });
       }
 
@@ -1411,4 +1597,65 @@ export function filterPrinterDevices(devices: DiscoveredDevice[]): DiscoveredDev
  */
 export function findDeviceWithSerial(devices: DiscoveredDevice[]): DiscoveredDevice | null {
   return devices.find((d) => d.serialNumber && d.serialNumber.length >= 4) ?? null;
+}
+
+/**
+ * Convert a DiscoveredDevice to a UniversalHardwareIdentity for fingerprint generation.
+ *
+ * Maps all fields from the discovery result to the fingerprint engine's
+ * input format. Null values are preserved — null means "could not be read",
+ * not "unknown default".
+ *
+ * This conversion ensures the fingerprint engine receives ALL available
+ * identifiers from the device scan, regardless of which scanner detected it.
+ */
+export function discoveredDeviceToHardwareIdentity(device: DiscoveredDevice): import("./fingerprint-types").UniversalHardwareIdentity {
+  return {
+    // Basic Information
+    manufacturer: device.manufacturer,
+    productName: device.deviceName,
+    model: device.modelNumber,
+    productCode: device.productCode,
+    firmwareVersion: device.firmwareVersion,
+    hardwareRevision: device.hardwareRevision,
+    sdkSerialNumber: device.serialNumber,
+    // USB Information
+    vendorId: device.vendorId,
+    productId: device.productId,
+    usbDeviceInstanceId: device.usbDeviceInstanceId,
+    usbContainerId: device.usbContainerId,
+    usbDevicePath: device.usbDevicePath,
+    usbPortPath: device.usbPortPath,
+    usbLocationPath: device.usbLocationPath,
+    usbInterfaceNumber: device.usbInterfaceNumber,
+    usbBusNumber: device.usbBusNumber,
+    usbAddress: device.usbAddress,
+    usbDeviceClass: device.usbDeviceClass,
+    usbDeviceSubclass: device.usbDeviceSubclass,
+    // Windows Device Information
+    pnpDeviceId: device.pnpDeviceId,
+    hardwareIds: device.hardwareIds,
+    compatibleIds: device.compatibleIds,
+    containerGuid: device.containerGuid,
+    parentDevice: device.parentDevice,
+    driverVersion: device.driverVersion,
+    driverProvider: device.driverProvider,
+    driverDate: device.driverDate,
+    deviceClassGuid: device.deviceClassGuid,
+    // Network Information
+    ethernetMacAddress: device.ethernetMacAddress,
+    wifiMacAddress: device.wifiMacAddress,
+    ipAddress: device.ipAddress,
+    hostname: device.hostname,
+    // Bluetooth Information
+    bluetoothMacAddress: device.bluetoothMacAddress,
+    bluetoothDeviceAddress: device.bluetoothDeviceAddress,
+    bluetoothName: device.bluetoothName,
+    // Firmware Information
+    chipUid: device.chipUid,
+    flashId: device.flashId,
+    factoryDeviceUuid: device.factoryDeviceUuid,
+    manufacturingBatch: device.manufacturingBatch,
+    manufacturingDate: device.manufacturingDate,
+  };
 }

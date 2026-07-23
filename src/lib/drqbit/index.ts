@@ -13,8 +13,44 @@
  */
 
 // Phase 1 — Discovery
-export { scanAllPorts, connectUsbDevice, releaseUsbDevice, isWebUsbAvailable, isBluetoothAvailable, isLanAvailable, filterPrinterDevices, findDeviceWithSerial } from "./device-discovery";
+export { scanAllPorts, connectUsbDevice, releaseUsbDevice, isWebUsbAvailable, isBluetoothAvailable, isLanAvailable, filterPrinterDevices, findDeviceWithSerial, discoveredDeviceToHardwareIdentity } from "./device-discovery";
 export type { DiscoveryResult, ScannerAvailability, DiscoveredDevice, DiscoveryConnection, DeviceScanner, UsbConnectionStep, UsbConnectionResult } from "./device-discovery";
+
+// Universal Hardware Fingerprint Engine
+export {
+  generateHardwareFingerprint,
+  generateFingerprintHash,
+  generateDeviceUuid,
+  detectDuplicateSerialInDb,
+  resolveDuplicateSerial,
+  lookupByFingerprint,
+  generateOrReuseDeviceUuid,
+  updateConnectionTracking,
+  markDuplicateSerials,
+  updatePassportFingerprint,
+  createPassportFromFingerprint,
+} from "./fingerprint-engine";
+export type {
+  UniversalHardwareIdentity,
+  HardwareFingerprintResult,
+  DuplicateSerialResolution,
+  FingerprintLookupResult,
+  FingerprintGenerationInput,
+  FingerprintEngineConfig,
+  FingerprintQuality,
+  DetectionPriorityKey,
+} from "./fingerprint-types";
+export {
+  DETECTION_PRIORITY,
+  DETECTION_PRIORITY_LABELS,
+  DETECTION_PRIORITY_ICONS,
+  FINGERPRINT_QUALITY_DISPLAY,
+  DEFAULT_FINGERPRINT_CONFIG,
+  classifyFingerprintQuality,
+  selectPrimaryIdentifier,
+  countAvailableIdentifiers,
+  getPrimaryIdentifierValue,
+} from "./fingerprint-types";
 
 // Phase 2 — Identification
 export { identifyAllDevices, identifyDevice, identifyModel, extractSerialNumber } from "./device-identification";

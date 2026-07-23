@@ -34,6 +34,8 @@ import { useNavigation } from "@/lib/navigation/store";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { FingerprintDiscoveryCard, type FingerprintScanResult } from "@/components/qbit/admin/FingerprintDiscoveryCard";
+import type { UniversalHardwareIdentity, HardwareFingerprintResult } from "@/lib/drqbit/fingerprint-types";
 
 interface ProductOption {
   id: string;
@@ -134,6 +136,25 @@ export function DeviceRegisterPage() {
   const [selectedVideos, setSelectedVideos] = useState<Set<string>>(new Set());
   const [selectedDocuments, setSelectedDocuments] = useState<Set<string>>(new Set());
 
+  // Universal Hardware Fingerprint — scan result
+  const [fingerprintScan, setFingerprintScan] = useState<FingerprintScanResult | null>(null);
+  const [fingerprintIdentity, setFingerprintIdentity] = useState<UniversalHardwareIdentity | null>(null);
+
+  // Fingerprint fields (auto-populated from scan)
+  const [vendorId, setVendorId] = useState("");
+  const [productIdCode, setProductIdCode] = useState("");
+  const [hardwareFingerprint, setHardwareFingerprint] = useState("");
+  const [deviceUuid, setDeviceUuid] = useState("");
+  const [chipUid, setChipUid] = useState("");
+  const [factoryDeviceUuid, setFactoryDeviceUuid] = useState("");
+  const [ethernetMac, setEthernetMac] = useState("");
+  const [bluetoothMac, setBluetoothMac] = useState("");
+  const [usbDeviceInstanceId, setUsbDeviceInstanceId] = useState("");
+  const [usbContainerId, setUsbContainerId] = useState("");
+  const [duplicateSerialFlag, setDuplicateSerialFlag] = useState(false);
+  const [fingerprintQuality, setFingerprintQuality] = useState("");
+  const [primaryIdentifier, setPrimaryIdentifier] = useState("");
+
   const userName = user?.name ?? "Admin";
   const initials = userName.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 
@@ -198,6 +219,36 @@ export function DeviceRegisterPage() {
     setter(next);
   }
 
+  /** Auto-populate ALL form fields from fingerprint scan result. */
+  function handleFingerprintScanComplete(result: FingerprintScanResult) {
+    setFingerprintScan(result);
+    setFingerprintIdentity(result.identity);
+
+    // Auto-populate basic fields from scan
+    const identity = result.identity;
+    if (identity.sdkSerialNumber) setSerialNumber(identity.sdkSerialNumber);
+    if (identity.productName) setProductName(identity.productName);
+    if (identity.model) setModelNumber(identity.model);
+    if (identity.manufacturer) setBrand(identity.manufacturer);
+    if (identity.firmwareVersion) {} // available but not in current form
+
+    // Auto-populate fingerprint fields
+    const fp = result.fingerprintResult;
+    setVendorId(identity.vendorId ?? "");
+    setProductIdCode(identity.productId ?? "");
+    setHardwareFingerprint(fp.fingerprintHash);
+    setDeviceUuid(fp.deviceUuid);
+    setChipUid(identity.chipUid ?? "");
+    setFactoryDeviceUuid(identity.factoryDeviceUuid ?? "");
+    setEthernetMac(identity.ethernetMacAddress ?? "");
+    setBluetoothMac(identity.bluetoothMacAddress ?? "");
+    setUsbDeviceInstanceId(identity.usbDeviceInstanceId ?? "");
+    setUsbContainerId(identity.usbContainerId ?? "");
+    setDuplicateSerialFlag(fp.duplicateSerialDetected);
+    setFingerprintQuality(fp.quality);
+    setPrimaryIdentifier(fp.primaryIdentifier);
+  }
+
   function resetForm() {
     setSelectedProductId("");
     setSerialNumber("");
@@ -255,6 +306,15 @@ export function DeviceRegisterPage() {
         selectedVideos: [...selectedVideos],
         selectedDocuments: [...selectedDocuments],
         selectedProductId,
+        // Universal Hardware Fingerprint fields (auto-populated from scan)
+        vendorId, productIdCode,
+        hardwareFingerprint, deviceUuid,
+        chipUid, factoryDeviceUuid,
+        ethernetMac, bluetoothMac,
+        usbDeviceInstanceId, usbContainerId,
+        duplicateSerialFlag,
+        fingerprintQuality, primaryIdentifier,
+        ...(fingerprintIdentity ? { fingerprintIdentity } : {}),
       };
 
       const res = await fetch("/api/admin/device-registry", {
@@ -324,11 +384,16 @@ export function DeviceRegisterPage() {
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium">Serial Number *</label>
-              <Input value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} placeholder="SN-001" />
+              <Input value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} placeholder="Auto-filled from scan or manual entry" />
+              {duplicateSerialFlag && (
+                <p className="mt-1 text-xs text-qbit-error flex items-center gap-1">
+                  <Icon name="warning" className="text-[14px]" filled /> Duplicate serial detected — Fingerprint used for unique ID
+                </p>
+              )}
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium">Product Name *</label>
-              <Input value={productName} onChange={(e) => setProductName(e.target.value)} placeholder="Auto-filled from product" />
+              <Input value={productName} onChange={(e) => setProductName(e.target.value)} placeholder="Auto-filled from scan or product" />
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium">Model Number</label>
@@ -349,7 +414,107 @@ export function DeviceRegisterPage() {
               </select>
             </div>
           </div>
+
+          {/* Scan Device — auto-populates ALL fields */}
+          <div className="mt-6 border-t border-qbit-outline-variant/50 pt-4">
+            <h4 className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-qbit-primary">
+              <Icon name="fingerprint" className="text-[16px]" /> Universal Hardware Fingerprint — Scan Device
+            </h4>
+            <p className="mb-3 text-xs text-qbit-on-surface-variant">
+              Click Scan Device to auto-populate every hardware field. The system collects all identifiers (VID, PID, Serial, Chip UID, MAC addresses, etc.) and generates a unique Hardware Fingerprint.
+              Never type hardware info manually when the device is connected.
+            </p>
+            <FingerprintDiscoveryCard
+              onScanComplete={handleFingerprintScanComplete}
+              existingSerial={serialNumber}
+            />
+          </div>
         </SurfaceCard>
+
+        {/* Section — Hardware Fingerprint Details (auto-populated from scan) */}
+        {fingerprintScan && (
+          <SurfaceCard className="p-6">
+            <h3 className="mb-4 flex items-center gap-2 text-sm font-bold text-qbit-on-surface">
+              <Icon name="fingerprint" className="text-[20px] text-qbit-primary" /> Hardware Fingerprint Details
+            </h3>
+            <p className="mb-4 text-xs text-qbit-on-surface-variant">All fields below were auto-populated from the device scan. These identifiers are stored permanently and used for unique identification.</p>
+
+            {/* Duplicate serial warning */}
+            {duplicateSerialFlag && (
+              <div className="mb-4 flex items-center gap-2 rounded-lg border border-qbit-error/30 bg-qbit-error/5 p-3">
+                <Icon name="warning" className="text-[20px] text-qbit-error" filled />
+                <div>
+                  <p className="text-sm font-semibold text-qbit-error">Duplicate Serial Number Detected</p>
+                  <p className="text-xs text-qbit-on-surface-variant">
+                    Another device in the database shares this serial number. The Hardware Fingerprint ({fingerprintQuality} quality) will be used as the primary unique identifier instead.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
+              {/* Fingerprint Core */}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-qbit-primary">Hardware Fingerprint Hash *</label>
+                <Input value={hardwareFingerprint} readOnly className="font-mono text-xs bg-qbit-surface-container-low" />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-qbit-primary">Device UUID *</label>
+                <Input value={deviceUuid} readOnly className="font-mono text-xs bg-qbit-surface-container-low" />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium">Fingerprint Quality</label>
+                <Input value={fingerprintQuality || "—"} readOnly className="bg-qbit-surface-container-low" />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium">Primary Identifier</label>
+                <Input value={primaryIdentifier || "—"} readOnly className="bg-qbit-surface-container-low" />
+              </div>
+
+              {/* USB Information */}
+              <div className="col-span-2 border-t border-qbit-outline-variant/50 pt-3 mt-1">
+                <p className="text-xs font-bold uppercase tracking-wider text-qbit-primary mb-2">USB Information</p>
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium">Vendor ID (VID)</label>
+                <Input value={vendorId || "—"} readOnly className="font-mono bg-qbit-surface-container-low" />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium">Product ID (PID)</label>
+                <Input value={productIdCode || "—"} readOnly className="font-mono bg-qbit-surface-container-low" />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium">USB Device Instance ID</label>
+                <Input value={usbDeviceInstanceId || "—"} readOnly className="font-mono text-xs bg-qbit-surface-container-low" />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium">USB Container ID</label>
+                <Input value={usbContainerId || "—"} readOnly className="font-mono bg-qbit-surface-container-low" />
+              </div>
+
+              {/* Deep Hardware Identity */}
+              <div className="col-span-2 border-t border-qbit-outline-variant/50 pt-3 mt-1">
+                <p className="text-xs font-bold uppercase tracking-wider text-qbit-primary mb-2">Deep Hardware Identity</p>
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium">Chip UID</label>
+                <Input value={chipUid || "—"} readOnly className="font-mono bg-qbit-surface-container-low" />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium">Factory Device UUID</label>
+                <Input value={factoryDeviceUuid || "—"} readOnly className="font-mono bg-qbit-surface-container-low" />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium">Ethernet MAC</label>
+                <Input value={ethernetMac || "—"} readOnly className="font-mono bg-qbit-surface-container-low" />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium">Bluetooth MAC</label>
+                <Input value={bluetoothMac || "—"} readOnly className="font-mono bg-qbit-surface-container-low" />
+              </div>
+            </div>
+          </SurfaceCard>
+        )}
 
         {/* Section 2 — Device Images */}
         <SurfaceCard className="p-6">

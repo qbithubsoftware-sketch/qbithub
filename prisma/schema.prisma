@@ -1984,7 +1984,7 @@ model HardwareSignature {
   id             String      @id @default(cuid())
   productId      String
   product        QbitProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
-  // Primary matching keys
+  // Primary matching keys (existing)
   vendorId       String? // USB VID (e.g. "0x04B8" for Epson)
   productIdCode  String? // USB PID (e.g. "0x0202")
   hardwareId     String? // composite hardware ID
@@ -1993,6 +1993,14 @@ model HardwareSignature {
   // Network signature (for LAN/WiFi devices)
   macPrefix      String? // first 3 octets of MAC (OUI)
   openPorts      String? // JSON array of ports, e.g. [9100, 515]
+  // Universal Hardware Fingerprint — extended matching keys
+  usbDeviceInstanceId String?  // USB Device Instance ID
+  usbContainerId      String?  // USB Container ID
+  chipUid             String?  // MCU/chip unique ID
+  factoryDeviceUuid   String?  // Factory-programmed device UUID
+  ethernetMac         String?  // Full Ethernet MAC
+  bluetoothMac        String?  // Full Bluetooth MAC
+  firmwareSignature   String?  // Firmware version + hash combination
   // Metadata
   connectionType String? // "usb" | "com" | "lan" | "wifi"
   notes          String?
@@ -2001,6 +2009,10 @@ model HardwareSignature {
   @@index([productId])
   @@index([vendorId, productIdCode])
   @@index([macPrefix])
+  @@index([chipUid])
+  @@index([factoryDeviceUuid])
+  @@index([ethernetMac])
+  @@index([bluetoothMac])
 }
 
 /// A scan session — one run of the Desktop Agent scanner.
@@ -2152,7 +2164,8 @@ model DevicePassport {
   detectedDevice       DetectedDevice? @relation(fields: [detectedDeviceId], references: [id])
   productId            String?
   product              QbitProduct?    @relation(fields: [productId], references: [id])
-  // Hardware identity (denormalized for search + display)
+  // === Hardware identity (denormalized for search + display) ===
+  // Basic Information
   hardwareId           String?
   vendorId             String?
   productIdCode        String?
@@ -2161,13 +2174,59 @@ model DevicePassport {
   manufacturer         String?
   brand                String?
   model                String?
+  productCode          String?        // Product Code (distinct from USB PID)
+  firmwareVersion      String?        // Firmware version read from device
+  hardwareRevision     String?        // Hardware revision from device descriptor
   connectionType       String?
   port                 String?
   usbVersion           String?
   osInfo               String?
   architecture         String?
-  macAddress           String?
+  macAddress           String?        // Ethernet/Wi-Fi MAC address
   ipAddress            String?
+  // USB Information — Universal Hardware Fingerprint
+  usbDeviceInstanceId  String?        // Windows USB Device Instance ID (unique per port)
+  usbContainerId       String?        // USB Container ID (groups functionally related devices)
+  usbDevicePath        String?        // USB device path for I/O
+  usbPortPath          String?        // USB port path (physical connector location)
+  usbLocationPath      String?        // USB location path from Windows
+  usbInterfaceNumber   Int?           // USB interface number claimed
+  usbBusNumber         Int?           // USB bus number
+  usbAddress           Int?           // USB address on bus
+  usbDeviceClass       String?        // USB device class code
+  usbDeviceSubclass    String?        // USB device subclass code
+  // Windows Device Information
+  pnpDeviceId          String?        // PNP Device ID
+  containerGuid        String?        // Windows Container GUID
+  parentDevice         String?        // Parent device instance ID
+  driverVersion        String?        // Driver version string
+  driverProvider       String?        // Driver provider name
+  driverDate           String?        // Driver date
+  deviceClassGuid      String?        // Windows device class GUID
+  // Network Information (if available)
+  ethernetMacAddress   String?        // Dedicated Ethernet MAC
+  wifiMacAddress       String?        // Dedicated Wi-Fi MAC
+  hostname             String?        // Device hostname
+  // Bluetooth Information
+  bluetoothMacAddress  String?        // Bluetooth MAC address
+  bluetoothDeviceAddress String?      // Bluetooth device address
+  bluetoothName        String?        // Bluetooth friendly name
+  // Firmware Information — deep hardware identity
+  chipUid              String?        // MCU/chip unique ID (highest priority identifier)
+  flashId              String?        // Flash memory ID
+  factoryDeviceUuid    String?        // Factory-programmed device UUID
+  manufacturingBatch   String?        // Manufacturing batch code
+  manufacturingDate    String?        // Manufacturing date string
+  // === Universal Hardware Fingerprint ===
+  deviceUuid           String?        @unique  // Internal device UUID (generated on first detection)
+  hardwareFingerprint  String?        @unique  // SHA-256 fingerprint of all collected identifiers
+  duplicateSerialFlag  Boolean        @default(false) // True when another device shares same serial
+  fingerprintQuality   String?        // "high" | "medium" | "low" — quality of available identifiers
+  primaryIdentifier    String?        // Which identifier was used as primary (e.g. "chipUid", "ethernetMac", "serialNumber")
+  // Connection tracking
+  firstConnectedAt     DateTime?      // First time this device was detected
+  lastConnectedAt      DateTime?      @default(now()) // Last time detected
+  connectionCount      Int            @default(1)     // How many times this device was seen
   // Device status (computed from driver intelligence + scan data)
   deviceStatus         String          @default("ready") // "ready" | "driver_missing" | "driver_outdated" | "unsupported" | "unknown"
   // Customer link (optional — set when device is associated with a customer asset)
@@ -2209,10 +2268,20 @@ model DevicePassport {
   @@index([serialNumber])
   @@index([vendorId, productIdCode])
   @@index([hardwareId])
+  @@index([hardwareFingerprint])
+  @@index([deviceUuid])
+  @@index([chipUid])
+  @@index([usbDeviceInstanceId])
+  @@index([usbContainerId])
+  @@index([ethernetMacAddress])
+  @@index([bluetoothMacAddress])
+  @@index([factoryDeviceUuid])
+  @@index([duplicateSerialFlag])
   @@index([customerAssetId])
   @@index([branchId])
   @@index([assignedEngineerId])
   @@index([deviceStatus])
+  @@index([fingerprintQuality])
 }
 
 /// Driver intelligence — installed vs latest driver comparison.
