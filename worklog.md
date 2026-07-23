@@ -165,3 +165,49 @@ Stage Summary:
 - Bulk OUT/IN endpoints identified for ESC/POS communication
 - Clean release/close on failure
 - All 4 WebUSB callers fixed (device-discovery.ts, WebUsbScanner.tsx, WifiSetupWizard.tsx, CustomerPortal.tsx)
+---
+Task ID: USB-DEBUG-2
+Agent: Main Agent (Super Z)
+Task: Dr. QBIT — WebUSB Connection Silent Failure Investigation & Fix
+
+Work Log:
+- Investigated the active component rendering chain: /dr-qbit → PublicLayout → CustomerPortal (the ACTIVE component)
+- Found that DrQbitWorkflow.tsx is DEPRECATED and NOT imported anywhere
+- Found that DiscoveryScanner.tsx is ONLY rendered in /portal route under screen "dr-qbit-detection"
+- Found ROOT CAUSE of the silent failure in CustomerPortal.tsx handleLaunchScanner():
+  - Line 286-284: After requestDevice() succeeds, the code reads device.serialNumber
+  - If serial is null/empty (common for USB printers that don't expose serial via descriptor), the code just silently `return`s
+  - NO error message, NO UI update, NO device info displayed
+  - The 7-step USB connection flow (connectUsbDevice()) is NEVER called — only STEP 1 runs
+  - This explains exactly the user's symptom: "After clicking Connect, nothing happens"
+- Fixed CustomerPortal.tsx:
+  - Added imports: useToast, connectUsbDevice, releaseUsbDevice, UsbConnectionResult, UsbConnectionStep from device-discovery
+  - Added usbConnectionResult state
+  - Rewrote handleLaunchScanner() with full 7-step flow:
+    - STEP 1: requestDevice() — detailed console.log + toast notification
+    - STEPS 2-7: connectUsbDevice(selectedDevice) — calls the existing Phase 1 engine
+    - On connection failure: shows EXACT error (step name + exception details) via toast + UsbConnectionStatusCard
+    - On connection success: reads serial → proceed to performLookup
+    - On serial unavailable: shows clear message instead of silent return
+    - WebUSB not supported: shows descriptive toast, no silent return
+  - Added UsbConnectionStatusCard component:
+    - Shows exact error message (no generic "Connection Failed")
+    - Shows 4 diagnostic checks (config null, multiple interfaces, claimed interface, driver conflict)
+    - Shows full 7-step log with per-step status (OK/FAILED/SKIPPED)
+    - Shows Retry button on failure
+    - Shows connection details on success (claimed interface, bulk OUT/IN endpoints)
+  - Updated ScanningCard from 3-step to 7-step visual progress
+  - Updated handleReset to clear usbConnectionResult
+- Verified TypeScript compilation: zero errors in modified files
+- NO new features added — only using existing connectUsbDevice() Phase 1 engine
+- NO changes to device-discovery.ts, WebUsbScanner.tsx, DiscoveryScanner.tsx
+
+Stage Summary:
+- ROOT CAUSE: CustomerPortal.handleLaunchScanner() only ran STEP 1 (requestDevice), never called connectUsbDevice(), and silently returned when serial was unavailable
+- Fix: Connected the existing Phase 1 7-step USB engine (connectUsbDevice) to the CustomerPortal component
+- All 7 steps now logged to console with [DrQBIT Portal USB STEP X] prefix
+- Exact exceptions shown in UI via toast + UsbConnectionStatusCard (step log, diagnostic checks)
+- No errors swallowed, no generic "Connection Failed"
+- 4 diagnostic checks displayed: config null, interfaces, claim status, driver conflict
+- USB connection must be stable before proceeding to Serial Number / Cloud Lookup / Diagnostics
+- Serial unavailable case shows descriptive message instead of silent return

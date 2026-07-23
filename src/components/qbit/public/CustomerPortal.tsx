@@ -51,6 +51,13 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { WifiSetupWizard } from "./WifiSetupWizard";
+import { useToast } from "@/hooks/use-toast";
+import {
+  connectUsbDevice,
+  releaseUsbDevice,
+  type UsbConnectionResult,
+  type UsbConnectionStep,
+} from "@/lib/drqbit/device-discovery";
 
 // ====================== Types ======================
 interface MediaFile {
@@ -144,11 +151,13 @@ const WHATSAPP_NUMBER = "919876543210"; // QBIT Support WhatsApp
 
 // ====================== Component ======================
 export function CustomerPortal() {
+  const { toast } = useToast();
   const [serial, setSerial] = useState("");
   const [state, setState] = useState<State>("idle");
   const [result, setResult] = useState<LookupResponse | null>(null);
   const [scanning, setScanning] = useState(false);
   const [wifiSetupOpen, setWifiSetupOpen] = useState(false);
+  const [usbConnectionResult, setUsbConnectionResult] = useState<UsbConnectionResult | null>(null);
   const resultRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -211,88 +220,165 @@ export function CustomerPortal() {
     await performLookup(serial);
   }
 
-  // Hardware Scanner flow: REAL USB detection → read serial → call
+  // Hardware Scanner flow: Full 7-step USB connection → read serial → call
   // the SAME performLookup → render the SAME result page.
-  // Flow: Detect USB Device → Read Serial Number → Call Device Lookup API →
-  //       Open Existing Result Screen.
+  //
+  // 7-Step USB Connection Flow:
+  //   STEP 1: navigator.usb.requestDevice() — user selects device in Chrome picker
+  //   STEP 2: device.open() — open the device for I/O operations
+  //   STEP 3: device.selectConfiguration() — select the active USB configuration
+  //   STEP 4: device.claimInterface() — claim the printer/data interface
+  //   STEP 5: Read USB interfaces — enumerate all interface class codes
+  //   STEP 6: Read endpoints — enumerate bulk IN/OUT endpoints
+  //   STEP 7: Create connected device object — build UsbConnectionResult
+  //
+  // If any step throws an exception:
+  //   - Log the exact exception to console
+  //   - Show the exact error in the UI (toast + connection status card)
+  //   - Do NOT swallow errors
+  //   - Do NOT return generic "Connection Failed"
+  //   - Do NOT continue to Serial Number / Cloud Lookup / Diagnostics
+  //
+  // Diagnostic checks performed:
+  //   - Is device.configuration null after open()?
+  //   - Does the device expose multiple interfaces?
+  //   - Is the correct interface being claimed?
+  //   - Is another application (printer driver) already using the interface?
   async function handleLaunchScanner() {
     setScanning(true);
+    setUsbConnectionResult(null);
+    const TAG = "[DrQBIT Portal USB]";
 
     // Check if WebUSB is available
-    if (typeof navigator !== "undefined" && navigator.usb) {
-      try {
-        // CRITICAL FIX: Previously .catch(() => null) silently swallowed ALL errors
-        // and discarded the selected device. Now we properly handle errors.
-        let selectedUsbDevice: USBDevice | null = null;
-        try {
-          selectedUsbDevice = await navigator.usb.requestDevice({ filters: [] });
-          console.log("[DrQBIT Portal] requestDevice() succeeded:", selectedUsbDevice.productName ?? "Unknown");
-        } catch (reqErr) {
-          const errName = reqErr instanceof DOMException ? reqErr.name : (reqErr instanceof Error ? reqErr.name : "UnknownError");
-          if (errName === "NotFoundError") {
-            // User cancelled the Chrome picker — not an error, just no selection
-            console.log("[DrQBIT Portal] User cancelled USB picker.");
-          } else {
-            // Real error — log it
-            console.error("[DrQBIT Portal] requestDevice() error:", errName, reqErr instanceof Error ? reqErr.message : String(reqErr));
-          }
-          selectedUsbDevice = null;
-        }
-
-        // Get authorized devices (may include devices from previous sessions)
-        const authorizedDevices = await navigator.usb.getDevices();
-
-        // If requestDevice gave us a device, prefer that one
-        // Otherwise, find a printer-like device from authorized list
-        let targetDevice: USBDevice | null = null;
-        if (selectedUsbDevice) {
-          targetDevice = selectedUsbDevice;
-        } else if (authorizedDevices.length > 0) {
-          // Find a device with a serial number (best candidate for lookup)
-          // Prefer devices that look like printers (by keyword in name)
-          const printerDevice = authorizedDevices.find((d) => {
-            const name = (d.productName ?? "").toLowerCase();
-            const mf = (d.manufacturerName ?? "").toLowerCase();
-            const combined = `${name} ${mf}`;
-            // Printer keyword heuristic
-            return combined.includes("printer") || combined.includes("print") ||
-                   combined.includes("thermal") || combined.includes("pos") ||
-                   combined.includes("scanner") || combined.includes("label") ||
-                   combined.includes("barcode") || combined.includes("receipt");
-          });
-          targetDevice = printerDevice ?? authorizedDevices[0];
-        }
-
-        if (!targetDevice) {
-          // No USB devices found or user cancelled permission dialog
-          setScanning(false);
-          return;
-        }
-
-        // Read serial number from the USB device
-        const detectedSerial = targetDevice.serialNumber;
-
-        setScanning(false);
-
-        if (detectedSerial && detectedSerial.length >= 4) {
-          // We got a real serial number from the USB device
-          setSerial(detectedSerial);
-          await performLookup(detectedSerial);
-        } else {
-          // Device doesn't expose a serial number via WebUSB
-          // The user needs to enter it manually or use the Desktop Agent
-          return;
-        }
-      } catch (e) {
-        // USB scan error — log the exact error instead of silently swallowing
-        console.error("[DrQBIT Portal] USB scan error:", e instanceof Error ? `${e.name}: ${e.message}` : String(e));
-        setScanning(false);
-        return;
-      }
-    } else {
+    if (typeof navigator === "undefined" || !navigator.usb) {
       // WebUSB not supported in this browser
+      console.error(`${TAG} WebUSB is NOT available in this browser. Use Chrome or Edge over HTTPS.`);
+      toast({
+        title: "WebUSB Not Supported",
+        description: "Use Chrome or Edge browser over HTTPS to detect USB hardware. No devices can be detected without WebUSB.",
+        variant: "destructive",
+        duration: 8000,
+      });
       setScanning(false);
       return;
+    }
+
+    // ===== STEP 1: navigator.usb.requestDevice() =====
+    let selectedDevice: USBDevice;
+    try {
+      console.log(`${TAG} STEP 1: Calling navigator.usb.requestDevice({ filters: [] })...`);
+      selectedDevice = await navigator.usb.requestDevice({ filters: [] });
+      console.log(`${TAG} STEP 1: SUCCESS — User selected device: "${selectedDevice.productName ?? "Unknown"}" (VID=0x${selectedDevice.vendorId.toString(16).toUpperCase().padStart(4, "0")}, PID=0x${selectedDevice.productId.toString(16).toUpperCase().padStart(4, "0")})`);
+      console.log(`${TAG} STEP 1: Serial number from descriptor: "${selectedDevice.serialNumber ?? "NOT EXPOSED"}"`);
+      console.log(`${TAG} STEP 1: Manufacturer: "${selectedDevice.manufacturerName ?? "N/A"}"`);
+      console.log(`${TAG} STEP 1: USB Version: ${selectedDevice.usbVersionMajor}.${selectedDevice.usbVersionMinor}.${selectedDevice.usbVersionSubminor}`);
+      console.log(`${TAG} STEP 1: Configurations count: ${selectedDevice.configurations.length}`);
+
+      toast({
+        title: "STEP 1: Device Selected",
+        description: `"${selectedDevice.productName ?? "Unknown"}" (VID=0x${selectedDevice.vendorId.toString(16).toUpperCase().padStart(4, "0")}, PID=0x${selectedDevice.productId.toString(16).toUpperCase().padStart(4, "0")}). Running 7-step USB connection flow...`,
+      });
+    } catch (e) {
+      const errName = e instanceof DOMException ? e.name : (e instanceof Error ? e.name : "UnknownError");
+      const errMessage = e instanceof Error ? e.message : String(e);
+
+      if (errName === "NotFoundError") {
+        // User cancelled the Chrome picker — not an error, just no selection
+        console.log(`${TAG} STEP 1: User cancelled the browser permission dialog. No device selected.`);
+        toast({
+          title: "No Device Selected",
+          description: "Please click 'Launch Hardware Scanner' again and select a device in the browser permission dialog.",
+          variant: "destructive",
+        });
+      } else {
+        // Real error — log the exact exception and show it in the UI
+        console.error(`${TAG} STEP 1: FAILED — requestDevice() threw: ${errName}: ${errMessage}`);
+        toast({
+          title: `STEP 1 Failed: ${errName}`,
+          description: errMessage,
+          variant: "destructive",
+          duration: 10000,
+        });
+      }
+      setScanning(false);
+      return;
+    }
+
+    // ===== STEPS 2–7: Run the 7-step USB connection flow =====
+    console.log(`${TAG} Running 7-step USB connection flow on "${selectedDevice.productName ?? "Unknown"}"...`);
+    const usbConnResult = await connectUsbDevice(selectedDevice);
+    setUsbConnectionResult(usbConnResult);
+
+    if (!usbConnResult.connected) {
+      // Connection failed at a specific step — show the EXACT error
+      const failedStep = usbConnResult.failedStep ?? "unknown";
+      const errName = usbConnResult.errorName ?? "UnknownError";
+      const errMessage = usbConnResult.errorMessage ?? "Unknown error";
+
+      console.error(`${TAG} USB connection FAILED at ${failedStep}: ${errName}: ${errMessage}`);
+
+      // Build user-friendly message based on which step failed
+      let userTitle = `USB ${failedStep} Failed`;
+      let userDescription = errMessage;
+
+      if (failedStep === "step2_open") {
+        userTitle = "STEP 2 Failed: Cannot Open Device";
+        userDescription = `device.open() failed: ${errName}: ${errMessage}. ${usbConnResult.interfacePossiblyInUse ? "Another application (likely the printer driver) may be using this device. Try disconnecting the printer, disabling the auto-installed driver, and scanning again." : "The device may not support WebUSB I/O operations. Descriptor data (VID/PID/serial) is still available."}`;
+      } else if (failedStep === "step3_selectConfiguration") {
+        userTitle = "STEP 3 Failed: Cannot Select Configuration";
+        userDescription = `selectConfiguration() failed: ${errName}: ${errMessage}. The device may have rejected the configuration selection.`;
+      } else if (failedStep === "step4_claimInterface") {
+        userTitle = "STEP 4 Failed: Cannot Claim Interface";
+        userDescription = `claimInterface() failed: ${errName}: ${errMessage}. ${usbConnResult.interfacePossiblyInUse ? "Another application (likely the printer driver) is probably using the interface. The OS may have auto-installed a driver that claimed the interface. Try: (1) Disable the printer driver in Device Manager, (2) Disconnect and reconnect the printer, (3) Scan again." : "The interface could not be claimed. The device may require a specific protocol."}`;
+      }
+
+      toast({
+        title: userTitle,
+        description: userDescription,
+        variant: "destructive",
+        duration: 12000,
+      });
+
+      // Do NOT proceed to Serial Number, Cloud Lookup, or Diagnostics.
+      // The USB connection must be stable before continuing.
+      // The connection status card will show the full step log and diagnostics.
+      setScanning(false);
+      return;
+    }
+
+    // ===== USB Connection Established Successfully =====
+    console.log(`${TAG} USB CONNECTION ESTABLISHED SUCCESSFULLY`);
+    console.log(`${TAG} Claimed interface: #${usbConnResult.claimedInterfaceNumber ?? "N/A"}`);
+    console.log(`${TAG} Bulk OUT endpoint: #${usbConnResult.bulkOutEndpoint ?? "N/A"}`);
+    console.log(`${TAG} Bulk IN endpoint: #${usbConnResult.bulkInEndpoint ?? "N/A"}`);
+
+    toast({
+      title: "USB Connected",
+      description: `Device "${selectedDevice.productName ?? "Unknown"}" connected. Interface #${usbConnResult.claimedInterfaceNumber ?? "N/A"} claimed. Bulk OUT: #${usbConnResult.bulkOutEndpoint ?? "N/A"}, Bulk IN: #${usbConnResult.bulkInEndpoint ?? "N/A"}.`,
+    });
+
+    // ===== Read serial number from the connected USB device =====
+    const detectedSerial = selectedDevice.serialNumber;
+    console.log(`${TAG} Serial number from connected device: "${detectedSerial ?? "NOT EXPOSED"}"`);
+
+    if (detectedSerial && detectedSerial.length >= 4) {
+      // We got a real serial number from the USB device
+      setSerial(detectedSerial);
+      setScanning(false);
+      await performLookup(detectedSerial);
+    } else {
+      // Device doesn't expose a serial number via WebUSB descriptor.
+      // This is common for many USB printers — the serial may require
+      // an ESC/POS command to read it from the device memory.
+      // DO NOT silently return — show a clear message to the user.
+      console.warn(`${TAG} Device "${selectedDevice.productName ?? "Unknown"}" does not expose a serial number via WebUSB descriptor. Serial: "${detectedSerial ?? "null"}".`);
+      toast({
+        title: "Serial Number Not Available",
+        description: `Device "${selectedDevice.productName ?? "Unknown"}" (VID=0x${selectedDevice.vendorId.toString(16).toUpperCase().padStart(4, "0")}, PID=0x${selectedDevice.productId.toString(16).toUpperCase().padStart(4, "0")}) was connected successfully, but does not expose a serial number via the USB descriptor. Please enter the serial number manually below. It is printed on your device sticker or invoice.`,
+        variant: "destructive",
+        duration: 12000,
+      });
+      setScanning(false);
     }
   }
 
@@ -300,6 +386,7 @@ export function CustomerPortal() {
     setState("idle");
     setResult(null);
     setSerial("");
+    setUsbConnectionResult(null);
     inputRef.current?.focus();
   }
 
@@ -318,6 +405,20 @@ export function CustomerPortal() {
     }, 80);
     return () => clearTimeout(t);
   }, [state]);
+
+  // Format USB connection step name for display
+  const formatStepName = (step: string): string => {
+    const stepNames: Record<string, string> = {
+      step1_requestDevice: "STEP 1: requestDevice()",
+      step2_open: "STEP 2: device.open()",
+      step3_selectConfiguration: "STEP 3: selectConfiguration()",
+      step4_claimInterface: "STEP 4: claimInterface()",
+      step5_readInterfaces: "STEP 5: Read Interfaces",
+      step6_readEndpoints: "STEP 6: Read Endpoints",
+      step7_createDeviceObject: "STEP 7: Create Device Object",
+    };
+    return stepNames[step] ?? step;
+  };
 
   return (
     <div className="w-full">
@@ -341,6 +442,15 @@ export function CustomerPortal() {
           <WifiSetupCard onLaunch={() => setWifiSetupOpen(true)} disabled={state === "searching"} />
         )}
       </div>
+
+      {/* ===== USB Connection Status Card — shown after scan completes ===== */}
+      {usbConnectionResult && !scanning && (
+        <UsbConnectionStatusCard
+          result={usbConnectionResult}
+          formatStepName={formatStepName}
+          onRetry={handleLaunchScanner}
+        />
+      )}
 
       {/* ===== Search Device — Full-width below the cards ===== */}
       <div className="mt-5">
@@ -1258,30 +1368,40 @@ function HardwareScannerCard({
 }
 
 /**
- * ScanningCard — shown while the hardware scanner is detecting USB devices.
- * Displays an animated 3-step progress:
- *   1. Detecting USB connection
- *   2. Reading device serial number
- *   3. Identifying product
- *
- * After 3 seconds, the parent component stops showing this card and
- * triggers performLookup with the detected serial.
+ * ScanningCard — shown while the hardware scanner is running the 7-step
+ * USB connection flow. Displays an animated 7-step progress:
+ *   STEP 1: requestDevice() — User selects device in Chrome picker
+ *   STEP 2: device.open() — Open the device for I/O
+ *   STEP 3: selectConfiguration() — Select active USB configuration
+ *   STEP 4: claimInterface() — Claim printer/data interface
+ *   STEP 5: Read USB interfaces
+ *   STEP 6: Read endpoints
+ *   STEP 7: Create connected device object
  */
 function ScanningCard() {
   const [step, setStep] = useState(0);
   const steps = [
-    { icon: "usb", label: "Detecting USB connection…" },
-    { icon: "fingerprint", label: "Reading device serial number…" },
-    { icon: "inventory_2", label: "Identifying product…" },
+    { icon: "usb", label: "STEP 1: requestDevice() — Selecting device…" },
+    { icon: "lock_open", label: "STEP 2: device.open() — Opening device…" },
+    { icon: "settings", label: "STEP 3: selectConfiguration() — Selecting configuration…" },
+    { icon: "cable", label: "STEP 4: claimInterface() — Claiming interface…" },
+    { icon: "list", label: "STEP 5: Reading USB interfaces…" },
+    { icon: "swap_vert", label: "STEP 6: Reading endpoints…" },
+    { icon: "check_circle", label: "STEP 7: Creating connected device object…" },
   ];
 
   useEffect(() => {
-    const t1 = setTimeout(() => setStep(1), 1000);
-    const t2 = setTimeout(() => setStep(2), 2000);
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
+    // Animate through the 7 steps — each step advances after a delay
+    // (real timing is controlled by the async scan, this is visual only)
+    const timers = [
+      setTimeout(() => setStep(1), 500),
+      setTimeout(() => setStep(2), 1200),
+      setTimeout(() => setStep(3), 1800),
+      setTimeout(() => setStep(4), 2400),
+      setTimeout(() => setStep(5), 3000),
+      setTimeout(() => setStep(6), 3500),
+    ];
+    return () => timers.forEach(clearTimeout);
   }, []);
 
   return (
@@ -1293,27 +1413,27 @@ function ScanningCard() {
           Hardware Scanner
         </div>
         <h3 className="text-xl font-bold tracking-tight text-qbit-on-surface sm:text-2xl">
-          Scanning USB Devices…
+          Establishing USB Connection…
         </h3>
         <p className="mt-1 text-xs font-medium text-qbit-on-surface-variant">
-          Dr. QBIT is detecting your connected hardware
+          Dr. QBIT is running the 7-step USB connection flow
         </p>
       </div>
 
       {/* Animated scanner */}
-      <div className="flex flex-col items-center justify-center py-6">
-        <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-qbit-primary/15 mb-4">
-          <span className="material-symbols-outlined text-[48px] text-qbit-primary animate-pulse">memory</span>
+      <div className="flex flex-col items-center justify-center py-4">
+        <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-qbit-primary/15 mb-3">
+          <span className="material-symbols-outlined text-[40px] text-qbit-primary animate-pulse">memory</span>
           <div className="absolute inset-0 rounded-full border-4 border-qbit-primary/20 border-t-qbit-primary animate-spin" />
         </div>
       </div>
 
-      {/* Progress steps */}
-      <div className="space-y-2.5">
+      {/* 7-Step Progress */}
+      <div className="space-y-2">
         {steps.map((s, i) => (
-          <div key={i} className="flex items-center gap-2.5 text-sm">
+          <div key={i} className="flex items-center gap-2 text-sm">
             <span
-              className={`material-symbols-outlined text-[20px] ${
+              className={`material-symbols-outlined text-[18px] ${
                 i < step ? "text-qbit-success" : i === step ? "text-qbit-primary animate-pulse" : "text-qbit-on-surface-variant/40"
               }`}
             >
@@ -1322,7 +1442,7 @@ function ScanningCard() {
             <span
               className={
                 i < step
-                  ? "text-qbit-on-surface line-through"
+                  ? "text-qbit-on-surface"
                   : i === step
                     ? "text-qbit-on-surface font-semibold"
                     : "text-qbit-on-surface-variant/60"
@@ -1334,9 +1454,157 @@ function ScanningCard() {
         ))}
       </div>
 
-      <p className="mt-5 text-center text-xs text-qbit-on-surface-variant">
-        Please keep your device connected…
+      <p className="mt-4 text-center text-xs text-qbit-on-surface-variant">
+        Please keep your device connected and approve the browser permission dialog…
       </p>
+    </section>
+  );
+}
+
+/**
+ * UsbConnectionStatusCard — shown after the 7-step USB connection flow
+ * completes (success OR failure). Displays the full step log, diagnostic
+ * checks, and exact error messages. No generic "Connection Failed".
+ *
+ * If the connection failed, shows a Retry button.
+ * If the connection succeeded, shows the connection details.
+ */
+function UsbConnectionStatusCard({
+  result,
+  formatStepName,
+  onRetry,
+}: {
+  result: UsbConnectionResult;
+  formatStepName: (step: string) => string;
+  onRetry: () => void;
+}) {
+  const isConnected = result.connected;
+  const failedStep = result.failedStep;
+  const errName = result.errorName;
+  const errMessage = result.errorMessage;
+
+  return (
+    <section className={`mt-5 rounded-3xl border p-6 shadow-lg sm:p-8 ${
+      isConnected
+        ? "border-qbit-success/30 bg-qbit-success/5"
+        : "border-qbit-error/30 bg-qbit-error/5"
+    }`}>
+      {/* Header */}
+      <div className="mb-4 flex items-center gap-3">
+        <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${
+          isConnected ? "bg-qbit-success/10 text-qbit-success" : "bg-qbit-error/10 text-qbit-error"
+        }`}>
+          <span className="material-symbols-outlined text-[28px]">
+            {isConnected ? "check_circle" : "error"}
+          </span>
+        </div>
+        <div>
+          <h3 className="text-lg font-bold text-qbit-on-surface">
+            {isConnected ? "USB Connection Established" : `Connection Failed: ${formatStepName(failedStep ?? "unknown")}`}
+          </h3>
+          {!isConnected && errMessage && (
+            <p className="text-sm font-medium text-qbit-error mt-0.5">
+              {errName}: {errMessage}
+            </p>
+          )}
+          {isConnected && (
+            <p className="text-sm text-qbit-on-surface-variant mt-0.5">
+              Interface #{result.claimedInterfaceNumber ?? "N/A"} claimed. Bulk OUT: #{result.bulkOutEndpoint ?? "N/A"}, Bulk IN: #{result.bulkInEndpoint ?? "N/A"}.
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Diagnostic Checks */}
+      {!isConnected && (
+        <div className="mb-4 rounded-xl border border-qbit-error/20 bg-white p-3">
+          <h4 className="text-xs font-semibold uppercase tracking-wider text-qbit-error mb-2">Diagnostic Checks</h4>
+          <ul className="space-y-1.5 text-xs text-qbit-on-surface">
+            <li className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[14px] text-qbit-on-surface-variant">info</span>
+              <span>device.configuration null after open(): <strong>{result.configurationWasNullAfterOpen === null ? "N/A" : result.configurationWasNullAfterOpen ? "YES (selectConfiguration needed)" : "NO (configuration already set)"}</strong></span>
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[14px] text-qbit-on-surface-variant">info</span>
+              <span>Device exposes multiple interfaces: <strong>{result.interfaceCount === null ? "N/A" : result.interfaceCount > 1 ? `YES (${result.interfaceCount} interfaces)` : result.interfaceCount === 1 ? "NO (1 interface)" : "NO (0 interfaces)"}</strong></span>
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[14px] text-qbit-on-surface-variant">info</span>
+              <span>Interface claimed: <strong>{result.claimedInterfaceNumber === null ? "NOT CLAIMED" : `#${result.claimedInterfaceNumber}`}</strong></span>
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[14px]">{result.interfacePossiblyInUse ? "warning" : "check_circle"}</span>
+              <span className={result.interfacePossiblyInUse ? "text-qbit-error font-semibold" : "text-qbit-on-surface"}>
+                Another app (printer driver) using interface: <strong>{result.interfacePossiblyInUse === null ? "N/A" : result.interfacePossiblyInUse ? "YES — OS driver may have auto-claimed the interface" : "NO — interface was available"}</strong>
+              </span>
+            </li>
+          </ul>
+        </div>
+      )}
+
+      {/* Connected Device Details */}
+      {isConnected && (
+        <div className="mb-4 rounded-xl border border-qbit-success/20 bg-white p-3">
+          <h4 className="text-xs font-semibold uppercase tracking-wider text-qbit-success mb-2">Connection Details</h4>
+          <ul className="space-y-1.5 text-xs text-qbit-on-surface">
+            <li className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[14px] text-qbit-success">check_circle</span>
+              <span>Claimed interface: #{result.claimedInterfaceNumber ?? "N/A"}</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[14px] text-qbit-success">check_circle</span>
+              <span>Bulk OUT endpoint (send data): #{result.bulkOutEndpoint ?? "N/A"}</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[14px] text-qbit-success">check_circle</span>
+              <span>Bulk IN endpoint (read data): #{result.bulkInEndpoint ?? "N/A"}</span>
+            </li>
+          </ul>
+        </div>
+      )}
+
+      {/* Step Log — detailed log of each step */}
+      <div className="rounded-xl border border-qbit-outline-variant/30 bg-white p-3">
+        <h4 className="text-xs font-semibold uppercase tracking-wider text-qbit-on-surface-variant mb-2">Step Log</h4>
+        <div className="space-y-1.5">
+          {result.stepLog.map((log, idx) => (
+            <div key={idx} className="flex items-start gap-2 text-xs">
+              <span className={`material-symbols-outlined text-[14px] shrink-0 mt-0.5 ${
+                log.status === "success" ? "text-qbit-success"
+                : log.status === "failed" ? "text-qbit-error"
+                : "text-qbit-on-surface-variant"
+              }`}>
+                {log.status === "success" ? "check_circle" : log.status === "failed" ? "error" : "skip_next"}
+              </span>
+              <div>
+                <span className="font-semibold text-qbit-on-surface">{formatStepName(log.step)}</span>
+                <span className={`ml-1 ${
+                  log.status === "success" ? "text-qbit-success"
+                  : log.status === "failed" ? "text-qbit-error"
+                  : "text-qbit-on-surface-variant"
+                }`}>
+                  — {log.status === "success" ? "OK" : log.status === "failed" ? "FAILED" : "SKIPPED"}
+                </span>
+                <p className="text-qbit-on-surface-variant mt-0.5">{log.message}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Retry button (shown only on failure) */}
+      {!isConnected && (
+        <div className="mt-4 flex justify-center">
+          <button
+            type="button"
+            onClick={onRetry}
+            className="inline-flex items-center gap-2 rounded-xl bg-qbit-primary px-6 py-2.5 text-sm font-semibold text-qbit-on-primary hover:bg-qbit-primary-container transition-colors"
+          >
+            <span className="material-symbols-outlined text-[18px]">refresh</span>
+            Retry USB Connection
+          </button>
+        </div>
+      )}
     </section>
   );
 }
