@@ -27,38 +27,57 @@ function safeJsonParse<T>(value: string | null, fallback: T): T {
 export default async function ProductDetailPage({ params }: PageProps) {
   const { slug } = await params;
 
+  // Use explicit SELECT (not include) to avoid querying columns that may
+  // not yet exist in the production database (e.g., categoryId on V6 migration).
+  // This also improves performance by fetching only the fields we need.
   const product = await db.qbitProduct.findUnique({
     where: { slug },
-    include: {
-      specEntries: { orderBy: { sortIndex: "asc" } },
-      featureEntries: { orderBy: { sortIndex: "asc" } },
-      productOS: { orderBy: { sortIndex: "asc" } },
+    select: {
+      id: true, name: true, brand: true, manufacturer: true, model: true,
+      slug: true, deviceType: true, category: true, description: true,
+      longDescription: true, imageUrl: true, galleryImages: true,
+      specifications: true, features: true, operatingSystems: true,
+      videos: true, startingPrice: true, badgeLabel: true, isFeatured: true,
+      isTrending: true, tags: true, compatibleDevices: true, status: true,
+      isActive: true, driverDownloadUrl: true, manualUrl: true,
+      installationGuideUrl: true, knowledgeBaseUrl: true, brochureUrl: true,
+      datasheetUrl: true, warrantyUrl: true, sdkUrl: true, utilityUrl: true,
+      qrCodeUrl: true, seoTitle: true, seoDescription: true,
+      viewCount: true, downloadCount: true,
+      aiDiagnosticsSupported: true, drQbitSupported: true,
+      latestDriverVersion: true, latestFirmwareVersion: true,
+      lastUpdated: true, updatedAt: true,
+      // Relations
+      specEntries: { orderBy: { sortIndex: "asc" }, select: { property: true, value: true, group: true, sortIndex: true } },
+      featureEntries: { orderBy: { sortIndex: "asc" }, select: { icon: true, title: true, description: true, sortIndex: true } },
+      productOS: { orderBy: { sortIndex: "asc" }, select: { osName: true, osIcon: true, minVersion: true, sortIndex: true } },
       mediaFiles: {
         where: { visibility: "public" },
         orderBy: [{ isPrimary: "desc" }, { sortIndex: "asc" }],
+        select: { id: true, type: true, title: true, url: true, mimeType: true, thumbnailUrl: true, altText: true, provider: true, externalId: true, isPrimary: true, sortIndex: true },
       },
-      // V5: Fetch shared resources from Global Resource Library
       resourceMappings: {
-        include: {
+        orderBy: { sortIndex: "asc" },
+        select: {
+          id: true, overrideType: true, sortIndex: true,
           resource: {
             select: {
               id: true, name: true, type: true, version: true,
               description: true, url: true, mimeType: true, fileSize: true,
               thumbnailUrl: true, status: true, downloadCount: true,
               releaseDate: true,
-              // V5 new fields — critical for download pipeline
               storageKey: true, publicUrl: true, storageProvider: true,
               urlType: true, extension: true, originalFileName: true,
               checksum: true, visibility: true,
             },
           },
         },
-        orderBy: { sortIndex: "asc" },
       },
       relatedProducts: {
         orderBy: { sortIndex: "asc" },
         take: 4,
-        include: {
+        select: {
+          sortIndex: true,
           related: {
             select: {
               id: true, name: true, slug: true, brand: true, model: true,

@@ -23,17 +23,34 @@ export async function GET(req: NextRequest, { params }: Params) {
     const { slug } = await params;
     const product = await db.qbitProduct.findUnique({
       where: { slug },
-      include: {
-        specEntries: { orderBy: { sortIndex: "asc" } },
-        featureEntries: { orderBy: { sortIndex: "asc" } },
-        productOS: { orderBy: { sortIndex: "asc" } },
+      select: {
+        id: true, name: true, brand: true, manufacturer: true, model: true,
+        slug: true, deviceType: true, category: true, description: true,
+        longDescription: true, imageUrl: true, galleryImages: true,
+        specifications: true, features: true, operatingSystems: true,
+        videos: true, startingPrice: true, badgeLabel: true, isFeatured: true,
+        isTrending: true, tags: true, compatibleDevices: true, status: true,
+        isActive: true, driverDownloadUrl: true, manualUrl: true,
+        installationGuideUrl: true, knowledgeBaseUrl: true, brochureUrl: true,
+        datasheetUrl: true, warrantyUrl: true, sdkUrl: true, utilityUrl: true,
+        qrCodeUrl: true, seoTitle: true, seoDescription: true, seoKeywords: true,
+        viewCount: true, downloadCount: true,
+        aiDiagnosticsSupported: true, drQbitSupported: true,
+        latestDriverVersion: true, latestFirmwareVersion: true,
+        lastUpdated: true, updatedAt: true, createdAt: true,
+        // Relations (explicit select to avoid querying V6 columns like categoryId)
+        specEntries: { orderBy: { sortIndex: "asc" }, select: { property: true, value: true, group: true } },
+        featureEntries: { orderBy: { sortIndex: "asc" }, select: { icon: true, title: true, description: true } },
+        productOS: { orderBy: { sortIndex: "asc" }, select: { osName: true, osIcon: true, minVersion: true } },
         mediaFiles: {
           where: { visibility: "public" },
           orderBy: { sortIndex: "asc" },
+          select: { id: true, type: true, title: true, url: true, mimeType: true, thumbnailUrl: true, altText: true, provider: true, externalId: true },
         },
-        // V5: Fetch shared resources from Global Resource Library
         resourceMappings: {
-          include: {
+          orderBy: { sortIndex: "asc" },
+          select: {
+            id: true, overrideType: true,
             resource: {
               select: {
                 id: true, name: true, type: true, version: true,
@@ -43,12 +60,12 @@ export async function GET(req: NextRequest, { params }: Params) {
               },
             },
           },
-          orderBy: { sortIndex: "asc" },
         },
         relatedProducts: {
           orderBy: { sortIndex: "asc" },
           take: 8,
-          include: {
+          select: {
+            sortIndex: true,
             related: {
               select: {
                 id: true, name: true, slug: true, brand: true, model: true,
