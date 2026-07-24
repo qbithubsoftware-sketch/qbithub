@@ -51,3 +51,27 @@ Stage Summary:
 - Warning: No products exist in DB — seed script Phase 3 skipped. Product-resource links cannot be created until products are seeded
 - Warning: MIN_UPLOAD_SIZE is 1024 bytes — config/text files smaller than this will be rejected. May need adjustment for small file types
 - Remaining: Products need seeding before product-resource linking can work
+
+---
+Task ID: Critical-Production-Fix
+Agent: Super Z (Main)
+Task: Debug and fix Runtime Rendering Error on deployed Vercel portal
+
+Work Log:
+- Inspected deployed site via web reader — found HTTP 500 with RSC error digest 4102106584
+- Tested /api/public/products on production — got exact error: "Error validating datasource `db`: the URL must start with the protocol `file:`" with `provider = "sqlite"` at schema.prisma line 15
+- Traced git history — found commit 33c6a56 changed provider from "postgresql" to "sqlite" (breaking production). Commit 7f98997 had "postgresql" (correct)
+- Root cause: Prisma datasource provider hardcoded to "sqlite" but Vercel DATABASE_URL is PostgreSQL (Neon). Prisma does NOT support dynamic provider — the provider must match the actual database engine
+- Fixed: Changed prisma/schema.prisma provider back to "postgresql", updated misleading comment, generated baseline migration
+- Initially added prisma db push to Vercel buildCommand but reverted to original "next build" to match previous working config
+- Pushed fix to GitHub (commit 0cfe535)
+- After Neon database resumed from auto-suspend, verified all pages load: / (200), /products (200), /downloads (200), /api/health (200)
+- Build verification: npm run build — 0 TypeScript errors, 0 build errors
+
+Stage Summary:
+- Root cause: Prisma schema provider = "sqlite" doesn't match Neon PostgreSQL DATABASE_URL on Vercel
+- The comment "dynamically set" was misleading — Prisma requires hardcoded provider
+- Fix: Changed provider to "postgresql" (matching what commit 7f98997 had before it was accidentally changed)
+- All pages now load successfully on production
+- Neon database connection initially timed out (auto-suspend), resumed after warm-up period
+- Remaining: Need to run prisma db push against production Neon DB to add V5 columns (storageKey, publicUrl, etc.) — the homepage works but product detail pages with V5 select fields may still fail until schema is pushed
