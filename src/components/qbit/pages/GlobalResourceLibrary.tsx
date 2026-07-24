@@ -330,8 +330,8 @@ function ResourceFormModal({ resource, onClose, onSaved }: { resource: GlobalRes
     version: resource?.version ?? "",
     description: resource?.description ?? "",
     supportedCategories: resource?.supportedCategories ?? "",
-    url: resource?.url ?? "",
-    urlType: (resource as Record<string, unknown> | null)?.urlType as string ?? "storage_key",
+    url: (resource as Record<string, unknown> | null)?.url as string ?? "",
+    urlType: (resource as Record<string, unknown> | null)?.urlType as string ?? "uploaded",
     mimeType: resource?.mimeType ?? "",
     fileSize: resource?.fileSize ?? 0,
     originalFileName: (resource as Record<string, unknown> | null)?.originalFileName as string ?? "",
@@ -340,8 +340,14 @@ function ResourceFormModal({ resource, onClose, onSaved }: { resource: GlobalRes
     releaseDate: resource?.releaseDate ? resource.releaseDate.split("T")[0] : "",
     status: resource?.status ?? "active",
     visibility: resource?.visibility ?? "public",
+    // V5 Enterprise fields
+    storageKey: (resource as Record<string, unknown> | null)?.storageKey as string ?? "",
+    publicUrl: (resource as Record<string, unknown> | null)?.publicUrl as string ?? "",
+    storageProvider: (resource as Record<string, unknown> | null)?.storageProvider as string ?? "",
+    extension: (resource as Record<string, unknown> | null)?.extension as string ?? "",
   });
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   // ===== Category multi-select state =====
   const [allCategories, setAllCategories] = useState<Array<{ slug: string; label: string }>>([]);
@@ -418,61 +424,98 @@ function ResourceFormModal({ resource, onClose, onSaved }: { resource: GlobalRes
 
   async function handleFileUpload(file: File) {
     setUploading(true);
+    setUploadProgress(0);
     try {
-      // ===== Upload via Storage Service API =====
-      // POST file to /api/admin/resources/upload — returns storageKey + checksum
-      const formData = new FormData();
-      formData.append("file", file);
-
-      console.log(`[FRONTEND-UPLOAD] Sending file: name="${file.name}", type="${file.type}", size=${file.size}`);
-      console.log(`[FRONTEND-UPLOAD] FormData keys: [${[...formData.keys()]}]`);
-
-      const res = await fetch("/api/admin/resources/upload", {
+      // ===== Enterprise Upload Pipeline =====
+      // Phase 1: Create upload session
+      const sessionRes = await fetch("/api/admin/resources/upload?phase=create-session", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fileName: file.name,
+          mimeType: file.type || "application/octet-stream",
+          fileSize: file.size,
+        }),
       });
-      const data = await res.json().catch(() => null);
-      if (!res.ok || !data?.success) {
-        // Structured field-level error response:
-        //   { success, code, field, expected, received, message, stage, details }
-        const errorCode = data?.code ?? "UNKNOWN";
-        const errorMsg = data?.message ?? data?.error ?? "Upload failed";
-        const errorStage = data?.stage ?? "unknown";
-        const errorField = data?.field ?? "";
-        const errorExpected = data?.expected ?? "";
-        const errorReceived = data?.received ?? "";
-
-        // Build a human-readable error with field-level detail
-        let detail = errorMsg;
-        if (errorField && errorExpected && errorReceived) {
-          detail = `${errorMsg} (field: "${errorField}", expected: ${errorExpected}, received: ${errorReceived})`;
-        }
-        console.error(`[FRONTEND-UPLOAD] Upload failed: [${errorCode}] ${detail} (at ${errorStage})`);
-        console.error(`[FRONTEND-UPLOAD] Full error response:`, data);
-        throw new Error(`[${errorCode}] ${detail} (at ${errorStage})`);
+      const sessionData = await sessionRes.json().catch(() => null);
+      if (!sessionRes.ok || !sessionData?.success) {
+        const errorCode = sessionData?.code ?? "UPLOAD_FAILED";
+        const errorMsg = sessionData?.message ?? "Upload session creation failed";
+        throw new Error("[" + errorCode + "] " + errorMsg);
       }
-      // Store the storageKey + metadata in the form
+
+      const sessionId = sessionData.sessionId;
+      const totalChunks = sessionData.totalChunks;
+      const chunkSize = sessionData.chunkSize;
+      console.log("[FRONTEND-UPLOAD] Session created: id=" + sessionId + ", chunks=" + totalChunks);
+
+      // Phase 2: Upload chunks
+      for (let i = 0; i < totalChunks; i++) {
+        const start = i * chunkSize;
+        const end = Math.min(start + chunkSize, file.size);
+        const chunkBlob = file.slice(start, end);
+        const chunkFormData = new FormData();
+        chunkFormData.append("sessionId", sessionId);
+        chunkFormData.append("chunkIndex", String(i));
+        chunkFormData.append("chunk", chunkBlob);
+
+        const chunkRes = await fetch("/api/admin/resources/upload?phase=upload-chunk", {
+          method: "POST",
+          body: chunkFormData,
+        });
+        const chunkData = await chunkRes.json().catch(() => null);
+        if (!chunkRes.ok || !chunkData?.success) {
+          const errorCode = chunkData?.code ?? "UPLOAD_FAILED";
+          const errorMsg = chunkData?.message ?? "Chunk upload failed";
+          throw new Error("[" + errorCode + "] " + errorMsg + " (chunk " + i + ")");
+        }
+
+        const progress = chunkData.progress ?? Math.round(((i + 1) / totalChunks) * 100);
+        setUploadProgress(progress);
+      }
+
+      // Phase 3: Complete upload
+      const completeRes = await fetch("/api/admin/resources/upload?phase=complete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId }),
+      });
+      const completeData = await completeRes.json().catch(() => null);
+      if (!completeRes.ok || !completeData?.success) {
+        const errorCode = completeData?.code ?? "UPLOAD_FAILED";
+        const errorMsg = completeData?.message ?? "Upload completion failed";
+        throw new Error("[" + errorCode + "] " + errorMsg);
+      }
+
+      // Store the new architecture fields in the form
       setForm({
         ...form,
-        url: data.storageKey,
-        urlType: data.urlType || "storage_key",
-        mimeType: data.mimeType,
-        fileSize: data.fileSize,
-        originalFileName: data.originalFileName,
-        checksum: data.checksum,
+        storageKey: completeData.storageKey,
+        publicUrl: completeData.publicUrl || null,
+        storageProvider: completeData.storageProvider,
+        urlType: "uploaded",
+        mimeType: completeData.mimeType,
+        fileSize: completeData.fileSize,
+        originalFileName: completeData.originalFileName,
+        extension: completeData.extension,
+        checksum: completeData.checksum,
+        url: completeData.storageKey, // Backward compat
       });
       toast({
         title: "File uploaded",
-        description: `${file.name} (${formatFileSize(file.size)})`,
+        description: file.name + " (" + formatFileSize(file.size) + ")",
       });
     } catch (e) {
+      const errorMsg = e instanceof Error ? e.message : "Upload failed";
+      // Never show "UNKNOWN" — always show the real structured error
       toast({
         title: "Upload failed",
-        description: e instanceof Error ? e.message : "Unknown error",
+        description: errorMsg.startsWith("[") ? errorMsg : "[UPLOAD_FAILED] " + errorMsg,
         variant: "destructive",
       });
     } finally {
       setUploading(false);
+      setUploadProgress(0);
     }
   }
 
@@ -489,8 +532,14 @@ function ResourceFormModal({ resource, onClose, onSaved }: { resource: GlobalRes
         version: form.version || null,
         description: form.description || null,
         supportedCategories: form.supportedCategories || null,
-        url: form.url,
-        urlType: form.urlType || "storage_key",
+        // V5 Enterprise fields (preferred)
+        storageKey: form.storageKey || null,
+        publicUrl: form.publicUrl || null,
+        storageProvider: form.storageProvider || null,
+        urlType: form.urlType || "uploaded",
+        extension: form.extension || null,
+        // Legacy field (backward compat)
+        url: form.url || form.storageKey || form.publicUrl || null,
         mimeType: form.mimeType || null,
         fileSize: form.fileSize || null,
         originalFileName: form.originalFileName || null,

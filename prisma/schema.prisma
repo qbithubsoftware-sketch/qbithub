@@ -1806,8 +1806,25 @@ model QbitProduct {
 /// Resources exist ONCE in this table and are linked to products via
 /// ProductResourceMapping. Eliminates duplicate uploads — one resource
 /// can be used by unlimited products.
+/// V5 Enterprise Resource Model — Redesigned for production-grade reliability.
+///
+/// ARCHITECTURAL CHANGES (vs legacy):
+///   - storageKey: ALWAYS references the physical object in the storage provider.
+///     Never contains a public URL. This is the ONLY field used for storage lookup.
+///   - publicUrl: The user-facing URL (CDN link, redirect URL, etc.).
+///     NEVER used for storage lookup. Can be null for internal-only resources.
+///   - storageProvider: Records which provider stored the file ("local", "vercel-blob",
+///     "s3", "r2"). Enables multi-provider environments.
+///   - urlType: Still used as discriminator but NOW has "uploaded" (new default)
+///     instead of the dangerous "storage_key" default. The download pipeline
+///     auto-validates urlType against the actual URL pattern at runtime.
+///   - extension, mimeType: Stored separately for efficient filtering.
+///   - Backward compatibility: Legacy `url` field is kept as nullable and
+///     populated by a migration script from old urlType/url data.
 model Resource {
   id              String   @id @default(cuid())
+
+  // === Identity ===
   /// Resource name (e.g. "4Barcode APK", "Label Shop", "Windows Driver v2.4")
   name            String
   /// Resource type: "windows_driver" | "windows_software" | "android_software" |
@@ -1819,40 +1836,66 @@ model Resource {
   version         String?
   /// Short description
   description     String?
-  /// Comma-separated list of supported device categories (e.g. "thermal_printer,portable_printer")
-  /// Used for smart filtering in product mapping dropdowns.
-  supportedCategories String?
-  /// File URL — can be a storage key, data URL (base64), or external URL.
-  /// Discriminated by the `urlType` field.
-  /// Optional to allow safe migration on existing databases.
-  url             String?
-  /// Type discriminator for the `url` field:
-  /// "storage_key" = uploaded via StorageService, "data_url" = base64 inline, "external" = http(s) redirect
-  urlType         String   @default("storage_key")
-  /// MIME type of the file (e.g. "application/vnd.android.package-archive")
+
+  // === Storage Identity (CRITICAL — separates internal key from public URL) ===
+  /// Internal storage key — the ONLY reference used for storage lookup.
+  /// For "uploaded" resources: a local key like "resources/1784559605570-abc-driver.exe"
+  /// For "external" resources: null (no file in our storage)
+  /// For "data_url" resources: the full data:... URL (stored inline)
+  /// NEVER contains a public HTTP URL pointing to a CDN.
+  storageKey      String?
+  /// Public-facing URL for the resource. Used for redirects and display.
+  /// For "uploaded" resources: the CDN URL or download API URL.
+  /// For "external" resources: the external URL (YouTube, vendor site, etc.)
+  /// NEVER used for storage lookup.
+  publicUrl       String?
+  /// Which storage provider holds the physical file.
+  /// "local" | "vercel-blob" | "s3" | "r2" | null (for external/data_url)
+  storageProvider String?
+  /// Type discriminator:
+  ///   "uploaded" — file stored via StorageService (storageKey is a local key)
+  ///   "external" — redirect to publicUrl (YouTube, vendor site, etc.)
+  ///   "data_url" — base64 inline data in storageKey
+  urlType         String   @default("uploaded")
+
+  // === File Metadata ===
+  /// File extension (e.g. "exe", "zip", "pdf") — without the dot
+  extension       String?
+  /// MIME type of the file
   mimeType        String?
-  /// File size in bytes (for display)
+  /// File size in bytes
   fileSize        Int?
   /// Original filename as uploaded by the admin
   originalFileName String?
   /// SHA-256 checksum for file integrity verification
   checksum        String?
+
+  // === Display ===
+  /// Comma-separated list of supported device categories
+  supportedCategories String?
   /// Thumbnail URL (for videos/images)
   thumbnailUrl    String?
   /// Release date
   releaseDate     DateTime?
+
+  // === Lifecycle ===
   /// Status: "active" | "deprecated" | "draft"
   status          String   @default("active")
-  /// Download counter (incremented when a customer downloads via any product)
+  /// Download counter
   downloadCount   Int      @default(0)
+  /// Visibility: "public" | "internal" | "partner" | "dealer" | "engineer" | "admin"
+  visibility      String   @default("public")
   /// Admin who created this resource
   createdBy       String?
   /// Admin who last updated this resource
   updatedBy       String?
-  /// Visibility: "public" | "employee" | "engineer" | "admin" (RBAC)
-  visibility      String   @default("public")
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
+  // === Backward Compatibility ===
+  /// Legacy `url` field — kept for migration. Populated from old records.
+  /// New code MUST NOT write to this field. Use storageKey + publicUrl instead.
+  url             String?
 
   /// Products linked to this resource (many-to-many)
   productMappings ProductResourceMapping[]
@@ -1862,6 +1905,8 @@ model Resource {
   @@index([visibility])
   @@index([name])
   @@index([urlType])
+  @@index([storageProvider])
+  @@index([extension])
 }
 
 /// V5 — Many-to-many mapping between QbitProduct and Resource.
