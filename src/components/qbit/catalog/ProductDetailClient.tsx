@@ -114,6 +114,15 @@ export interface ProductDetail {
     status: string;
     downloadCount: number;
     releaseDate: string | null;
+    // V5 new fields
+    storageKey: string | null;
+    publicUrl: string | null;
+    storageProvider: string | null;
+    urlType: string | null;
+    extension: string | null;
+    originalFileName: string | null;
+    checksum: string | null;
+    visibility: string;
   }[];
   sku: string | null;
   startingPrice: string | null;

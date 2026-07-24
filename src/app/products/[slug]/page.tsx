@@ -46,6 +46,10 @@ export default async function ProductDetailPage({ params }: PageProps) {
               description: true, url: true, mimeType: true, fileSize: true,
               thumbnailUrl: true, status: true, downloadCount: true,
               releaseDate: true,
+              // V5 new fields — critical for download pipeline
+              storageKey: true, publicUrl: true, storageProvider: true,
+              urlType: true, extension: true, originalFileName: true,
+              checksum: true, visibility: true,
             },
           },
         },
@@ -123,6 +127,15 @@ export default async function ProductDetailPage({ params }: PageProps) {
       status: m.resource.status,
       downloadCount: m.resource.downloadCount,
       releaseDate: m.resource.releaseDate?.toISOString() ?? null,
+      // V5 new fields — needed for proper download handling
+      storageKey: m.resource.storageKey,
+      publicUrl: m.resource.publicUrl,
+      storageProvider: m.resource.storageProvider,
+      urlType: m.resource.urlType,
+      extension: m.resource.extension,
+      originalFileName: m.resource.originalFileName,
+      checksum: m.resource.checksum,
+      visibility: m.resource.visibility,
     })),
     sku: null, // SECURITY: SKU is internal-inventory — never expose on public product page.
     startingPrice: product.startingPrice,

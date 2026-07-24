@@ -88,7 +88,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       }
     }
 
-    const result = await serveResourceDownload({ resourceId: id });
+    const result = await serveResourceDownload(id);
 
     if (isResourceError(result)) {
       const statusMap: Record<string, number> = {

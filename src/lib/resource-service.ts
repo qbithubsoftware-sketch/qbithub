@@ -92,11 +92,11 @@ export function resolveUrlType(resource: {
   publicUrl: string | null;
   url: string | null;
 }): "uploaded" | "external" | "data_url" {
-  const storedType = resource.urlType ?? "uploaded";
+  const storedType: string = resource.urlType ?? "uploaded";
   const effectiveUrl = resource.storageKey ?? resource.url ?? resource.publicUrl ?? "";
   const detectedType = detectUrlType(effectiveUrl);
 
-  if (storedType === detectedType) return storedType;
+  if (storedType === detectedType) return detectedType;
   if (storedType === "storage_key" && detectedType === "uploaded") return "uploaded";
 
   // CRITICAL SAFETY NET: If stored "uploaded"/"storage_key" but URL is actually "external"
@@ -106,7 +106,9 @@ export function resolveUrlType(resource: {
     return "external";
   }
 
-  return storedType;
+  // Default: return detected type if it's valid, otherwise "uploaded"
+  if (detectedType === "uploaded" || detectedType === "external" || detectedType === "data_url") return detectedType;
+  return "uploaded";
 }
 
 // ---------------------------------------------------------------------------
@@ -295,7 +297,7 @@ export async function writeUploadChunk(
     const fh = await fs.open(tempPath, "w+");
     // Extend the file to the expected total size
     if (session.fileSize > 0) {
-      await fh.writeFile(Buffer.alloc(session.fileSize), 0);
+      await fh.writeFile(Buffer.alloc(session.fileSize));
     }
     return fh;
   });

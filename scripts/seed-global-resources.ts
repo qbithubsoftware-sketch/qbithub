@@ -1,14 +1,70 @@
 /**
  * Seed V5 Global Resource Library with demo shared resources.
  *
- * Creates resources that can be linked to unlimited products via
- * ProductResourceMapping. Eliminates duplicate uploads.
+ * V5 FIX: All resources now properly set storageKey, publicUrl, urlType,
+ * storageProvider, and extension fields. This eliminates the root cause
+ * of the FILE_NOT_FOUND bug (seed script previously omitted urlType,
+ * causing Prisma default "uploaded" to misclassify HTTP URLs).
+ *
+ * External URLs → urlType="external", publicUrl=URL, storageKey=null
+ * Uploaded files → urlType="uploaded", storageKey=local-key, publicUrl=null
  *
  * Run with: source /tmp/prod-db.env && npx tsx scripts/seed-global-resources.ts
  */
 
 import { PrismaClient } from "@prisma/client";
 const db = new PrismaClient();
+
+/**
+ * Determine urlType, storageKey, publicUrl, extension from a URL.
+ * - HTTP URLs (non-Vercel-Blob) → external
+ * - Vercel Blob URLs → uploaded (treated as storage keys)
+ * - Local keys → uploaded
+ */
+function classifyUrl(url: string): {
+  urlType: string;
+  storageKey: string | null;
+  publicUrl: string | null;
+  storageProvider: string | null;
+  extension: string | null;
+} {
+  const isVercelBlob = url.includes("blob.vercel-storage.com");
+  const isHttp = url.startsWith("http://") || url.startsWith("https://");
+
+  // Extract extension from URL path
+  const pathPart = url.split("?")[0].split("#")[0];
+  const extMatch = pathPart.match(/\.(?:apk|exe|msi|bin|hex|img|iso|rom|zip|rar|7z|pdf|docx|xlsx|csv|txt|xml|json|png|jpg|jpeg|webp|svg|gif|bmp|mp4|mov|avi|mkv|mp3|wav|aac|ogg|doc|xls|ppt|pptx|rtf|inf|cat|sys|cab|aab)$/i);
+  const extension = extMatch ? extMatch[1].toLowerCase() : null;
+
+  if (isVercelBlob) {
+    return {
+      urlType: "uploaded",
+      storageKey: url,     // Vercel Blob URLs are storage keys
+      publicUrl: url,      // Also the public-facing CDN URL
+      storageProvider: "vercel-blob",
+      extension,
+    };
+  }
+
+  if (isHttp) {
+    return {
+      urlType: "external",
+      storageKey: null,     // External URLs are NOT storage keys
+      publicUrl: url,       // Used for display/redirect
+      storageProvider: null,
+      extension,
+    };
+  }
+
+  // Local storage key
+  return {
+    urlType: "uploaded",
+    storageKey: url,
+    publicUrl: null,
+    storageProvider: "local",
+    extension,
+  };
+}
 
 const RESOURCES = [
   {
@@ -126,6 +182,54 @@ const RESOURCES = [
 async function main() {
   console.log("=== Seeding V5 Global Resource Library ===\n");
 
+  // Phase 1: Fix existing broken records first
+  console.log("Phase 1: Fix existing records with incorrect urlType...\n");
+  const allResources = await db.resource.findMany({
+    select: { id: true, name: true, url: true, storageKey: true, publicUrl: true, urlType: true, storageProvider: true },
+  });
+
+  let fixedCount = 0;
+  for (const existing of allResources) {
+    const effectiveUrl = existing.storageKey ?? existing.url ?? existing.publicUrl ?? "";
+    if (!effectiveUrl) continue;
+
+    const classification = classifyUrl(effectiveUrl);
+
+    // Check if urlType matches
+    if (existing.urlType !== classification.urlType) {
+      console.log(`  FIX urlType: "${existing.name}" stored=${existing.urlType} → effective=${classification.urlType}`);
+      await db.resource.update({
+        where: { id: existing.id },
+        data: {
+          urlType: classification.urlType,
+          storageKey: classification.storageKey,
+          publicUrl: classification.publicUrl,
+          storageProvider: classification.storageProvider,
+        },
+      });
+      fixedCount++;
+    }
+
+    // Check if HTTP URL is in storageKey (broken mapping)
+    if (existing.storageKey && (existing.storageKey.startsWith("http://") || existing.storageKey.startsWith("https://"))
+        && !existing.storageKey.includes("blob.vercel-storage.com")) {
+      console.log(`  FIX storageKey→publicUrl: "${existing.name}" moving HTTP URL from storageKey to publicUrl`);
+      await db.resource.update({
+        where: { id: existing.id },
+        data: {
+          storageKey: null,
+          publicUrl: existing.storageKey,
+          urlType: "external",
+          url: existing.storageKey,
+        },
+      });
+      fixedCount++;
+    }
+  }
+  console.log(`  Fixed ${fixedCount} records.\n`);
+
+  // Phase 2: Create new seed resources with proper V5 fields
+  console.log("Phase 2: Create seed resources with V5 fields...\n");
   for (const r of RESOURCES) {
     // Check if resource already exists (by name + version)
     const existing = await db.resource.findFirst({
@@ -135,6 +239,9 @@ async function main() {
       console.log(`  ✓ Already exists: ${r.name} (${r.version ?? "no version"})`);
       continue;
     }
+
+    const classification = classifyUrl(r.url);
+
     const created = await db.resource.create({
       data: {
         name: r.name,
@@ -142,8 +249,15 @@ async function main() {
         version: r.version ?? null,
         description: r.description,
         supportedCategories: r.supportedCategories,
-        url: r.url,
+        // V5 fields — properly classified
+        storageKey: classification.storageKey,
+        publicUrl: classification.publicUrl,
+        storageProvider: classification.storageProvider,
+        urlType: classification.urlType,
+        extension: classification.extension,
         mimeType: r.mimeType ?? null,
+        // Legacy field for backward compat
+        url: r.url,
         thumbnailUrl: r.thumbnailUrl ?? null,
         releaseDate: r.releaseDate,
         status: "active",
@@ -152,7 +266,86 @@ async function main() {
         updatedBy: "system-seed",
       },
     });
-    console.log(`  ✓ Created: ${created.name} (${created.type}) → ${created.id}`);
+    console.log(`  ✓ Created: ${created.name} (${created.type}, urlType=${classification.urlType}) → ${created.id}`);
+  }
+
+  // Phase 3: Link resources to P80 Alpha product
+  console.log("\nPhase 3: Link resources to products...\n");
+  const p80Alpha = await db.qbitProduct.findFirst({ where: { slug: "thermal-printer-p80-alpha" } });
+  const t800 = await db.qbitProduct.findFirst({ where: { slug: "t-800-window-pos" } });
+
+  if (p80Alpha) {
+    const driver = await db.resource.findFirst({ where: { name: "Windows Driver v2.4.1" } });
+    const firmware = await db.resource.findFirst({ where: { name: "P80UE Firmware v1.8.0" } });
+    const manual = await db.resource.findFirst({ where: { name: "Thermal Printer User Manual" } });
+    const qsg = await db.resource.findFirst({ where: { name: "Quick Start Guide" } });
+    const video = await db.resource.findFirst({ where: { name: "Installation Video — Thermal Printer Setup" } });
+    const errors = await db.resource.findFirst({ where: { name: "Common Error Guide" } });
+    const sdk = await db.resource.findFirst({ where: { name: "QBIT SDK" } });
+
+    const links = [
+      { resourceId: driver?.id, overrideType: "windows_driver", sortIndex: 0 },
+      { resourceId: firmware?.id, overrideType: "firmware", sortIndex: 1 },
+      { resourceId: manual?.id, overrideType: "manual", sortIndex: 2 },
+      { resourceId: qsg?.id, overrideType: "installation_guide", sortIndex: 3 },
+      { resourceId: video?.id, overrideType: "video", sortIndex: 4 },
+      { resourceId: errors?.id, overrideType: "troubleshooting", sortIndex: 5 },
+      { resourceId: sdk?.id, overrideType: "sdk", sortIndex: 6 },
+    ];
+
+    for (const link of links) {
+      if (!link.resourceId) continue;
+      const existingMapping = await db.productResourceMapping.findFirst({
+        where: { productId: p80Alpha.id, resourceId: link.resourceId },
+      });
+      if (existingMapping) {
+        console.log(`  ✓ Already linked: P80 Alpha → ${link.overrideType}`);
+        continue;
+      }
+      await db.productResourceMapping.create({
+        data: {
+          productId: p80Alpha.id,
+          resourceId: link.resourceId,
+          overrideType: link.overrideType,
+          sortIndex: link.sortIndex,
+        },
+      });
+      console.log(`  ✓ Linked: P80 Alpha → ${link.overrideType}`);
+    }
+  } else {
+    console.log("  ⚠ P80 Alpha product not found — skipping product linking");
+  }
+
+  if (t800) {
+    const posUtility = await db.resource.findFirst({ where: { name: "POS Utility" } });
+    const labelShop = await db.resource.findFirst({ where: { name: "Label Shop" } });
+    const usbDriver = await db.resource.findFirst({ where: { name: "USB Driver" } });
+
+    const links = [
+      { resourceId: posUtility?.id, overrideType: "pos_utility", sortIndex: 0 },
+      { resourceId: labelShop?.id, overrideType: "windows_software", sortIndex: 1 },
+      { resourceId: usbDriver?.id, overrideType: "windows_driver", sortIndex: 2 },
+    ];
+
+    for (const link of links) {
+      if (!link.resourceId) continue;
+      const existingMapping = await db.productResourceMapping.findFirst({
+        where: { productId: t800.id, resourceId: link.resourceId },
+      });
+      if (existingMapping) {
+        console.log(`  ✓ Already linked: T-800 → ${link.overrideType}`);
+        continue;
+      }
+      await db.productResourceMapping.create({
+        data: {
+          productId: t800.id,
+          resourceId: link.resourceId,
+          overrideType: link.overrideType,
+          sortIndex: link.sortIndex,
+        },
+      });
+      console.log(`  ✓ Linked: T-800 → ${link.overrideType}`);
+    }
   }
 
   const total = await db.resource.count();

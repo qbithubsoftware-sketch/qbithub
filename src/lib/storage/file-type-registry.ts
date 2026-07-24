@@ -218,6 +218,15 @@ export const FILE_TYPE_REGISTRY: FileTypeEntry[] = [
       { offset: 0x8001, signature: [0x43, 0x44, 0x30, 0x30, 0x31], name: "CD001 (ISO 9660)" },
     ],
   },
+  {
+    extension: ".rom",
+    label: "ROM Firmware Image",
+    category: "firmware",
+    mimeTypes: [
+      "application/octet-stream",
+    ],
+    // No reliable magic bytes — ROM format varies by vendor
+  },
 
   // ===================================================================
   // ANDROID — APK, AAB
@@ -341,6 +350,19 @@ export const FILE_TYPE_REGISTRY: FileTypeEntry[] = [
     ],
   },
   {
+    extension: ".doc",
+    label: "Microsoft Word Document (Legacy)",
+    category: "document",
+    mimeTypes: [
+      "application/msword",
+      "application/vnd.ms-word",
+      "application/octet-stream",
+    ],
+    magicBytes: [
+      { offset: 0, signature: [0xD0, 0xCF, 0x11, 0xE0], name: "OLE2 header (DOC)" },
+    ],
+  },
+  {
     extension: ".docx",
     label: "Microsoft Word Document",
     category: "document",
@@ -352,6 +374,62 @@ export const FILE_TYPE_REGISTRY: FileTypeEntry[] = [
     ],
     magicBytes: [
       { offset: 0, signature: [0x50, 0x4B, 0x03, 0x04], name: "ZIP header (DOCX)" },
+    ],
+  },
+  {
+    extension: ".xls",
+    label: "Microsoft Excel Spreadsheet (Legacy)",
+    category: "document",
+    mimeTypes: [
+      "application/vnd.ms-excel",
+      "application/msexcel",
+      "application/x-msexcel",
+      "application/octet-stream",
+    ],
+    magicBytes: [
+      { offset: 0, signature: [0xD0, 0xCF, 0x11, 0xE0], name: "OLE2 header (XLS)" },
+    ],
+  },
+  {
+    extension: ".ppt",
+    label: "Microsoft PowerPoint Presentation (Legacy)",
+    category: "document",
+    mimeTypes: [
+      "application/vnd.ms-powerpoint",
+      "application/powerpoint",
+      "application/x-mspowerpoint",
+      "application/octet-stream",
+    ],
+    magicBytes: [
+      { offset: 0, signature: [0xD0, 0xCF, 0x11, 0xE0], name: "OLE2 header (PPT)" },
+    ],
+  },
+  {
+    extension: ".pptx",
+    label: "Microsoft PowerPoint Presentation",
+    category: "document",
+    mimeTypes: [
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "application/zip",
+      "application/x-zip-compressed",
+      "application/octet-stream",
+    ],
+    magicBytes: [
+      { offset: 0, signature: [0x50, 0x4B, 0x03, 0x04], name: "ZIP header (PPTX)" },
+    ],
+  },
+  {
+    extension: ".rtf",
+    label: "Rich Text Format Document",
+    category: "document",
+    mimeTypes: [
+      "application/rtf",
+      "text/rtf",
+      "application/msword",                              // Some browsers
+      "application/octet-stream",
+    ],
+    magicBytes: [
+      { offset: 0, signature: [0x7B, 0x5C, 0x72, 0x74, 0x66], name: "RTF header ({\rtf)" },
     ],
   },
   {
@@ -483,9 +561,34 @@ export const FILE_TYPE_REGISTRY: FileTypeEntry[] = [
       { offset: 0, signature: [0x3C, 0x73, 0x76, 0x67], name: "SVG tag (<svg)" },
     ],
   },
+  {
+    extension: ".gif",
+    label: "GIF Image",
+    category: "image",
+    mimeTypes: [
+      "image/gif",
+      "application/octet-stream",
+    ],
+    magicBytes: [
+      { offset: 0, signature: [0x47, 0x49, 0x46, 0x38], name: "GIF header (GIF8)" },
+    ],
+  },
+  {
+    extension: ".bmp",
+    label: "BMP Image",
+    category: "image",
+    mimeTypes: [
+      "image/bmp",
+      "image/x-ms-bmp",
+      "application/octet-stream",
+    ],
+    magicBytes: [
+      { offset: 0, signature: [0x42, 0x4D], name: "BM header (BMP)" },
+    ],
+  },
 
   // ===================================================================
-  // VIDEOS — MP4, MOV
+  // VIDEOS — MP4, MOV, AVI, MKV
   // ===================================================================
   {
     extension: ".mp4",
@@ -514,6 +617,95 @@ export const FILE_TYPE_REGISTRY: FileTypeEntry[] = [
     magicBytes: [
       { offset: 4, signature: [0x6D, 0x6F, 0x6F, 0x76], name: "moov atom (MOV)" },
       { offset: 4, signature: [0x6D, 0x64, 0x61, 0x74], name: "mdat atom (MOV)" },
+    ],
+  },
+  {
+    extension: ".avi",
+    label: "AVI Video",
+    category: "video",
+    mimeTypes: [
+      "video/avi",
+      "video/x-msvideo",
+      "application/x-msvideo",
+      "application/octet-stream",
+    ],
+    magicBytes: [
+      { offset: 0, signature: [0x52, 0x49, 0x46, 0x46], name: "RIFF header (AVI)" },
+      { offset: 8, signature: [0x41, 0x56, 0x49], name: "AVI marker" },
+    ],
+  },
+  {
+    extension: ".mkv",
+    label: "Matroska Video",
+    category: "video",
+    mimeTypes: [
+      "video/x-matroska",
+      "video/matroska",
+      "application/octet-stream",
+    ],
+    magicBytes: [
+      { offset: 0, signature: [0x1A, 0x45, 0xDF, 0xA3], name: "EBML header (MKV)" },
+    ],
+  },
+
+  // ===================================================================
+  // AUDIO — MP3, WAV, AAC, OGG
+  // ===================================================================
+  {
+    extension: ".mp3",
+    label: "MP3 Audio",
+    category: "video",                                   // Using video category as "media"
+    mimeTypes: [
+      "audio/mpeg",
+      "audio/mp3",
+      "audio/x-mpeg",
+      "application/octet-stream",
+    ],
+    magicBytes: [
+      { offset: 0, signature: [0xFF, 0xFB], name: "MP3 sync word" },
+      { offset: 0, signature: [0x49, 0x44, 0x33], name: "ID3 header (MP3)" },
+    ],
+  },
+  {
+    extension: ".wav",
+    label: "WAV Audio",
+    category: "video",                                   // Using video category as "media"
+    mimeTypes: [
+      "audio/wav",
+      "audio/x-wav",
+      "audio/wave",
+      "application/octet-stream",
+    ],
+    magicBytes: [
+      { offset: 0, signature: [0x52, 0x49, 0x46, 0x46], name: "RIFF header (WAV)" },
+      { offset: 8, signature: [0x57, 0x41, 0x56, 0x45], name: "WAVE marker" },
+    ],
+  },
+  {
+    extension: ".aac",
+    label: "AAC Audio",
+    category: "video",                                   // Using video category as "media"
+    mimeTypes: [
+      "audio/aac",
+      "audio/x-aac",
+      "application/octet-stream",
+    ],
+    magicBytes: [
+      { offset: 0, signature: [0xFF, 0xF1], name: "AAC ADTS sync word" },
+      { offset: 0, signature: [0xFF, 0xF9], name: "AAC ADTS sync word (MPEG-2)" },
+    ],
+  },
+  {
+    extension: ".ogg",
+    label: "OGG Audio",
+    category: "video",                                   // Using video category as "media"
+    mimeTypes: [
+      "audio/ogg",
+      "application/ogg",
+      "application/octet-stream",
+    ],
+    magicBytes: [
+      { offset: 0, signature: [0x4F, 0x67, 0x67, 0x53], name: "OggS header" },
     ],
   },
 ];
@@ -570,8 +762,8 @@ export const BLOCKED_EXTENSIONS = new Set([
 // Size limits
 // ---------------------------------------------------------------------------
 
-/** Maximum file size: 100MB (enterprise resources — large firmware, SDKs, ISOs). */
-export const MAX_FILE_SIZE = 100 * 1024 * 1024;
+/** Maximum file size: 1 GB (enterprise resources — large firmware, SDKs, ISOs, videos). */
+export const MAX_FILE_SIZE = 1 * 1024 * 1024 * 1024;
 
 /** Minimum file size: 1 byte (reject empty files). */
 export const MIN_FILE_SIZE = 1;
@@ -618,7 +810,7 @@ export function isExtensionBlocked(ext: string): boolean {
 export function validateMimeForExtension(
   mimeType: string,
   ext: string,
-): { valid: boolean; note?: string; canonicalMime?: string } {
+): { valid: boolean; note?: string; canonicalMime?: string; category?: string } {
   const entry = byExtension.get(ext);
   if (!entry) {
     return { valid: false, note: `Extension "${ext}" is not in the registry` };
@@ -626,12 +818,12 @@ export function validateMimeForExtension(
 
   // application/octet-stream is always accepted for any registered extension
   if (mimeType === "application/octet-stream") {
-    return { valid: true, note: "octet-stream fallback accepted", canonicalMime: entry.mimeTypes[0] };
+    return { valid: true, note: "octet-stream fallback accepted", canonicalMime: entry.mimeTypes[0], category: entry.category };
   }
 
   // Check if the reported MIME is one of the known variants for this extension
   if (entry.mimeTypes.includes(mimeType)) {
-    return { valid: true, canonicalMime: entry.mimeTypes[0] };
+    return { valid: true, canonicalMime: entry.mimeTypes[0], category: entry.category };
   }
 
   // Extension is registered but MIME is unknown — still accept.
@@ -640,6 +832,7 @@ export function validateMimeForExtension(
     valid: true,
     note: `MIME "${mimeType}" not in known variants for ${ext}, but extension is registered. Accepting based on extension.`,
     canonicalMime: entry.mimeTypes[0],
+    category: entry.category,
   };
 }
 

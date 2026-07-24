@@ -341,7 +341,7 @@ async function main() {
   for (const p of PRODUCTS) {
     // Find by slug OR model — production DB has legacy rows with different slug conventions
     let existing = await db.qbitProduct.findUnique({ where: { slug: p.slug } });
-    if (!existing) existing = await db.qbitProduct.findUnique({ where: { model: p.model } });
+    if (!existing) existing = await db.qbitProduct.findFirst({ where: { model: p.model } });
     if (existing) {
       // Update with rich data, also normalize the slug if it was different
       await db.qbitProduct.update({

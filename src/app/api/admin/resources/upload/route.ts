@@ -183,7 +183,6 @@ async function handleCompleteUpload(req: NextRequest): Promise<NextResponse> {
   }
 
   const metadata = result as {
-    success: true;
     storageKey: string;
     storageProvider: string;
     mimeType: string;

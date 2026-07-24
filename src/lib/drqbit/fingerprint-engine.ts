@@ -237,7 +237,7 @@ export async function generateHardwareFingerprint(
 
   // Step 5: Generate device UUID
   // Generate Device UUID from primary identifier (deterministic when possible)
-  const primaryValue = getPrimaryIdentifierValue(identity);
+  const primaryValue = getPrimaryIdentifierValueFromIdentity(identity, selectPrimaryIdentifier(identity));
   const deviceUuid = config.generateDeviceUuid ? generateDeviceUuid(primaryValue) : "";
 
   // Step 6: Detect duplicate serial (if configured)
@@ -749,7 +749,7 @@ export async function generateOrReuseDeviceUuid(
   }
 
   // New device — generate new UUID from primary identifier
-  const primaryValue = getPrimaryIdentifierValue(identity);
+  const primaryValue = getPrimaryIdentifierValueFromIdentity(identity, selectPrimaryIdentifier(identity));
   return generateDeviceUuid(primaryValue);
 }
 

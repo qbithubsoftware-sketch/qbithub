@@ -1,20 +1,25 @@
 /**
- * Unified Resource Download Service
+ * Unified Resource Download Service — V5 Enterprise
  *
  * SINGLE SOURCE OF TRUTH for serving downloadable files.
  * All download API routes MUST use this module — never implement
  * download logic directly in route handlers.
  *
+ * KEY PRINCIPLES (aligned with resource-service.ts):
+ *   1. storageKey is ALWAYS used for storage lookup — NEVER publicUrl
+ *   2. publicUrl is NEVER used for storage lookup — only for display/redirects
+ *   3. urlType is validated and auto-corrected at runtime via resolveUrlType()
+ *   4. All errors are structured — never "UNKNOWN"
+ *   5. Backward compatibility — legacy `url` field is handled gracefully
+ *
  * Handles:
- *  - Storage key → StorageService.download()
- *  - Data URL → base64 decode
  *  - External URL → redirect
+ *  - Data URL → base64 decode
+ *  - Storage key → StorageService.download() (storageKey ONLY, never publicUrl)
  *  - File integrity check (checksum)
  *  - Download count increment
  *  - Proper Content-Type / Content-Disposition headers
- *  - Graceful error responses (never HTML where JSON expected)
- *  - Signed URL generation for the legacy Download model
- *  - Backward compatibility with files stored in public/uploads/resources/
+ *  - Graceful error responses (structured JSON, never generic HTML)
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -22,23 +27,32 @@ import { db } from "@/lib/db";
 import { StorageService } from "@/lib/storage/storage";
 import { sanitizeFileName, getExtension, MIME_FROM_EXT } from "@/lib/storage/types";
 import { createResourceLogger, createErrorResponse } from "@/lib/storage/resource-logger";
+import { resolveUrlType, detectUrlType } from "@/lib/resource-service";
 import crypto from "crypto";
 
 // ---------------------------------------------------------------------------
-// Types
+// Types — aligned with V5 Resource model
 // ---------------------------------------------------------------------------
 
 interface ResourceRecord {
   id: string;
   name: string;
-  url: string | null;
-  urlType?: string | null;
-  mimeType?: string | null;
-  fileSize?: number | null;
-  checksum?: string | null;
-  originalFileName?: string | null;
+  // V5 fields (preferred)
+  storageKey: string | null;
+  publicUrl: string | null;
+  storageProvider: string | null;
+  urlType: string | null;
+  // File metadata
+  mimeType: string | null;
+  fileSize: number | null;
+  checksum: string | null;
+  originalFileName: string | null;
+  extension: string | null;
+  // Display / lifecycle
   visibility: string;
   downloadCount: number;
+  // Legacy backward compat
+  url: string | null;
 }
 
 interface DownloadOptions {
@@ -97,18 +111,8 @@ export function validateDownloadToken(
 }
 
 // ---------------------------------------------------------------------------
-// URL type detection (replaces fragile startsWith heuristics)
+// URL type detection (aligned with resource-service.ts)
 // ---------------------------------------------------------------------------
-
-export function detectUrlType(url: string): "storage_key" | "data_url" | "external" {
-  if (url.startsWith("data:")) return "data_url";
-  // Vercel Blob URLs are storage keys (not external redirects)
-  // They look like: https://xxx.public.blob.vercel-storage.com/resources/...
-  if (isVercelBlobUrl(url)) return "storage_key";
-  if (url.startsWith("http://") || url.startsWith("https://")) return "external";
-  // Local storage keys (new format): "resources/..." or legacy: "/uploads/resources/..."
-  return "storage_key";
-}
 
 /**
  * Check if a URL is a Vercel Blob storage URL.
@@ -132,25 +136,52 @@ export function isVercelBlobUrl(url: string): boolean {
 /**
  * Serve a resource file as a downloadable response.
  *
- * This is the ONLY function that should produce file-download responses.
- * All download API routes call this instead of implementing their own logic.
+ * This is the ONLY function that should produce file-download responses
+ * from the legacy download routes ([id]/download).
+ * The admin resource route ([id]?download=true) uses serveResourceDownload()
+ * from resource-service.ts instead.
+ *
+ * Both paths share the SAME principles:
+ *   - storageKey for storage lookup
+ *   - publicUrl for redirects only
+ *   - Auto-correct urlType mismatches
  */
 export async function serveResourceFile(
   resource: ResourceRecord,
   options: DownloadOptions = {},
 ): Promise<NextResponse> {
   const logger = createResourceLogger("download");
-  const urlType = resource.urlType || detectUrlType(resource.url ?? "");
+
+  // Resolve effective urlType — auto-corrects mismatches at runtime
+  const urlType = resolveUrlType({
+    urlType: resource.urlType,
+    storageKey: resource.storageKey,
+    publicUrl: resource.publicUrl,
+    url: resource.url,
+  });
+
+  // Determine the effective URL for the resource
+  const effectiveStorageKey = resource.storageKey ?? resource.url ?? "";
+  const effectivePublicUrl = resource.publicUrl ?? resource.url ?? "";
 
   // ---- 1. External URL → redirect ----
   if (urlType === "external") {
+    const redirectUrl = effectivePublicUrl || effectiveStorageKey;
+    if (!redirectUrl) {
+      logger.failed("FILE_NOT_FOUND", `External resource "${resource.name}" has no URL.`, { resourceId: resource.id });
+      return NextResponse.json(
+        createErrorResponse("FILE_NOT_FOUND", `The resource "${resource.name}" has no valid URL for redirect.`, "download", { resourceId: resource.id }),
+        { status: 404 },
+      );
+    }
     logger.completed({ resourceId: resource.id, fileName: resource.originalFileName ?? undefined, mimeType: resource.mimeType ?? undefined });
-    return NextResponse.redirect(resource.url ?? "", { status: 302 });
+    return NextResponse.redirect(redirectUrl, { status: 302 });
   }
 
   // ---- 2. Data URL → base64 decode ----
   if (urlType === "data_url") {
-    const base64Data = (resource.url ?? "").split(",")[1];
+    const dataUrl = effectiveStorageKey;
+    const base64Data = dataUrl.split(",")[1];
     if (!base64Data) {
       logger.failed("INVALID_DATA_URL", "Data URL has no base64 payload", { resourceId: resource.id });
       return NextResponse.json(
@@ -180,15 +211,29 @@ export async function serveResourceFile(
     });
   }
 
-  // ---- 3. Storage key → StorageService ----
-  console.log(`[ResourceDownload] === OBJECT LIFECYCLE: DB → Download ===`);
-  console.log(`[ResourceDownload]   resource.id:       ${resource.id}`);
-  console.log(`[ResourceDownload]   resource.url:      ${resource.url ?? "(null)"}`);
-  console.log(`[ResourceDownload]   resource.urlType:  ${urlType}`);
-  console.log(`[ResourceDownload]   Calling StorageService.download("${(resource.url ?? "").slice(0, 60)}...")`);
+  // ---- 3. Uploaded / Storage key → StorageService ----
+  // CRITICAL: Use storageKey for lookup. NEVER use publicUrl.
+  const storageKey = effectiveStorageKey;
+  if (!storageKey) {
+    logger.failed("FILE_NOT_FOUND", `Resource "${resource.name}" has no storage key.`, { resourceId: resource.id });
+    return NextResponse.json(
+      createErrorResponse("FILE_NOT_FOUND", `The resource "${resource.name}" has no file in storage.`, "download", { resourceId: resource.id, name: resource.name }),
+      { status: 404 },
+    );
+  }
+
+  // SAFETY CHECK: If storageKey is an HTTP URL (but NOT a Vercel Blob URL),
+  // it's a broken record — auto-correct to redirect
+  if ((storageKey.startsWith("http://") || storageKey.startsWith("https://")) && !isVercelBlobUrl(storageKey)) {
+    console.warn(`[ResourceDownload] SAFETY: storageKey for "${resource.name}" is HTTP URL. Redirecting instead.`);
+    logger.completed({ resourceId: resource.id, fileName: resource.originalFileName ?? undefined });
+    return NextResponse.redirect(storageKey, { status: 302 });
+  }
+
+  console.log(`[ResourceDownload] Download: id=${resource.id}, key="${storageKey.slice(0, 60)}", type=${urlType}, provider=${resource.storageProvider ?? "auto"}`);
 
   try {
-    const downloadResult = await StorageService.download(resource.url ?? "");
+    const downloadResult = await StorageService.download(storageKey);
     const uint8Array = new Uint8Array(downloadResult.buffer);
     const fileName = sanitizeFileName(
       resource.originalFileName || resource.name,
@@ -263,13 +308,14 @@ export async function serveResourceFile(
     });
   } catch (storageErr) {
     console.error(
-      `[ResourceDownload] Storage error for key="${resource.url ?? ""}" resource="${resource.name}" (id=${resource.id}):`,
+      `[ResourceDownload] Storage error for key="${storageKey}" resource="${resource.name}" (id=${resource.id}):`,
       storageErr,
     );
-    logger.failed("FILE_NOT_FOUND", `Physical file not found: ${resource.url ?? ""}`, {
+    logger.failed("FILE_NOT_FOUND", `Physical file not found: ${storageKey.slice(0, 60)}`, {
       resourceId: resource.id,
-      storageKey: resource.url ?? "",
+      storageKey: storageKey.slice(0, 60),
       fileName: resource.originalFileName ?? undefined,
+      storageProvider: resource.storageProvider ?? "auto",
     });
 
     return NextResponse.json(
@@ -277,7 +323,7 @@ export async function serveResourceFile(
         "FILE_NOT_FOUND",
         `The physical file for "${resource.name}" could not be read. It may have been moved or deleted.`,
         "download",
-        { resourceId: resource.id, storageKey: resource.url },
+        { resourceId: resource.id, storageKey: storageKey.slice(0, 60), storageProvider: resource.storageProvider ?? "auto" },
       ),
       { status: 404 },
     );
@@ -314,7 +360,8 @@ async function incrementDownloadCount(
 }
 
 /**
- * Fetch a resource record with all download-relevant fields.
+ * Fetch a resource record with ALL download-relevant fields.
+ * V5: Selects storageKey, publicUrl, storageProvider (not just legacy url).
  * Returns null if not found.
  */
 export async function findResourceForDownload(
@@ -327,14 +374,22 @@ export async function findResourceForDownload(
       select: {
         id: true,
         name: true,
-        url: true,
+        // V5 fields (preferred)
+        storageKey: true,
+        publicUrl: true,
+        storageProvider: true,
         urlType: true,
+        // File metadata
         mimeType: true,
         fileSize: true,
         checksum: true,
         originalFileName: true,
+        extension: true,
+        // Display / lifecycle
         visibility: true,
         downloadCount: true,
+        // Legacy backward compat
+        url: true,
       },
     });
     return r;
@@ -350,13 +405,20 @@ export async function findResourceForDownload(
   return {
     id: d.id,
     name: d.name,
-    url: d.storagePath,
-    urlType: "storage_key",
+    storageKey: d.storagePath,
+    publicUrl: null,
+    storageProvider: "local",
+    urlType: "uploaded",
     mimeType: null,
     fileSize: d.fileSize,
     checksum: d.checksum,
     originalFileName: null,
+    extension: null,
     visibility: d.visibility,
     downloadCount: d.downloadCount,
+    url: d.storagePath,
   };
 }
+
+// Re-export detectUrlType for backward compat with any importers
+export { detectUrlType };

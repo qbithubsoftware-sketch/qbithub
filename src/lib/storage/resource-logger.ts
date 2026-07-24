@@ -56,6 +56,8 @@ export interface ResourceLogEntry {
   extension?: string;
   /** Storage key */
   storageKey?: string;
+  /** Storage provider name */
+  storageProvider?: string;
   /** User ID (if authenticated) */
   userId?: string;
   /** Duration in milliseconds */
