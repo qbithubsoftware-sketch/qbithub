@@ -9,10 +9,10 @@ generator client {
 }
 
 datasource db {
-  // Production uses PostgreSQL (Neon). Local dev uses SQLite with file: URL.
-  // The provider is set dynamically — when DATABASE_URL starts with "file:",
-  // SQLite is used; otherwise PostgreSQL is assumed.
-  provider = "sqlite"
+  // Production uses PostgreSQL (Neon/Supabase). Local dev uses the same Neon
+  // database via DATABASE_URL. Prisma does NOT support dynamic provider switching
+  // — the provider must match the actual database engine at runtime.
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
