@@ -33,7 +33,7 @@ function classifyUrl(url: string): {
 
   // Extract extension from URL path
   const pathPart = url.split("?")[0].split("#")[0];
-  const extMatch = pathPart.match(/\.(?:apk|exe|msi|bin|hex|img|iso|rom|zip|rar|7z|pdf|docx|xlsx|csv|txt|xml|json|png|jpg|jpeg|webp|svg|gif|bmp|mp4|mov|avi|mkv|mp3|wav|aac|ogg|doc|xls|ppt|pptx|rtf|inf|cat|sys|cab|aab)$/i);
+  const extMatch = pathPart.match(/\.(apk|exe|msi|bin|hex|img|iso|rom|zip|rar|7z|pdf|docx|xlsx|csv|txt|xml|json|png|jpg|jpeg|webp|svg|gif|bmp|mp4|mov|avi|mkv|mp3|wav|aac|ogg|doc|xls|ppt|pptx|rtf|inf|cat|sys|cab|aab)$/i);
   const extension = extMatch ? extMatch[1].toLowerCase() : null;
 
   if (isVercelBlob) {
