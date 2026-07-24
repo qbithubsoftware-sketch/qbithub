@@ -36,6 +36,8 @@ import {
   type ResourceError,
   type UploadSession,
 } from "@/lib/resource-service";
+import { getStorageAdapter } from "@/lib/storage/adapters/storage-factory";
+import type { FileMetadata } from "@/lib/storage/adapters/storage-adapter";
 
 // ---------------------------------------------------------------------------
 // Helpers

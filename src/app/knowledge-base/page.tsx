@@ -1,10 +1,10 @@
 /**
  * /knowledge-base — public knowledge base / FAQ / troubleshooting articles.
  *
- * NOTE: The Article Prisma model does not currently exist in the schema.
  * This page renders a curated static knowledge base that links to existing
- * resources (Dr. QBIT, Support, Videos, Downloads). When the Article model
- * is added in a future iteration, this page will switch to fetching from DB.
+ * resources (Dr. QBIT, Support, Videos, Downloads). The KnowledgeArticle
+ * model exists in the Prisma schema; dynamic fetching is available via
+ * /api/public/articles. This static version provides a curated overview.
  */
 
 import Link from "next/link";

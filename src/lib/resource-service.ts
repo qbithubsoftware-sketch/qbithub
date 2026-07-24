@@ -12,6 +12,8 @@
 import { db } from "@/lib/db";
 import { StorageService } from "@/lib/storage/storage";
 import { getStorageProvider } from "@/lib/storage/provider";
+import { getStorageAdapter } from "@/lib/storage/adapters/storage-factory";
+import type { StorageAdapter, FileMetadata, UploadResult as AdapterUploadResult } from "@/lib/storage/adapters/storage-adapter";
 import {
   isExtensionAllowed,
   isExtensionBlocked,
@@ -359,37 +361,70 @@ export async function completeUploadSession(
 
   const checksum = crypto.createHash("sha256").update(fileBuffer).digest("hex");
 
-  let storageResult;
+  // Use the new StorageAdapter for hosting-agnostic upload
+  const adapter = getStorageAdapter();
+  const metadata: FileMetadata = {
+    contentType: session.mimeType,
+    size: fileBuffer.length,
+    originalName: session.fileName,
+    extension: session.extension,
+  };
+
+  let adapterResult: AdapterUploadResult | null = null;
+  let storageResult: { storageKey: string; mimeType: string; fileSize: number };
+
   try {
-    storageResult = await StorageService.upload(fileBuffer, session.fileName, session.mimeType);
-  } catch (uploadErr) {
-    const errMsg = uploadErr instanceof Error ? uploadErr.message : String(uploadErr);
-    return createError("STORAGE_ERROR", "upload", "Storage provider failed: " + errMsg, {
-      provider: getStorageProvider().name,
-      fileName: session.fileName,
-      fileSize: session.fileSize,
-      originalError: errMsg,
-    });
+    // Use the new StorageAdapter for hosting-agnostic upload
+    adapterResult = await adapter.upload(session.fileName, fileBuffer, metadata);
+    // Map adapter result to legacy shape for backward compatibility
+    storageResult = {
+      storageKey: adapterResult.key,
+      mimeType: adapterResult.contentType,
+      fileSize: adapterResult.size,
+    };
+  } catch (adapterErr) {
+    // Fallback to legacy StorageService if adapter fails
+    const adapterErrMsg = adapterErr instanceof Error ? adapterErr.message : String(adapterErr);
+    console.warn("[ResourceService] StorageAdapter upload failed (" + adapter.name + "), falling back to StorageService: " + adapterErrMsg);
+    try {
+      const legacyResult = await StorageService.upload(fileBuffer, session.fileName, session.mimeType);
+      storageResult = {
+        storageKey: legacyResult.storageKey,
+        mimeType: legacyResult.mimeType,
+        fileSize: legacyResult.fileSize,
+      };
+    } catch (legacyErr) {
+      const errMsg = legacyErr instanceof Error ? legacyErr.message : String(legacyErr);
+      return createError("STORAGE_ERROR", "upload", "Storage upload failed. Adapter: " + adapterErrMsg + ". Legacy: " + errMsg, {
+        adapter: adapter.name,
+        provider: getStorageProvider().name,
+        fileName: session.fileName,
+        fileSize: session.fileSize,
+      });
+    }
   }
 
   try { await fs.unlink(tempPath); } catch { /* non-critical */ }
 
   session.status = "completed";
   session.storageKey = storageResult.storageKey;
-  session.storageProvider = getStorageProvider().name;
+  session.storageProvider = adapter.name;
   session.checksum = checksum;
 
+  // Determine publicUrl based on adapter result
   let publicUrl: string | null = null;
-  if (getStorageProvider().name === "vercel-blob" && storageResult.storageKey.startsWith("https://")) {
+  if (adapterResult && adapterResult.url) {
+    publicUrl = adapterResult.url;
+  } else if (storageResult.storageKey.startsWith("https://")) {
     publicUrl = storageResult.storageKey;
   }
 
-  console.log("[UploadComplete] Session " + sessionId + ": storageKey=" + storageResult.storageKey + ", provider=" + getStorageProvider().name);
+  console.log("[UploadComplete] Session " + sessionId + ": storageKey=" + storageResult.storageKey + ", adapter=" + adapter.name);
 
   return {
     success: true,
     storageKey: storageResult.storageKey,
-    storageProvider: getStorageProvider().name,
+    storageProvider: adapter.name,
     mimeType: session.mimeType,
     fileSize: fileBuffer.length,
     originalFileName: session.fileName,

@@ -25,6 +25,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { StorageService } from "@/lib/storage/storage";
+import { getStorageAdapter } from "@/lib/storage/adapters/storage-factory";
 import { sanitizeFileName, getExtension, MIME_FROM_EXT } from "@/lib/storage/types";
 import { createResourceLogger, createErrorResponse } from "@/lib/storage/resource-logger";
 import { resolveUrlType, detectUrlType } from "@/lib/resource-service";
@@ -215,9 +216,9 @@ export async function serveResourceFile(
   // CRITICAL: Use storageKey for lookup. NEVER use publicUrl.
   const storageKey = effectiveStorageKey;
   if (!storageKey) {
-    logger.failed("FILE_NOT_FOUND", `Resource "${resource.name}" has no storage key.`, { resourceId: resource.id });
+    logger.failed("PENDING_UPLOAD", `Resource "${resource.name}" has no storage key or URL.`, { resourceId: resource.id });
     return NextResponse.json(
-      createErrorResponse("FILE_NOT_FOUND", `The resource "${resource.name}" has no file in storage.`, "download", { resourceId: resource.id, name: resource.name }),
+      createErrorResponse("PENDING_UPLOAD", `This resource "${resource.name}" is pending upload — no file or URL has been assigned yet. Please contact the administrator or try again later.`, "download", { resourceId: resource.id, name: resource.name }),
       { status: 404 },
     );
   }
@@ -233,7 +234,40 @@ export async function serveResourceFile(
   console.log(`[ResourceDownload] Download: id=${resource.id}, key="${storageKey.slice(0, 60)}", type=${urlType}, provider=${resource.storageProvider ?? "auto"}`);
 
   try {
-    const downloadResult = await StorageService.download(storageKey);
+    // Try the new StorageAdapter first for hosting-agnostic download
+    const adapter = getStorageAdapter();
+    let downloadBuffer: Buffer | null = null;
+    let downloadMimeType: string;
+
+    try {
+      downloadBuffer = await adapter.download(storageKey);
+    } catch {
+      downloadBuffer = null;
+    }
+
+    // If adapter didn't find it, fallback to legacy StorageService
+    if (!downloadBuffer) {
+      try {
+        const legacyResult = await StorageService.download(storageKey);
+        downloadBuffer = legacyResult.buffer;
+        downloadMimeType = legacyResult.mimeType;
+      } catch {
+        // Both failed — throw to enter the catch block below
+        throw new Error("File not found via StorageAdapter or StorageService");
+      }
+    } else {
+      // Determine MIME type from extension for adapter result
+      const ext = getExtension(storageKey);
+      downloadMimeType = MIME_FROM_EXT[ext] || resource.mimeType || "application/octet-stream";
+    }
+
+    // Build a unified download result from whichever source succeeded
+    const downloadResult = {
+      buffer: downloadBuffer,
+      mimeType: downloadMimeType,
+      fileSize: downloadBuffer.length,
+      fileName: sanitizeFileName(resource.originalFileName || resource.name),
+    };
     const uint8Array = new Uint8Array(downloadResult.buffer);
     const fileName = sanitizeFileName(
       resource.originalFileName || resource.name,
@@ -311,17 +345,22 @@ export async function serveResourceFile(
       `[ResourceDownload] Storage error for key="${storageKey}" resource="${resource.name}" (id=${resource.id}):`,
       storageErr,
     );
-    logger.failed("FILE_NOT_FOUND", `Physical file not found: ${storageKey.slice(0, 60)}`, {
+    logger.failed("PENDING_UPLOAD", `Physical file not found: ${storageKey.slice(0, 60)}`, {
       resourceId: resource.id,
       storageKey: storageKey.slice(0, 60),
       fileName: resource.originalFileName ?? undefined,
       storageProvider: resource.storageProvider ?? "auto",
     });
 
+    // Determine the most helpful error message based on context
+    const errMsg = resource.storageProvider === "local"
+      ? `This resource "${resource.name}" is pending upload — the physical file has not been stored yet. Please contact the administrator or try again later.`
+      : `This resource "${resource.name}" could not be retrieved from ${resource.storageProvider ?? "storage"}. The file may have been moved, deleted, or is still pending upload. Please contact the administrator.`;
+
     return NextResponse.json(
       createErrorResponse(
-        "FILE_NOT_FOUND",
-        `The physical file for "${resource.name}" could not be read. It may have been moved or deleted.`,
+        "PENDING_UPLOAD",
+        errMsg,
         "download",
         { resourceId: resource.id, storageKey: storageKey.slice(0, 60), storageProvider: resource.storageProvider ?? "auto" },
       ),
